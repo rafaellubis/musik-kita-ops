@@ -2,7 +2,49 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+/*
+|--------------------------------------------------------------------------
+| Scheduled Tasks
+|--------------------------------------------------------------------------
+| Jadwal otomatis untuk M03/M05. Supaya jadwal ini benar-benar berjalan,
+| service `php artisan schedule:run` harus dieksekusi setiap menit oleh
+| Task Scheduler Windows. Lihat dokumentasi setup di docs/SCHEDULER.md.
+|
+| Cek jadwal yang aktif:
+|   php artisan schedule:list
+|
+| Jalankan manual untuk testing:
+|   php artisan schedule:run         (eksekusi yang due saat ini)
+|   php artisan schedule:work        (loop terus seperti di production)
+*/
+
+// ===== M03: Generator sesi mingguan =====
+// Tanggal 25 setiap bulan, jam 06:00 — generate sesi untuk bulan berikutnya.
+// Idempotent: aman dijalankan ulang.
+Schedule::command('sessions:generate-month')
+    ->monthlyOn(25, '06:00')
+    ->name('m03-generate-monthly-sessions')
+    ->withoutOverlapping();
+
+// ===== M05: Generator SPP bulanan =====
+// Tanggal 1 setiap bulan, jam 06:00 — terbitkan SPP untuk semua murid Aktif.
+// Idempotent: invoice yang sudah ada tidak duplikat (BR-5.1).
+Schedule::command('invoices:generate-spp')
+    ->monthlyOn(1, '06:00')
+    ->name('m05-generate-monthly-spp')
+    ->withoutOverlapping();
+
+// ===== M05: Apply denda harian =====
+// Setiap hari jam 06:00 mulai tanggal 11 — hitung & update denda Rp 5.000/hari
+// untuk invoice UNPAID/PARTIAL bulan ini (BR-5.3). Idempotent.
+Schedule::command('invoices:apply-fines')
+    ->dailyAt('06:00')
+    ->when(fn () => now()->day >= 11)
+    ->name('m05-apply-late-fines')
+    ->withoutOverlapping();

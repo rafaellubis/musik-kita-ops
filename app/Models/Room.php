@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Room extends Model
 {
@@ -16,10 +17,20 @@ class Room extends Model
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
-        'has_piano' => 'boolean',
-        'has_drum' => 'boolean',
+        'is_active'     => 'boolean',
+        'has_piano'     => 'boolean',
+        'has_drum'      => 'boolean',
         'has_amplifier' => 'boolean',
-        'capacity' => 'integer',
+        'capacity'      => 'integer',
     ];
+
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(Schedule::class);
+    }
+
+    public function classSessions(): HasMany
+    {
+        return $this->hasMany(ClassSession::class);
+    }
 }

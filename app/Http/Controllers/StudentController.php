@@ -2,18 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Student;
-use App\Models\Instrument;
-use App\Models\Package;
-use Illuminate\Http\Request;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
-use App\Models\Teacher;
+use App\Models\Instrument;
+use App\Models\Package;
 use App\Models\Room;
-
+use App\Models\Student;
+use App\Models\Teacher;
+use App\Services\StudentLifecycleService;
+use Illuminate\Http\Request;
+use InvalidArgumentException;
 
 class StudentController extends Controller
 {
+    public function __construct(
+        private readonly StudentLifecycleService $lifecycle,
+    ) {}
+
     public function index(Request $request)
     {
         // Build query bertahap berdasarkan filter
@@ -76,86 +81,367 @@ class StudentController extends Controller
             'package.instrument',
             'assignedTeacher',
             'assignedRoom',
+            'histories.changedBy',
+            // M03: enrollment ACTIVE + schedules + room
+            'enrollments' => fn ($q) => $q->latest('effective_date'),
+            'enrollments.package',
+            'enrollments.teacher',
+            'enrollments.schedules.room',
         ])->findOrFail($id);
 
-        return view('students.show', compact('student'));
+        // Data untuk dropdown di panel aksi lifecycle + form schedule
+        $packages = Package::where('is_active', true)
+            ->with('instrument')
+            ->orderBy('sort_order')
+            ->get();
+        $teachers = Teacher::where('is_active', true)
+            ->with('instruments')
+            ->orderBy('name')
+            ->get();
+        $rooms = Room::where('is_active', true)->orderBy('code')->get();
+
+        // M03: Sesi mendatang (5 terdekat dari hari ini)
+        $upcomingSessions = $student->classSessions()
+            ->with('room', 'substituteTeacher')
+            ->whereDate('session_date', '>=', now()->toDateString())
+            ->orderBy('session_date')
+            ->orderBy('start_time')
+            ->limit(5)
+            ->get();
+
+        // M05: 5 invoice terbaru + total saldo outstanding (UNPAID + PARTIAL)
+        $recentInvoices = $student->invoices()
+            ->with('items')
+            ->limit(5)
+            ->get();
+
+        $outstandingBalance = (int) $student->invoices()
+            ->whereIn('status', ['UNPAID', 'PARTIAL'])
+            ->get()
+            ->sum(fn ($inv) => $inv->balance);
+
+        $unpaidCount = $student->invoices()
+            ->whereIn('status', ['UNPAID', 'PARTIAL'])
+            ->count();
+
+        return view('students.show', compact(
+            'student', 'packages', 'teachers', 'rooms',
+            'upcomingSessions',
+            'recentInvoices', 'outstandingBalance', 'unpaidCount',
+        ));
     }
 
-    // Method create, store, edit, update, destroy diisi di Sesi 4-5
-	public function create()
-	{
-    $packages = Package::where('is_active', true)
-        ->with('instrument')
-        ->orderBy('sort_order')
-        ->get();
+    public function create()
+    {
+        $packages = Package::where('is_active', true)
+            ->with('instrument')
+            ->orderBy('sort_order')
+            ->get();
 
-    $teachers = Teacher::where('is_active', true)
-        ->orderBy('name')
-        ->get();
+        $teachers = Teacher::where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
-    $rooms = Room::where('is_active', true)
-        ->orderBy('code')
-        ->get();
+        $rooms = Room::where('is_active', true)
+            ->orderBy('code')
+            ->get();
 
-    return view('students.create', compact('packages', 'teachers', 'rooms'));
-	}
-
-	public function store(StoreStudentRequest $request)
-{
-    $validated = $request->validated();
-
-    // Auto-generate student_code
-    $validated['student_code'] = Student::generateCode();
-
-    // Set active_since kalau status Aktif
-    if ($validated['status'] === 'Aktif') {
-        $validated['active_since'] = now()->toDateString();
+        return view('students.create', compact('packages', 'teachers', 'rooms'));
     }
 
-    $student = Student::create($validated);
+    /**
+     * Bikin murid baru. Status awal selalu 'Calon' di tabel students,
+     * lalu kalau form pilih Trial / Aktif, langsung dipanggil service
+     * yang akan mengubah status sambil menulis history.
+     *
+     * Pendekatan ini memastikan SETIAP murid punya minimal 1 baris
+     * di student_status_histories — tidak ada "ghost" murid yang
+     * langsung Aktif tanpa jejak.
+     */
+    public function store(StoreStudentRequest $request)
+    {
+        $validated = $request->validated();
 
-    return redirect()->route('students.show', $student->id)
-        ->with('success', "Murid {$student->full_name} ({$student->student_code}) berhasil ditambahkan.");
-	}
-	
-	public function edit(string $id)
-	{
-    $student = Student::findOrFail($id);
+        // Auto-generate student_code (format M-YYYY-NNNN)
+        $code = Student::generateCode();
 
-    $packages = Package::where('is_active', true)
-        ->with('instrument')
-        ->orderBy('sort_order')
-        ->get();
+        // Buat dulu sebagai Calon, biar lifecycle service yang transisi.
+        $student = Student::create([
+            'student_code'        => $code,
+            'full_name'           => $validated['full_name'],
+            'nickname'            => $validated['nickname'] ?? null,
+            'gender'              => $validated['gender'],
+            'birth_date'          => $validated['birth_date'] ?? null,
+            'phone'               => $validated['phone'] ?? null,
+            'email'               => $validated['email'] ?? null,
+            'address'             => $validated['address'] ?? null,
+            'notes'               => $validated['notes'] ?? null,
+            'parent_name'         => $validated['parent_name'] ?? null,
+            'parent_phone'        => $validated['parent_phone'] ?? null,
+            'parent_email'        => $validated['parent_email'] ?? null,
+            'parent_relationship' => $validated['parent_relationship'] ?? null,
+            'preferred_day'       => $validated['preferred_day'] ?? null,
+            'preferred_time'      => $validated['preferred_time'] ?? null,
+            'package_id'          => $validated['package_id'] ?? null,
+            'assigned_teacher_id' => $validated['assigned_teacher_id'] ?? null,
+            'assigned_room_id'    => $validated['assigned_room_id'] ?? null,
+            'status'              => 'Calon',
+        ]);
 
-    $teachers = Teacher::where('is_active', true)
-        ->orderBy('name')
-        ->get();
+        // Transisi sesuai pilihan form
+        try {
+            if ($validated['status'] === 'Trial') {
+                $this->lifecycle->mulaiTrial($student, [
+                    'trial_date' => $validated['trial_date'],
+                    'package_id' => $validated['package_id'] ?? null,
+                    'assigned_teacher_id' => $validated['assigned_teacher_id'] ?? null,
+                    'assigned_room_id' => $validated['assigned_room_id'] ?? null,
+                ]);
+            } elseif ($validated['status'] === 'Aktif') {
+                $this->lifecycle->skipTrial($student, [
+                    'reason_code'         => $validated['reason_code'],
+                    'reason'              => $validated['skip_trial_reason'],
+                    'package_id'          => $validated['package_id'],
+                    'assigned_teacher_id' => $validated['assigned_teacher_id'],
+                    'assigned_room_id'    => $validated['assigned_room_id'] ?? null,
+                ]);
+            }
+            // status === 'Calon' -> tidak perlu transisi tambahan
+        } catch (InvalidArgumentException $e) {
+            // Rollback manual: hapus murid yang baru saja dibuat
+            $student->delete();
+            return back()->withInput()->with('error', $e->getMessage());
+        }
 
-    $rooms = Room::where('is_active', true)
-        ->orderBy('code')
-        ->get();
+        return redirect()->route('students.show', $student->id)
+            ->with('success', "Murid {$student->full_name} ({$student->student_code}) berhasil ditambahkan.");
+    }
 
-    return view('students.edit', compact('student', 'packages', 'teachers', 'rooms'));
-	}
+    public function edit(string $id)
+    {
+        $student = Student::findOrFail($id);
 
-	public function update(UpdateStudentRequest $request, string $id)
-	{
-    $student = Student::findOrFail($id);
-    $validated = $request->validated();
+        $packages = Package::where('is_active', true)
+            ->with('instrument')
+            ->orderBy('sort_order')
+            ->get();
 
-    // Status TIDAK di-include dalam $validated
-    // karena tidak ada di rules UpdateStudentRequest
-    $student->update($validated);
+        $teachers = Teacher::where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
-    return redirect()->route('students.show', $student->id)
-        ->with('success', "Data murid {$student->full_name} berhasil diperbarui.");
-	}
+        $rooms = Room::where('is_active', true)
+            ->orderBy('code')
+            ->get();
 
-	public function destroy(string $id)
-	{
-    // Redirect ke detail — hard delete dinonaktifkan
-    // Status terminal (Mengundurkan Diri) akan dihandle via lifecycle action Sesi 8
-    return redirect()->route('students.show', $id)
-        ->with('error', 'Untuk mengakhiri status murid, gunakan tombol aksi di halaman detail.');
-	}
+        return view('students.edit', compact('student', 'packages', 'teachers', 'rooms'));
+    }
+
+    public function update(UpdateStudentRequest $request, string $id)
+    {
+        $student = Student::findOrFail($id);
+        $validated = $request->validated();
+
+        // Status TIDAK di-update lewat form edit — hanya lewat lifecycle action.
+        $student->update($validated);
+
+        return redirect()->route('students.show', $student->id)
+            ->with('success', "Data murid {$student->full_name} berhasil diperbarui.");
+    }
+
+    public function destroy(string $id)
+    {
+        // Redirect ke detail — hard delete dinonaktifkan.
+        // Status terminal (Mengundurkan Diri) lewat lifecycle action di show page.
+        return redirect()->route('students.show', $id)
+            ->with('error', 'Untuk mengakhiri status murid, gunakan tombol "Mundur" di halaman detail.');
+    }
+
+    /**
+     * API internal: daftar guru aktif yang mengajar instrumen tertentu.
+     * Dipanggil AJAX dari form tambah/edit murid.
+     */
+    public function teachersByInstrument(string $instrumentId)
+    {
+        $teachers = Teacher::where('is_active', true)
+            ->whereHas('instruments', function ($q) use ($instrumentId) {
+                $q->where('instruments.id', $instrumentId);
+            })
+            ->orderBy('name')
+            ->get(['id', 'code', 'name']);
+
+        return response()->json($teachers);
+    }
+
+    // =================================================================
+    // LIFECYCLE ACTIONS (M02)
+    // Setiap method delegate ke StudentLifecycleService.
+    // Validasi input pakai inline rules — sederhana, mudah dilihat
+    // bareng business intent. Refactor ke FormRequest kalau membesar.
+    // =================================================================
+
+    public function startTrial(Request $request, string $id)
+    {
+        $student = Student::findOrFail($id);
+        $data = $request->validate([
+            'trial_date'          => 'required|date|after:now',
+            'package_id'          => 'nullable|exists:packages,id',
+            'assigned_teacher_id' => 'nullable|exists:teachers,id',
+            'assigned_room_id'    => 'nullable|exists:rooms,id',
+            'notes'               => 'nullable|string|max:500',
+        ], [
+            'trial_date.required' => 'Tanggal trial wajib diisi.',
+            'trial_date.after'    => 'Jadwal trial harus setelah sekarang.',
+        ]);
+
+        return $this->runLifecycle(
+            fn () => $this->lifecycle->mulaiTrial($student, $data),
+            $student,
+            'Jadwal trial berhasil disimpan. Status sekarang: Trial.'
+        );
+    }
+
+    public function convertActive(Request $request, string $id)
+    {
+        $student = Student::findOrFail($id);
+        $data = $request->validate([
+            'package_id'          => 'required|exists:packages,id',
+            'assigned_teacher_id' => 'required|exists:teachers,id',
+            'assigned_room_id'    => 'nullable|exists:rooms,id',
+            'notes'               => 'nullable|string|max:500',
+        ], [
+            'package_id.required'          => 'Paket wajib dipilih sebelum konversi Aktif.',
+            'assigned_teacher_id.required' => 'Guru wajib dipilih sebelum konversi Aktif.',
+        ]);
+
+        return $this->runLifecycle(
+            fn () => $this->lifecycle->konversiAktif($student, $data),
+            $student,
+            'Murid dikonversi jadi Aktif. Tagihan REG + SPP perlu diterbitkan (modul tagihan menyusul).'
+        );
+    }
+
+    public function skipTrial(Request $request, string $id)
+    {
+        $student = Student::findOrFail($id);
+        $data = $request->validate([
+            'reason_code'         => 'required|in:walk_in,migrasi,reaktivasi,lulus_kids',
+            'reason'              => 'required|string|max:500',
+            'package_id'          => 'required|exists:packages,id',
+            'assigned_teacher_id' => 'required|exists:teachers,id',
+            'assigned_room_id'    => 'nullable|exists:rooms,id',
+        ], [
+            'reason_code.required' => 'Pilih alasan skip trial (walk-in / migrasi / reaktivasi / lulus kids).',
+            'reason.required'      => 'Penjelasan alasan wajib diisi untuk audit.',
+        ]);
+
+        return $this->runLifecycle(
+            fn () => $this->lifecycle->skipTrial($student, $data),
+            $student,
+            'Murid langsung jadi Aktif (skip trial). Alasan tercatat di riwayat status.'
+        );
+    }
+
+    public function startCuti(Request $request, string $id)
+    {
+        $student = Student::findOrFail($id);
+        $data = $request->validate([
+            'cuti_from'  => 'required|date|after_or_equal:today',
+            'cuti_until' => 'required|date|after:cuti_from',
+            'reason'     => 'required|string|max:500',
+        ], [
+            'cuti_from.required'  => 'Tanggal mulai cuti wajib diisi.',
+            'cuti_until.required' => 'Tanggal akhir cuti wajib diisi.',
+            'cuti_until.after'    => 'Tanggal akhir cuti harus setelah tanggal mulai.',
+            'reason.required'     => 'Alasan cuti wajib diisi.',
+        ]);
+
+        return $this->runLifecycle(
+            fn () => $this->lifecycle->ajukanCuti($student, $data),
+            $student,
+            'Pengajuan cuti tercatat. Tagihan biaya cuti Rp 100.000 perlu diterbitkan.'
+        );
+    }
+
+    public function withdraw(Request $request, string $id)
+    {
+        $student = Student::findOrFail($id);
+        $data = $request->validate([
+            'reason' => 'required|string|max:500',
+        ], [
+            'reason.required' => 'Alasan mundur wajib diisi.',
+        ]);
+
+        return $this->runLifecycle(
+            fn () => $this->lifecycle->mundurkan($student, $data),
+            $student,
+            'Murid ditandai Mengundurkan Diri.'
+        );
+    }
+
+    public function complete(Request $request, string $id)
+    {
+        $student = Student::findOrFail($id);
+        $data = $request->validate([
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        return $this->runLifecycle(
+            fn () => $this->lifecycle->selesai($student, $data),
+            $student,
+            'Murid Kids Class ditandai Selesai (lulus 6 bulan).'
+        );
+    }
+
+    public function returnFromCuti(Request $request, string $id)
+    {
+        $student = Student::findOrFail($id);
+        $data = $request->validate([
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        return $this->runLifecycle(
+            fn () => $this->lifecycle->aktifkanDariCuti($student, $data),
+            $student,
+            'Cuti diakhiri. Murid kembali Aktif.'
+        );
+    }
+
+    public function reactivate(Request $request, string $id)
+    {
+        $student = Student::findOrFail($id);
+        $data = $request->validate([
+            'package_id'          => 'required|exists:packages,id',
+            'assigned_teacher_id' => 'required|exists:teachers,id',
+            'assigned_room_id'    => 'nullable|exists:rooms,id',
+            'notes'               => 'nullable|string|max:500',
+        ], [
+            'package_id.required'          => 'Paket wajib dipilih untuk re-aktivasi.',
+            'assigned_teacher_id.required' => 'Guru wajib dipilih untuk re-aktivasi.',
+        ]);
+
+        return $this->runLifecycle(
+            fn () => $this->lifecycle->aktifkanKembali($student, $data),
+            $student,
+            'Murid diaktifkan kembali.'
+        );
+    }
+
+    /**
+     * Wrapper umum untuk semua lifecycle action: jalankan callback service,
+     * tangkap InvalidArgumentException (transisi tidak valid), redirect ke
+     * detail dengan flash message yang sesuai.
+     */
+    private function runLifecycle(callable $action, Student $student, string $successMessage)
+    {
+        try {
+            $action();
+        } catch (InvalidArgumentException $e) {
+            return redirect()->route('students.show', $student->id)
+                ->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('students.show', $student->id)
+            ->with('success', $successMessage);
+    }
 }

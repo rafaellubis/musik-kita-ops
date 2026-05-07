@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Student extends Model
 {
@@ -46,6 +47,40 @@ class Student extends Model
     public function assignedRoom(): BelongsTo
     {
         return $this->belongsTo(Room::class, 'assigned_room_id');
+    }
+
+    /**
+     * Riwayat transisi status. Urut terbaru duluan untuk tampilan timeline.
+     */
+    public function histories(): HasMany
+    {
+        return $this->hasMany(StudentStatusHistory::class)
+                    ->latest();
+    }
+
+    /**
+     * Semua enrollment murid (historis + aktif). Pakai scopeActive untuk
+     * filter yang berjalan: $student->enrollments()->active()->first().
+     */
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
+    /**
+     * Sesi yang ter-generate untuk murid ini (lewat enrollment-nya).
+     */
+    public function classSessions(): HasMany
+    {
+        return $this->hasMany(ClassSession::class);
+    }
+
+    /**
+     * Tagihan ke murid (M05). Urut terbaru duluan.
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class)->latest('issued_at');
     }
 
     // ============= STATIC METHODS =============

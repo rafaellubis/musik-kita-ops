@@ -246,20 +246,52 @@
         </div>
 
         {{-- Alasan Skip Trial — muncul kalau status = Aktif --}}
-        <div class="mt-4" id="field-skip-reason"
+        <div class="mt-4 space-y-3" id="field-skip-reason"
              style="{{ old('status') === 'Aktif' ? '' : 'display:none' }}">
-            <label class="block text-sm font-medium">
-                Alasan Langsung Aktif <span class="text-red-500">*</span>
-            </label>
-            <textarea name="skip_trial_reason" rows="2" maxlength="500"
-                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                      placeholder="Mis: walk-in confident, migrasi data dari Excel, reaktivasi ex-murid, lulus Kids Class lanjut privat">{{ old('skip_trial_reason') }}</textarea>
-            <p class="text-xs text-gray-500 mt-1">
-                Akan tercatat di audit trail. Wajib diisi untuk akuntabilitas.
-            </p>
-            @error('skip_trial_reason')
-                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-            @enderror
+
+            {{-- Dropdown reason_code (enum) --}}
+            <div>
+                <label class="block text-sm font-medium">
+                    Kode Alasan Skip Trial <span class="text-red-500">*</span>
+                </label>
+                <select name="reason_code"
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                    <option value="">— Pilih —</option>
+                    @php
+                        $reasonOptions = [
+                            'walk_in' => 'Walk-in (datang langsung & confident bayar)',
+                            'migrasi' => 'Migrasi data dari sistem lama',
+                            'reaktivasi' => 'Reaktivasi murid lama',
+                            'lulus_kids' => 'Lulus Kids Class lanjut privat',
+                        ];
+                    @endphp
+                    @foreach($reasonOptions as $code => $label)
+                        <option value="{{ $code }}"
+                            {{ old('reason_code') === $code ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('reason_code')
+                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            {{-- Penjelasan bebas --}}
+            <div>
+                <label class="block text-sm font-medium">
+                    Penjelasan Detail <span class="text-red-500">*</span>
+                </label>
+                <textarea name="skip_trial_reason" rows="2" maxlength="500"
+                          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                          placeholder="Tambahkan konteks: nama murid asal, link spreadsheet migrasi, catatan walk-in, dll.">{{ old('skip_trial_reason') }}</textarea>
+                <p class="text-xs text-gray-500 mt-1">
+                    Akan tercatat di riwayat status (audit trail).
+                </p>
+                @error('skip_trial_reason')
+                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                @enderror
+            </div>
         </div>
 
     @else
@@ -287,44 +319,54 @@
 </div>
 
         {{-- Paket --}}
-        <div>
-            <label class="block text-sm font-medium">Paket</label>
-            <select name="package_id"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                <option value="">— Belum ditentukan —</option>
-                @foreach($packages as $pkg)
-                    <option value="{{ $pkg->id }}"
-                        {{ old('package_id', $student?->package_id) == $pkg->id ? 'selected' : '' }}>
-                        [{{ $pkg->code }}] {{ $pkg->instrument->name }}
-                        - {{ $pkg->class_type }}
-                        @if($pkg->grade) - {{ $pkg->grade }} @endif
-                        ({{ $pkg->formatted_price }})
-                    </option>
-                @endforeach
-            </select>
-            <p class="text-xs text-gray-500 mt-1">Wajib untuk status Aktif.</p>
-            @error('package_id')
-                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-            @enderror
-        </div>
+		<div>
+			<label class="block text-sm font-medium">Paket</label>
+			<select name="package_id"
+				id="package-select"
+				class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+				onchange="handlePackageChange(this)">
+			<option value="" data-instrument-id="">— Belum ditentukan —</option>
+			@foreach($packages as $pkg)
+				<option value="{{ $pkg->id }}"
+					data-instrument-id="{{ $pkg->instrument->id }}"
+					{{ old('package_id', $student?->package_id) == $pkg->id ? 'selected' : '' }}>
+					[{{ $pkg->code }}] {{ $pkg->instrument->name }}
+					- {{ $pkg->class_type }}
+					@if($pkg->grade) - {{ $pkg->grade }} @endif
+					({{ $pkg->formatted_price }})
+				</option>
+			@endforeach
+			</select>
+				<p class="text-xs text-gray-500 mt-1">Wajib untuk status Aktif.</p>
+			@error('package_id')
+				<p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+			@enderror
+		</div>
 
         {{-- Guru --}}
-        <div>
-            <label class="block text-sm font-medium">Guru Utama</label>
-            <select name="assigned_teacher_id"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                <option value="">— Belum ditentukan —</option>
-                @foreach($teachers as $t)
-                    <option value="{{ $t->id }}"
-                        {{ old('assigned_teacher_id', $student?->assigned_teacher_id) == $t->id ? 'selected' : '' }}>
-                        [{{ $t->code }}] {{ $t->name }}
-                    </option>
-                @endforeach
-            </select>
-            @error('assigned_teacher_id')
-                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-            @enderror
-        </div>
+<div>
+    <label class="block text-sm font-medium">Guru Utama</label>
+    <select name="assigned_teacher_id"
+            id="teacher-select"
+            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+        {{-- Default: kosong kalau belum pilih paket --}}
+        @if($student?->package_id && $student?->assigned_teacher_id)
+            {{-- Mode edit: pre-load guru yang sudah assign --}}
+            <option value="">— Pilih Guru —</option>
+            <option value="{{ $student->assignedTeacher->id }}" selected>
+                [{{ $student->assignedTeacher->code }}] {{ $student->assignedTeacher->name }}
+            </option>
+        @else
+            <option value="">— Pilih paket dulu —</option>
+        @endif
+    </select>
+    <p class="text-xs text-gray-500 mt-1" id="teacher-hint">
+        Pilih paket terlebih dahulu untuk melihat daftar guru.
+    </p>
+    @error('assigned_teacher_id')
+        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+    @enderror
+</div>
 
         {{-- Ruangan --}}
         <div>
@@ -377,21 +419,19 @@
 </fieldset>
 
 {{-- ============= JAVASCRIPT: Conditional Fields ============= --}}
-@if(($mode ?? 'create') === 'create')
 <script>
 function handleStatusChange(status) {
     const trialField = document.getElementById('field-trial-date');
     const skipField = document.getElementById('field-skip-reason');
 
-    // Reset semua
-    trialField.style.display = 'none';
-    skipField.style.display = 'none';
+    // Guard: element mungkin tidak ada di mode edit
+    if (trialField) trialField.style.display = 'none';
+    if (skipField) skipField.style.display = 'none';
 
-    // Tampilkan sesuai pilihan
     if (status === 'Trial') {
-        trialField.style.display = 'block';
+        if (trialField) trialField.style.display = 'block';
     } else if (status === 'Aktif') {
-        skipField.style.display = 'block';
+        if (skipField) skipField.style.display = 'block';
     }
 }
 
@@ -402,5 +442,82 @@ document.addEventListener('DOMContentLoaded', function() {
         handleStatusChange(statusSelect.value);
     }
 });
+
+// ============= Filter Guru by Instrumen =============
+function handlePackageChange(selectEl) {
+    const instrumentId = selectEl.options[selectEl.selectedIndex].dataset.instrumentId;
+    const teacherSelect = document.getElementById('teacher-select');
+    const teacherHint = document.getElementById('teacher-hint');
+
+    // Reset guru dropdown
+    teacherSelect.innerHTML = '';
+
+    // Kalau tidak ada instrumen (pilihan kosong)
+    if (!instrumentId) {
+        teacherSelect.innerHTML = '<option value="">— Pilih paket dulu —</option>';
+        teacherHint.textContent = 'Pilih paket terlebih dahulu untuk melihat daftar guru.';
+
+        // Trigger status change juga (kalau ada)
+        handleStatusChange(document.getElementById('status-select')?.value || '');
+        return;
+    }
+
+    // Loading state
+    teacherSelect.innerHTML = '<option value="">Memuat daftar guru...</option>';
+    teacherHint.textContent = 'Sedang memuat...';
+
+    // AJAX ke server
+    fetch(`/api/teachers-by-instrument/${instrumentId}`)
+        .then(response => response.json())
+        .then(teachers => {
+            teacherSelect.innerHTML = '';
+
+            if (teachers.length === 0) {
+                teacherSelect.innerHTML = '<option value="">Tidak ada guru untuk instrumen ini</option>';
+                teacherHint.textContent = 'Tidak ada guru aktif untuk instrumen ini.';
+                return;
+            }
+
+            // Tambah opsi default
+            teacherSelect.innerHTML = '<option value="">— Pilih Guru —</option>';
+
+            // Tambah opsi guru
+            teachers.forEach(teacher => {
+                const option = document.createElement('option');
+                option.value = teacher.id;
+                option.textContent = `[${teacher.code}] ${teacher.name}`;
+
+                // Pre-select kalau ada current value (mode edit / old input)
+                const currentTeacherId = '{{ $student?->assigned_teacher_id ?? '' }}';
+                const oldTeacherId = '{{ old('assigned_teacher_id', '') }}';
+                if (option.value == oldTeacherId || option.value == currentTeacherId) {
+                    option.selected = true;
+                }
+
+                teacherSelect.appendChild(option);
+            });
+
+            teacherHint.textContent = `${teachers.length} guru tersedia untuk instrumen ini.`;
+        })
+        .catch(error => {
+            teacherSelect.innerHTML = '<option value="">Error memuat guru</option>';
+            teacherHint.textContent = 'Gagal memuat daftar guru. Refresh halaman.';
+            console.error('Error:', error);
+        });
+}
+
+// Auto-trigger saat halaman load (untuk mode edit atau old input)
+document.addEventListener('DOMContentLoaded', function() {
+    const packageSelect = document.getElementById('package-select');
+    if (packageSelect && packageSelect.value) {
+        handlePackageChange(packageSelect);
+    }
+
+    // Juga trigger status change kalau ada old value
+    const statusSelect = document.getElementById('status-select');
+    if (statusSelect && statusSelect.value) {
+        handleStatusChange(statusSelect.value);
+    }
+});
+
 </script>
-@endif

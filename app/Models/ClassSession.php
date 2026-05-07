@@ -1,0 +1,111 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+/**
+ * Sesi kelas konkret per tanggal (M03/M04).
+ *
+ * Dinamai ClassSession (bukan Session) karena facade `Session` Laravel
+ * sudah pakai nama itu. Tabel underlying: class_sessions.
+ *
+ * Lifecycle:
+ *   1. Generator (M03) bikin row dengan status SCHEDULED atau LIBUR
+ *   2. Admin input absensi (M04) -> status berubah ke HADIR/IZIN/HANGUS/dll
+ *   3. Kalkulasi honor (M06) isi honor_code dan honor_amount
+ */
+class ClassSession extends Model
+{
+    use HasFactory;
+
+    protected $table = 'class_sessions';
+
+    protected $fillable = [
+        'schedule_id', 'enrollment_id',
+        'student_id', 'teacher_id', 'substitute_teacher_id',
+        'session_date', 'start_time', 'end_time',
+        'room_id', 'status',
+        'late_minutes', 'notes',
+        'honor_code', 'honor_amount',
+    ];
+
+    protected $casts = [
+        'session_date'  => 'date',
+        'late_minutes'  => 'integer',
+        'honor_amount'  => 'integer',
+    ];
+
+    /**
+     * Status enum yang valid (referensi cepat ke CLAUDE.md).
+     */
+    public const STATUS_SCHEDULED       = 'SCHEDULED';
+    public const STATUS_HADIR            = 'HADIR';
+    public const STATUS_HADIR_TERLAMBAT  = 'HADIR_TERLAMBAT';
+    public const STATUS_IZIN_RESCHEDULE  = 'IZIN_RESCHEDULE';
+    public const STATUS_IZIN_VIDEO       = 'IZIN_VIDEO';
+    public const STATUS_HANGUS           = 'HANGUS';
+    public const STATUS_LIBUR            = 'LIBUR';
+    public const STATUS_DIGANTI          = 'DIGANTI';
+
+    /**
+     * Guru yang berhak honor untuk sesi ini.
+     * Kalau ada substitute (DIGANTI), honor ke substitute (BR-4.9).
+     * Selain itu honor ke guru asli.
+     */
+    public function getHonoredTeacherIdAttribute(): int
+    {
+        return $this->substitute_teacher_id ?? $this->teacher_id;
+    }
+
+    // ============= RELATIONSHIPS =============
+
+    public function schedule(): BelongsTo
+    {
+        return $this->belongsTo(Schedule::class);
+    }
+
+    public function enrollment(): BelongsTo
+    {
+        return $this->belongsTo(Enrollment::class);
+    }
+
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(Student::class);
+    }
+
+    public function teacher(): BelongsTo
+    {
+        return $this->belongsTo(Teacher::class);
+    }
+
+    public function substituteTeacher(): BelongsTo
+    {
+        return $this->belongsTo(Teacher::class, 'substitute_teacher_id');
+    }
+
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(Room::class);
+    }
+
+    // ============= SCOPES =============
+
+    public function scopeInMonth($query, int $year, int $month)
+    {
+        return $query->whereYear('session_date', $year)
+                     ->whereMonth('session_date', $month);
+    }
+
+    public function scopeForTeacher($query, int $teacherId)
+    {
+        // Cocokkan teacher asli ATAU substitute (untuk laporan honor)
+        return $query->where(function ($q) use ($teacherId) {
+            $q->where('teacher_id', $teacherId)
+              ->orWhere('substitute_teacher_id', $teacherId);
+        });
+    }
+}

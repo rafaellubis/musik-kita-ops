@@ -43,6 +43,8 @@ class StoreStudentRequest extends FormRequest
             'trial_date'          => 'nullable|date|after:now',
 
             // ============= HYBRID: ALASAN SKIP TRIAL =============
+            // Wajib kalau status = Aktif (validasi di withValidator).
+            'reason_code'         => 'nullable|in:walk_in,migrasi,reaktivasi,lulus_kids',
             'skip_trial_reason'   => 'nullable|string|max:500',
         ];
     }
@@ -67,6 +69,7 @@ class StoreStudentRequest extends FormRequest
             'trial_date.after'             => 'Jadwal trial harus setelah sekarang.',
             'preferred_time.date_format'   => 'Format jam preferensi salah (gunakan HH:MM).',
             'skip_trial_reason.max'        => 'Alasan maksimal 500 karakter.',
+            'reason_code.in'               => 'Kode alasan tidak valid.',
         ];
     }
 
@@ -103,6 +106,14 @@ class StoreStudentRequest extends FormRequest
                 $validator->errors()->add(
                     'skip_trial_reason',
                     'Alasan langsung Aktif wajib diisi (mis: walk-in confident, migrasi data, lulus Kids Class).'
+                );
+            }
+
+            // ============= RULE 4b: Aktif wajib reason_code (Hybrid v1.1) =============
+            if ($this->status === 'Aktif' && !$this->reason_code) {
+                $validator->errors()->add(
+                    'reason_code',
+                    'Pilih kode alasan: walk_in / migrasi / reaktivasi / lulus_kids.'
                 );
             }
 
