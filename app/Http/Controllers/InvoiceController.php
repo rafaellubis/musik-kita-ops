@@ -71,13 +71,19 @@ class InvoiceController extends Controller
     {
         $invoice->load([
             'student',
-            'items',
+            'items.addedBy',
             'payments' => fn ($q) => $q->latest('payment_date'),
             'payments.createdBy',
             'payments.voidedBy',
         ]);
 
-        return view('invoices.show', compact('invoice'));
+        // Katalog item manual yang aktif — untuk dropdown tambah item
+        $catalogItems = \App\Models\InvoiceComponent::where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('code')
+            ->get(['id', 'code', 'name', 'default_price']);
+
+        return view('invoices.show', compact('invoice', 'catalogItems'));
     }
 
     /**

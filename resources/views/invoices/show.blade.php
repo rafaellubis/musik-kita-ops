@@ -16,8 +16,10 @@
             'PAID'    => 'bg-green-100 text-green-700 border-green-300',
             'VOID'    => 'bg-gray-100 text-gray-500 border-gray-300',
         ];
-        $isOwner = auth()->user()?->hasRole('Owner');
-        $canPay = $invoice->status !== 'PAID' && $invoice->status !== 'VOID';
+        $isOwner      = auth()->user()?->hasRole('Owner');
+        $canPay       = $invoice->status !== 'PAID' && $invoice->status !== 'VOID';
+        // Item manual bisa ditambah/dihapus selama invoice belum PAID/VOID
+        $canEditItems = in_array($invoice->status, ['UNPAID', 'PARTIAL']);
     @endphp
 
     <div class="py-12">
@@ -153,27 +155,189 @@
             </div>
 
             {{-- ============= ITEMS ============= --}}
-            <div class="bg-white shadow-sm sm:rounded-lg p-6">
-                <h3 class="text-lg font-medium mb-3">Item Tagihan</h3>
+            <div class="bg-white shadow-sm sm:rounded-lg p-6"
+                 x-data="{ showAddItem: false }">
+
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-lg font-medium">Item Tagihan</h3>
+                    {{-- Tombol tambah item manual hanya untuk Owner/Admin, invoice belum PAID/VOID --}}
+                    @hasanyrole('Owner|Admin')
+                        @if($canEditItems && $catalogItems->isNotEmpty())
+                            <button type="button" @click="showAddItem = !showAddItem"
+                                    class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm">
+                                + Tambah Item Manual
+                            </button>
+                        @endif
+                    @endhasanyrole
+                </div>
+
+                {{-- ===== Form tambah item manual ===== --}}
+                @hasanyrole('Owner|Admin')
+                    @if($canEditItems && $catalogItems->isNotEmpty())
+                        <div x-show="showAddItem" x-cloak
+                             class="mb-4 p-4 border border-indigo-200 bg-indigo-50 rounded"
+                             x-data="{
+                                selectedId: '',
+                                defaultPrice: 0,
+                                defaultName: '',
+                                selectComponent(id, price, name) {
+                                    this.selectedId = id;
+                                    this.defaultPrice = price;
+                                    this.defaultName = name;
+                                    this.$refs.amount.value = price;
+                                    this.$refs.description.value = name;
+                                }
+                             }">
+                            <form method="POST"
+                                  action="{{ route('invoice-items.store', $invoice->id) }}">
+                                @csrf
+                                <h4 class="font-medium text-sm mb-3">Pilih Item dari Katalog</h4>
+
+                                {{-- Dropdown katalog --}}
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                                    <div>
+                                        <label class="block text-xs font-medium mb-1">
+                                            Item <span class="text-red-500">*</span>
+                                        </label>
+                                        <select name="invoice_component_id" required
+                                                class="block w-full border-gray-300 rounded"
+                                                @change="selectComponent($event.target.value,
+                                                    $event.target.selectedOptions[0]?.dataset.price,
+                                                    $event.target.selectedOptions[0]?.dataset.name)">
+                                            <option value="">— Pilih item —</option>
+                                            @foreach($catalogItems as $cat)
+                                                <option value="{{ $cat->id }}"
+                                                        data-price="{{ $cat->default_price }}"
+                                                        data-name="{{ $cat->name }}"
+                                                        {{ old('invoice_component_id') == $cat->id ? 'selected' : '' }}>
+                                                    {{ $cat->code }} — {{ $cat->name }}
+                                                    (Rp {{ number_format($cat->default_price, 0, ',', '.') }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium mb-1">
+                                            Deskripsi di Invoice <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text" name="description" required maxlength="255"
+                                               x-ref="description"
+                                               value="{{ old('description') }}"
+                                               class="block w-full border-gray-300 rounded"
+                                               placeholder="Nama item di invoice">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium mb-1">
+                                            Jumlah (Rp) <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="number" name="amount" required
+                                               min="1" max="99999999"
+                                               x-ref="amount"
+                                               value="{{ old('amount') }}"
+                                               class="block w-full border-gray-300 rounded"
+                                               placeholder="100000">
+                                        <p class="text-xs text-gray-400 mt-1">
+                                            Pre-fill dari harga default, bisa diubah.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 flex gap-2">
+                                    <button type="submit"
+                                            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm">
+                                        Tambahkan ke Invoice
+                                    </button>
+                                    <button type="button" @click="showAddItem = false"
+                                            class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm">
+                                        Batal
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    @elseif($canEditItems && $catalogItems->isEmpty())
+                        <div class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-700">
+                            Belum ada katalog item manual.
+                            @role('Owner')
+                                <a href="{{ route('invoice-components.create') }}" class="underline">
+                                    Tambah katalog di sini.
+                                </a>
+                            @else
+                                Minta Owner untuk menambahkan item di menu Katalog Item Tagihan.
+                            @endrole
+                        </div>
+                    @endif
+                @endhasanyrole
+
+                {{-- ===== Tabel item ===== --}}
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b text-left text-xs text-gray-500 uppercase">
                             <th class="py-1">Kode</th>
                             <th class="py-1">Deskripsi</th>
                             <th class="py-1 text-right">Jumlah</th>
+                            <th class="py-1 text-center">Tipe</th>
+                            @hasanyrole('Owner|Admin')
+                                @if($canEditItems)
+                                    <th class="py-1 text-right">Aksi</th>
+                                @endif
+                            @endhasanyrole
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($invoice->items as $item)
                             <tr class="border-b">
                                 <td class="py-2 font-mono text-xs">{{ $item->item_code }}</td>
-                                <td class="py-2">{{ $item->description }}</td>
-                                <td class="py-2 text-right">Rp {{ number_format($item->amount, 0, ',', '.') }}</td>
+                                <td class="py-2">
+                                    {{ $item->description }}
+                                    @if($item->isManual() && $item->addedBy)
+                                        <div class="text-xs text-gray-400">
+                                            + oleh {{ $item->addedBy->name }}
+                                        </div>
+                                    @endif
+                                </td>
+                                <td class="py-2 text-right">
+                                    Rp {{ number_format($item->amount, 0, ',', '.') }}
+                                </td>
+                                <td class="py-2 text-center">
+                                    @if($item->isManual())
+                                        <span class="px-2 py-0.5 rounded text-xs bg-indigo-100 text-indigo-700">
+                                            Manual
+                                        </span>
+                                    @else
+                                        <span class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-500">
+                                            Sistem
+                                        </span>
+                                    @endif
+                                </td>
+                                @hasanyrole('Owner|Admin')
+                                    @if($canEditItems)
+                                        <td class="py-2 text-right">
+                                            @if($item->isManual())
+                                                <form method="POST"
+                                                      action="{{ route('invoice-items.destroy', $item->id) }}"
+                                                      class="inline"
+                                                      onsubmit="return confirm('Hapus item {{ $item->item_code }} dari invoice ini?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                            class="text-xs text-red-600 hover:underline">
+                                                        Hapus
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <span class="text-xs text-gray-300">—</span>
+                                            @endif
+                                        </td>
+                                    @endif
+                                @endhasanyrole
                             </tr>
                         @endforeach
-                        <tr class="font-bold">
+                        <tr class="font-bold border-t-2">
                             <td colspan="2" class="py-2 text-right">Total</td>
-                            <td class="py-2 text-right">Rp {{ number_format($invoice->total_amount, 0, ',', '.') }}</td>
+                            <td class="py-2 text-right">
+                                Rp {{ number_format($invoice->total_amount, 0, ',', '.') }}
+                            </td>
+                            <td colspan="{{ $canEditItems ? 2 : 1 }}"></td>
                         </tr>
                     </tbody>
                 </table>

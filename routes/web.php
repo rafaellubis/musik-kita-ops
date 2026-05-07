@@ -4,6 +4,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\InstrumentController;
 use App\Http\Controllers\InvoiceComponentController;
+use App\Http\Controllers\InvoiceItemController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PackageController;
@@ -165,13 +166,29 @@ Route::middleware('auth')->group(function () {
             ->except(['index', 'show']);
 
         Route::resource('invoice-components', InvoiceComponentController::class)
-            ->parameters(['invoice-components' => 'InvoiceComponent'])
+            ->parameters(['invoice-components' => 'invoiceComponent'])
             ->except(['index', 'show']);
 
         // BR-5.18: Void pembayaran hanya Owner.
         Route::post('payments/{payment}/void',
             [PaymentController::class, 'void']
         )->name('payments.void');
+    });
+
+    /* ======================================================================
+     | WRITE OPERASIONAL — Item manual invoice (Owner + Admin)
+     | Admin boleh tambah/hapus item manual, tapi tidak bisa void payment.
+     |====================================================================== */
+    Route::middleware('role:Owner|Admin')->group(function () {
+        // Tambah item manual ke invoice
+        Route::post('invoices/{invoice}/items',
+            [InvoiceItemController::class, 'store']
+        )->name('invoice-items.store');
+
+        // Hapus item manual dari invoice
+        Route::delete('invoice-items/{invoiceItem}',
+            [InvoiceItemController::class, 'destroy']
+        )->name('invoice-items.destroy');
     });
 
     /* ======================================================================
@@ -192,7 +209,7 @@ Route::middleware('auth')->group(function () {
             ->only(['index']);
 
         Route::resource('invoice-components', InvoiceComponentController::class)
-            ->parameters(['invoice-components' => 'InvoiceComponent'])
+            ->parameters(['invoice-components' => 'invoiceComponent'])
             ->only(['index']);
 
         // Murid: Auditor boleh lihat detail murid

@@ -11,7 +11,8 @@ class InvoiceItem extends Model
     use HasFactory;
 
     protected $fillable = [
-        'invoice_id', 'item_code', 'description', 'amount', 'metadata',
+        'invoice_id', 'invoice_component_id', 'added_by',
+        'item_code', 'description', 'amount', 'metadata',
     ];
 
     protected $casts = [
@@ -19,8 +20,24 @@ class InvoiceItem extends Model
         'metadata' => 'array',
     ];
 
+    /** Item manual: added_by tidak null. Item sistem: added_by null. */
+    public function isManual(): bool
+    {
+        return $this->added_by !== null;
+    }
+
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    public function component(): BelongsTo
+    {
+        return $this->belongsTo(InvoiceComponent::class, 'invoice_component_id');
+    }
+
+    public function addedBy(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'added_by');
     }
 }
