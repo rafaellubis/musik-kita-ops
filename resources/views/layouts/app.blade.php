@@ -13,9 +13,9 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased bg-slate-50">
+    <body class="font-sans antialiased bg-mk-bg text-mk-text">
 
-        {{-- Layout: Sidebar (gelap) + Area Konten (terang) --}}
+        {{-- Layout: Sidebar gelap (kiri) + Area Konten gelap (kanan) --}}
         <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: false }">
 
             {{-- ===== MOBILE OVERLAY ===== --}}
@@ -45,37 +45,48 @@
             {{-- ===== AREA KONTEN ===== --}}
             <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
 
-                {{-- Topbar --}}
-                <div class="shrink-0 h-14 bg-white border-b border-gray-200 flex items-center px-4 lg:px-6 gap-3">
+                {{-- Topbar (gelap, konsisten dengan sidebar) --}}
+                <div class="shrink-0 h-14 bg-mk-sidebar border-b border-white/[0.06]
+                            flex items-center px-4 lg:px-6 gap-3">
 
                     {{-- Hamburger (mobile) --}}
                     <button @click="sidebarOpen = !sidebarOpen"
-                            class="lg:hidden p-1.5 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors">
+                            class="lg:hidden p-1.5 rounded-md text-mk-muted hover:text-mk-text
+                                   hover:bg-white/5 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
                     </button>
 
-                    {{-- Breadcrumb / page context --}}
-                    <div class="flex-1 text-sm text-gray-500 hidden lg:block">
+                    {{-- Identitas sistem --}}
+                    <div class="flex-1 text-xs text-mk-dim hidden lg:block">
                         Musik KITA — Sistem Operasional
                     </div>
 
-                    {{-- Info kanan: tanggal + user --}}
+                    {{-- Kanan: Tanggal + User pill + Keluar --}}
                     <div class="flex items-center gap-3 ml-auto">
-                        <span class="hidden sm:block text-xs text-gray-400">
+                        <span class="hidden sm:block text-xs text-mk-dim">
                             {{ now()->translatedFormat('l, j F Y') }}
                         </span>
-                        <div class="flex items-center gap-1.5">
-                            <div class="w-7 h-7 rounded-full bg-mk-sidebar flex items-center justify-center text-xs font-bold text-mk-accent">
+
+                        <div class="flex items-center gap-2">
+                            {{-- Avatar inisial --}}
+                            <div class="w-7 h-7 rounded-full bg-mk-accentDim flex items-center
+                                        justify-center text-xs font-bold text-mk-accent shrink-0">
                                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                             </div>
-                            <span class="hidden sm:block text-xs font-medium text-gray-700">{{ auth()->user()->name }}</span>
+                            <span class="hidden sm:block text-xs font-medium text-mk-muted">
+                                {{ auth()->user()->name }}
+                            </span>
                         </div>
+
+                        {{-- Tombol keluar --}}
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit"
-                                    class="text-xs text-gray-400 hover:text-gray-600 transition-colors px-2 py-1 rounded hover:bg-gray-100">
+                                    class="text-xs text-mk-dim hover:text-mk-muted transition-colors
+                                           px-2 py-1 rounded hover:bg-white/5">
                                 Keluar
                             </button>
                         </form>
@@ -83,14 +94,16 @@
                 </div>
 
                 {{-- Page Header (dari slot $header di tiap view) --}}
+                {{-- dark-content scope dimulai di sini agar $header juga dapat override --}}
                 @isset($header)
-                <div class="shrink-0 bg-white border-b border-gray-200 px-4 lg:px-8 py-4">
+                <div class="dark-content shrink-0 bg-mk-card border-b border-white/[0.06]
+                            px-4 lg:px-8 py-4">
                     {{ $header }}
                 </div>
                 @endisset
 
-                {{-- Konten Halaman --}}
-                <main class="flex-1 overflow-y-auto bg-slate-50">
+                {{-- Konten Halaman — dark-content membuat semua Tailwind light-class ter-override --}}
+                <main class="dark-content flex-1 overflow-y-auto bg-mk-bg">
                     {{ $slot }}
                 </main>
 
