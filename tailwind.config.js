@@ -12,7 +12,22 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['"DM Sans"', ...defaultTheme.fontFamily.sans],
+                serif: ['"Playfair Display"', ...defaultTheme.fontFamily.serif],
+            },
+            colors: {
+                mk: {
+                    bg:        '#0F1117',
+                    sidebar:   '#161B2E',
+                    card:      '#1E2235',
+                    cardHover: '#252B42',
+                    border:    'rgba(255,255,255,0.06)',
+                    accent:    '#D4A853',
+                    accentDim: 'rgba(212,168,83,0.15)',
+                    text:      '#E8EAF0',
+                    muted:     '#8B92A8',
+                    dim:       '#555D7A',
+                },
             },
         },
     },

@@ -1,153 +1,97 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
-    <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
-                    </a>
-                </div>
+{{--
+    Sidebar navigasi vertikal — dark navy.
+    Di-include oleh layouts/app.blade.php di dalam <aside>.
+--}}
 
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-					<x-nav-link :href="route('instruments.index')" :active="request()->routeIs('instruments.*')">
-						{{ __('Instrument') }}
-                    </x-nav-link>
-					<x-nav-link :href="route('packages.index')" :active="request()->routeIs('packages.*')">
-						{{ __('Paket') }}
-					</x-nav-link>
-					<x-nav-link :href="route('teachers.index')" :active="request()->routeIs('teachers.*')">
-						{{ __('Guru') }}
-					</x-nav-link>
-					<x-nav-link :href="route('payroll-configs.index')" :active="request()->routeIs('payroll-configs.*')">
-						{{ __('Honor') }}
-					</x-nav-link>
-					<x-nav-link :href="route('holidays.index')" :active="request()->routeIs('holidays.*')">
-						{{ __('Hari Libur') }}
-					</x-nav-link>
-					<x-nav-link :href="route('invoice-components.index')" :active="request()->routeIs('invoice-components.*')">
-						{{ __('Invoice Murid') }}
-					</x-nav-link>
-					<x-nav-link :href="route('rooms.index')" :active="request()->routeIs('rooms.*')">
-						{{ __('Ruangan') }}
-					</x-nav-link>
-					<x-nav-link :href="route('students.index')" :active="request()->routeIs('students.*')">
-						{{ __('Murid') }}
-					</x-nav-link>
-					<x-nav-link :href="route('sessions.index')" :active="request()->routeIs('sessions.*')">
-						{{ __('Sesi') }}
-					</x-nav-link>
-					<x-nav-link :href="route('invoices.index')" :active="request()->routeIs('invoices.*')">
-						{{ __('Tagihan') }}
-					</x-nav-link>
-					<x-nav-link :href="route('honors.index')" :active="request()->routeIs('honors.*')">
-						{{ __('Slip Honor') }}
-					</x-nav-link>
-					<x-nav-link :href="route('expenses.index')" :active="request()->routeIs('expenses.*') || request()->routeIs('expense-categories.*')">
-						{{ __('Pengeluaran') }}
-					</x-nav-link>
-					<x-nav-link :href="route('events.index')" :active="request()->routeIs('events.*') || request()->routeIs('event-honor-slips.*') || request()->routeIs('event-participants.*')">
-						{{ __('Event') }}
-					</x-nav-link>
-					@if(auth()->user()->hasRole('Owner'))
-					<x-nav-link :href="route('reports.finance')" :active="request()->routeIs('reports.*')">
-						{{ __('Laporan') }}
-					</x-nav-link>
-					@else
-					<x-nav-link :href="route('reports.students')" :active="request()->routeIs('reports.*')">
-						{{ __('Laporan') }}
-					</x-nav-link>
-					@endif
-					@if(auth()->user()->hasRole('Owner'))
-					<x-nav-link :href="route('audit-logs.index')" :active="request()->routeIs('audit-logs.*')">
-						{{ __('Audit Log') }}
-					</x-nav-link>
-					@endif
-                </div>
-            </div>
-
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name }}</div>
-
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </button>
-                    </x-slot>
-
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-
-                        <!-- Authentication -->
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-
-                            <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault();
-                                                this.closest('form').submit();">
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
-            </div>
-
-            <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+{{-- ===== LOGO ===== --}}
+<div class="flex items-center gap-2.5 px-4 py-5 border-b border-white/[0.06] shrink-0">
+    <div class="w-8 h-8 rounded-lg bg-mk-accent flex items-center justify-center text-base leading-none shrink-0">
+        🎹
     </div>
-
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
-        </div>
-
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
-            </div>
-
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
-
-                <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
-                </form>
-            </div>
-        </div>
+    <div>
+        <div class="font-serif font-bold text-[15px] text-mk-text leading-tight">Musik KITA</div>
+        <div class="text-[10px] text-mk-dim tracking-wide">Operasional System</div>
     </div>
+</div>
+
+{{-- ===== NAV ITEMS ===== --}}
+<nav class="flex-1 overflow-y-auto py-3 px-2 space-y-0.5 text-[13px]">
+
+    {{-- Grup: UTAMA --}}
+    <div class="px-2 pt-1 pb-1.5 text-[10px] font-semibold tracking-widest text-mk-dim uppercase">Utama</div>
+
+    <x-sidebar-item route="dashboard" icon="🏠" label="Dashboard"
+        :active="request()->routeIs('dashboard')" />
+    <x-sidebar-item route="students.index" icon="🎓" label="Murid"
+        :active="request()->routeIs('students.*')" />
+    <x-sidebar-item route="sessions.index" icon="🎵" label="Sesi"
+        :active="request()->routeIs('sessions.*')" />
+
+    {{-- Grup: KEUANGAN --}}
+    <div class="px-2 pt-4 pb-1.5 text-[10px] font-semibold tracking-widest text-mk-dim uppercase">Keuangan</div>
+
+    <x-sidebar-item route="invoices.index" icon="💳" label="Tagihan"
+        :active="request()->routeIs('invoices.*')" />
+    <x-sidebar-item route="honors.index" icon="💰" label="Slip Honor"
+        :active="request()->routeIs('honors.*')" />
+    <x-sidebar-item route="expenses.index" icon="📊" label="Pengeluaran"
+        :active="request()->routeIs('expenses.*') || request()->routeIs('expense-categories.*')" />
+    <x-sidebar-item route="events.index" icon="🎤" label="Event"
+        :active="request()->routeIs('events.*') || request()->routeIs('event-honor-slips.*') || request()->routeIs('event-participants.*')" />
+
+    {{-- Grup: LAPORAN --}}
+    <div class="px-2 pt-4 pb-1.5 text-[10px] font-semibold tracking-widest text-mk-dim uppercase">Laporan</div>
+
+    @if(auth()->user()->hasRole('Owner'))
+        <x-sidebar-item route="reports.finance" icon="📈" label="Laporan"
+            :active="request()->routeIs('reports.*')" />
+        <x-sidebar-item route="audit-logs.index" icon="🔍" label="Audit Log"
+            :active="request()->routeIs('audit-logs.*')" />
+    @else
+        <x-sidebar-item route="reports.students" icon="📈" label="Laporan"
+            :active="request()->routeIs('reports.*')" />
+    @endif
+
+    {{-- Grup: MASTER DATA --}}
+    <div class="px-2 pt-4 pb-1.5 text-[10px] font-semibold tracking-widest text-mk-dim uppercase">Master Data</div>
+
+    <x-sidebar-item route="teachers.index" icon="👨‍🏫" label="Guru"
+        :active="request()->routeIs('teachers.*')" />
+    <x-sidebar-item route="instruments.index" icon="🎸" label="Instrumen"
+        :active="request()->routeIs('instruments.*')" />
+    <x-sidebar-item route="packages.index" icon="📦" label="Paket"
+        :active="request()->routeIs('packages.*')" />
+    <x-sidebar-item route="rooms.index" icon="🚪" label="Ruangan"
+        :active="request()->routeIs('rooms.*')" />
+    <x-sidebar-item route="holidays.index" icon="📅" label="Hari Libur"
+        :active="request()->routeIs('holidays.*')" />
+    <x-sidebar-item route="invoice-components.index" icon="🧾" label="Komponen Invoice"
+        :active="request()->routeIs('invoice-components.*')" />
+    <x-sidebar-item route="payroll-configs.index" icon="⚙️" label="Config Honor"
+        :active="request()->routeIs('payroll-configs.*')" />
+
 </nav>
+
+{{-- ===== INFO USER (bawah sidebar) ===== --}}
+<div class="shrink-0 px-4 py-3 border-t border-white/[0.06]">
+    <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-mk-accentDim flex items-center justify-center text-sm font-bold text-mk-accent shrink-0">
+            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+        </div>
+        <div class="flex-1 min-w-0">
+            <div class="text-xs font-semibold text-mk-text truncate">{{ auth()->user()->name }}</div>
+            <div class="text-[10px] text-mk-dim truncate">
+                @foreach(auth()->user()->getRoleNames() as $role){{ $role }}@endforeach
+            </div>
+        </div>
+        <a href="{{ route('profile.edit') }}"
+           class="text-mk-dim hover:text-mk-muted transition-colors p-1 rounded"
+           title="Edit profil">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+        </a>
+    </div>
+</div>
