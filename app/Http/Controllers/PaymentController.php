@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Services\PaymentService;
@@ -95,6 +96,13 @@ class PaymentController extends Controller
         } catch (InvalidArgumentException $e) {
             return back()->with('error', $e->getMessage());
         }
+
+        AuditLog::record(
+            action: AuditLog::ACTION_VOID,
+            entity: $payment,
+            entityLabel: $payment->receipt_number,
+            notes: 'Alasan: ' . $data['reason'],
+        );
 
         return back()->with('success', sprintf(
             'Pembayaran %s berhasil di-void. Status invoice di-recalc.',

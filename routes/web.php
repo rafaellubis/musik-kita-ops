@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventHonorSlipController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\HolidayController;
@@ -26,9 +29,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 /*
 |--------------------------------------------------------------------------
@@ -334,10 +337,25 @@ Route::middleware('auth')->group(function () {
             [EventHonorSlipController::class, 'print']
         )->name('event-honor-slips.print');
 
+        // ===== M09: Laporan (read-only, semua role) =====
+        Route::get('reports/finance',
+            [ReportController::class, 'finance']
+        )->name('reports.finance');
+        Route::get('reports/students',
+            [ReportController::class, 'students']
+        )->name('reports.students');
+
         // ===== M05: Kuitansi cetak =====
         Route::get('payments/{payment}/receipt',
             [PaymentController::class, 'receipt']
         )->name('payments.receipt');
+    });
+
+    // ===== M09: Audit Log (Owner only) =====
+    Route::middleware('role:Owner')->group(function () {
+        Route::get('audit-logs',
+            [AuditLogController::class, 'index']
+        )->name('audit-logs.index');
     });
 });
 

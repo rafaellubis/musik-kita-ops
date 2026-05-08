@@ -54,6 +54,14 @@
 					<x-nav-link :href="route('events.index')" :active="request()->routeIs('events.*') || request()->routeIs('event-honor-slips.*') || request()->routeIs('event-participants.*')">
 						{{ __('Event') }}
 					</x-nav-link>
+					<x-nav-link :href="route('reports.finance')" :active="request()->routeIs('reports.*')">
+						{{ __('Laporan') }}
+					</x-nav-link>
+					@if(auth()->user()->hasRole('Owner'))
+					<x-nav-link :href="route('audit-logs.index')" :active="request()->routeIs('audit-logs.*')">
+						{{ __('Audit Log') }}
+					</x-nav-link>
+					@endif
                 </div>
             </div>
 

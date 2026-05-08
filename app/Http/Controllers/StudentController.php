@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
+use App\Models\AuditLog;
 use App\Models\Instrument;
 use App\Models\Package;
 use App\Models\Room;
@@ -434,12 +435,24 @@ class StudentController extends Controller
      */
     private function runLifecycle(callable $action, Student $student, string $successMessage)
     {
+        $statusBefore = $student->status;
         try {
             $action();
         } catch (InvalidArgumentException $e) {
             return redirect()->route('students.show', $student->id)
                 ->with('error', $e->getMessage());
         }
+
+        // Catat perubahan status ke audit log
+        $student->refresh();
+        AuditLog::record(
+            action: AuditLog::ACTION_LIFECYCLE,
+            entity: $student,
+            entityLabel: $student->full_name . ' (' . $student->student_code . ')',
+            oldValues: ['status' => $statusBefore],
+            newValues: ['status' => $student->status],
+            notes: $successMessage,
+        );
 
         return redirect()->route('students.show', $student->id)
             ->with('success', $successMessage);
