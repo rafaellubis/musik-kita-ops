@@ -35,10 +35,12 @@ class HonorController extends Controller
         $month = (int) $request->get('month', now()->month);
 
         $query = HonorSlip::query()
+            ->join('teachers', 'teacher_honor_slips.teacher_id', '=', 'teachers.id')
+            ->select('teacher_honor_slips.*')
             ->with('teacher')
             ->forMonth($year, $month)
-            ->orderBy('status')  // CALCULATED/DRAFT dulu, PAID di bawah
-            ->orderByRelation('teacher', 'name');
+            ->orderBy('status')          // CALCULATED/DRAFT dulu, PAID di bawah
+            ->orderBy('teachers.name');  // dalam satu status, urut nama guru
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -120,14 +122,20 @@ class HonorController extends Controller
         $data = $request->validate([
             'transport_honor'  => 'required|integer|min:0|max:99999999',
             'other_honor'      => 'required|integer|min:0|max:99999999',
-            'other_honor_note' => 'nullable|string|max:255|required_if:other_honor,>,0',
+            'other_honor_note' => 'nullable|string|max:255',
         ], [
-            'transport_honor.required'  => 'Honor transport wajib diisi (isi 0 jika tidak ada).',
-            'transport_honor.min'       => 'Honor transport tidak boleh negatif.',
-            'other_honor.required'      => 'Honor lain-lain wajib diisi (isi 0 jika tidak ada).',
-            'other_honor.min'           => 'Honor lain-lain tidak boleh negatif.',
-            'other_honor_note.required_if' => 'Keterangan lain-lain wajib diisi jika ada honor lain-lain.',
+            'transport_honor.required' => 'Honor transport wajib diisi (isi 0 jika tidak ada).',
+            'transport_honor.min'      => 'Honor transport tidak boleh negatif.',
+            'other_honor.required'     => 'Honor lain-lain wajib diisi (isi 0 jika tidak ada).',
+            'other_honor.min'          => 'Honor lain-lain tidak boleh negatif.',
         ]);
+
+        // required_if Laravel tidak support operator > — validasi manual
+        if ((int) $data['other_honor'] > 0 && empty(trim($data['other_honor_note'] ?? ''))) {
+            return back()
+                ->withErrors(['other_honor_note' => 'Keterangan lain-lain wajib diisi jika ada honor lain-lain.'])
+                ->withInput();
+        }
 
         $honor->transport_honor  = $data['transport_honor'];
         $honor->other_honor      = $data['other_honor'];
