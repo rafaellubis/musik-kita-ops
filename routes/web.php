@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\HolidayController;
+use App\Http\Controllers\HonorController;
 use App\Http\Controllers\InstrumentController;
 use App\Http\Controllers\InvoiceComponentController;
 use App\Http\Controllers\InvoiceItemController;
@@ -173,6 +174,22 @@ Route::middleware('auth')->group(function () {
         Route::post('payments/{payment}/void',
             [PaymentController::class, 'void']
         )->name('payments.void');
+
+        // ===== M06: Honor Guru — aksi sensitif (Owner only) =====
+        // Kalkulasi, edit komponen manual, dan tandai dibayar.
+        // READ (index, show, print) di group read-only di bawah.
+        Route::post('honors/calculate',
+            [HonorController::class, 'calculate']
+        )->name('honors.calculate');
+        Route::get('honors/{honor}/edit',
+            [HonorController::class, 'edit']
+        )->name('honors.edit');
+        Route::patch('honors/{honor}',
+            [HonorController::class, 'update']
+        )->name('honors.update');
+        Route::post('honors/{honor}/mark-paid',
+            [HonorController::class, 'markPaid']
+        )->name('honors.mark-paid');
     });
 
     /* ======================================================================
@@ -219,6 +236,18 @@ Route::middleware('auth')->group(function () {
         Route::get('sessions',
             [SessionController::class, 'index']
         )->name('sessions.index');
+
+        // ===== M06: Honor Guru — read-only =====
+        Route::get('honors',
+            [HonorController::class, 'index']
+        )->name('honors.index');
+        // /honors/{honor}/print harus sebelum /honors/{honor} (biar tidak ditangkap show)
+        Route::get('honors/{honor}/print',
+            [HonorController::class, 'print']
+        )->name('honors.print');
+        Route::get('honors/{honor}',
+            [HonorController::class, 'show']
+        )->name('honors.show');
 
         // ===== M05: List & detail invoice (read-only) =====
         Route::get('invoices',

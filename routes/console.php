@@ -40,6 +40,16 @@ Schedule::command('invoices:generate-spp')
     ->name('m05-generate-monthly-spp')
     ->withoutOverlapping();
 
+// ===== M06: Kalkulasi honor guru =====
+// H-2 sebelum akhir bulan, jam 06:00 — aggregate honor dari absensi bulan ini.
+// Dijalankan harian tapi when() hanya eksekusi di hari yang tepat (H-2).
+// Idempotent: slip PAID tidak diubah, slip CALCULATED di-update base_honor-nya.
+Schedule::command('honor:calculate')
+    ->dailyAt('06:00')
+    ->when(fn () => now()->day === now()->copy()->endOfMonth()->subDays(2)->day)
+    ->name('m06-calculate-teacher-honor')
+    ->withoutOverlapping();
+
 // ===== M05: Apply denda harian =====
 // Setiap hari jam 06:00 mulai tanggal 11 — hitung & update denda Rp 5.000/hari
 // untuk invoice UNPAID/PARTIAL bulan ini (BR-5.3). Idempotent.
