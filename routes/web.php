@@ -30,7 +30,7 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'role:Owner|Admin|Auditor'])
     ->name('dashboard');
 
 /*
@@ -337,10 +337,7 @@ Route::middleware('auth')->group(function () {
             [EventHonorSlipController::class, 'print']
         )->name('event-honor-slips.print');
 
-        // ===== M09: Laporan (read-only, semua role) =====
-        Route::get('reports/finance',
-            [ReportController::class, 'finance']
-        )->name('reports.finance');
+        // ===== M09: Laporan statistik murid (read-only, semua role) =====
         Route::get('reports/students',
             [ReportController::class, 'students']
         )->name('reports.students');
@@ -351,8 +348,14 @@ Route::middleware('auth')->group(function () {
         )->name('payments.receipt');
     });
 
-    // ===== M09: Audit Log (Owner only) =====
+    // ===== M09: Owner only =====
     Route::middleware('role:Owner')->group(function () {
+        // Dashboard P&L dan Laporan Keuangan — data finansial sensitif
+        Route::get('reports/finance',
+            [ReportController::class, 'finance']
+        )->name('reports.finance');
+
+        // Audit Log
         Route::get('audit-logs',
             [AuditLogController::class, 'index']
         )->name('audit-logs.index');

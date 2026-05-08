@@ -25,44 +25,12 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $year  = (int) now()->year;
-        $month = (int) now()->month;
-        $today = now()->startOfDay();
+        $year    = (int) now()->year;
+        $month   = (int) now()->month;
+        $today   = now()->startOfDay();
+        $isOwner = auth()->user()->hasRole('Owner');
 
-        // ===== REVENUE =====
-        // Semua pembayaran valid (tidak void) bulan ini
-        $revenueBulan = Payment::whereNull('voided_at')
-            ->whereYear('payment_date', $year)
-            ->whereMonth('payment_date', $month)
-            ->sum('amount');
-
-        // Breakdown per metode
-        $revenueCash     = Payment::whereNull('voided_at')
-            ->where('method', 'CASH')
-            ->whereYear('payment_date', $year)
-            ->whereMonth('payment_date', $month)
-            ->sum('amount');
-        $revenueTransfer = $revenueBulan - $revenueCash;
-
-        // ===== PENGELUARAN =====
-        $pengeluaranBulan = Expense::forMonth($year, $month)->sum('amount');
-        $pengeluaranCash  = Expense::forMonth($year, $month)->cash()->sum('amount');
-
-        // ===== LABA / RUGI =====
-        $labaBulan = $revenueBulan - $pengeluaranBulan;
-
-        // ===== PETTY CASH (saldo kas fisik hari ini) =====
-        // Semua penerimaan CASH dari murid sampai hari ini
-        $kasmasukTotal = Payment::whereNull('voided_at')
-            ->where('method', 'CASH')
-            ->whereDate('payment_date', '<=', $today)
-            ->sum('amount');
-        $kaskeluarTotal = Expense::cash()
-            ->whereDate('expense_date', '<=', $today)
-            ->sum('amount');
-        $saldoKas = $kasmasukTotal - $kaskeluarTotal;
-
-        // ===== STATISTIK MURID =====
+        // ===== STATISTIK MURID (semua role) =====
         $muridStats = Student::selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status')
@@ -74,18 +42,46 @@ class DashboardController extends Controller
         $muridCalon = $muridStats['Calon'] ?? 0;
         $muridTotal = array_sum($muridStats);
 
-        // ===== AGING PIUTANG =====
-        // Kelompokkan invoice belum lunas berdasarkan umur piutang
-        $invoicesUnpaid = Invoice::whereIn('status', ['UNPAID', 'PARTIAL'])
-            ->with('student:id,full_name,student_code')
-            ->get(['id', 'invoice_number', 'student_id', 'total_amount', 'paid_amount', 'due_date', 'issued_at']);
+        // ===== P&L (Owner only) =====
+        $revenueBulan = $revenueCash = $revenueTransfer = 0;
+        $pengeluaranBulan = $pengeluaranCash = 0;
+        $labaBulan = 0;
 
-        $aging = ['current' => 0, 'late1_30' => 0, 'late31' => 0];
+        if ($isOwner) {
+            $revenueBulan = Payment::whereNull('voided_at')
+                ->whereYear('payment_date', $year)
+                ->whereMonth('payment_date', $month)
+                ->sum('amount');
+            $revenueCash = Payment::whereNull('voided_at')
+                ->where('method', 'CASH')
+                ->whereYear('payment_date', $year)
+                ->whereMonth('payment_date', $month)
+                ->sum('amount');
+            $revenueTransfer  = $revenueBulan - $revenueCash;
+            $pengeluaranBulan = Expense::forMonth($year, $month)->sum('amount');
+            $pengeluaranCash  = Expense::forMonth($year, $month)->cash()->sum('amount');
+            $labaBulan        = $revenueBulan - $pengeluaranBulan;
+        }
+
+        // ===== PETTY CASH, AGING, INVOICE TERLAMA, HONOR (semua role) =====
+        $kasmasukTotal = Payment::whereNull('voided_at')
+            ->where('method', 'CASH')
+            ->whereDate('payment_date', '<=', $today)
+            ->sum('amount');
+        $kaskeluarTotal = Expense::cash()
+            ->whereDate('expense_date', '<=', $today)
+            ->sum('amount');
+        $saldoKas = $kasmasukTotal - $kaskeluarTotal;
+
+        $aging      = ['current' => 0, 'late1_30' => 0, 'late31' => 0];
         $agingCount = ['current' => 0, 'late1_30' => 0, 'late31' => 0];
 
+        $invoicesUnpaid = Invoice::whereIn('status', ['UNPAID', 'PARTIAL'])
+            ->get(['id', 'total_amount', 'paid_amount', 'due_date']);
+
         foreach ($invoicesUnpaid as $inv) {
-            $sisa = $inv->total_amount - $inv->paid_amount;
-            $dueDate = $inv->due_date ? Carbon::parse($inv->due_date) : null;
+            $sisa     = $inv->total_amount - $inv->paid_amount;
+            $dueDate  = $inv->due_date ? Carbon::parse($inv->due_date) : null;
             $daysLate = $dueDate ? max(0, $today->diffInDays($dueDate, false) * -1) : 0;
 
             if ($daysLate <= 0) {
@@ -101,16 +97,13 @@ class DashboardController extends Controller
         }
         $totalPiutang = array_sum($aging);
 
-        // 10 invoice terlama yang belum lunas (early-warning tunggakan)
         $invoiceTerlama = Invoice::whereIn('status', ['UNPAID', 'PARTIAL'])
             ->with('student:id,full_name,student_code')
             ->orderBy('due_date')
             ->limit(10)
             ->get();
 
-        // ===== SLIP HONOR BELUM DIBAYAR =====
-        $honorBelumBayar = HonorSlip::where('status', '!=', HonorSlip::STATUS_PAID)
-            ->where('status', HonorSlip::STATUS_CALCULATED)
+        $honorBelumBayar = HonorSlip::where('status', HonorSlip::STATUS_CALCULATED)
             ->with('teacher:id,name')
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
@@ -119,7 +112,7 @@ class DashboardController extends Controller
         $monthName = Carbon::create($year, $month, 1)->translatedFormat('F Y');
 
         return view('dashboard', compact(
-            'year', 'month', 'monthName',
+            'year', 'month', 'monthName', 'isOwner',
             'revenueBulan', 'revenueCash', 'revenueTransfer',
             'pengeluaranBulan', 'pengeluaranCash',
             'labaBulan',

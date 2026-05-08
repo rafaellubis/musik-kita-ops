@@ -14,7 +14,7 @@
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
-					</x-nav-link>
+                    </x-nav-link>
 					<x-nav-link :href="route('instruments.index')" :active="request()->routeIs('instruments.*')">
 						{{ __('Instrument') }}
                     </x-nav-link>
@@ -54,9 +54,15 @@
 					<x-nav-link :href="route('events.index')" :active="request()->routeIs('events.*') || request()->routeIs('event-honor-slips.*') || request()->routeIs('event-participants.*')">
 						{{ __('Event') }}
 					</x-nav-link>
+					@if(auth()->user()->hasRole('Owner'))
 					<x-nav-link :href="route('reports.finance')" :active="request()->routeIs('reports.*')">
 						{{ __('Laporan') }}
 					</x-nav-link>
+					@else
+					<x-nav-link :href="route('reports.students')" :active="request()->routeIs('reports.*')">
+						{{ __('Laporan') }}
+					</x-nav-link>
+					@endif
 					@if(auth()->user()->hasRole('Owner'))
 					<x-nav-link :href="route('audit-logs.index')" :active="request()->routeIs('audit-logs.*')">
 						{{ __('Audit Log') }}

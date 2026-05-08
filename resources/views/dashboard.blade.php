@@ -3,10 +3,12 @@
         <div class="flex justify-between items-center">
             <h2 class="font-semibold text-xl">Dashboard — {{ $monthName }}</h2>
             <div class="flex gap-2 text-sm">
+                @if($isOwner)
                 <a href="{{ route('reports.finance', ['year' => $year, 'month' => $month]) }}"
                    class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-xs">
                     Laporan Keuangan →
                 </a>
+                @endif
                 <a href="{{ route('reports.students', ['year' => $year, 'month' => $month]) }}"
                    class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-xs">
                     Laporan Murid →
@@ -18,9 +20,11 @@
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
-            {{-- ===== BARIS 1: P&L BULAN INI ===== --}}
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {{-- ===== BARIS 1: KARTU RINGKASAN ===== --}}
+            {{-- P&L (Owner only) + Saldo Kas (semua role) --}}
+            <div class="grid grid-cols-2 {{ $isOwner ? 'sm:grid-cols-4' : 'sm:grid-cols-2' }} gap-4">
 
+                @if($isOwner)
                 {{-- Revenue --}}
                 <div class="bg-white shadow-sm rounded-lg p-4">
                     <div class="text-xs text-gray-500 uppercase tracking-wide">Pendapatan Bulan Ini</div>
@@ -54,8 +58,9 @@
                         {{ $labaBulan >= 0 ? 'Surplus' : 'Defisit' }} bulan ini
                     </div>
                 </div>
+                @endif
 
-                {{-- Saldo Kas --}}
+                {{-- Saldo Kas (semua role) --}}
                 <div class="bg-white shadow-sm rounded-lg p-4">
                     <div class="text-xs text-gray-500 uppercase tracking-wide">Saldo Kas</div>
                     <div class="mt-1 text-2xl font-bold {{ $saldoKas >= 0 ? 'text-blue-700' : 'text-red-600' }}">
@@ -66,9 +71,18 @@
                         · Keluar Rp {{ number_format($kaskeluarTotal, 0, ',', '.') }}
                     </div>
                 </div>
+
+                {{-- Statistik Murid singkat (semua role) --}}
+                <div class="bg-white shadow-sm rounded-lg p-4">
+                    <div class="text-xs text-gray-500 uppercase tracking-wide">Murid Aktif</div>
+                    <div class="mt-1 text-2xl font-bold text-indigo-700">{{ $muridAktif }}</div>
+                    <div class="mt-1 text-xs text-gray-400">
+                        Trial {{ $muridTrial }} · Cuti {{ $muridCuti }} · Calon {{ $muridCalon }}
+                    </div>
+                </div>
             </div>
 
-            {{-- ===== BARIS 2: MURID + PIUTANG ===== --}}
+            {{-- ===== BARIS 2: STATISTIK MURID + AGING PIUTANG (semua role) ===== --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                 {{-- Statistik Murid --}}
@@ -98,7 +112,7 @@
                     </div>
                 </div>
 
-                {{-- Aging Piutang --}}
+                {{-- Aging Piutang (semua role) --}}
                 <div class="bg-white shadow-sm rounded-lg p-4">
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="text-sm font-semibold text-gray-700">Aging Piutang</h3>
@@ -142,7 +156,7 @@
                 </div>
             </div>
 
-            {{-- ===== BARIS 3: TAGIHAN TERLAMA + HONOR BELUM BAYAR ===== --}}
+            {{-- ===== BARIS 3: TAGIHAN TERLAMA + HONOR BELUM BAYAR (semua role) ===== --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                 {{-- 10 Invoice Terlama Belum Lunas --}}
@@ -194,7 +208,7 @@
                     @endif
                 </div>
 
-                {{-- Slip Honor Belum Dibayar --}}
+                {{-- Slip Honor Belum Dibayar (semua role) --}}
                 <div class="bg-white shadow-sm rounded-lg overflow-hidden">
                     <div class="px-4 py-3 border-b bg-gray-50">
                         <h3 class="text-sm font-semibold text-gray-700">Slip Honor Belum Dibayarkan</h3>
