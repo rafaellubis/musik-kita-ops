@@ -51,6 +51,9 @@
 					<x-nav-link :href="route('expenses.index')" :active="request()->routeIs('expenses.*') || request()->routeIs('expense-categories.*')">
 						{{ __('Pengeluaran') }}
 					</x-nav-link>
+					<x-nav-link :href="route('events.index')" :active="request()->routeIs('events.*') || request()->routeIs('event-honor-slips.*') || request()->routeIs('event-participants.*')">
+						{{ __('Event') }}
+					</x-nav-link>
                 </div>
             </div>
 

@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventHonorSlipController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\HolidayController;
@@ -206,6 +208,46 @@ Route::middleware('auth')->group(function () {
         Route::post('honors/{honor}/mark-paid',
             [HonorController::class, 'markPaid']
         )->name('honors.mark-paid');
+
+        // ===== M08: Event — write sensitif (Owner only) =====
+        // Buat/edit event, input hasil ujian, tandai selesai, kelola slip honor.
+        Route::resource('events', EventController::class)->except(['index', 'show', 'destroy']);
+        Route::post('events/{event}/complete',
+            [EventController::class, 'complete']
+        )->name('events.complete');
+        Route::patch('events/{event}/exam-results',
+            [EventController::class, 'saveExamResults']
+        )->name('events.exam-results');
+
+        // Slip honor event
+        Route::post('events/{event}/honor-slips',
+            [EventHonorSlipController::class, 'store']
+        )->name('event-honor-slips.store');
+        Route::get('event-honor-slips/{eventHonorSlip}/edit',
+            [EventHonorSlipController::class, 'edit']
+        )->name('event-honor-slips.edit');
+        Route::patch('event-honor-slips/{eventHonorSlip}',
+            [EventHonorSlipController::class, 'update']
+        )->name('event-honor-slips.update');
+        Route::post('event-honor-slips/{eventHonorSlip}/mark-paid',
+            [EventHonorSlipController::class, 'markPaid']
+        )->name('event-honor-slips.mark-paid');
+        Route::delete('event-honor-slips/{eventHonorSlip}',
+            [EventHonorSlipController::class, 'destroy']
+        )->name('event-honor-slips.destroy');
+    });
+
+    /* ======================================================================
+     | WRITE OPERASIONAL — Peserta event (Owner + Admin)
+     | Admin boleh tambah/hapus peserta event.
+     |====================================================================== */
+    Route::middleware('role:Owner|Admin')->group(function () {
+        Route::post('events/{event}/participants',
+            [EventController::class, 'addParticipant']
+        )->name('events.participants.store');
+        Route::delete('event-participants/{participant}',
+            [EventController::class, 'removeParticipant']
+        )->name('event-participants.destroy');
     });
 
     /* ======================================================================
@@ -284,6 +326,13 @@ Route::middleware('auth')->group(function () {
         Route::get('invoices/{invoice}',
             [InvoiceController::class, 'show']
         )->name('invoices.show');
+
+        // ===== M08: Event — read-only =====
+        Route::resource('events', EventController::class)->only(['index', 'show']);
+        // print harus sebelum show agar tidak ditangkap wildcard
+        Route::get('event-honor-slips/{eventHonorSlip}/print',
+            [EventHonorSlipController::class, 'print']
+        )->name('event-honor-slips.print');
 
         // ===== M05: Kuitansi cetak =====
         Route::get('payments/{payment}/receipt',
