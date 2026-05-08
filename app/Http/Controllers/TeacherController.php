@@ -8,7 +8,10 @@ class TeacherController extends Controller
 {
     public function index()
     {
-        $teachers = Teacher::with('instruments')->orderBy('code')->get();
+        $teachers = Teacher::with('instruments')
+            ->withCount(['enrollments as active_students' => fn ($q) => $q->where('status', 'ACTIVE')])
+            ->orderBy('code')
+            ->get();
         return view('teachers.index', compact('teachers'));
     }
  

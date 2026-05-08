@@ -1,58 +1,125 @@
 <x-app-layout>
-    <x-slot name="header"><h2 class="font-semibold text-xl">Master Data — Guru</h2></x-slot>
-    <div class="py-12"><div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <div class="bg-white shadow-sm sm:rounded-lg p-6">
-            @if (session('success'))
-                <div class="mb-4 p-3 bg-green-50 text-green-700 rounded">{{ session('success') }}</div>
-            @endif
-            <div class="mb-4 flex justify-between">
-                <h3 class="text-lg font-bold">Daftar Guru ({{ $teachers->count() }})</h3>
-                <a href="{{ route('teachers.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded">+ Tambah</a>
+    <x-slot name="header">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="font-semibold text-xl text-gray-800">Master Data — Guru</h2>
+                <div class="text-xs text-gray-500 mt-0.5">
+                    {{ $teachers->where('is_active', true)->count() }} aktif
+                    dari {{ $teachers->count() }} total guru
+                </div>
             </div>
-            <table class="min-w-full divide-y divide-gray-200 border">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th class="px-3 py-2 text-left text-xs font-bold uppercase">Kode</th>
-                        <th class="px-3 py-2 text-left text-xs font-bold uppercase">Nama</th>
-                        <th class="px-3 py-2 text-left text-xs font-bold uppercase">Email</th>
-                        <th class="px-3 py-2 text-left text-xs font-bold uppercase">Instrumen</th>
-                        <th class="px-3 py-2 text-center text-xs font-bold uppercase">Status</th>
-                        <th class="px-3 py-2 text-center text-xs font-bold uppercase">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y">
-                    @foreach($teachers as $t)
-                        <tr>
-                            <td class="px-3 py-2 text-sm font-mono font-bold">{{ $t->code }}</td>
-                            <td class="px-3 py-2 text-sm font-bold">{{ $t->name }}</td>
-                            <td class="px-3 py-2 text-sm text-gray-600">{{ $t->email ?? '—' }}</td>
-                            <td class="px-3 py-2 text-sm">
-                                @foreach($t->instruments as $i)
-                                    <span class="inline-block px-2 py-0.5 text-xs rounded mr-1 mb-1
-                                        {{ $i->pivot->is_primary ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-700' }}">
-                                        {{ $i->pivot->is_primary ? '★ ' : '' }}{{ $i->name }}
-                                    </span>
-                                @endforeach
-                            </td>
-                            <td class="px-3 py-2 text-sm text-center">
-                                @if($t->is_active)
-                                    <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Aktif</span>
-                                @else
-                                    <span class="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">Non-aktif</span>
-                                @endif
-                            </td>
-                            <td class="px-3 py-2 text-sm text-center whitespace-nowrap">
-                                <a href="{{ route('teachers.edit', $t->id) }}" class="text-blue-600">Edit</a>
-                                <form action="{{ route('teachers.destroy', $t->id) }}" method="POST" class="inline"
-                                      onsubmit="return confirm('Yakin hapus {{ $t->name }}?')">
-                                    @csrf @method('DELETE')
-                                    <button class="text-red-600 ml-2">Hapus</button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            @role('Owner|Admin')
+            <a href="{{ route('teachers.create') }}"
+               class="px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+               style="background:#D4A853;color:#1A1000">
+                + Tambah Guru
+            </a>
+            @endrole
         </div>
-    </div></div>
+    </x-slot>
+
+    <div class="py-6 px-4 lg:px-8">
+
+        {{-- Flash messages --}}
+        @if(session('success'))
+        <div class="mb-5 p-3 rounded-lg text-sm"
+             style="background:rgba(52,211,153,0.1);color:#34D399;border:1px solid rgba(52,211,153,0.2)">
+            {{ session('success') }}
+        </div>
+        @endif
+
+        {{-- ===== GRID KARTU GURU ===== --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            @foreach($teachers as $idx => $t)
+            <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 fade-in-up
+                        transition-all duration-200 hover:shadow-md"
+                 style="animation-delay:{{ $idx * 60 }}ms;
+                        --hover-border:rgba(212,168,83,0.4)"
+                 onmouseenter="this.style.borderColor='rgba(212,168,83,0.4)'"
+                 onmouseleave="this.style.borderColor='rgba(255,255,255,0.07)'">
+
+                {{-- Header: Avatar + Nama + Status --}}
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center gap-3">
+                        {{-- Avatar inisial --}}
+                        <div class="w-11 h-11 rounded-xl flex items-center justify-center
+                                    text-base font-bold shrink-0"
+                             style="background:rgba(212,168,83,0.15);color:#D4A853">
+                            {{ strtoupper(substr($t->name, 0, 1)) }}
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold text-gray-800">{{ $t->name }}</div>
+                            <div class="text-xs font-mono text-gray-500">{{ $t->code }}</div>
+                        </div>
+                    </div>
+                    {{-- Badge status --}}
+                    @if($t->is_active)
+                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold shrink-0"
+                          style="background:rgba(52,211,153,0.12);color:#34D399">Aktif</span>
+                    @else
+                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold shrink-0"
+                          style="background:rgba(139,146,168,0.12);color:#8B92A8">Non-aktif</span>
+                    @endif
+                </div>
+
+                {{-- Instrumen tags --}}
+                <div class="flex flex-wrap gap-1.5 mb-4">
+                    @forelse($t->instruments as $ins)
+                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold"
+                          style="{{ $ins->pivot->is_primary
+                              ? 'background:rgba(212,168,83,0.18);color:#D4A853'
+                              : 'background:rgba(255,255,255,0.06);color:#8B92A8' }}">
+                        {{ $ins->pivot->is_primary ? '★ ' : '' }}{{ $ins->name }}
+                    </span>
+                    @empty
+                    <span class="text-xs text-gray-400">Belum ada instrumen</span>
+                    @endforelse
+                </div>
+
+                {{-- Stats: murid aktif + email --}}
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <div class="rounded-lg p-2.5"
+                         style="background:rgba(255,255,255,0.04)">
+                        <div class="text-[10px] uppercase tracking-wide text-gray-500 mb-1">Murid Aktif</div>
+                        <div class="text-lg font-bold text-gray-800">{{ $t->active_students ?? 0 }}</div>
+                    </div>
+                    <div class="rounded-lg p-2.5"
+                         style="background:rgba(255,255,255,0.04)">
+                        <div class="text-[10px] uppercase tracking-wide text-gray-500 mb-1">Instrumen</div>
+                        <div class="text-lg font-bold text-gray-800">{{ $t->instruments->count() }}</div>
+                    </div>
+                </div>
+
+                {{-- Email (jika ada) --}}
+                @if($t->email)
+                <div class="text-xs text-gray-400 mb-4 truncate">{{ $t->email }}</div>
+                @endif
+
+                {{-- Aksi --}}
+                @role('Owner|Admin')
+                <div class="flex gap-2 pt-3 border-t border-gray-100">
+                    <a href="{{ route('teachers.edit', $t->id) }}"
+                       class="flex-1 text-center py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                       style="background:rgba(212,168,83,0.15);color:#D4A853">
+                        Edit
+                    </a>
+                    @role('Owner')
+                    <form action="{{ route('teachers.destroy', $t->id) }}" method="POST"
+                          onsubmit="return confirm('Yakin hapus guru {{ addslashes($t->name) }}?')">
+                        @csrf @method('DELETE')
+                        <button type="submit"
+                                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                                style="background:rgba(248,113,113,0.12);color:#F87171">
+                            Hapus
+                        </button>
+                    </form>
+                    @endrole
+                </div>
+                @endrole
+
+            </div>
+            @endforeach
+        </div>
+
+    </div>
 </x-app-layout>
