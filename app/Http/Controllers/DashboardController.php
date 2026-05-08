@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ClassSession;
 use App\Models\Expense;
 use App\Models\HonorSlip;
 use App\Models\Invoice;
@@ -46,6 +47,8 @@ class DashboardController extends Controller
         $revenueBulan = $revenueCash = $revenueTransfer = 0;
         $pengeluaranBulan = $pengeluaranCash = 0;
         $labaBulan = 0;
+        $revenueChart   = [];   // data area chart 6 bulan
+        $instrumenChart = [];   // data donut distribusi instrumen
 
         if ($isOwner) {
             $revenueBulan = Payment::whereNull('voided_at')
@@ -61,6 +64,36 @@ class DashboardController extends Controller
             $pengeluaranBulan = Expense::forMonth($year, $month)->sum('amount');
             $pengeluaranCash  = Expense::forMonth($year, $month)->cash()->sum('amount');
             $labaBulan        = $revenueBulan - $pengeluaranBulan;
+
+            // Area chart: pemasukan vs honor 6 bulan terakhir
+            for ($i = 5; $i >= 0; $i--) {
+                $d = now()->subMonths($i);
+                $revenueChart[] = [
+                    'label'     => $d->translatedFormat('M Y'),
+                    'pemasukan' => (int) Payment::whereNull('voided_at')
+                                       ->whereYear('payment_date', $d->year)
+                                       ->whereMonth('payment_date', $d->month)
+                                       ->sum('amount'),
+                    'honor'     => (int) HonorSlip::where('year', $d->year)
+                                       ->where('month', $d->month)
+                                       ->sum('total_honor'),
+                    'pengeluaran' => (int) Expense::forMonth($d->year, $d->month)->sum('amount'),
+                ];
+            }
+
+            // Donut: distribusi murid aktif per instrumen
+            $instrumenChart = DB::table('students')
+                ->join('enrollments', function ($j) {
+                    $j->on('students.id', '=', 'enrollments.student_id')
+                      ->where('enrollments.status', 'ACTIVE');
+                })
+                ->join('packages', 'enrollments.package_id', '=', 'packages.id')
+                ->join('instruments', 'packages.instrument_id', '=', 'instruments.id')
+                ->where('students.status', 'Aktif')
+                ->select('instruments.name as name', DB::raw('COUNT(DISTINCT students.id) as total'))
+                ->groupBy('instruments.id', 'instruments.name')
+                ->orderBy('total', 'desc')
+                ->get();
         }
 
         // ===== PETTY CASH, AGING, INVOICE TERLAMA, HONOR (semua role) =====
@@ -109,6 +142,24 @@ class DashboardController extends Controller
             ->orderBy('month', 'desc')
             ->get();
 
+        // Bar chart: absensi mingguan bulan ini (semua role)
+        $attendanceChart = [];
+        $monthStart = Carbon::create($year, $month, 1)->startOfMonth();
+        $monthEnd   = Carbon::create($year, $month, 1)->endOfMonth();
+        for ($w = 0; $w < 4; $w++) {
+            $wStart = $monthStart->copy()->addDays($w * 7);
+            $wEnd   = $monthStart->copy()->addDays($w * 7 + 6)->min($monthEnd);
+            $attendanceChart[] = [
+                'label'  => 'Mg ' . ($w + 1),
+                'hadir'  => ClassSession::whereBetween('session_date', [$wStart, $wEnd])
+                                ->whereIn('status', ['HADIR', 'HADIR_TERLAMBAT'])->count(),
+                'izin'   => ClassSession::whereBetween('session_date', [$wStart, $wEnd])
+                                ->whereIn('status', ['IZIN_RESCHEDULE', 'IZIN_VIDEO'])->count(),
+                'hangus' => ClassSession::whereBetween('session_date', [$wStart, $wEnd])
+                                ->where('status', 'HANGUS')->count(),
+            ];
+        }
+
         $monthName = Carbon::create($year, $month, 1)->translatedFormat('F Y');
 
         return view('dashboard', compact(
@@ -121,6 +172,7 @@ class DashboardController extends Controller
             'aging', 'agingCount', 'totalPiutang',
             'invoiceTerlama',
             'honorBelumBayar',
+            'revenueChart', 'instrumenChart', 'attendanceChart',
         ));
     }
 }
