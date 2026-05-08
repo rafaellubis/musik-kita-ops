@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\ExpenseCategoryController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\HonorController;
 use App\Http\Controllers\InstrumentController;
@@ -170,10 +172,24 @@ Route::middleware('auth')->group(function () {
             ->parameters(['invoice-components' => 'invoiceComponent'])
             ->except(['index', 'show']);
 
+        // ===== M07: Pengeluaran — hapus hanya Owner =====
+        Route::delete('expenses/{expense}', [ExpenseController::class, 'destroy'])
+            ->name('expenses.destroy');
+
+        // ===== M07: Kategori pengeluaran — master data, hanya Owner =====
+        Route::resource('expense-categories', ExpenseCategoryController::class)
+            ->parameters(['expense-categories' => 'expenseCategory'])
+            ->except(['index', 'show']);
+
         // BR-5.18: Void pembayaran hanya Owner.
         Route::post('payments/{payment}/void',
             [PaymentController::class, 'void']
         )->name('payments.void');
+
+        // ===== M07: Pengeluaran — Owner bisa hapus, Admin bisa create/edit =====
+        // Hapus expense + CRUD kategori di group Owner-only di bawah.
+        Route::resource('expenses', ExpenseController::class)
+            ->except(['index', 'show', 'destroy']);
 
         // ===== M06: Honor Guru — aksi sensitif (Owner only) =====
         // Kalkulasi, edit komponen manual, dan tandai dibayar.
@@ -236,6 +252,13 @@ Route::middleware('auth')->group(function () {
         Route::get('sessions',
             [SessionController::class, 'index']
         )->name('sessions.index');
+
+        // ===== M07: Pengeluaran — read-only =====
+        Route::resource('expenses', ExpenseController::class)->only(['index', 'show']);
+
+        Route::resource('expense-categories', ExpenseCategoryController::class)
+            ->parameters(['expense-categories' => 'expenseCategory'])
+            ->only(['index']);
 
         // ===== M06: Honor Guru — read-only =====
         Route::get('honors',

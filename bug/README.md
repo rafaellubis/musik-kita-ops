@@ -21,6 +21,7 @@ Contoh: `BUG-001-required_if-operator-tidak-valid.md`
 |----|------|-------|--------|---------|
 | BUG-001 | [BUG-001-required_if-operator-tidak-valid.md](BUG-001-required_if-operator-tidak-valid.md) | M06 Honor | FIXED | 2026-05-08 |
 | BUG-002 | [BUG-002-orderByRelation-tidak-ada-di-eloquent.md](BUG-002-orderByRelation-tidak-ada-di-eloquent.md) | M06 Honor | FIXED | 2026-05-08 |
+| BUG-003 | [BUG-003-payment-wrong-column-name.md](BUG-003-payment-wrong-column-name.md) | M07 Pengeluaran | FIXED | 2026-05-08 |
 
 ---
 

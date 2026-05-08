@@ -35,6 +35,7 @@ class DatabaseSeeder extends Seeder
             HolidaySeeder::class,
             InvoiceComponentSeeder::class,
             PayrollConfigSeeder::class,
+            ExpenseCategorySeeder::class, // M07: kategori pengeluaran
 
             // 3. Master data dengan dependensi
             PackageSeeder::class,   // butuh instruments

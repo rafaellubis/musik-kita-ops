@@ -48,6 +48,9 @@
 					<x-nav-link :href="route('honors.index')" :active="request()->routeIs('honors.*')">
 						{{ __('Slip Honor') }}
 					</x-nav-link>
+					<x-nav-link :href="route('expenses.index')" :active="request()->routeIs('expenses.*') || request()->routeIs('expense-categories.*')">
+						{{ __('Pengeluaran') }}
+					</x-nav-link>
                 </div>
             </div>
 
