@@ -83,8 +83,10 @@
     {{-- Header --}}
     <div class="header">
         <div>
-            <div class="studio-name">Musik KITA</div>
-            <div class="studio-sub">Slip Honor Guru</div>
+            <img src="{{ asset('images/logo-musikkita-light-mode.PNG') }}"
+                 alt="Musik KITA"
+                 style="height:48px; max-width:190px; object-fit:contain; object-position:left; display:block;">
+            <div class="studio-sub" style="margin-top:4px;">Slip Honor Guru</div>
         </div>
         <div class="slip-title">
             <div class="label">No. Slip</div>

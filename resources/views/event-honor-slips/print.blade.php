@@ -44,7 +44,9 @@
 </div>
 
 <div class="header">
-    <h1>STUDIO MUSIK KITA</h1>
+    <img src="{{ asset('images/logo-musikkita-light-mode.PNG') }}"
+         alt="Musik KITA"
+         style="height:52px; max-width:210px; object-fit:contain; margin:0 auto 6px; display:block;">
     <p>Slip Honor Guru — Event</p>
 </div>
 

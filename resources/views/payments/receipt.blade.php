@@ -160,8 +160,10 @@
 
     <div class="header">
         <div>
-            <div class="studio-name">MUSIK KITA</div>
-            <div style="font-size: 10pt; color: #555;">
+            <img src="{{ asset('images/logo-musikkita-light-mode.PNG') }}"
+                 alt="Musik KITA"
+                 style="height:52px; max-width:200px; object-fit:contain; object-position:left; display:block;">
+            <div style="font-size: 10pt; color: #555; margin-top:4px;">
                 Studio Musik & Sekolah Musik<br>
                 — alamat dan kontak studio —
             </div>

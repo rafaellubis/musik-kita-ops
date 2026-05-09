@@ -37,10 +37,23 @@
             .py-6 { padding: 0 !important; }
             .shadow-sm { box-shadow: none !important; }
             @page { margin: 15mm; }
+            .print-only { display: flex !important; }
         }
+        .print-only { display: none; }
     </style>
 
     <div class="py-6 px-4 lg:px-8 space-y-4">
+
+        {{-- Header logo — hanya muncul saat cetak --}}
+        <div class="print-only" style="align-items:center; justify-content:space-between; border-bottom:2px solid #111; padding-bottom:10px; margin-bottom:4px;">
+            <img src="{{ asset('images/logo-musikkita-light-mode.PNG') }}"
+                 alt="Musik KITA"
+                 style="height:48px; max-width:190px; object-fit:contain; object-position:left;">
+            <div style="text-align:right; font-size:11pt; color:#555;">
+                <div style="font-weight:bold; font-size:13pt; color:#111;">Laporan Keuangan</div>
+                <div>{{ $monthName }}</div>
+            </div>
+        </div>
 
         {{-- ===== RINGKASAN P&L ===== --}}
         <div class="bg-white shadow-sm rounded-lg overflow-hidden">
