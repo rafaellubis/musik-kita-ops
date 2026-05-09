@@ -15,8 +15,17 @@
     </head>
     <body class="font-sans antialiased bg-mk-bg text-mk-text">
 
-        {{-- Layout: Sidebar gelap (kiri) + Area Konten gelap (kanan) --}}
-        <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: false }">
+        {{-- Layout: Sidebar gelap (kiri) + Area Konten (kanan) --}}
+        <div class="flex h-screen overflow-hidden"
+             x-data="{
+                 sidebarOpen: false,
+                 theme: localStorage.getItem('mk-theme') || 'dark',
+                 toggleTheme() {
+                     this.theme = this.theme === 'dark' ? 'light' : 'dark';
+                     localStorage.setItem('mk-theme', this.theme);
+                 }
+             }"
+             :data-theme="theme">
 
             {{-- ===== MOBILE OVERLAY ===== --}}
             <div x-show="sidebarOpen"
@@ -45,8 +54,8 @@
             {{-- ===== AREA KONTEN ===== --}}
             <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
 
-                {{-- Topbar (gelap, konsisten dengan sidebar) --}}
-                <div class="shrink-0 h-14 bg-mk-sidebar border-b border-white/[0.06]
+                {{-- Topbar --}}
+                <div class="mk-topbar shrink-0 h-14 bg-mk-sidebar border-b border-white/[0.06]
                             flex items-center px-4 lg:px-6 gap-3">
 
                     {{-- Hamburger (mobile) --}}
@@ -64,22 +73,24 @@
                         Musik KITA — Sistem Operasional
                     </div>
 
-                    {{-- Kanan: Tanggal + User pill + Keluar --}}
+                    {{-- Kanan: Tanggal + Avatar + Toggle tema + Keluar --}}
                     <div class="flex items-center gap-3 ml-auto">
                         <span class="hidden sm:block text-xs text-mk-dim">
                             {{ now()->translatedFormat('l, j F Y') }}
                         </span>
 
-                        <div class="flex items-center gap-2">
-                            {{-- Avatar inisial --}}
-                            <div class="w-7 h-7 rounded-full bg-mk-accentDim flex items-center
-                                        justify-center text-xs font-bold text-mk-accent shrink-0">
-                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                            </div>
-                            <span class="hidden sm:block text-xs font-medium text-mk-muted">
-                                {{ auth()->user()->name }}
-                            </span>
+                        {{-- Avatar inisial (nama tampil di sidebar kiri bawah) --}}
+                        <div class="w-7 h-7 rounded-full bg-mk-accentDim flex items-center
+                                    justify-center text-xs font-bold text-mk-accent shrink-0">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                         </div>
+
+                        {{-- Tombol toggle tema gelap/terang --}}
+                        <button @click="toggleTheme()"
+                                class="text-mk-dim hover:text-mk-muted transition-colors p-1.5 rounded hover:bg-white/5 text-sm leading-none"
+                                :title="theme === 'dark' ? 'Beralih ke tema terang' : 'Beralih ke tema gelap'">
+                            <span x-text="theme === 'dark' ? '☀️' : '🌙'">☀️</span>
+                        </button>
 
                         {{-- Tombol keluar --}}
                         <form method="POST" action="{{ route('logout') }}">
@@ -93,17 +104,17 @@
                     </div>
                 </div>
 
-                {{-- Page Header (dari slot $header di tiap view) --}}
-                {{-- dark-content scope dimulai di sini agar $header juga dapat override --}}
+                {{-- Page Header — tema menyesuaikan pilihan dark/light --}}
                 @isset($header)
-                <div class="dark-content shrink-0 bg-mk-card border-b border-white/[0.06]
-                            px-4 lg:px-8 py-4">
+                <div :class="theme === 'dark' ? 'dark-content' : 'light-content'"
+                     class="shrink-0 bg-mk-card border-b border-white/[0.06] px-4 lg:px-8 py-4">
                     {{ $header }}
                 </div>
                 @endisset
 
-                {{-- Konten Halaman — dark-content membuat semua Tailwind light-class ter-override --}}
-                <main class="dark-content flex-1 overflow-y-auto bg-mk-bg">
+                {{-- Konten Halaman — tema menyesuaikan pilihan dark/light --}}
+                <main :class="theme === 'dark' ? 'dark-content' : 'light-content'"
+                      class="flex-1 overflow-y-auto bg-mk-bg">
                     {{ $slot }}
                 </main>
 
