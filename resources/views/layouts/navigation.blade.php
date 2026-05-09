@@ -4,14 +4,11 @@
 --}}
 
 {{-- ===== LOGO ===== --}}
-<div class="flex items-center gap-2.5 px-4 py-5 border-b border-white/[0.06] shrink-0">
-    <div class="w-8 h-8 rounded-lg bg-mk-accent flex items-center justify-center text-base leading-none shrink-0">
-        🎹
-    </div>
-    <div>
-        <div class="font-serif font-bold text-[15px] text-mk-text leading-tight">Musik KITA</div>
-        <div class="text-[10px] text-mk-dim tracking-wide">Operasional System</div>
-    </div>
+<div class="px-4 py-3 border-b border-white/[0.06] shrink-0">
+    <img src="{{ asset('images/logo-musikkita-dark-mode.PNG') }}"
+         alt="Musik KITA"
+         class="h-10 w-full object-contain object-left"
+         style="max-width:160px">
 </div>
 
 {{-- ===== NAV ITEMS ===== --}}

@@ -337,6 +337,13 @@
     <script>
     document.addEventListener('DOMContentLoaded', function () {
 
+        // Deteksi tema saat halaman dimuat untuk chart yang theme-aware
+        const isDark = (localStorage.getItem('mk-theme') || 'dark') === 'dark';
+        const chartLabelColor  = isDark ? '#8B92A8' : '#9A7050';
+        const chartGridColor   = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(101,65,27,0.08)';
+        const chartTooltipTheme = isDark ? 'dark' : 'light';
+        const chartTooltipBg    = isDark ? '#1E2235' : '#FBF5EC';
+
         // ---- Area Chart: P&L 6 Bulan (Owner only) ----
         @if($isOwner)
         const revenueData = @json($revenueChart);
@@ -355,12 +362,12 @@
             ],
             xaxis: {
                 categories: revenueData.map(d => d.label),
-                labels: { style: { colors: '#8B92A8', fontSize: '11px' } },
+                labels: { style: { colors: chartLabelColor, fontSize: '11px' } },
                 axisBorder: { show: false }, axisTicks: { show: false },
             },
             yaxis: {
                 labels: {
-                    style: { colors: '#8B92A8', fontSize: '11px' },
+                    style: { colors: chartLabelColor, fontSize: '11px' },
                     formatter: v => 'Rp ' + (v / 1000000).toFixed(1) + 'jt',
                 },
             },
@@ -370,11 +377,11 @@
                 gradient: { shadeIntensity: 1, opacityFrom: 0.25, opacityTo: 0.02, stops: [0, 95] },
             },
             stroke: { curve: 'smooth', width: 2 },
-            grid: { borderColor: 'rgba(255,255,255,0.07)', strokeDashArray: 4 },
+            grid: { borderColor: chartGridColor, strokeDashArray: 4 },
             dataLabels: { enabled: false },
             legend: { show: false },
             tooltip: {
-                theme: 'dark',
+                theme: chartTooltipTheme,
                 y: { formatter: v => 'Rp ' + new Intl.NumberFormat('id-ID').format(v) },
             },
         }).render();
@@ -399,7 +406,7 @@
                 dataLabels: { enabled: false },
                 legend: { show: false },
                 tooltip: {
-                    theme: 'dark',
+                    theme: chartTooltipTheme,
                     y: { formatter: v => v + ' murid' },
                 },
                 stroke: { width: 0 },
@@ -424,18 +431,18 @@
             ],
             xaxis: {
                 categories: attendanceData.map(d => d.label),
-                labels: { style: { colors: '#8B92A8', fontSize: '11px' } },
+                labels: { style: { colors: chartLabelColor, fontSize: '11px' } },
                 axisBorder: { show: false }, axisTicks: { show: false },
             },
-            yaxis: { labels: { style: { colors: '#8B92A8', fontSize: '11px' } } },
+            yaxis: { labels: { style: { colors: chartLabelColor, fontSize: '11px' } } },
             colors: ['#34D399', '#FBBF24', '#F87171'],
             plotOptions: {
                 bar: { borderRadius: 4, columnWidth: '60%' },
             },
-            grid: { borderColor: 'rgba(255,255,255,0.07)', strokeDashArray: 4 },
+            grid: { borderColor: chartGridColor, strokeDashArray: 4 },
             dataLabels: { enabled: false },
             legend: { show: false },
-            tooltip: { theme: 'dark' },
+            tooltip: { theme: chartTooltipTheme },
         }).render();
 
     });

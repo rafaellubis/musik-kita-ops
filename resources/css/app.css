@@ -423,3 +423,42 @@
     border-color: rgba(160,82,45,0.30);
     color: #A0522D;
 }
+
+/* ================================================================
+   LIGHT CONTENT — OVERRIDE text-mk-* DAN bg-mk-* CUSTOM COLORS
+   Tanpa override ini, text-mk-text (#E8EAF0 near-white) tidak
+   terlihat di atas background krem (#FBF5EC).
+================================================================ */
+.light-content .text-mk-text               { color: #2C1A07 !important; }
+.light-content .text-mk-muted              { color: #7A5C3A !important; }
+.light-content .text-mk-dim                { color: #A8845A !important; }
+.light-content .text-mk-accent             { color: #A0522D !important; }
+.light-content .hover\:text-mk-text:hover  { color: #2C1A07 !important; }
+.light-content .hover\:text-mk-muted:hover { color: #5A3C1E !important; }
+.light-content .bg-mk-accentDim            { background-color: rgba(160,82,45,0.12) !important; }
+
+/* Tombol / badge inline yang pakai warna dark mode */
+.light-content .mk-filter-btn   { background: rgba(160,82,45,0.12) !important; color: #A0522D !important; }
+.light-content .mk-reset-btn    { background: rgba(101,65,27,0.08) !important; color: #7A5C3A !important; }
+/* Status card inactive (rgba white yang hampir invisible di light mode) */
+.light-content .mk-status-card-inactive {
+    background: rgba(101,65,27,0.06) !important;
+    border-color: rgba(101,65,27,0.14) !important;
+}
+/* Label status tidak aktif pada status card */
+.light-content .mk-status-card-inactive .mk-status-label { color: #9A7050 !important; }
+
+/* ================================================================
+   SIDEBAR (aside) — OVERRIDES KHUSUS LIGHT MODE
+   Sidebar tetap gelap mahoni (#3B2208) di light mode.
+   Teks disesuaikan ke palet wheat/krem agar kontras dengan mahoni.
+================================================================ */
+[data-theme="light"] aside .text-mk-muted             { color: rgba(245,222,179,0.65) !important; }
+[data-theme="light"] aside .text-mk-dim               { color: rgba(245,222,179,0.35) !important; }
+[data-theme="light"] aside .text-mk-text              { color: rgba(245,222,179,0.90) !important; }
+[data-theme="light"] aside .text-mk-accent            { color: #F5DEB3 !important; }
+[data-theme="light"] aside .bg-mk-accentDim           { background-color: rgba(245,222,179,0.18) !important; }
+[data-theme="light"] aside .border-mk-accent          { border-color: rgba(245,222,179,0.70) !important; }
+[data-theme="light"] aside .hover\:bg-white\/5:hover  { background-color: rgba(245,222,179,0.08) !important; }
+[data-theme="light"] aside .hover\:text-mk-text:hover { color: rgba(245,222,179,0.95) !important; }
+[data-theme="light"] aside .border-white\/\[0\.06\]   { border-color: rgba(245,222,179,0.12) !important; }

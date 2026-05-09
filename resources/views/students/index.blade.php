@@ -53,11 +53,15 @@
                 $href     = route('students.index', array_merge(request()->except(['status','page']), $isActive ? [] : ['status' => $st]));
             @endphp
             <a href="{{ $href }}"
-               class="rounded-xl px-4 py-2.5 transition-all duration-150 select-none cursor-pointer"
-               style="background:{{ $isActive ? $cfg['color'] . '22' : 'rgba(255,255,255,0.04)' }};
-                      border:1px solid {{ $isActive ? $cfg['dot'] . '60' : 'rgba(255,255,255,0.07)' }}">
+               @class([
+                   'rounded-xl px-4 py-2.5 transition-all duration-150 select-none cursor-pointer',
+                   'mk-status-card-inactive' => !$isActive,
+               ])
+               style="{{ $isActive
+                   ? 'background:' . $cfg['color'] . '22;border:1px solid ' . $cfg['dot'] . '60'
+                   : '' }}">
                 <div class="text-xl font-bold leading-none" style="color:{{ $cfg['color'] }}">{{ $count }}</div>
-                <div class="text-xs mt-1" style="color:{{ $isActive ? $cfg['color'] : '#6B7494' }}">{{ $st }}</div>
+                <div class="text-xs mt-1 mk-status-label" style="color:{{ $isActive ? $cfg['color'] : '' }}">{{ $st }}</div>
             </a>
             @endforeach
         </div>
@@ -86,12 +90,12 @@
                     @endforeach
                 </select>
                 <button type="submit"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                        class="mk-filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
                         style="background:rgba(212,168,83,0.15);color:#D4A853">
                     Filter
                 </button>
                 <a href="{{ route('students.index') }}"
-                   class="px-4 py-2 rounded-lg text-sm transition-colors"
+                   class="mk-reset-btn px-4 py-2 rounded-lg text-sm transition-colors"
                    style="background:rgba(255,255,255,0.05);color:#8B92A8">
                     Reset
                 </a>

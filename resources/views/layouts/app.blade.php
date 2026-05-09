@@ -68,9 +68,16 @@
                         </svg>
                     </button>
 
-                    {{-- Identitas sistem --}}
-                    <div class="flex-1 text-xs text-mk-dim hidden lg:block">
-                        Musik KITA — Sistem Operasional
+                    {{-- Identitas sistem: logo dark di dark mode, logo light di light mode --}}
+                    <div class="flex-1 items-center hidden lg:flex">
+                        <img src="{{ asset('images/logo-musikkita-dark-mode.PNG') }}"
+                             x-show="theme === 'dark'"
+                             alt="Musik KITA" class="h-8 object-contain object-left"
+                             style="max-width:140px">
+                        <img src="{{ asset('images/logo-musikkita-light-mode.PNG') }}"
+                             x-show="theme === 'light'" x-cloak
+                             alt="Musik KITA" class="h-8 object-contain object-left"
+                             style="max-width:140px; mix-blend-mode:multiply">
                     </div>
 
                     {{-- Kanan: Tanggal + Avatar + Toggle tema + Keluar --}}
