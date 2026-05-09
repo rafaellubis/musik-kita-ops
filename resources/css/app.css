@@ -250,6 +250,11 @@
    Kelas .light-content di-scope sama seperti .dark-content.
 ================================================================ */
 
+/* === BASE TEXT COLOR ===
+   Tanpa ini, elemen tanpa class warna eksplisit (th, td, span, p)
+   mewarisi warna browser default — hampir tidak kelihatan di background krem. */
+.light-content                     { color: #2C1A07; }
+
 /* === BACKGROUND CARDS & PANEL === */
 .light-content .bg-white          { background-color: #FBF5EC; }
 .light-content .bg-gray-50        { background-color: rgba(101,65,27,0.04); }
