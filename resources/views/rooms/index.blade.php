@@ -1,21 +1,30 @@
 <x-app-layout>
-    <x-slot name="header"><h2 class="font-semibold text-xl">Ruangan Studio</h2></x-slot>
-    <div class="py-12"><div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <x-slot name="header">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="font-semibold text-xl text-mk-text">Ruangan Studio</h2>
+                <div class="text-xs text-mk-muted mt-0.5">{{ $rooms->count() }} ruangan terdaftar</div>
+            </div>
+            @role('Owner|Admin')
+            <a href="{{ route('rooms.create') }}"
+               class="px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+               style="background:#D4A853;color:#1A1000">
+                + Tambah Ruangan
+            </a>
+            @endrole
+        </div>
+    </x-slot>
+
+    <div class="py-6 px-4 lg:px-8">
 
         @if(session('success'))
-            <div class="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded">
-                {{ session('success') }}
-            </div>
+        <div class="mb-5 p-3 rounded-lg text-sm"
+             style="background:rgba(52,211,153,0.1);color:#34D399;border:1px solid rgba(52,211,153,0.2)">
+            {{ session('success') }}
+        </div>
         @endif
 
-        <div class="bg-white shadow-sm sm:rounded-lg p-6">
-
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium">Total: {{ $rooms->count() }} ruangan</h3>
-                <a href="{{ route('rooms.create') }}"
-                   class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">+ Tambah</a>
-            </div>
-
+        <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -32,7 +41,7 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     @foreach($rooms as $r)
-                        <tr>
+                        <tr class="hover:bg-gray-50">
                             <td class="px-4 py-2 font-mono text-sm font-bold">{{ $r->code }}</td>
                             <td class="px-4 py-2 text-sm">{{ $r->name }}</td>
                             <td class="px-4 py-2 text-sm text-center">{{ $r->capacity }} org</td>
@@ -68,6 +77,7 @@
                             <td class="px-4 py-2 text-right whitespace-nowrap">
                                 <a href="{{ route('rooms.edit', $r->id) }}"
                                    class="text-blue-600 hover:underline">Edit</a>
+                                @role('Owner')
                                 <form action="{{ route('rooms.destroy', $r->id) }}"
                                       method="POST" class="inline ml-2"
                                       onsubmit="return confirm('Hapus ruangan {{ $r->code }} ({{ $r->name }})?');">
@@ -75,6 +85,7 @@
                                     @method('DELETE')
                                     <button type="submit" class="text-red-600 hover:underline">Hapus</button>
                                 </form>
+                                @endrole
                             </td>
                         </tr>
                     @endforeach
@@ -82,5 +93,5 @@
             </table>
         </div>
 
-    </div></div>
+    </div>
 </x-app-layout>

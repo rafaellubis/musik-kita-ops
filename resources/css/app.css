@@ -172,6 +172,22 @@
     animation: fadeInUp 0.4s ease-out both;
 }
 
+/* === ACTION BUTTONS — konversi warna button ke dark theme ===
+   bg-blue-600 / bg-purple-600 tidak di-cover override di atas
+   karena nilai -600 bukan badge (badge pakai -50/-100).
+   Override ke gold accent supaya konsisten di semua halaman.      */
+.dark-content .bg-blue-600   { background-color: rgba(212,168,83,0.9) !important; color: #1A1000 !important; }
+.dark-content .hover\:bg-blue-700:hover  { background-color: #D4A853 !important; color: #1A1000 !important; }
+.dark-content .bg-blue-500   { background-color: rgba(212,168,83,0.85) !important; color: #1A1000 !important; }
+.dark-content .hover\:bg-blue-600:hover  { background-color: rgba(212,168,83,0.9) !important; }
+
+.dark-content .bg-purple-600 { background-color: rgba(212,168,83,0.9) !important; color: #1A1000 !important; }
+.dark-content .hover\:bg-purple-700:hover { background-color: #D4A853 !important; color: #1A1000 !important; }
+
+/* Indigo buttons → gold (konsisten dengan blue/purple) */
+.dark-content .bg-indigo-600 { background-color: rgba(212,168,83,0.9) !important; color: #1A1000 !important; }
+.dark-content .hover\:bg-indigo-700:hover { background-color: #D4A853 !important; color: #1A1000 !important; }
+
 /* === PAGINATION === */
 .dark-content nav[aria-label="Pagination"] span,
 .dark-content nav[aria-label="Pagination"] a {

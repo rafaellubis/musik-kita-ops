@@ -1,36 +1,46 @@
 <x-app-layout>
-    <x-slot name="header"><h2 class="font-semibold text-xl">Hari Libur {{ $year }}</h2></x-slot>
-    <div class="py-12"><div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <x-slot name="header">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="font-semibold text-xl text-mk-text">Hari Libur {{ $year }}</h2>
+                <div class="text-xs text-mk-muted mt-0.5">{{ $holidays->count() }} hari libur terdaftar</div>
+            </div>
+            @role('Owner|Admin')
+            <a href="{{ route('holidays.create') }}"
+               class="px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+               style="background:#D4A853;color:#1A1000">
+                + Tambah Libur
+            </a>
+            @endrole
+        </div>
+    </x-slot>
+
+    <div class="py-6 px-4 lg:px-8">
 
         @if(session('success'))
-            <div class="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded">
-                {{ session('success') }}
-            </div>
+        <div class="mb-5 p-3 rounded-lg text-sm"
+             style="background:rgba(52,211,153,0.1);color:#34D399;border:1px solid rgba(52,211,153,0.2)">
+            {{ session('success') }}
+        </div>
         @endif
 
-        <div class="bg-white shadow-sm sm:rounded-lg p-6">
+        {{-- Filter tahun --}}
+        <div class="mb-4">
+            <form method="GET" class="inline-flex items-center gap-2">
+                <label class="text-xs text-mk-muted font-medium">Tahun:</label>
+                <select name="year" onchange="this.form.submit()"
+                        class="border-gray-300 rounded-md text-sm">
+                    @foreach($availableYears as $y)
+                        <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                    @endforeach
+                    @if(!$availableYears->contains($year))
+                        <option value="{{ $year }}" selected>{{ $year }}</option>
+                    @endif
+                </select>
+            </form>
+        </div>
 
-            <div class="flex justify-between items-center mb-4">
-                <form method="GET" class="flex items-center gap-2">
-                    <label class="text-sm font-medium">Tahun:</label>
-                    <select name="year" onchange="this.form.submit()"
-                            class="border-gray-300 rounded-md text-sm">
-                        @foreach($availableYears as $y)
-                            <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                        @endforeach
-                        @if(!$availableYears->contains($year))
-                            <option value="{{ $year }}" selected>{{ $year }}</option>
-                        @endif
-                    </select>
-                    <span class="text-sm text-gray-600 ml-3">
-                        Total: {{ $holidays->count() }} hari libur
-                    </span>
-                </form>
-
-                <a href="{{ route('holidays.create') }}"
-                   class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">+ Tambah</a>
-            </div>
-
+        <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -45,14 +55,14 @@
                 <tbody class="divide-y divide-gray-200">
                     @php
                         $typeBadge = [
-                            'Nasional' => 'bg-red-100 text-red-800',
-                            'Cuti Bersama' => 'bg-amber-100 text-amber-800',
-                            'Internal' => 'bg-blue-100 text-blue-800',
+                            'Nasional'      => 'bg-red-100 text-red-800',
+                            'Cuti Bersama'  => 'bg-amber-100 text-amber-800',
+                            'Internal'      => 'bg-blue-100 text-blue-800',
                         ];
                         $dayName = ['Sun'=>'Min','Mon'=>'Sen','Tue'=>'Sel','Wed'=>'Rab','Thu'=>'Kam','Fri'=>'Jum','Sat'=>'Sab'];
                     @endphp
                     @forelse($holidays as $h)
-                        <tr>
+                        <tr class="hover:bg-gray-50">
                             <td class="px-4 py-2 text-sm">
                                 <span class="font-mono">{{ $h->date->format('d M Y') }}</span>
                                 <span class="ml-2 text-xs text-gray-500">
@@ -73,9 +83,10 @@
                                     <span class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-600">Off</span>
                                 @endif
                             </td>
-                            <td class="px-4 py-2 text-right">
+                            <td class="px-4 py-2 text-right whitespace-nowrap">
                                 <a href="{{ route('holidays.edit', $h->id) }}"
                                    class="text-blue-600 hover:underline">Edit</a>
+                                @role('Owner')
                                 <form action="{{ route('holidays.destroy', $h->id) }}"
                                       method="POST" class="inline ml-2"
                                       onsubmit="return confirm('Hapus hari libur {{ $h->date->format('d M Y') }} ({{ $h->name }})?');">
@@ -83,6 +94,7 @@
                                     @method('DELETE')
                                     <button type="submit" class="text-red-600 hover:underline">Hapus</button>
                                 </form>
+                                @endrole
                             </td>
                         </tr>
                     @empty
@@ -94,8 +106,7 @@
                     @endforelse
                 </tbody>
             </table>
-
         </div>
 
-    </div></div>
+    </div>
 </x-app-layout>
