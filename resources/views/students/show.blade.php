@@ -281,10 +281,11 @@
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
-                            <select name="package_id" required class="block w-full rounded-lg text-sm px-3 py-2">
-                                <option value="">— Pilih —</option>
+                            <select name="package_id" required class="block w-full rounded-lg text-sm px-3 py-2"
+                                    onchange="lifecycleFilterTeacher(this, 'teacher-skip')">
+                                <option value="" data-instrument-id="">— Pilih —</option>
                                 @foreach($packages as $pkg)
-                                <option value="{{ $pkg->id }}">
+                                <option value="{{ $pkg->id }}" data-instrument-id="{{ $pkg->instrument->id }}">
                                     [{{ $pkg->code }}] {{ $pkg->instrument->name }} ({{ $pkg->formatted_price }})
                                 </option>
                                 @endforeach
@@ -292,11 +293,9 @@
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Guru Utama <span class="text-red-400">*</span></label>
-                            <select name="assigned_teacher_id" required class="block w-full rounded-lg text-sm px-3 py-2">
-                                <option value="">— Pilih —</option>
-                                @foreach($teachers as $t)
-                                <option value="{{ $t->id }}">[{{ $t->code }}] {{ $t->name }}</option>
-                                @endforeach
+                            <select name="assigned_teacher_id" required id="teacher-skip"
+                                    class="block w-full rounded-lg text-sm px-3 py-2">
+                                <option value="">— Pilih paket dulu —</option>
                             </select>
                         </div>
                         <div>
@@ -327,10 +326,13 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
-                            <select name="package_id" required class="block w-full rounded-lg text-sm px-3 py-2">
-                                <option value="">— Pilih —</option>
+                            <select name="package_id" required id="package-convert"
+                                    class="block w-full rounded-lg text-sm px-3 py-2"
+                                    onchange="lifecycleFilterTeacher(this, 'teacher-convert')">
+                                <option value="" data-instrument-id="">— Pilih —</option>
                                 @foreach($packages as $pkg)
-                                <option value="{{ $pkg->id }}" {{ $student->package_id == $pkg->id ? 'selected' : '' }}>
+                                <option value="{{ $pkg->id }}" data-instrument-id="{{ $pkg->instrument->id }}"
+                                        {{ $student->package_id == $pkg->id ? 'selected' : '' }}>
                                     [{{ $pkg->code }}] {{ $pkg->instrument->name }} ({{ $pkg->formatted_price }})
                                 </option>
                                 @endforeach
@@ -338,13 +340,9 @@
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Guru Utama <span class="text-red-400">*</span></label>
-                            <select name="assigned_teacher_id" required class="block w-full rounded-lg text-sm px-3 py-2">
-                                <option value="">— Pilih —</option>
-                                @foreach($teachers as $t)
-                                <option value="{{ $t->id }}" {{ $student->assigned_teacher_id == $t->id ? 'selected' : '' }}>
-                                    [{{ $t->code }}] {{ $t->name }}
-                                </option>
-                                @endforeach
+                            <select name="assigned_teacher_id" required id="teacher-convert"
+                                    class="block w-full rounded-lg text-sm px-3 py-2">
+                                <option value="">— Pilih paket dulu —</option>
                             </select>
                         </div>
                         <div>
@@ -435,20 +433,22 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
-                            <select name="package_id" required class="block w-full rounded-lg text-sm px-3 py-2">
-                                <option value="">— Pilih —</option>
+                            <select name="package_id" required id="package-reactivate"
+                                    class="block w-full rounded-lg text-sm px-3 py-2"
+                                    onchange="lifecycleFilterTeacher(this, 'teacher-reactivate')">
+                                <option value="" data-instrument-id="">— Pilih —</option>
                                 @foreach($packages as $pkg)
-                                <option value="{{ $pkg->id }}">[{{ $pkg->code }}] {{ $pkg->instrument->name }} ({{ $pkg->formatted_price }})</option>
+                                <option value="{{ $pkg->id }}" data-instrument-id="{{ $pkg->instrument->id }}">
+                                    [{{ $pkg->code }}] {{ $pkg->instrument->name }} ({{ $pkg->formatted_price }})
+                                </option>
                                 @endforeach
                             </select>
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Guru Utama <span class="text-red-400">*</span></label>
-                            <select name="assigned_teacher_id" required class="block w-full rounded-lg text-sm px-3 py-2">
-                                <option value="">— Pilih —</option>
-                                @foreach($teachers as $t)
-                                <option value="{{ $t->id }}">[{{ $t->code }}] {{ $t->name }}</option>
-                                @endforeach
+                            <select name="assigned_teacher_id" required id="teacher-reactivate"
+                                    class="block w-full rounded-lg text-sm px-3 py-2">
+                                <option value="">— Pilih paket dulu —</option>
                             </select>
                         </div>
                         <div>
@@ -1012,4 +1012,62 @@
         </div>{{-- end x-data tabs --}}
 
     </div>
+
+<script>
+/**
+ * Filter dropdown guru berdasarkan instrumen dari paket yang dipilih.
+ * Dipakai di form lifecycle: skip-trial, konversi-aktif, re-aktivasi.
+ *
+ * @param {HTMLSelectElement} packageEl  - <select name="package_id"> yang berubah
+ * @param {string}            teacherId  - id dari <select> guru yang akan diisi
+ * @param {string|null}       preselect  - teacher id yang harus dipre-select (opsional)
+ */
+function lifecycleFilterTeacher(packageEl, teacherId, preselect = null) {
+    const teacherEl   = document.getElementById(teacherId);
+    const selectedOpt = packageEl.options[packageEl.selectedIndex];
+    const instrumentId = selectedOpt?.dataset?.instrumentId || '';
+
+    if (!instrumentId) {
+        teacherEl.innerHTML = '<option value="">— Pilih paket dulu —</option>';
+        return;
+    }
+
+    teacherEl.innerHTML = '<option value="">Memuat guru...</option>';
+    teacherEl.disabled  = true;
+
+    fetch(`/api/teachers-by-instrument/${instrumentId}`)
+        .then(r => r.json())
+        .then(teachers => {
+            teacherEl.disabled = false;
+            if (!teachers.length) {
+                teacherEl.innerHTML = '<option value="">Tidak ada guru untuk instrumen ini</option>';
+                return;
+            }
+            teacherEl.innerHTML = '<option value="">— Pilih Guru —</option>';
+            teachers.forEach(t => {
+                const opt    = document.createElement('option');
+                opt.value    = t.id;
+                opt.textContent = `[${t.code}] ${t.name}`;
+                if (preselect && String(t.id) === String(preselect)) opt.selected = true;
+                teacherEl.appendChild(opt);
+            });
+        })
+        .catch(() => {
+            teacherEl.disabled  = false;
+            teacherEl.innerHTML = '<option value="">Gagal memuat — coba refresh</option>';
+        });
+}
+
+// Auto-load guru di form Konversi Aktif jika murid sudah punya paket terpilih.
+document.addEventListener('DOMContentLoaded', () => {
+    const pkgConvert = document.getElementById('package-convert');
+    if (pkgConvert && pkgConvert.value) {
+        lifecycleFilterTeacher(
+            pkgConvert,
+            'teacher-convert',
+            '{{ $student->assigned_teacher_id }}'
+        );
+    }
+});
+</script>
 </x-app-layout>
