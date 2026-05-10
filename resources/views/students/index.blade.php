@@ -5,13 +5,13 @@
                 <h2 class="font-semibold text-xl text-gray-800">Daftar Murid</h2>
                 <div class="text-xs text-gray-500 mt-0.5">{{ $students->total() }} murid ditampilkan</div>
             </div>
-            @can('create', App\Models\Student::class)
+            @hasanyrole('Owner|Admin')
             <a href="{{ route('students.create') }}"
                class="px-4 py-2 rounded-lg text-sm font-bold transition-colors"
                style="background:#D4A853;color:#1A1000">
                 + Tambah Murid
             </a>
-            @endcan
+            @endhasanyrole
         </div>
     </x-slot>
 
