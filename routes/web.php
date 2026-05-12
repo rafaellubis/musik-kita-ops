@@ -191,6 +191,11 @@ Route::middleware('auth')->group(function () {
             [PaymentController::class, 'void']
         )->name('payments.void');
 
+        // M05: Hapus denda manual — hanya Owner (cron tetap bisa generate ulang)
+        Route::post('invoices/{invoice}/remove-denda',
+            [InvoiceController::class, 'removeDenda']
+        )->name('invoices.remove-denda');
+
         // ===== M07: Pengeluaran — Owner bisa hapus, Admin bisa create/edit =====
         // Hapus expense + CRUD kategori di group Owner-only di bawah.
         Route::resource('expenses', ExpenseController::class)
