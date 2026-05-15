@@ -47,9 +47,10 @@ class PaymentService
             throw new InvalidArgumentException('Jumlah pembayaran harus lebih dari 0.');
         }
 
-        // Pembayaran partial hanya diizinkan untuk invoice KIDS_CLASS_BUNDLE.
-        // Untuk invoice lain, jumlah bayar harus sama persis dengan saldo.
-        if ($invoice->class_type !== 'KIDS_CLASS_BUNDLE' && $data['amount'] < $invoice->balance) {
+        // Semua invoice harus dibayar penuh dalam satu pembayaran.
+        // Untuk KIDS_CLASS_BUNDLE cicilan, "partial" diwujudkan lewat 3 invoice terpisah —
+        // bukan dengan membayar 1 invoice berkali-kali dengan nominal kurang.
+        if ($data['amount'] < $invoice->balance) {
             throw new InvalidArgumentException(
                 'Pembayaran harus dilunasi penuh. ' .
                 'Saldo yang harus dibayar: Rp ' . number_format($invoice->balance, 0, ',', '.') . '.'

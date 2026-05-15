@@ -30,8 +30,9 @@
         $hasDenda        = $invoice->items->where('item_code', 'DENDA')->isNotEmpty();
         $canRemoveDenda  = $isOwner && in_array($invoice->status, ['UNPAID', 'PARTIAL']) && $hasDenda;
         $totalDenda      = $invoice->items->where('item_code', 'DENDA')->sum('amount');
-        // Non-KIDS_CLASS_BUNDLE: amount di-lock = saldo (harus bayar penuh).
-        $lockAmount      = $invoice->class_type !== 'KIDS_CLASS_BUNDLE';
+        // Semua invoice harus dibayar penuh — field amount selalu di-lock = saldo.
+        // Untuk KIDS_CLASS_BUNDLE, "cicilan" berarti 3 invoice terpisah yang masing-masing lunas.
+        $lockAmount = true;
     @endphp
 
     <div class="py-6 px-4 lg:px-8 space-y-4">
@@ -139,16 +140,6 @@
                                            class="mt-1 block w-full border-gray-300 rounded bg-gray-50 cursor-not-allowed">
                                     <p class="text-xs text-gray-500 mt-1">
                                         Harus dilunasi penuh: Rp {{ number_format($invoice->balance, 0, ',', '.') }}
-                                    </p>
-                                @else
-                                    {{-- KIDS_CLASS_BUNDLE: boleh partial (cicilan) --}}
-                                    <input type="number" name="amount" required
-                                           min="1" max="{{ $invoice->balance }}"
-                                           value="{{ old('amount', $invoice->balance) }}"
-                                           class="mt-1 block w-full border-gray-300 rounded">
-                                    <p class="text-xs text-gray-500 mt-1">
-                                        Saldo saat ini: Rp {{ number_format($invoice->balance, 0, ',', '.') }}
-                                        · Cicilan diperbolehkan.
                                     </p>
                                 @endif
                             </div>

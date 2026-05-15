@@ -268,12 +268,13 @@ class InvoiceService
     {
         $paid = $invoice->validPayments()->sum('amount');
 
+        // Setiap invoice harus dibayar penuh — tidak ada status PARTIAL dalam alur normal.
+        // PARTIAL tidak akan terjadi karena PaymentService memblokir pembayaran kurang dari saldo.
+        // Safety net: jika karena sebab apapun paid < total, status kembali ke UNPAID.
         $status = match (true) {
             $invoice->status === Invoice::STATUS_VOID => Invoice::STATUS_VOID,
             $paid <= 0                                => Invoice::STATUS_UNPAID,
             $paid >= $invoice->total_amount           => Invoice::STATUS_PAID,
-            $invoice->class_type === 'KIDS_CLASS_BUNDLE' => Invoice::STATUS_PARTIAL,
-            // Non-KIDS_CLASS_BUNDLE tidak boleh PARTIAL (mis. setelah void sebagian).
             default                                   => Invoice::STATUS_UNPAID,
         };
 
