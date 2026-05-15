@@ -537,6 +537,13 @@ X Pakai Bootstrap CSS      -> project ini Tailwind CSS (Breeze default)
 X Ganti utility class jadi class custom CSS -> ikuti pola Tailwind
 X Buat role GURU           -> Fase 1 tidak ada login guru
 X Push .env ke GitHub      -> berisi password database
+
+DATABASE — PERINGATAN KRITIS:
+X php artisan migrate:fresh pada database utama (mk_operasional) TANPA konfirmasi eksplisit
+  -> migrate:fresh MENGHAPUS SEMUA DATA. Selalu konfirmasi dengan user sebelum dijalankan.
+  -> Insiden: database production terhapus karena phpunit.xml tidak pakai SQLite in-memory.
+  -> php artisan test AMAN hanya jika phpunit.xml sudah override DB_CONNECTION=sqlite + DB_DATABASE=:memory:
+  -> Sebelum migrate:fresh: cek DB_CONNECTION di .env, pastikan bukan database production.
 ```
 
 ---
