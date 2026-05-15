@@ -203,10 +203,10 @@ class InvoiceService
 
         $report = ['created' => 0, 'skipped' => 0];
 
-        // Murid Aktif dengan enrollment ACTIVE & punya paket
+        // Murid Aktif dengan enrollment ACTIVE yang belum berakhir (end_date IS NULL)
         $students = Student::where('status', 'Aktif')
-            ->whereHas('enrollments', fn ($q) => $q->where('status', 'ACTIVE'))
-            ->with(['enrollments' => fn ($q) => $q->where('status', 'ACTIVE')->with('package.instrument')])
+            ->whereHas('enrollments', fn ($q) => $q->where('status', 'ACTIVE')->whereNull('end_date'))
+            ->with(['enrollments' => fn ($q) => $q->where('status', 'ACTIVE')->whereNull('end_date')->with('package.instrument')])
             ->get();
 
         foreach ($students as $student) {
