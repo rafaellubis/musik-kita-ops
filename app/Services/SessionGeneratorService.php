@@ -120,8 +120,8 @@ class SessionGeneratorService
                 continue;
             }
 
-            // Kalau enrollment sudah berakhir, stop
-            if ($enrollment->end_date && $date->gt($enrollment->end_date)) {
+            // Kalau enrollment sudah berakhir (termasuk hari end_date itu sendiri), skip
+            if ($enrollment->end_date && $date->gte($enrollment->end_date)) {
                 continue;
             }
 
