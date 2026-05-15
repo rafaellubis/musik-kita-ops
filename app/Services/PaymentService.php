@@ -47,6 +47,15 @@ class PaymentService
             throw new InvalidArgumentException('Jumlah pembayaran harus lebih dari 0.');
         }
 
+        // Pembayaran partial hanya diizinkan untuk invoice KIDS_CLASS_BUNDLE.
+        // Untuk invoice lain, jumlah bayar harus sama persis dengan saldo.
+        if ($invoice->class_type !== 'KIDS_CLASS_BUNDLE' && $data['amount'] < $invoice->balance) {
+            throw new InvalidArgumentException(
+                'Pembayaran harus dilunasi penuh. ' .
+                'Saldo yang harus dibayar: Rp ' . number_format($invoice->balance, 0, ',', '.') . '.'
+            );
+        }
+
         if (!array_key_exists($data['method'], Payment::METHODS)) {
             throw new InvalidArgumentException(
                 'Metode pembayaran tidak valid. Pilih: ' . implode(', ', array_keys(Payment::METHODS))

@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
+use App\Models\Enrollment;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Student;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Pusat logika invoice (M05).
@@ -56,6 +58,10 @@ class InvoiceService
      * Cocok untuk: REG, CUTI, UJI, MC, KIDS_FP, atau gabungan REG+SPP.
      *
      * @param  array<int,array{code:string,description:string,amount:int,metadata?:array}>  $items
+     * @param  string|null  $classType          Snapshot class_type paket murid (opsional).
+     * @param  string       $paymentMode        FULL atau INSTALLMENT (default FULL).
+     * @param  int|null     $installmentNumber  Nomor termin 1/2/3 (hanya untuk INSTALLMENT).
+     * @param  string|null  $installmentGroupId UUID pengikat 3 invoice cicilan (hanya untuk INSTALLMENT).
      */
     public function createOneOff(
         Student $student,
@@ -63,6 +69,10 @@ class InvoiceService
         ?string $description = null,
         ?Carbon $dueDate = null,
         ?Carbon $issuedAt = null,
+        ?string $classType = null,
+        string $paymentMode = Invoice::MODE_FULL,
+        ?int $installmentNumber = null,
+        ?string $installmentGroupId = null,
     ): Invoice {
         if (empty($items)) {
             throw new \InvalidArgumentException('Items invoice tidak boleh kosong.');
@@ -78,20 +88,27 @@ class InvoiceService
         $year = $issuedAt->year;
         $month = $issuedAt->month;
 
-        return DB::transaction(function () use ($student, $items, $description, $year, $month, $dueDate, $issuedAt) {
+        return DB::transaction(function () use (
+            $student, $items, $description, $year, $month, $dueDate, $issuedAt,
+            $classType, $paymentMode, $installmentNumber, $installmentGroupId
+        ) {
             $total = array_sum(array_column($items, 'amount'));
 
             $invoice = Invoice::create([
-                'invoice_number' => $this->generateNumber($year, $month, 'INV'),
-                'student_id'     => $student->id,
-                'year'           => $year,
-                'month'          => $month,
-                'description'    => $description ?? $this->summarizeItems($items),
-                'total_amount'   => $total,
-                'paid_amount'    => 0,
-                'status'         => Invoice::STATUS_UNPAID,
-                'due_date'       => $dueDate->toDateString(),
-                'issued_at'      => $issuedAt->toDateString(),
+                'invoice_number'      => $this->generateNumber($year, $month, 'INV'),
+                'student_id'          => $student->id,
+                'year'                => $year,
+                'month'               => $month,
+                'description'         => $description ?? $this->summarizeItems($items),
+                'total_amount'        => $total,
+                'paid_amount'         => 0,
+                'status'              => Invoice::STATUS_UNPAID,
+                'due_date'            => $dueDate->toDateString(),
+                'issued_at'           => $issuedAt->toDateString(),
+                'class_type'          => $classType,
+                'payment_mode'        => $paymentMode,
+                'installment_number'  => $installmentNumber,
+                'installment_group_id'=> $installmentGroupId,
             ]);
 
             foreach ($items as $item) {
@@ -106,6 +123,65 @@ class InvoiceService
 
             return $invoice->fresh('items');
         });
+    }
+
+    /**
+     * Generate 3 invoice cicilan untuk murid KIDS_CLASS_BUNDLE (BR-10.10).
+     *
+     * Nominal:
+     *   Termin 1 & 2 : intdiv(total, 3)
+     *   Termin 3     : sisa (total - termin1 - termin2) agar jumlah selalu tepat.
+     *
+     * Due date per termin:
+     *   Termin 1 : tanggal 10 bulan aktivasi (bulan ke-1)
+     *   Termin 2 : tanggal 10 bulan ke-2
+     *   Termin 3 : tanggal 10 bulan ke-4
+     *
+     * @return Invoice[]  Array 3 invoice berurutan termin 1, 2, 3.
+     */
+    public function createKidsBundleInstallments(
+        Student $student,
+        Enrollment $enrollment,
+        Carbon $startDate,
+    ): array {
+        $package  = $enrollment->package;
+        $total    = $package->price_per_month;
+        $groupId  = Str::uuid()->toString();
+
+        $termin1 = intdiv($total, 3);
+        $termin2 = intdiv($total, 3);
+        $termin3 = $total - $termin1 - $termin2;
+
+        // Offset bulan per termin: bulan ke-1, ke-2, ke-4 (index 0-based: 0, 1, 3).
+        $offsets = [0, 1, 3];
+        $invoices = [];
+
+        foreach ($offsets as $i => $offset) {
+            $terminNo = $i + 1;
+            $amount   = [$termin1, $termin2, $termin3][$i];
+
+            $issuedAt = $startDate->copy()->addMonths($offset)->startOfMonth();
+            $dueDate  = $issuedAt->copy()->setDay(self::DUE_DAY)->endOfDay();
+
+            $invoices[] = $this->createOneOff(
+                student: $student,
+                items: [[
+                    'code'        => 'SPP',
+                    'description' => "SPP Kids Class Bundle – Termin {$terminNo}/3",
+                    'amount'      => $amount,
+                    'metadata'    => ['package_id' => $package->id, 'installment_number' => $terminNo],
+                ]],
+                description: "Kids Class Bundle – Termin {$terminNo}/3",
+                dueDate: $dueDate,
+                issuedAt: $issuedAt,
+                classType: 'KIDS_CLASS_BUNDLE',
+                paymentMode: Invoice::MODE_INSTALLMENT,
+                installmentNumber: $terminNo,
+                installmentGroupId: $groupId,
+            );
+        }
+
+        return $invoices;
     }
 
     /**
@@ -131,6 +207,15 @@ class InvoiceService
             $enrollment = $student->enrollments->first();
             if (!$enrollment || !$enrollment->package) continue;
 
+            $package = $enrollment->package;
+
+            // KIDS_CLASS_BUNDLE tidak kena SPP bulanan — tagihan mereka sudah
+            // di-generate sebagai 3 cicilan saat aktivasi (BR-10.10).
+            if ($package->class_type === 'KIDS_CLASS_BUNDLE') {
+                $report['skipped']++;
+                continue;
+            }
+
             // Skip kalau invoice SPP untuk bulan ini sudah ada
             $exists = Invoice::where('student_id', $student->id)
                 ->where('year', $year)
@@ -143,7 +228,6 @@ class InvoiceService
                 continue;
             }
 
-            $package = $enrollment->package;
             $this->createOneOff(
                 student: $student,
                 items: [[
@@ -156,6 +240,7 @@ class InvoiceService
                 description: 'SPP ' . $issuedAt->format('F Y'),
                 dueDate: $dueDate,
                 issuedAt: $issuedAt,
+                classType: $package->class_type,
             );
             $report['created']++;
         }
@@ -166,6 +251,12 @@ class InvoiceService
     /**
      * Recalculate paid_amount + status berdasarkan validPayments.
      * Dipanggil setelah PaymentService::recordPayment / voidPayment.
+     *
+     * Aturan PARTIAL:
+     *   - Hanya invoice KIDS_CLASS_BUNDLE yang boleh berstatus PARTIAL.
+     *   - Invoice lain: jika bayar < total karena void, kembali ke UNPAID (tidak PARTIAL).
+     *     Kondisi ini seharusnya tidak terjadi karena PaymentService memblokir partial,
+     *     tapi sebagai safety net tetap ditangani di sini.
      */
     public function recalcStatus(Invoice $invoice): Invoice
     {
@@ -175,7 +266,9 @@ class InvoiceService
             $invoice->status === Invoice::STATUS_VOID => Invoice::STATUS_VOID,
             $paid <= 0                                => Invoice::STATUS_UNPAID,
             $paid >= $invoice->total_amount           => Invoice::STATUS_PAID,
-            default                                   => Invoice::STATUS_PARTIAL,
+            $invoice->class_type === 'KIDS_CLASS_BUNDLE' => Invoice::STATUS_PARTIAL,
+            // Non-KIDS_CLASS_BUNDLE tidak boleh PARTIAL (mis. setelah void sebagian).
+            default                                   => Invoice::STATUS_UNPAID,
         };
 
         $invoice->update([

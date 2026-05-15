@@ -256,6 +256,7 @@
 
             {{-- Skip Trial --}}
             <div x-show="openForm === 'skip'" x-cloak
+                 x-data="{ kidsBundle: false }"
                  class="mt-4 rounded-xl p-4"
                  style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2)">
                 <form method="POST" action="{{ route('students.skip-trial', $student->id) }}">
@@ -282,10 +283,12 @@
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
                             <select name="package_id" required class="block w-full rounded-lg text-sm px-3 py-2"
-                                    onchange="lifecycleFilterTeacher(this, 'teacher-skip')">
-                                <option value="" data-instrument-id="">— Pilih —</option>
+                                    @change="kidsBundle = ($event.target.selectedOptions[0]?.dataset?.classType === 'KIDS_CLASS_BUNDLE'); lifecycleFilterTeacher($event.target, 'teacher-skip')">
+                                <option value="" data-instrument-id="" data-class-type="">— Pilih —</option>
                                 @foreach($packages as $pkg)
-                                <option value="{{ $pkg->id }}" data-instrument-id="{{ $pkg->instrument->id }}">
+                                <option value="{{ $pkg->id }}"
+                                        data-instrument-id="{{ $pkg->instrument->id }}"
+                                        data-class-type="{{ $pkg->class_type }}">
                                     [{{ $pkg->code }}] {{ $pkg->instrument->name }} ({{ $pkg->formatted_price }})
                                 </option>
                                 @endforeach
@@ -307,6 +310,20 @@
                                 @endforeach
                             </select>
                         </div>
+                        {{-- Metode pembayaran: hanya muncul untuk KIDS_CLASS_BUNDLE --}}
+                        <div x-show="kidsBundle" class="md:col-span-2 p-3 rounded-lg border border-blue-200 bg-blue-50">
+                            <div class="text-xs font-semibold text-blue-700 mb-2">Metode Pembayaran Kids Class Bundle</div>
+                            <div class="flex gap-6">
+                                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                    <input type="radio" name="payment_mode" value="FULL" checked> Lunas sekali bayar
+                                </label>
+                                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                    <input type="radio" name="payment_mode" value="INSTALLMENT"> Cicilan 3 Termin (bulan ke-1, 2, 4)
+                                </label>
+                            </div>
+                        </div>
+                        {{-- Hidden default FULL untuk non-bundle --}}
+                        <input x-show="!kidsBundle" type="hidden" name="payment_mode" value="FULL">
                     </div>
                     <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
                             style="background:rgba(52,211,153,0.2);color:#34D399">
@@ -317,6 +334,7 @@
 
             {{-- Konversi Aktif --}}
             <div x-show="openForm === 'convert'" x-cloak
+                 x-data="{ kidsBundle: false }"
                  class="mt-4 rounded-xl p-4"
                  style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2)">
                 <form method="POST" action="{{ route('students.convert-active', $student->id) }}">
@@ -328,10 +346,12 @@
                             <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
                             <select name="package_id" required id="package-convert"
                                     class="block w-full rounded-lg text-sm px-3 py-2"
-                                    onchange="lifecycleFilterTeacher(this, 'teacher-convert')">
-                                <option value="" data-instrument-id="">— Pilih —</option>
+                                    @change="kidsBundle = ($event.target.selectedOptions[0]?.dataset?.classType === 'KIDS_CLASS_BUNDLE'); lifecycleFilterTeacher($event.target, 'teacher-convert')">
+                                <option value="" data-instrument-id="" data-class-type="">— Pilih —</option>
                                 @foreach($packages as $pkg)
-                                <option value="{{ $pkg->id }}" data-instrument-id="{{ $pkg->instrument->id }}"
+                                <option value="{{ $pkg->id }}"
+                                        data-instrument-id="{{ $pkg->instrument->id }}"
+                                        data-class-type="{{ $pkg->class_type }}"
                                         {{ $student->package_id == $pkg->id ? 'selected' : '' }}>
                                     [{{ $pkg->code }}] {{ $pkg->instrument->name }} ({{ $pkg->formatted_price }})
                                 </option>
@@ -360,6 +380,19 @@
                             <label class="block text-xs text-gray-500 mb-1">Catatan</label>
                             <textarea name="notes" rows="2" maxlength="500" class="block w-full rounded-lg text-sm px-3 py-2"></textarea>
                         </div>
+                        {{-- Metode pembayaran: hanya muncul untuk KIDS_CLASS_BUNDLE --}}
+                        <div x-show="kidsBundle" class="md:col-span-2 p-3 rounded-lg border border-blue-200 bg-blue-50">
+                            <div class="text-xs font-semibold text-blue-700 mb-2">Metode Pembayaran Kids Class Bundle</div>
+                            <div class="flex gap-6">
+                                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                    <input type="radio" name="payment_mode" value="FULL" checked> Lunas sekali bayar
+                                </label>
+                                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                    <input type="radio" name="payment_mode" value="INSTALLMENT"> Cicilan 3 Termin (bulan ke-1, 2, 4)
+                                </label>
+                            </div>
+                        </div>
+                        <input x-show="!kidsBundle" type="hidden" name="payment_mode" value="FULL">
                     </div>
                     <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
                             style="background:rgba(52,211,153,0.2);color:#34D399">
@@ -423,6 +456,7 @@
 
             {{-- Re-aktivasi --}}
             <div x-show="openForm === 'reactivate'" x-cloak
+                 x-data="{ kidsBundle: false }"
                  class="mt-4 rounded-xl p-4"
                  style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2)">
                 <form method="POST" action="{{ route('students.reactivate', $student->id) }}">
@@ -435,10 +469,12 @@
                             <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
                             <select name="package_id" required id="package-reactivate"
                                     class="block w-full rounded-lg text-sm px-3 py-2"
-                                    onchange="lifecycleFilterTeacher(this, 'teacher-reactivate')">
-                                <option value="" data-instrument-id="">— Pilih —</option>
+                                    @change="kidsBundle = ($event.target.selectedOptions[0]?.dataset?.classType === 'KIDS_CLASS_BUNDLE'); lifecycleFilterTeacher($event.target, 'teacher-reactivate')">
+                                <option value="" data-instrument-id="" data-class-type="">— Pilih —</option>
                                 @foreach($packages as $pkg)
-                                <option value="{{ $pkg->id }}" data-instrument-id="{{ $pkg->instrument->id }}">
+                                <option value="{{ $pkg->id }}"
+                                        data-instrument-id="{{ $pkg->instrument->id }}"
+                                        data-class-type="{{ $pkg->class_type }}">
                                     [{{ $pkg->code }}] {{ $pkg->instrument->name }} ({{ $pkg->formatted_price }})
                                 </option>
                                 @endforeach
@@ -464,6 +500,19 @@
                             <label class="block text-xs text-gray-500 mb-1">Catatan</label>
                             <textarea name="notes" rows="2" maxlength="500" class="block w-full rounded-lg text-sm px-3 py-2"></textarea>
                         </div>
+                        {{-- Metode pembayaran: hanya muncul untuk KIDS_CLASS_BUNDLE --}}
+                        <div x-show="kidsBundle" class="md:col-span-2 p-3 rounded-lg border border-blue-200 bg-blue-50">
+                            <div class="text-xs font-semibold text-blue-700 mb-2">Metode Pembayaran Kids Class Bundle</div>
+                            <div class="flex gap-6">
+                                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                    <input type="radio" name="payment_mode" value="FULL" checked> Lunas sekali bayar
+                                </label>
+                                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                    <input type="radio" name="payment_mode" value="INSTALLMENT"> Cicilan 3 Termin (bulan ke-1, 2, 4)
+                                </label>
+                            </div>
+                        </div>
+                        <input x-show="!kidsBundle" type="hidden" name="payment_mode" value="FULL">
                     </div>
                     <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
                             style="background:rgba(52,211,153,0.2);color:#34D399">

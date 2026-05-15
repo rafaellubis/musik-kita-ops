@@ -310,6 +310,7 @@ class StudentController extends Controller
             'assigned_teacher_id' => 'required|exists:teachers,id',
             'assigned_room_id'    => 'nullable|exists:rooms,id',
             'notes'               => 'nullable|string|max:500',
+            'payment_mode'        => 'nullable|in:FULL,INSTALLMENT',
         ], [
             'package_id.required'          => 'Paket wajib dipilih sebelum konversi Aktif.',
             'assigned_teacher_id.required' => 'Guru wajib dipilih sebelum konversi Aktif.',
@@ -318,7 +319,7 @@ class StudentController extends Controller
         return $this->runLifecycle(
             fn () => $this->lifecycle->konversiAktif($student, $data),
             $student,
-            'Murid dikonversi jadi Aktif. Tagihan REG + SPP perlu diterbitkan (modul tagihan menyusul).'
+            'Murid dikonversi jadi Aktif. Tagihan REG + SPP sudah diterbitkan.'
         );
     }
 
@@ -331,6 +332,7 @@ class StudentController extends Controller
             'package_id'          => 'required|exists:packages,id',
             'assigned_teacher_id' => 'required|exists:teachers,id',
             'assigned_room_id'    => 'nullable|exists:rooms,id',
+            'payment_mode'        => 'nullable|in:FULL,INSTALLMENT',
         ], [
             'reason_code.required' => 'Pilih alasan skip trial (walk-in / migrasi / reaktivasi / lulus kids).',
             'reason.required'      => 'Penjelasan alasan wajib diisi untuk audit.',
@@ -416,6 +418,7 @@ class StudentController extends Controller
             'assigned_teacher_id' => 'required|exists:teachers,id',
             'assigned_room_id'    => 'nullable|exists:rooms,id',
             'notes'               => 'nullable|string|max:500',
+            'payment_mode'        => 'nullable|in:FULL,INSTALLMENT',
         ], [
             'package_id.required'          => 'Paket wajib dipilih untuk re-aktivasi.',
             'assigned_teacher_id.required' => 'Guru wajib dipilih untuk re-aktivasi.',

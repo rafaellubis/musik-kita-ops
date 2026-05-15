@@ -30,6 +30,8 @@
         $hasDenda        = $invoice->items->where('item_code', 'DENDA')->isNotEmpty();
         $canRemoveDenda  = $isOwner && in_array($invoice->status, ['UNPAID', 'PARTIAL']) && $hasDenda;
         $totalDenda      = $invoice->items->where('item_code', 'DENDA')->sum('amount');
+        // Non-KIDS_CLASS_BUNDLE: amount di-lock = saldo (harus bayar penuh).
+        $lockAmount      = $invoice->class_type !== 'KIDS_CLASS_BUNDLE';
     @endphp
 
     <div class="py-6 px-4 lg:px-8 space-y-4">
@@ -64,6 +66,15 @@
                         <span class="px-3 py-1 rounded text-sm border {{ $statusColors[$invoice->status] }}">
                             {{ $invoice->status }}
                         </span>
+                        @if($invoice->installment_label)
+                            <span class="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-300">
+                                {{ $invoice->installment_label }}
+                            </span>
+                        @elseif($invoice->class_type === 'KIDS_CLASS_BUNDLE' && $invoice->payment_mode === 'FULL')
+                            <span class="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700 border border-purple-300">
+                                Kids Bundle – Lunas
+                            </span>
+                        @endif
                         <span class="text-sm text-gray-600">
                             Jatuh tempo: {{ $invoice->due_date->format('d M Y') }}
                             @if($invoice->balance > 0 && $invoice->due_date->lt(now()))
@@ -119,13 +130,27 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                             <div>
                                 <label class="block">Jumlah <span class="text-red-500">*</span></label>
-                                <input type="number" name="amount" required
-                                       min="1" max="99999999"
-                                       value="{{ old('amount', $invoice->balance) }}"
-                                       class="mt-1 block w-full border-gray-300 rounded">
-                                <p class="text-xs text-gray-500 mt-1">
-                                    Saldo saat ini: Rp {{ number_format($invoice->balance, 0, ',', '.') }}
-                                </p>
+                                @if($lockAmount)
+                                    {{-- Non-KIDS_CLASS_BUNDLE: harus bayar penuh, field di-lock --}}
+                                    <input type="number" name="amount" required
+                                           min="{{ $invoice->balance }}" max="{{ $invoice->balance }}"
+                                           value="{{ $invoice->balance }}"
+                                           readonly
+                                           class="mt-1 block w-full border-gray-300 rounded bg-gray-50 cursor-not-allowed">
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        Harus dilunasi penuh: Rp {{ number_format($invoice->balance, 0, ',', '.') }}
+                                    </p>
+                                @else
+                                    {{-- KIDS_CLASS_BUNDLE: boleh partial (cicilan) --}}
+                                    <input type="number" name="amount" required
+                                           min="1" max="{{ $invoice->balance }}"
+                                           value="{{ old('amount', $invoice->balance) }}"
+                                           class="mt-1 block w-full border-gray-300 rounded">
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        Saldo saat ini: Rp {{ number_format($invoice->balance, 0, ',', '.') }}
+                                        · Cicilan diperbolehkan.
+                                    </p>
+                                @endif
                             </div>
                             <div>
                                 <label class="block">Metode <span class="text-red-500">*</span></label>

@@ -31,21 +31,54 @@ class Invoice extends Model
         'status',
         'due_date', 'issued_at',
         'notes',
+        'class_type',
+        'payment_mode',
+        'installment_number',
+        'installment_group_id',
     ];
 
     protected $casts = [
-        'due_date'     => 'date',
-        'issued_at'    => 'date',
-        'year'         => 'integer',
-        'month'        => 'integer',
-        'total_amount' => 'integer',
-        'paid_amount'  => 'integer',
+        'due_date'           => 'date',
+        'issued_at'          => 'date',
+        'year'               => 'integer',
+        'month'              => 'integer',
+        'total_amount'       => 'integer',
+        'paid_amount'        => 'integer',
+        'installment_number' => 'integer',
     ];
 
     public const STATUS_UNPAID  = 'UNPAID';
     public const STATUS_PARTIAL = 'PARTIAL';
     public const STATUS_PAID    = 'PAID';
     public const STATUS_VOID    = 'VOID';
+
+    public const MODE_FULL        = 'FULL';
+    public const MODE_INSTALLMENT = 'INSTALLMENT';
+
+    // ============= HELPERS =============
+
+    /** Invoice ini milik paket KIDS_CLASS_BUNDLE? */
+    public function isKidsClassBundle(): bool
+    {
+        return $this->class_type === 'KIDS_CLASS_BUNDLE';
+    }
+
+    /** Invoice ini adalah cicilan (salah satu dari 3 termin)? */
+    public function isInstallment(): bool
+    {
+        return $this->payment_mode === self::MODE_INSTALLMENT;
+    }
+
+    /**
+     * Label termin untuk ditampilkan di UI.
+     * Contoh: "Termin 1/3", "Termin 2/3", "Termin 3/3".
+     * Null jika bukan installment.
+     */
+    public function getInstallmentLabelAttribute(): ?string
+    {
+        if (!$this->isInstallment() || !$this->installment_number) return null;
+        return "Termin {$this->installment_number}/3";
+    }
 
     // ============= ACCESSORS =============
 

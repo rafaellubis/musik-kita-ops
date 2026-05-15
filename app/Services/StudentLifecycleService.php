@@ -128,8 +128,13 @@ class StudentLifecycleService
                 $data['assigned_teacher_id'],
             );
 
-            // Terbitkan invoice REG + SPP bulan ini (BR-1.5, BR-1.8)
-            $invoice = $this->issueActivationInvoice($student, $enrollment, includeReg: true);
+            // Terbitkan invoice REG + SPP bulan ini (BR-1.5, BR-1.8).
+            // payment_mode: FULL atau INSTALLMENT, relevan untuk KIDS_CLASS_BUNDLE.
+            $invoice = $this->issueActivationInvoice(
+                $student, $enrollment,
+                includeReg: true,
+                paymentMode: $data['payment_mode'] ?? 'FULL',
+            );
 
             $this->recordHistory(
                 student:  $student,
@@ -192,7 +197,11 @@ class StudentLifecycleService
 
             // Terbitkan invoice. Lulus Kids Class re-enroll TIDAK perlu REG (BR-10.7).
             $includeReg = $data['reason_code'] !== 'lulus_kids';
-            $invoice = $this->issueActivationInvoice($student, $enrollment, includeReg: $includeReg);
+            $invoice = $this->issueActivationInvoice(
+                $student, $enrollment,
+                includeReg: $includeReg,
+                paymentMode: $data['payment_mode'] ?? 'FULL',
+            );
 
             $this->recordHistory(
                 student:      $student,
@@ -390,7 +399,11 @@ class StudentLifecycleService
             );
 
             // Mundur->Aktif WAJIB bayar REG ulang (Rp 250rb). Selesai->Aktif tidak.
-            $invoice = $this->issueActivationInvoice($student, $enrollment, includeReg: $needRegFee);
+            $invoice = $this->issueActivationInvoice(
+                $student, $enrollment,
+                includeReg: $needRegFee,
+                paymentMode: $data['payment_mode'] ?? 'FULL',
+            );
 
             $this->recordHistory(
                 student:  $student,
@@ -476,16 +489,78 @@ class StudentLifecycleService
     }
 
     /**
-     * Terbitkan invoice aktivasi (REG opsional + SPP bulan ini).
+     * Terbitkan invoice aktivasi (REG opsional + SPP / cicilan Kids Class Bundle).
      * Dipanggil saat skipTrial / konversiAktif / aktifkanKembali.
      *
-     * @param  bool  $includeReg  Apakah include item REG Rp 250.000.
-     *                            False kalau lulus_kids re-enroll (BR-10.7).
+     * @param  bool    $includeReg   Apakah include item REG Rp 250.000.
+     *                               False kalau lulus_kids re-enroll (BR-10.7).
+     * @param  string  $paymentMode  'FULL' atau 'INSTALLMENT' (hanya relevan untuk KIDS_CLASS_BUNDLE).
+     * @return Invoice  Invoice pertama yang dibuat (untuk dicatat di history).
      */
-    private function issueActivationInvoice(Student $student, Enrollment $enrollment, bool $includeReg): Invoice
-    {
+    private function issueActivationInvoice(
+        Student $student,
+        Enrollment $enrollment,
+        bool $includeReg,
+        string $paymentMode = 'FULL',
+    ): Invoice {
         $package = $enrollment->package ?? \App\Models\Package::find($enrollment->package_id);
 
+        // === KIDS_CLASS_BUNDLE: buat 3 cicilan atau 1 invoice lunas ===
+        if ($package->class_type === 'KIDS_CLASS_BUNDLE') {
+            if ($paymentMode === 'INSTALLMENT') {
+                // REG dibuat terpisah (satu invoice), lalu 3 cicilan SPP.
+                if ($includeReg) {
+                    $this->invoiceService->createOneOff(
+                        student: $student,
+                        items: [[
+                            'code'        => 'REG',
+                            'description' => 'Biaya Pendaftaran',
+                            'amount'      => InvoiceService::FEE_REG,
+                        ]],
+                        description: 'Biaya Pendaftaran',
+                        classType: $package->class_type,
+                    );
+                }
+
+                $cicilans = $this->invoiceService->createKidsBundleInstallments(
+                    student: $student,
+                    enrollment: $enrollment,
+                    startDate: now(),
+                );
+
+                // Kembalikan invoice cicilan pertama untuk dicatat di history.
+                return $cicilans[0];
+            }
+
+            // FULL: satu invoice dengan total penuh (REG + SPP digabung atau terpisah).
+            if ($includeReg) {
+                $this->invoiceService->createOneOff(
+                    student: $student,
+                    items: [[
+                        'code'        => 'REG',
+                        'description' => 'Biaya Pendaftaran',
+                        'amount'      => InvoiceService::FEE_REG,
+                    ]],
+                    description: 'Biaya Pendaftaran',
+                    classType: $package->class_type,
+                );
+            }
+
+            return $this->invoiceService->createOneOff(
+                student: $student,
+                items: [[
+                    'code'        => 'SPP',
+                    'description' => "SPP Kids Class Bundle " . now()->format('F Y') . " (Lunas)",
+                    'amount'      => $package->price_per_month,
+                    'metadata'    => ['package_id' => $package->id],
+                ]],
+                description: 'Kids Class Bundle – Pembayaran Lunas',
+                classType: $package->class_type,
+                paymentMode: 'FULL',
+            );
+        }
+
+        // === Paket reguler: REG opsional + SPP bulan ini ===
         $items = [];
 
         if ($includeReg) {
@@ -507,6 +582,7 @@ class StudentLifecycleService
             student: $student,
             items: $items,
             description: $includeReg ? 'Aktivasi murid (REG + SPP bulan ke-1)' : 'SPP bulan ke-1',
+            classType: $package->class_type,
         );
     }
 
