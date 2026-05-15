@@ -266,6 +266,10 @@ class InvoiceService
      */
     public function recalcStatus(Invoice $invoice): Invoice
     {
+        // Selalu sync total_amount dari items agar tidak corrupt jika item dihapus manual
+        $invoice->update(['total_amount' => $invoice->items()->sum('amount')]);
+        $invoice->refresh();
+
         $paid = $invoice->validPayments()->sum('amount');
 
         // Setiap invoice harus dibayar penuh — tidak ada status PARTIAL dalam alur normal.
