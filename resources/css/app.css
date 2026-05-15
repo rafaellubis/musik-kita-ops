@@ -11,6 +11,21 @@
 .overflow-y-auto::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
 .overflow-y-auto::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
 
+/* Transisi halus saat toggle tema dark ↔ light.
+   PENTING: selector tidak boleh bergantung pada theme class (.dark-content / .light-content)
+   karena Alpine mengganti class dan warna secara bersamaan dalam satu frame —
+   jika transition rule hilang tepat saat warna berubah, browser tidak sempat
+   menganimasikannya. Selector main/aside/mk-topbar selalu aktif tanpa syarat. */
+main, main *,
+aside, aside *,
+.mk-topbar, .mk-topbar *,
+.mk-page-header, .mk-page-header * {
+    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+/* Cegah flash background gelap saat pertama kali load di light mode */
+html[data-theme="light"] body { background-color: #F2E9DC; }
+
 /* ================================================================
    DARK CONTENT THEME
    Semua override di-scope ke .dark-content agar tidak bocor
@@ -25,6 +40,10 @@
 .dark-content .bg-gray-50        { background-color: rgba(255,255,255,0.03); }
 .dark-content .bg-gray-100       { background-color: rgba(255,255,255,0.06); }
 .dark-content .bg-gray-200       { background-color: rgba(255,255,255,0.09); }
+.dark-content .bg-gray-300       { background-color: rgba(255,255,255,0.14); }
+.dark-content .bg-gray-400       { background-color: rgba(255,255,255,0.20); }
+.dark-content .bg-gray-500       { background-color: rgba(255,255,255,0.28); }
+.dark-content .bg-gray-600       { background-color: rgba(255,255,255,0.35); }
 
 /* === HOVER BACKGROUNDS === */
 .dark-content .hover\:bg-gray-50:hover   { background-color: #252B42; }
@@ -133,11 +152,28 @@
 .dark-content input[type="search"],
 .dark-content input[type="url"],
 .dark-content input:not([type]),
+.dark-content input[type="file"],
 .dark-content select,
 .dark-content textarea {
     background-color: #252B42 !important;
     border-color: rgba(255,255,255,0.12) !important;
     color: #E8EAF0 !important;
+}
+
+/* Tombol "Pilih File" di dalam input file */
+.dark-content input[type="file"]::file-selector-button {
+    background-color: rgba(212,168,83,0.15);
+    border: 1px solid rgba(212,168,83,0.3);
+    color: #D4A853;
+    border-radius: 4px;
+    padding: 2px 10px;
+    margin-right: 10px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: background-color 0.15s ease;
+}
+.dark-content input[type="file"]:hover::file-selector-button {
+    background-color: rgba(212,168,83,0.25);
 }
 
 .dark-content input::placeholder,
@@ -153,6 +189,26 @@
     border-color: rgba(212,168,83,0.5) !important;
     box-shadow: 0 0 0 3px rgba(212,168,83,0.1) !important;
     outline: none !important;
+}
+
+/* Input readonly — jelas tidak bisa diedit, berbeda dari disabled */
+.dark-content input[readonly],
+.dark-content textarea[readonly] {
+    background-color: rgba(212,168,83,0.06) !important;
+    border-color: rgba(212,168,83,0.18) !important;
+    color: #8B92A8 !important;
+    cursor: not-allowed;
+}
+
+/* Input disabled — redup, tidak aktif sama sekali */
+.dark-content input:disabled,
+.dark-content select:disabled,
+.dark-content textarea:disabled {
+    background-color: rgba(255,255,255,0.02) !important;
+    border-color: rgba(255,255,255,0.04) !important;
+    color: #3B4260 !important;
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 /* Checkbox dan radio tetap berwarna */
@@ -187,6 +243,25 @@
 /* Indigo buttons → gold (konsisten dengan blue/purple) */
 .dark-content .bg-indigo-600 { background-color: rgba(212,168,83,0.9) !important; color: #1A1000 !important; }
 .dark-content .hover\:bg-indigo-700:hover { background-color: #D4A853 !important; color: #1A1000 !important; }
+
+/* Green success buttons — tetap hijau semantik (tidak di-convert ke gold) */
+.dark-content .bg-green-600   { background-color: #059669 !important; color: #ECFDF5 !important; }
+.dark-content .hover\:bg-green-700:hover { background-color: #047857 !important; color: #ECFDF5 !important; }
+.dark-content .bg-green-500   { background-color: rgba(5,150,105,0.85) !important; color: #ECFDF5 !important; }
+.dark-content .hover\:bg-green-600:hover { background-color: #059669 !important; color: #ECFDF5 !important; }
+
+/* Red danger buttons — tetap merah semantik, sedikit muted agar tidak terlalu menyilaukan */
+.dark-content .bg-red-600    { background-color: rgba(220,38,38,0.85) !important; color: #FEF2F2 !important; }
+.dark-content .hover\:bg-red-700:hover { background-color: #B91C1C !important; color: #FEF2F2 !important; }
+.dark-content .bg-red-500    { background-color: rgba(220,38,38,0.75) !important; color: #FEF2F2 !important; }
+.dark-content .hover\:bg-red-600:hover { background-color: rgba(220,38,38,0.85) !important; }
+
+/* Playfair Display untuk heading utama di konten halaman */
+.dark-content h1, .light-content h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
 
 /* === PAGINATION === */
 .dark-content nav[aria-label="Pagination"] span,
@@ -260,6 +335,10 @@
 .light-content .bg-gray-50        { background-color: rgba(101,65,27,0.04); }
 .light-content .bg-gray-100       { background-color: rgba(101,65,27,0.07); }
 .light-content .bg-gray-200       { background-color: rgba(101,65,27,0.11); }
+.light-content .bg-gray-300       { background-color: rgba(101,65,27,0.18); }
+.light-content .bg-gray-400       { background-color: rgba(101,65,27,0.26); }
+.light-content .bg-gray-500       { background-color: rgba(101,65,27,0.35); }
+.light-content .bg-gray-600       { background-color: rgba(101,65,27,0.45); }
 
 /* === HOVER BACKGROUNDS === */
 .light-content .hover\:bg-gray-50:hover   { background-color: #F5EAD8; }
@@ -307,14 +386,15 @@
 /* Green: Aktif, PAID, HADIR, Lunas */
 .light-content .bg-green-50               { background-color: rgba(58,125,68,0.10); }
 .light-content .bg-green-100              { background-color: rgba(58,125,68,0.16); }
-/* Yellow / Amber: Trial, PARTIAL, Cuti */
-.light-content .bg-yellow-50,
-.light-content .bg-amber-50               { background-color: rgba(181,101,29,0.10); }
-.light-content .bg-yellow-100,
-.light-content .bg-amber-100              { background-color: rgba(181,101,29,0.16); }
-/* Orange: Cuti, DIGANTI */
-.light-content .bg-orange-50              { background-color: rgba(181,101,29,0.10); }
-.light-content .bg-orange-100             { background-color: rgba(181,101,29,0.16); }
+/* Yellow: Trial, PARTIAL — sienna keemasan */
+.light-content .bg-yellow-50              { background-color: rgba(181,101,29,0.10); }
+.light-content .bg-yellow-100             { background-color: rgba(181,101,29,0.16); }
+/* Amber: CALCULATED — lebih keemasan dari yellow */
+.light-content .bg-amber-50               { background-color: rgba(180,83,9,0.10); }
+.light-content .bg-amber-100              { background-color: rgba(180,83,9,0.16); }
+/* Orange: Cuti, DIGANTI — lebih merah-oranye dari amber */
+.light-content .bg-orange-50              { background-color: rgba(194,65,12,0.10); }
+.light-content .bg-orange-100             { background-color: rgba(194,65,12,0.16); }
 /* Blue: Selesai, info */
 .light-content .bg-blue-50                { background-color: rgba(58,97,134,0.10); }
 .light-content .bg-blue-100               { background-color: rgba(58,97,134,0.14); }
@@ -336,10 +416,10 @@
 .light-content .text-yellow-700,
 .light-content .text-yellow-800           { color: #B5651D; }
 .light-content .text-orange-600,
-.light-content .text-orange-700           { color: #B5651D; }
+.light-content .text-orange-700           { color: #C2410C; }  /* merah-oranye, beda dari amber */
 .light-content .text-amber-600,
 .light-content .text-amber-700,
-.light-content .text-amber-800            { color: #B5651D; }
+.light-content .text-amber-800            { color: #B45309; }  /* keemasan, beda dari orange */
 .light-content .text-blue-600,
 .light-content .text-blue-700,
 .light-content .text-blue-800             { color: #3A6186; }
@@ -372,11 +452,28 @@
 .light-content input[type="search"],
 .light-content input[type="url"],
 .light-content input:not([type]),
+.light-content input[type="file"],
 .light-content select,
 .light-content textarea {
     background-color: #FFFFFF !important;
     border-color: rgba(101,65,27,0.25) !important;
     color: #2C1A07 !important;
+}
+
+/* Tombol "Pilih File" di dalam input file */
+.light-content input[type="file"]::file-selector-button {
+    background-color: rgba(160,82,45,0.12);
+    border: 1px solid rgba(160,82,45,0.3);
+    color: #A0522D;
+    border-radius: 4px;
+    padding: 2px 10px;
+    margin-right: 10px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: background-color 0.15s ease;
+}
+.light-content input[type="file"]:hover::file-selector-button {
+    background-color: rgba(160,82,45,0.22);
 }
 
 .light-content input::placeholder,
@@ -391,6 +488,26 @@
     border-color: rgba(160,82,45,0.60) !important;
     box-shadow: 0 0 0 3px rgba(160,82,45,0.12) !important;
     outline: none !important;
+}
+
+/* Input readonly — visual dibedakan dari editable tapi bukan disabled */
+.light-content input[readonly],
+.light-content textarea[readonly] {
+    background-color: rgba(160,82,45,0.05) !important;
+    border-color: rgba(160,82,45,0.22) !important;
+    color: #7A5C3A !important;
+    cursor: not-allowed;
+}
+
+/* Input disabled — redup, tidak aktif */
+.light-content input:disabled,
+.light-content select:disabled,
+.light-content textarea:disabled {
+    background-color: rgba(101,65,27,0.03) !important;
+    border-color: rgba(101,65,27,0.08) !important;
+    color: #C0956A !important;
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 .light-content input[type="checkbox"],
@@ -411,6 +528,18 @@
 
 .light-content .bg-indigo-600 { background-color: #A0522D !important; color: #FBF5EC !important; }
 .light-content .hover\:bg-indigo-700:hover { background-color: #8B4226 !important; color: #FBF5EC !important; }
+
+/* Green success buttons */
+.light-content .bg-green-600   { background-color: #16a34a !important; color: #F0FFF4 !important; }
+.light-content .hover\:bg-green-700:hover { background-color: #15803d !important; color: #F0FFF4 !important; }
+.light-content .bg-green-500   { background-color: rgba(22,163,74,0.9) !important; color: #F0FFF4 !important; }
+.light-content .hover\:bg-green-600:hover { background-color: #16a34a !important; color: #F0FFF4 !important; }
+
+/* Red danger buttons */
+.light-content .bg-red-600    { background-color: #DC2626 !important; color: #FFF5F5 !important; }
+.light-content .hover\:bg-red-700:hover { background-color: #B91C1C !important; color: #FFF5F5 !important; }
+.light-content .bg-red-500    { background-color: rgba(220,38,38,0.9) !important; color: #FFF5F5 !important; }
+.light-content .hover\:bg-red-600:hover { background-color: #DC2626 !important; }
 
 /* === PAGINATION === */
 .light-content nav[aria-label="Pagination"] span,

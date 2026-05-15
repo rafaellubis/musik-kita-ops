@@ -92,3 +92,10 @@ benar — kalau PHP 8.4 atau version lain, sesuaikan.
 job yang sama tidak jalan paralel.
 
 **Lihat log**: `storage/logs/laravel.log` untuk error scheduler.
+
+
+
+
+
+
+

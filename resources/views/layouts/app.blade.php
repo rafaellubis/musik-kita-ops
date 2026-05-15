@@ -12,6 +12,14 @@
         <link href="https://fonts.bunny.net/css?family=dm-sans:300,400,500,600,700|playfair-display:600,700&display=swap" rel="stylesheet" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        {{-- Set data-theme di <html> sebelum Alpine load agar tidak ada flash background salah --}}
+        <script>
+            (function () {
+                var t = localStorage.getItem('mk-theme') || 'dark';
+                document.documentElement.setAttribute('data-theme', t);
+            }());
+        </script>
     </head>
     <body class="font-sans antialiased bg-mk-bg text-mk-text">
 
@@ -114,7 +122,7 @@
                 {{-- Page Header — tema menyesuaikan pilihan dark/light --}}
                 @isset($header)
                 <div :class="theme === 'dark' ? 'dark-content' : 'light-content'"
-                     class="shrink-0 bg-mk-card border-b border-white/[0.06] px-4 lg:px-8 py-4">
+                     class="mk-page-header shrink-0 bg-mk-card border-b border-white/[0.06] px-4 lg:px-8 py-4">
                     {{ $header }}
                 </div>
                 @endisset
