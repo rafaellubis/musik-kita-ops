@@ -67,10 +67,12 @@ class SessionGeneratorService
         // Pre-load libur nasional untuk bulan ini → array tanggal Y-m-d
         $holidayDates = $this->loadHolidayDates($start, $end);
 
-        // Ambil semua schedule aktif yang enrollment-nya juga ACTIVE
+        // Ambil schedule aktif dengan enrollment ACTIVE dan murid berstatus Aktif.
+        // Double-filter karena enrollment bisa tertinggal ACTIVE saat murid sudah mundur.
         $schedules = Schedule::query()
             ->active()
             ->whereHas('enrollment', fn ($q) => $q->active())
+            ->whereHas('enrollment.student', fn ($q) => $q->where('status', 'Aktif'))
             ->with('enrollment')
             ->get();
 
