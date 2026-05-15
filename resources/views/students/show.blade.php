@@ -62,6 +62,12 @@
             {{ session('error') }}
         </div>
         @endif
+        @if(session('warning'))
+        <div class="p-3 rounded-lg text-sm fade-in-up"
+             style="background:rgba(251,191,36,0.1);color:#F59E0B;border:1px solid rgba(251,191,36,0.2)">
+            ⚠️ {{ session('warning') }}
+        </div>
+        @endif
         @if($errors->any())
         <div class="p-3 rounded-lg text-sm fade-in-up"
              style="background:rgba(248,113,113,0.1);color:#F87171;border:1px solid rgba(248,113,113,0.2)">
