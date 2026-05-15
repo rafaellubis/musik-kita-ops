@@ -163,6 +163,12 @@ class InvoiceService
             $issuedAt = $startDate->copy()->addMonths($offset)->startOfMonth();
             $dueDate  = $issuedAt->copy()->setDay(self::DUE_DAY)->endOfDay();
 
+            // Jika due date sudah lewat hari ini (mis. aktivasi setelah tgl 10),
+            // geser ke akhir bulan agar murid tidak langsung berstatus overdue.
+            if ($dueDate->lt(now()->startOfDay())) {
+                $dueDate = $issuedAt->copy()->endOfMonth();
+            }
+
             $invoices[] = $this->createOneOff(
                 student: $student,
                 items: [[
