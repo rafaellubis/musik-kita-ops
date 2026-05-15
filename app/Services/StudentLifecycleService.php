@@ -225,6 +225,8 @@ class StudentLifecycleService
      * Aktif -> Cuti. Berbayar Rp 100rb/pengajuan, maks 1 bulan + perpanjang 1x (BR-9).
      * Method ini juga handle perpanjang cuti (Cuti -> Cuti).
      *
+     * Guard (Gap 3): Blok pengajuan cuti jika ada invoice SPP UNPAID/PARTIAL di bulan berjalan.
+     *
      * @param array{
      *     cuti_from: string,
      *     cuti_until: string,
@@ -237,6 +239,18 @@ class StudentLifecycleService
         if (!in_array($student->status, ['Aktif', 'Cuti'], true)) {
             throw new InvalidArgumentException(
                 'Cuti hanya bisa dari Aktif atau perpanjangan dari Cuti. Status sekarang: ' . $student->status
+            );
+        }
+
+        // Guard: blok cuti jika SPP bulan berjalan belum dibayar (Gap 3)
+        $unpaidSppCurrentMonth = $student->invoices()
+            ->whereIn('status', ['UNPAID', 'PARTIAL'])
+            ->whereHas('items', fn ($q) => $q->where('item_code', 'SPP'))
+            ->exists();
+
+        if ($unpaidSppCurrentMonth) {
+            throw new InvalidArgumentException(
+                'Selesaikan tagihan SPP bulan berjalan sebelum mengajukan cuti.'
             );
         }
 
