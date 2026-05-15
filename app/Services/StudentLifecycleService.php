@@ -36,6 +36,9 @@ use InvalidArgumentException;
  */
 class StudentLifecycleService
 {
+    /** Pesan warning dari operasi terakhir, jika ada. Dibaca oleh controller. */
+    public ?string $lastWarning = null;
+
     public function __construct(
         private readonly InvoiceService $invoiceService,
     ) {}
@@ -242,13 +245,14 @@ class StudentLifecycleService
             );
         }
 
-        // Guard: blok cuti jika SPP bulan berjalan belum dibayar (Gap 3)
-        $unpaidSppCurrentMonth = $student->invoices()
+        // Guard: blok cuti jika ada SPP yang belum lunas (bulan apapun).
+        // Sengaja tidak filter per-bulan agar murid menyelesaikan semua tunggakan sebelum cuti.
+        $hasUnpaidSpp = $student->invoices()
             ->whereIn('status', ['UNPAID', 'PARTIAL'])
             ->whereHas('items', fn ($q) => $q->where('item_code', 'SPP'))
             ->exists();
 
-        if ($unpaidSppCurrentMonth) {
+        if ($hasUnpaidSpp) {
             throw new InvalidArgumentException(
                 'Selesaikan tagihan SPP bulan berjalan sebelum mengajukan cuti.'
             );
@@ -418,11 +422,8 @@ class StudentLifecycleService
             ->count();
 
         if ($unpaidCount > 0) {
-            session()->flash(
-                'warning',
-                "Perhatian: murid ini memiliki {$unpaidCount} tagihan lama yang belum lunas. " .
-                "Periksa riwayat tagihan setelah aktivasi."
-            );
+            $this->lastWarning = "Perhatian: murid ini memiliki {$unpaidCount} tagihan lama yang belum lunas. " .
+                "Periksa riwayat tagihan setelah aktivasi.";
         }
 
         // Mundur -> Aktif WAJIB bayar registrasi ulang. Selesai -> Aktif tidak.

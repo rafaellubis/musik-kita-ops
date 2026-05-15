@@ -424,11 +424,18 @@ class StudentController extends Controller
             'assigned_teacher_id.required' => 'Guru wajib dipilih untuk re-aktivasi.',
         ]);
 
-        return $this->runLifecycle(
+        $result = $this->runLifecycle(
             fn () => $this->lifecycle->aktifkanKembali($student, $data),
             $student,
             'Murid diaktifkan kembali.'
         );
+
+        // Flash warning dari service jika ada hutang lama (diset oleh aktifkanKembali).
+        if ($this->lifecycle->lastWarning) {
+            session()->flash('warning', $this->lifecycle->lastWarning);
+        }
+
+        return $result;
     }
 
     /**

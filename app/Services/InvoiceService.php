@@ -352,9 +352,6 @@ class InvoiceService
                     ]);
                 }
 
-                // Recalc total_amount + status
-                $newTotal = $invoice->items()->sum('amount');
-                $invoice->update(['total_amount' => $newTotal]);
                 $this->recalcStatus($invoice);
             });
 
