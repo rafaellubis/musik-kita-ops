@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ClassSession;
 use App\Models\Enrollment;
 use App\Models\Invoice;
 use App\Models\Student;
@@ -302,6 +303,20 @@ class StudentLifecycleService
 
             // Tutup enrollment aktif: INACTIVE + end_date = today.
             $this->closeActiveEnrollments($student, status: 'INACTIVE');
+
+            // Cancel semua sesi SCHEDULED yang terkait enrollment murid ini.
+            // Pakai CANCELLED (bukan hapus) agar audit trail history sesi terjaga.
+            // Gunakan semua enrollment (bukan hanya yang aktif) untuk menangkap
+            // edge case di mana enrollment sudah ditutup tapi sesi masih tersisa.
+            ClassSession::whereIn(
+                'enrollment_id',
+                $student->enrollments()->pluck('id')
+            )
+            ->where('status', ClassSession::STATUS_SCHEDULED)
+            ->update([
+                'status' => ClassSession::STATUS_CANCELLED,
+                'notes'  => 'Murid mengundurkan diri — sesi dibatalkan otomatis',
+            ]);
 
             $this->recordHistory(
                 student:  $student,
