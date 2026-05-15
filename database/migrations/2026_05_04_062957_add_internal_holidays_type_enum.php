@@ -12,6 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::getDriverName() === 'sqlite') return;
         DB::statement("ALTER TABLE holidays MODIFY COLUMN type ENUM('Nasional', 'Cuti Bersama', 'Internal') NOT NULL");
     }
 
@@ -20,6 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-     DB::statement("ALTER TABLE holidays MODIFY COLUMN type ENUM('Nasional', 'Cuti Bersama') NOT NULL");
+        if (DB::getDriverName() === 'sqlite') return;
+        DB::statement("ALTER TABLE holidays MODIFY COLUMN type ENUM('Nasional', 'Cuti Bersama') NOT NULL");
     }
 };

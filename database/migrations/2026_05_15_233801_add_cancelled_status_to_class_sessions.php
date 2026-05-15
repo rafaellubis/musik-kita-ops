@@ -7,6 +7,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // MODIFY COLUMN ENUM adalah syntax MySQL — skip di SQLite (dipakai untuk testing).
+        // Di SQLite kolom ini bertipe TEXT dan CANCELLED sudah valid sebagai nilai string.
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         // MySQL tidak bisa ALTER ENUM kolom langsung — harus re-define enum.
         // Tambah 'CANCELLED' di akhir daftar status.
         DB::statement("ALTER TABLE class_sessions MODIFY COLUMN status ENUM(
@@ -24,6 +30,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         // Hapus CANCELLED dari enum (hati-hati: jika ada row CANCELLED, down() akan error)
         DB::statement("ALTER TABLE class_sessions MODIFY COLUMN status ENUM(
             'SCHEDULED',
