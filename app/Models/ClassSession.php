@@ -49,6 +49,7 @@ class ClassSession extends Model
     public const STATUS_HANGUS           = 'HANGUS';
     public const STATUS_LIBUR            = 'LIBUR';
     public const STATUS_DIGANTI          = 'DIGANTI';
+    public const STATUS_CANCELLED        = 'CANCELLED';
 
     /**
      * Guru yang berhak honor untuk sesi ini.
