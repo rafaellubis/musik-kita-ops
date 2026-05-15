@@ -29,6 +29,14 @@ class AttendanceController extends Controller
      */
     public function edit(ClassSession $session)
     {
+        // Sesi CANCELLED tidak bisa diedit — dibatalkan sistem saat murid mundur.
+        if ($session->status === ClassSession::STATUS_CANCELLED) {
+            return redirect()->route('sessions.index', [
+                'year'  => $session->session_date->year,
+                'month' => $session->session_date->month,
+            ])->with('error', 'Sesi ini sudah dibatalkan (CANCELLED) dan tidak bisa diedit.');
+        }
+
         $session->load([
             'student',
             'teacher',
@@ -56,6 +64,13 @@ class AttendanceController extends Controller
      */
     public function update(Request $request, ClassSession $session)
     {
+        if ($session->status === ClassSession::STATUS_CANCELLED) {
+            return redirect()->route('sessions.index', [
+                'year'  => $session->session_date->year,
+                'month' => $session->session_date->month,
+            ])->with('error', 'Sesi ini sudah dibatalkan (CANCELLED) dan tidak bisa diedit.');
+        }
+
         $data = $request->validate([
             'status'                => 'required|in:HADIR,HADIR_TERLAMBAT,IZIN_RESCHEDULE,IZIN_VIDEO,HANGUS,LIBUR,DIGANTI',
             'late_minutes'          => 'nullable|integer|min:1|max:60|required_if:status,HADIR_TERLAMBAT',

@@ -12,7 +12,7 @@
     @php
         $statusList = [
             'SCHEDULED', 'HADIR', 'HADIR_TERLAMBAT',
-            'IZIN_RESCHEDULE', 'IZIN_VIDEO', 'HANGUS', 'LIBUR', 'DIGANTI',
+            'IZIN_RESCHEDULE', 'IZIN_VIDEO', 'HANGUS', 'LIBUR', 'DIGANTI', 'CANCELLED',
         ];
         $statusColors = [
             'SCHEDULED'       => 'bg-gray-100 text-gray-700',
@@ -23,6 +23,7 @@
             'HANGUS'          => 'bg-red-100 text-red-700',
             'LIBUR'           => 'bg-purple-100 text-purple-700',
             'DIGANTI'         => 'bg-orange-100 text-orange-700',
+            'CANCELLED'       => 'bg-gray-200 text-gray-500 line-through',
         ];
         $nextYear  = (int) now()->addMonth()->year;
         $nextMonth = (int) now()->addMonth()->month;
@@ -244,7 +245,7 @@
                                     @endif
                                 </td>
                                 <td class="px-2 py-1.5 text-center whitespace-nowrap">
-                                    @if(auth()->user()?->hasAnyRole(['Owner', 'Admin']))
+                                    @if(auth()->user()?->hasAnyRole(['Owner', 'Admin']) && $s->status !== 'CANCELLED')
                                         <a href="{{ route('attendance.edit', $s->id) }}"
                                            class="text-xs px-2 py-1 rounded
                                                   {{ $s->status === 'SCHEDULED'
