@@ -121,17 +121,11 @@ $invoice->refresh();
 ---
 
 ### Gap 7 — `applyLateFines()`: Denda dikenakan ke invoice cicilan INSTALLMENT
-**Severity:** 🟡 Medium
+**Severity:** ~~🟡 Medium~~ **DIBATALKAN**
 
-**Masalah:** Invoice Kids Class Bundle dengan `payment_mode = INSTALLMENT` memiliki struktur due date sendiri (termin 1, 2, 4). Denda Rp 5.000/hari tidak berlaku untuk cicilan ini.
+~~**Masalah:** Invoice Kids Class Bundle dengan `payment_mode = INSTALLMENT` memiliki struktur due date sendiri (termin 1, 2, 4). Denda Rp 5.000/hari tidak berlaku untuk cicilan ini.~~
 
-**Fix:** Tambahkan filter pada query di `applyLateFines()`:
-```php
-->where(fn($q) => $q
-    ->where('payment_mode', '!=', Invoice::MODE_INSTALLMENT)
-    ->orWhereNull('payment_mode')
-)
-```
+**Keputusan (2026-05-16):** Denda **tetap berlaku** untuk semua invoice termasuk cicilan installment. Business rule tidak membedakan jenis invoice untuk penghitungan denda. Gap ini tidak diimplementasikan.
 
 ---
 
