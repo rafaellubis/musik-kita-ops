@@ -411,6 +411,20 @@ class StudentLifecycleService
             );
         }
 
+        // Warning (bukan block): cek hutang lama dari sebelum murid mundur.
+        // Owner yang memutuskan apakah lanjut — proses tetap berjalan.
+        $unpaidCount = $student->invoices()
+            ->whereIn('status', ['UNPAID', 'PARTIAL'])
+            ->count();
+
+        if ($unpaidCount > 0) {
+            session()->flash(
+                'warning',
+                "Perhatian: murid ini memiliki {$unpaidCount} tagihan lama yang belum lunas. " .
+                "Periksa riwayat tagihan setelah aktivasi."
+            );
+        }
+
         // Mundur -> Aktif WAJIB bayar registrasi ulang. Selesai -> Aktif tidak.
         $needRegFee = $student->status === 'Mengundurkan Diri';
 
