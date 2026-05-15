@@ -3,7 +3,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Teacher;
 use App\Models\Instrument;
- 
+use App\Services\TeacherService;
+
 class TeacherController extends Controller
 {
     public function index()
@@ -67,11 +68,37 @@ class TeacherController extends Controller
             'instruments.*' => 'exists:instruments,id',
             'primary_instrument' => 'nullable|exists:instruments,id',
         ]);
-        $validated['is_active'] = $request->has('is_active');
-        $teacher->update(
-            collect($validated)->except(['instruments', 'primary_instrument'])->toArray()
-        );
+
+        // Tangani deactivation via TeacherService untuk cek cascade
+        $newIsActive = $request->has('is_active');
+        $wasActive   = $teacher->is_active;
+
+        // Jika guru sedang dinonaktifkan, jalankan deactivation guard
+        if ($wasActive && !$newIsActive) {
+            try {
+                $result = app(TeacherService::class)->deactivate($teacher);
+                if ($result['warning']) {
+                    session()->flash('warning', $result['warning']);
+                }
+            } catch (\InvalidArgumentException $e) {
+                return back()->with('error', $e->getMessage())->withInput();
+            }
+        }
+
+        // Update field lain (is_active sudah ditangani TeacherService jika deactivation,
+        // atau di sini jika re-aktivasi / tidak ada perubahan is_active)
+        $updateData = collect($validated)->except(['instruments', 'primary_instrument'])->toArray();
+
+        // Kalau deactivation sudah dijalankan TeacherService, jangan update is_active lagi
+        if ($wasActive && !$newIsActive) {
+            unset($updateData['is_active']);
+        } else {
+            $updateData['is_active'] = $newIsActive;
+        }
+
+        $teacher->update($updateData);
         $this->syncInstruments($teacher, $request);
+
         return redirect()->route('teachers.index')->with('success', 'Guru berhasil diperbarui.');
     }
  
