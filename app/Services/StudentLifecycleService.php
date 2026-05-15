@@ -346,6 +346,13 @@ class StudentLifecycleService
             );
         }
 
+        // Guard: blok graduasi jika masih ada tagihan belum lunas
+        if ($student->invoices()->whereIn('status', ['UNPAID', 'PARTIAL'])->exists()) {
+            throw new InvalidArgumentException(
+                'Murid masih punya tagihan yang belum lunas. Selesaikan semua tagihan sebelum menandai lulus.'
+            );
+        }
+
         return DB::transaction(function () use ($student, $data) {
             $from = $student->status;
 
