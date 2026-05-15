@@ -320,6 +320,10 @@ class InvoiceService
 
         $invoices = Invoice::forMonth($year, $month)
             ->unpaid()
+            ->where(fn ($q) => $q
+                ->where('payment_mode', '!=', Invoice::MODE_INSTALLMENT)
+                ->orWhereNull('payment_mode')
+            )
             ->with('items')
             ->get();
 
