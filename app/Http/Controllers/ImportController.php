@@ -40,7 +40,7 @@ class ImportController extends Controller
     public function validate(Request $request): RedirectResponse
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx|max:5120',
+            'file' => 'required|file|mimes:xlsx,zip|max:5120',
         ], [
             'file.required' => 'File Excel wajib diupload.',
             'file.mimes'    => 'File harus berformat .xlsx.',
