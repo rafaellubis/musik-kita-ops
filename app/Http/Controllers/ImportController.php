@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\StudentTemplateExport;
+use App\Exports\XlsxBuilder;
 use App\Models\AuditLog;
+use App\Models\Package;
+use App\Models\Teacher;
 use App\Services\StudentImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
-use Maatwebsite\Excel\Excel as ExcelFormat;
-use Maatwebsite\Excel\Facades\Excel;
 
 class ImportController extends Controller
 {
@@ -29,12 +29,16 @@ class ImportController extends Controller
 
     /**
      * Download template .xlsx siap pakai.
-     * Menggunakan Excel::raw() + response() langsung — lebih stabil di Windows/Laragon
-     * dibanding BinaryFileResponse yang bergantung pada temp file.
+     * Menggunakan XlsxBuilder (generator manual via ZipArchive) agar kompatibel penuh
+     * dengan Excel — PhpSpreadsheet menambah elemen XML yang memicu dialog repair di Excel.
      */
     public function downloadTemplate(): Response
     {
-        $content = Excel::raw(new StudentTemplateExport(), ExcelFormat::XLSX);
+        $builder = new XlsxBuilder();
+        $content = $builder->build([
+            ['name' => 'Data Murid',      'rows' => $this->dataMuridRows()],
+            ['name' => 'Referensi Kode',  'rows' => $this->referensiKodeRows()],
+        ]);
 
         return response($content, 200, [
             'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -127,5 +131,88 @@ class ImportController extends Controller
         session()->forget('import_preview');
         return redirect()->route('import.index')
             ->with('info', 'Import dibatalkan. Silakan upload ulang file jika ingin mencoba lagi.');
+    }
+
+    // ============= PRIVATE: DATA UNTUK TEMPLATE =============
+
+    /**
+     * Baris untuk sheet "Data Murid" — header + 1 baris contoh.
+     */
+    private function dataMuridRows(): array
+    {
+        return [
+            [
+                'full_name', 'nickname', 'gender', 'birth_date', 'phone', 'email',
+                'address', 'notes', 'parent_name', 'parent_phone', 'parent_email',
+                'parent_relationship', 'status', 'package_code', 'teacher_code',
+                'preferred_day', 'preferred_time', 'active_since',
+            ],
+            [
+                'Budi Santoso', 'Budi', 'L', '2010-05-15', '08111111111',
+                'budi@email.com', 'Jl. Contoh No.1', 'Catatan contoh',
+                'Ayah Budi', '08111111112', 'ayahbudi@email.com', 'Ayah',
+                'Aktif', 'KODE-PAKET-CONTOH', 'KODE-GURU-CONTOH',
+                'Senin', '15:30', '2026-01-15',
+            ],
+        ];
+    }
+
+    /**
+     * Baris untuk sheet "Referensi Kode" — daftar kode paket, guru, dan enum valid.
+     * Di-query live dari DB saat template di-download.
+     */
+    private function referensiKodeRows(): array
+    {
+        $rows = [];
+
+        // Kode paket aktif
+        $rows[] = ['=== KODE PAKET ==='];
+        $rows[] = ['package_code', 'Tipe Kelas', 'Durasi (menit)'];
+        $packages = Package::where('is_active', true)->orderBy('sort_order')->get();
+        if ($packages->isEmpty()) {
+            $rows[] = ['(tidak ada paket aktif)'];
+        } else {
+            foreach ($packages as $pkg) {
+                $rows[] = [$pkg->code, $pkg->class_type, $pkg->duration_min];
+            }
+        }
+
+        $rows[] = [];
+
+        // Kode guru aktif
+        $rows[] = ['=== KODE GURU ==='];
+        $rows[] = ['teacher_code', 'Nama Guru'];
+        $teachers = Teacher::where('is_active', true)->orderBy('name')->get();
+        if ($teachers->isEmpty()) {
+            $rows[] = ['(tidak ada guru aktif)'];
+        } else {
+            foreach ($teachers as $teacher) {
+                $rows[] = [$teacher->code, $teacher->name];
+            }
+        }
+
+        $rows[] = [];
+
+        // Nilai enum
+        $rows[] = ['=== NILAI STATUS ==='];
+        foreach (['Calon', 'Trial', 'Aktif', 'Cuti', 'Selesai', 'Mengundurkan Diri'] as $s) {
+            $rows[] = [$s];
+        }
+
+        $rows[] = [];
+
+        $rows[] = ['=== NILAI PREFERRED_DAY ==='];
+        foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'] as $d) {
+            $rows[] = [$d];
+        }
+
+        $rows[] = [];
+
+        $rows[] = ['=== NILAI PARENT_RELATIONSHIP ==='];
+        foreach (['Ayah', 'Ibu', 'Wali'] as $r) {
+            $rows[] = [$r];
+        }
+
+        return $rows;
     }
 }
