@@ -47,7 +47,19 @@ class ImportController extends Controller
             'file.max'      => 'Ukuran file maksimal 5MB.',
         ]);
 
-        $result = $this->service->validate($request->file('file'));
+        try {
+            $result = $this->service->validate($request->file('file'));
+        } catch (\Throwable $e) {
+            return redirect()->route('import.index')
+                ->with('error', 'File tidak dapat dibaca. Pastikan file tidak rusak dan menggunakan format .xlsx yang benar.');
+        }
+
+        // Hapus field 'data' dari errors sebelum disimpan ke session — hanya perlu row/name/message untuk preview
+        $result['errors'] = array_map(fn ($e) => [
+            'row'     => $e['row'],
+            'name'    => $e['name'],
+            'message' => $e['message'],
+        ], $result['errors']);
 
         session(['import_preview' => $result]);
 
@@ -65,12 +77,18 @@ class ImportController extends Controller
     {
         $preview = session('import_preview');
 
-        if (!$preview) {
+        if (!$preview || !isset($preview['valid'], $preview['overwrite'])) {
             return redirect()->route('import.index')
                 ->with('error', 'Sesi validasi kadaluarsa. Upload ulang file.');
         }
 
-        $result = $this->service->confirm($preview['valid'], $preview['overwrite']);
+        try {
+            $result = $this->service->confirm($preview['valid'], $preview['overwrite']);
+        } catch (\Throwable $e) {
+            session()->forget('import_preview');
+            return redirect()->route('import.index')
+                ->with('error', 'Terjadi kesalahan saat menyimpan data. Import dibatalkan, tidak ada data yang tersimpan.');
+        }
 
         session()->forget('import_preview');
 
@@ -78,11 +96,11 @@ class ImportController extends Controller
             action: AuditLog::ACTION_CREATE,
             entityLabel: 'Import Murid Excel',
             newValues: $result,
-            notes: 'Import massal dari file Excel oleh ' . auth()->user()->email,
+            notes: "Diimport: {$result['imported']} murid.",
         );
 
         return redirect()->route('students.index')
-            ->with('success', "{$result['imported']} murid berhasil diimport. {$result['skipped']} baris gagal (lihat log).");
+            ->with('success', "{$result['imported']} murid berhasil diimport.");
     }
 
     /**
@@ -91,6 +109,7 @@ class ImportController extends Controller
     public function cancel(): RedirectResponse
     {
         session()->forget('import_preview');
-        return redirect()->route('import.index');
+        return redirect()->route('import.index')
+            ->with('info', 'Import dibatalkan. Silakan upload ulang file jika ingin mencoba lagi.');
     }
 }
