@@ -88,6 +88,11 @@ class StudentImportService
             ->filter()
             ->toArray();
 
+        // Cache duration_min per package_code (untuk tampilkan end_time di preview)
+        $packageDurationMap = Package::where('is_active', true)
+            ->pluck('duration_min', 'code')
+            ->toArray();
+
         foreach ($rows as $index => $row) {
             // +2: row 1 = header, index mulai dari 0
             $rowNum = $index + 2;
@@ -110,7 +115,8 @@ class StudentImportService
                 $teacherCodes->toArray(),
                 $roomCodes,
                 $packageInstrumentMap,
-                $roomInstrumentsMap
+                $roomInstrumentsMap,
+                $packageDurationMap
             );
 
             if (is_string($result)) {
@@ -183,7 +189,8 @@ class StudentImportService
         array $teacherCodes = [],
         array $roomCodes = [],
         array $packageInstrumentMap = [],
-        array $roomInstrumentsMap = []
+        array $roomInstrumentsMap = [],
+        array $packageDurationMap = []
     ): array|string {
         $errors = [];
 
@@ -297,6 +304,12 @@ class StudentImportService
                                        : null;
         $data['room_id']             = !empty($row['kode_ruangan'])
                                        ? ($roomCodes[strtoupper(trim($row['kode_ruangan']))] ?? null)
+                                       : null;
+        $data['_room_code']          = !empty($row['kode_ruangan'])
+                                       ? strtoupper(trim($row['kode_ruangan']))
+                                       : null;
+        $data['_duration_min']       = !empty($row['package_code'])
+                                       ? ($packageDurationMap[$row['package_code']] ?? null)
                                        : null;
         $data['_has_warning']        = $roomWarning !== null;
         $data['_warning_message']    = $roomWarning;
@@ -422,7 +435,7 @@ class StudentImportService
         $roomId     = $data['room_id'] ?? null;
 
         // Hapus semua key internal sebelum simpan ke DB
-        unset($data['_existing_id'], $data['_has_warning'], $data['_warning_message'], $data['room_id']);
+        unset($data['_existing_id'], $data['_has_warning'], $data['_warning_message'], $data['room_id'], $data['_room_code'], $data['_duration_min']);
 
         if ($existingId) {
             // Mode update: murid sudah ada di DB

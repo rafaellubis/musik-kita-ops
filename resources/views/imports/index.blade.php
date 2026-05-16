@@ -90,6 +90,12 @@
             $errors   = $preview['errors'];
             $totalOk  = count($valid) + count($overwrite);
             $totalErr = count($errors);
+
+            // Statistik jadwal untuk ringkasan
+            $allRows       = array_merge($valid, $overwrite);
+            $denganJadwal  = count(array_filter($allRows, fn ($r) => !empty($r['data']['preferred_day']) && ($r['data']['status'] ?? '') === 'Aktif'));
+            $tanpaJadwal   = count(array_filter($allRows, fn ($r) => empty($r['data']['preferred_day'])  && ($r['data']['status'] ?? '') === 'Aktif'));
+            $denganWarning = count(array_filter($allRows, fn ($r) => !empty($r['data']['_has_warning'])));
         @endphp
 
         <div class="rounded-xl p-6 mb-4" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)">
@@ -110,6 +116,22 @@
                     ❌ {{ $totalErr }} error (dilewati)
                 </div>
             </div>
+
+            {{-- Ringkasan jadwal: tampilkan jika ada baris yang akan diimport --}}
+            @if($totalOk > 0)
+            <div class="mb-5 p-3 rounded-lg text-sm" style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2)">
+                <p class="font-medium mb-1" style="color:#34D399">Ringkasan Jadwal</p>
+                <ul class="space-y-0.5" style="color:#9CA3AF">
+                    <li>✓ {{ $denganJadwal }} murid akan diimport <strong>dengan jadwal</strong></li>
+                    @if($tanpaJadwal > 0)
+                    <li>— {{ $tanpaJadwal }} murid tanpa jadwal (preferred_day kosong)</li>
+                    @endif
+                    @if($denganWarning > 0)
+                    <li style="color:#FBBF24">⚠️ {{ $denganWarning }} murid dengan warning ruangan — cek setelah import</li>
+                    @endif
+                </ul>
+            </div>
+            @endif
 
             {{-- Tabel baris error --}}
             @if($totalErr > 0)
@@ -154,6 +176,8 @@
                                 <th class="px-3 py-2 text-left text-mk-muted font-medium">Baris</th>
                                 <th class="px-3 py-2 text-left text-mk-muted font-medium">Nama</th>
                                 <th class="px-3 py-2 text-left text-mk-muted font-medium">Status</th>
+                                <th class="px-3 py-2 text-left text-mk-muted font-medium">Jadwal</th>
+                                <th class="px-3 py-2 text-left text-mk-muted font-medium">Ruangan</th>
                                 <th class="px-3 py-2 text-left text-mk-muted font-medium">Keterangan</th>
                             </tr>
                         </thead>
@@ -163,7 +187,48 @@
                                 <td class="px-3 py-2 text-mk-muted">{{ $item['row'] }}</td>
                                 <td class="px-3 py-2 text-mk-text">{{ $item['data']['full_name'] }}</td>
                                 <td class="px-3 py-2 text-mk-muted">{{ $item['data']['status'] }}</td>
-                                <td class="px-3 py-2 font-medium" style="color:#34D399">baru</td>
+                                <td class="px-3 py-2 text-mk-muted whitespace-nowrap">
+                                    @if(!empty($item['data']['preferred_day']) && ($item['data']['status'] ?? '') === 'Aktif')
+                                        @php
+                                            $jadwalText = $item['data']['preferred_day'] . ' ' . $item['data']['preferred_time'];
+                                            if (!empty($item['data']['_duration_min']) && !empty($item['data']['preferred_time'])) {
+                                                $startParts = explode(':', $item['data']['preferred_time']);
+                                                $startMins  = (int)$startParts[0] * 60 + (int)$startParts[1];
+                                                $endMins    = $startMins + (int)$item['data']['_duration_min'];
+                                                $endTime    = sprintf('%02d:%02d', intdiv($endMins, 60), $endMins % 60);
+                                                $jadwalText = $item['data']['preferred_day'] . ' ' . $item['data']['preferred_time'] . '–' . $endTime;
+                                            }
+                                        @endphp
+                                        {{ $jadwalText }}
+                                        @if(!empty($item['data']['_has_warning']))
+                                            <span class="ml-1 text-xs" style="color:#FBBF24">⚠️</span>
+                                        @endif
+                                    @else
+                                        <span style="color:#6B7280">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2 text-mk-muted whitespace-nowrap">
+                                    @if(!empty($item['data']['_room_code']))
+                                        @if(!empty($item['data']['_has_warning']))
+                                            <span style="color:#FBBF24">{{ $item['data']['_room_code'] }}</span>
+                                        @else
+                                            {{ $item['data']['_room_code'] }}
+                                        @endif
+                                    @else
+                                        <span style="color:#6B7280">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2 font-medium">
+                                    @if(!empty($item['data']['_has_warning']))
+                                        <span style="color:#FBBF24" title="{{ $item['data']['_warning_message'] ?? '' }}">⚠️ Warning ruangan</span>
+                                    @elseif(!empty($item['data']['preferred_day']) && ($item['data']['status'] ?? '') === 'Aktif')
+                                        <span style="color:#34D399">✓ Murid + Jadwal</span>
+                                    @elseif(($item['data']['status'] ?? '') === 'Aktif')
+                                        <span style="color:#34D399">✓ Murid saja</span>
+                                    @else
+                                        <span style="color:#34D399">✓ Murid saja ({{ $item['data']['status'] }})</span>
+                                    @endif
+                                </td>
                             </tr>
                             @endforeach
                             @foreach($overwrite as $item)
@@ -171,7 +236,48 @@
                                 <td class="px-3 py-2 text-mk-muted">{{ $item['row'] }}</td>
                                 <td class="px-3 py-2 text-mk-text">{{ $item['data']['full_name'] }}</td>
                                 <td class="px-3 py-2 text-mk-muted">{{ $item['data']['status'] }}</td>
-                                <td class="px-3 py-2 font-medium" style="color:#F59E0B">overwrite</td>
+                                <td class="px-3 py-2 text-mk-muted whitespace-nowrap">
+                                    @if(!empty($item['data']['preferred_day']) && ($item['data']['status'] ?? '') === 'Aktif')
+                                        @php
+                                            $jadwalText = $item['data']['preferred_day'] . ' ' . $item['data']['preferred_time'];
+                                            if (!empty($item['data']['_duration_min']) && !empty($item['data']['preferred_time'])) {
+                                                $startParts = explode(':', $item['data']['preferred_time']);
+                                                $startMins  = (int)$startParts[0] * 60 + (int)$startParts[1];
+                                                $endMins    = $startMins + (int)$item['data']['_duration_min'];
+                                                $endTime    = sprintf('%02d:%02d', intdiv($endMins, 60), $endMins % 60);
+                                                $jadwalText = $item['data']['preferred_day'] . ' ' . $item['data']['preferred_time'] . '–' . $endTime;
+                                            }
+                                        @endphp
+                                        {{ $jadwalText }}
+                                        @if(!empty($item['data']['_has_warning']))
+                                            <span class="ml-1 text-xs" style="color:#FBBF24">⚠️</span>
+                                        @endif
+                                    @else
+                                        <span style="color:#6B7280">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2 text-mk-muted whitespace-nowrap">
+                                    @if(!empty($item['data']['_room_code']))
+                                        @if(!empty($item['data']['_has_warning']))
+                                            <span style="color:#FBBF24">{{ $item['data']['_room_code'] }}</span>
+                                        @else
+                                            {{ $item['data']['_room_code'] }}
+                                        @endif
+                                    @else
+                                        <span style="color:#6B7280">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2 font-medium">
+                                    @if(!empty($item['data']['_has_warning']))
+                                        <span style="color:#FBBF24" title="{{ $item['data']['_warning_message'] ?? '' }}">⚠️ Warning ruangan</span>
+                                    @elseif(!empty($item['data']['preferred_day']) && ($item['data']['status'] ?? '') === 'Aktif')
+                                        <span style="color:#F59E0B">✓ Murid + Jadwal</span>
+                                    @elseif(($item['data']['status'] ?? '') === 'Aktif')
+                                        <span style="color:#F59E0B">✓ Murid saja</span>
+                                    @else
+                                        <span style="color:#F59E0B">✓ Murid saja ({{ $item['data']['status'] }})</span>
+                                    @endif
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>
