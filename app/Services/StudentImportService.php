@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Package;
 use App\Models\Student;
+use App\Models\Room;
 use App\Models\Teacher;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -68,6 +69,21 @@ class StudentImportService
         $packageCodes = Package::where('is_active', true)->pluck('id', 'code');
         $teacherCodes = Teacher::where('is_active', true)->pluck('id', 'code');
 
+        // Cache kode ruangan aktif + instrumen yang didukung (untuk validasi dan warning)
+        $roomCodes          = Room::where('is_active', true)->pluck('id', 'code')->toArray();
+        $roomInstrumentsMap = Room::where('is_active', true)
+            ->get(['code', 'supported_instruments'])
+            ->mapWithKeys(fn ($r) => [$r->code => $r->supported_instruments ?? []])
+            ->toArray();
+
+        // Cache nama instrumen per package_code (untuk cek kompatibilitas ruangan)
+        $packageInstrumentMap = Package::with('instrument')
+            ->where('is_active', true)
+            ->get()
+            ->mapWithKeys(fn ($p) => [$p->code => $p->instrument?->name])
+            ->filter()
+            ->toArray();
+
         foreach ($rows as $index => $row) {
             // +2: row 1 = header, index mulai dari 0
             $rowNum = $index + 2;
@@ -87,7 +103,10 @@ class StudentImportService
                 $rowNum,
                 $data,
                 $packageCodes->toArray(),
-                $teacherCodes->toArray()
+                $teacherCodes->toArray(),
+                $roomCodes,
+                $packageInstrumentMap,
+                $roomInstrumentsMap
             );
 
             if (is_string($result)) {
@@ -157,7 +176,10 @@ class StudentImportService
         int $rowNum,
         array $row,
         array $packageCodes = [],
-        array $teacherCodes = []
+        array $teacherCodes = [],
+        array $roomCodes = [],
+        array $packageInstrumentMap = [],
+        array $roomInstrumentsMap = []
     ): array|string {
         $errors = [];
 
@@ -237,6 +259,23 @@ class StudentImportService
             }
         }
 
+        // Kode ruangan harus ada di tabel rooms dan statusnya aktif
+        // Jika instrumen paket tidak cocok dengan ruangan, hasilkan warning (tidak block import)
+        $roomWarning = null;
+        if (!empty($row['kode_ruangan'])) {
+            $kodeRuangan = strtoupper(trim($row['kode_ruangan']));
+            if (!isset($roomCodes[$kodeRuangan])) {
+                $errors[] = "kode_ruangan '{$row['kode_ruangan']}' tidak ditemukan atau tidak aktif";
+            } else {
+                // Warning (tidak block) jika instrumen murid tidak cocok dengan ruangan
+                $packageInstrument = $packageInstrumentMap[$row['package_code'] ?? ''] ?? null;
+                $roomInstruments   = $roomInstrumentsMap[$kodeRuangan] ?? [];
+                if ($packageInstrument && !in_array($packageInstrument, $roomInstruments)) {
+                    $roomWarning = "Ruangan {$kodeRuangan} tidak support instrumen {$packageInstrument}.";
+                }
+            }
+        }
+
         // ---------- KEMBALIKAN HASIL ----------
 
         if (!empty($errors)) {
@@ -244,15 +283,24 @@ class StudentImportService
             return 'Baris ' . $rowNum . ': ' . implode('; ', $errors);
         }
 
-        // Resolve kode paket/guru ke ID agar siap disimpan ke DB
+        // Resolve kode paket/guru/ruangan ke ID agar siap disimpan ke DB
         $data                        = $row;
-        $data['package_id']          = !empty($row['package_code'])  ? $packageCodes[$row['package_code']]  : null;
-        $data['assigned_teacher_id'] = !empty($row['teacher_code'])  ? $teacherCodes[$row['teacher_code']]  : null;
-        unset($data['package_code'], $data['teacher_code']);
+        $data['package_id']          = !empty($row['package_code'])
+                                       ? ($packageCodes[$row['package_code']] ?? null)
+                                       : null;
+        $data['assigned_teacher_id'] = !empty($row['teacher_code'])
+                                       ? ($teacherCodes[$row['teacher_code']] ?? null)
+                                       : null;
+        $data['room_id']             = !empty($row['kode_ruangan'])
+                                       ? ($roomCodes[strtoupper(trim($row['kode_ruangan']))] ?? null)
+                                       : null;
+        $data['_has_warning']        = $roomWarning !== null;
+        $data['_warning_message']    = $roomWarning;
+        unset($data['package_code'], $data['teacher_code'], $data['kode_ruangan']);
 
         // Normalisasi string kosong ke null agar konsisten dengan schema DB
         foreach ($data as $key => $value) {
-            if ($value === '' || $value === null) {
+            if ($value === '') {
                 $data[$key] = null;
             }
         }
@@ -287,7 +335,7 @@ class StudentImportService
     {
         // Ambil dan hapus key internal sebelum simpan ke DB
         $existingId = $data['_existing_id'] ?? null;
-        unset($data['_existing_id']);
+        unset($data['_existing_id'], $data['_has_warning'], $data['_warning_message'], $data['room_id']);
 
         if ($existingId) {
             // Mode update: murid sudah ada di DB

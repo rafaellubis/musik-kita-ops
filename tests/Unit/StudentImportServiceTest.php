@@ -2,7 +2,9 @@
 
 namespace Tests\Unit;
 
+use App\Models\Instrument;
 use App\Models\Package;
+use App\Models\Room;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Services\StudentImportService;
@@ -172,5 +174,111 @@ class StudentImportServiceTest extends TestCase
         $student->refresh();
         $this->assertEquals('P', $student->gender);
         $this->assertEquals('Aktif', $student->status);
+    }
+
+    // ============= HELPER =============
+
+    /**
+     * Buat fixture ruangan untuk test kode_ruangan.
+     * Return array berisi roomCodes, roomInstrumentsMap, dan objek piano instrument.
+     */
+    private function makeRoomMaps(): array
+    {
+        $piano = Instrument::create(['name' => 'Piano', 'code' => 'PIANO', 'is_active' => true, 'sort_order' => 1]);
+        $room  = Room::create([
+            'code' => 'R2', 'name' => 'Studio 2', 'capacity' => 1,
+            'supported_instruments' => ['Piano', 'Gitar'], 'is_active' => true,
+        ]);
+        $drumRoom = Room::create([
+            'code' => 'R8', 'name' => 'Studio 8', 'capacity' => 1,
+            'supported_instruments' => ['Drum'], 'is_active' => true,
+        ]);
+
+        return [
+            'roomCodes'          => ['R2' => $room->id, 'R8' => $drumRoom->id],
+            'roomInstrumentsMap' => ['R2' => ['Piano', 'Gitar'], 'R8' => ['Drum']],
+            'piano'              => $piano,
+        ];
+    }
+
+    // ============= TES VALIDASI KODE RUANGAN =============
+
+    public function test_kode_ruangan_tidak_ditemukan_return_error(): void
+    {
+        $result = $this->service->validateRow(5, [
+            'full_name'    => 'Budi', 'gender' => 'L', 'status' => 'Aktif',
+            'kode_ruangan' => 'X99',
+        ], [], [], [], [], []);
+
+        $this->assertIsString($result);
+        $this->assertStringContainsString('X99', $result);
+        $this->assertStringContainsString('tidak ditemukan', $result);
+    }
+
+    public function test_kode_ruangan_instrumen_tidak_cocok_return_warning(): void
+    {
+        ['roomCodes' => $roomCodes, 'roomInstrumentsMap' => $roomInstrumentsMap, 'piano' => $piano] = $this->makeRoomMaps();
+
+        $package = Package::create([
+            'code'           => 'REG-PIANO',
+            'instrument_id'  => $piano->id,
+            'class_type'     => 'REGULER',
+            'grade'          => 'Basic',
+            'duration_min'   => 30,
+            'price_per_month' => 340000,
+            'is_active'      => true,
+            'sort_order'     => 1,
+        ]);
+
+        $result = $this->service->validateRow(6, [
+            'full_name'    => 'Ani', 'gender' => 'P', 'status' => 'Aktif',
+            'package_code' => 'REG-PIANO',
+            'kode_ruangan' => 'R8',  // R8 hanya Drum — Piano tidak cocok
+        ], ['REG-PIANO' => $package->id], [], $roomCodes, ['REG-PIANO' => 'Piano'], $roomInstrumentsMap);
+
+        // Bukan error — tetap return array (warning, bukan block)
+        $this->assertIsArray($result);
+        $this->assertTrue($result['_has_warning']);
+        $this->assertStringContainsString('Piano', $result['_warning_message']);
+    }
+
+    public function test_kode_ruangan_valid_dan_cocok_tidak_ada_warning(): void
+    {
+        ['roomCodes' => $roomCodes, 'roomInstrumentsMap' => $roomInstrumentsMap, 'piano' => $piano] = $this->makeRoomMaps();
+
+        $package = Package::create([
+            'code'            => 'REG-PIANO',
+            'instrument_id'   => $piano->id,
+            'class_type'      => 'REGULER',
+            'grade'           => 'Basic',
+            'duration_min'    => 30,
+            'price_per_month' => 340000,
+            'is_active'       => true,
+            'sort_order'      => 1,
+        ]);
+
+        $result = $this->service->validateRow(7, [
+            'full_name'    => 'Cici', 'gender' => 'P', 'status' => 'Aktif',
+            'package_code' => 'REG-PIANO',
+            'kode_ruangan' => 'R2',  // R2 support Piano — cocok
+        ], ['REG-PIANO' => $package->id], [], $roomCodes, ['REG-PIANO' => 'Piano'], $roomInstrumentsMap);
+
+        $this->assertIsArray($result);
+        $this->assertFalse($result['_has_warning']);
+        $this->assertNull($result['_warning_message']);
+        $this->assertEquals($roomCodes['R2'], $result['room_id']);
+    }
+
+    public function test_kode_ruangan_kosong_tidak_error(): void
+    {
+        $result = $this->service->validateRow(8, [
+            'full_name'    => 'Dodi', 'gender' => 'L', 'status' => 'Aktif',
+            'kode_ruangan' => '',
+        ], [], [], [], [], []);
+
+        $this->assertIsArray($result);
+        $this->assertNull($result['room_id']);
+        $this->assertFalse($result['_has_warning']);
+        $this->assertNull($result['_warning_message']);
     }
 }
