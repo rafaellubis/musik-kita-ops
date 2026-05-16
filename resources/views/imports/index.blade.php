@@ -10,7 +10,7 @@
         </div>
     </x-slot>
 
-    <div class="py-6 px-4 lg:px-8 max-w-5xl">
+    <div class="py-6 px-4 lg:px-8 max-w-5xl mx-auto">
 
         {{-- Flash messages (semua tipe: success, error, info, warning) --}}
         @foreach(['success','error','info','warning'] as $type)
@@ -146,8 +146,8 @@
                 <h4 class="text-sm font-semibold text-mk-muted mb-2">
                     Baris yang akan diimport ({{ $totalOk }})
                 </h4>
-                <div class="overflow-x-auto rounded-lg"
-                     style="border:1px solid rgba(255,255,255,0.08);max-height:400px;overflow-y:auto">
+                <div class="overflow-x-auto rounded-lg" style="border:1px solid rgba(255,255,255,0.08)">
+                    <div style="max-height:400px;overflow-y:auto">
                     <table class="w-full text-xs">
                         <thead class="sticky top-0" style="background:#1A1000">
                             <tr>
@@ -176,6 +176,7 @@
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
             @endif
@@ -186,7 +187,8 @@
                     @csrf
                     <button type="submit"
                             class="px-5 py-2 rounded text-sm border transition-colors"
-                            style="border-color:rgba(255,255,255,0.2);color:#9CA3AF">
+                            style="border-color:rgba(255,255,255,0.2);color:#9CA3AF"
+                            onclick="return confirm('Batalkan import dan hapus hasil validasi?')">
                         Batal / Upload Ulang
                     </button>
                 </form>
@@ -207,6 +209,4 @@
         @endif
 
     </div>
-
-    <style>[x-cloak] { display: none !important; }</style>
 </x-app-layout>
