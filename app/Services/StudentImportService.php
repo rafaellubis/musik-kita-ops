@@ -2,10 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\Enrollment;
 use App\Models\Package;
-use App\Models\Student;
 use App\Models\Room;
+use App\Models\Schedule;
+use App\Models\Student;
+use App\Models\StudentStatusHistory;
 use App\Models\Teacher;
+use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -328,13 +332,96 @@ class StudentImportService
     // ============= PRIVATE HELPERS =============
 
     /**
+     * Konversi nama hari Indonesia ke integer Carbon (Minggu=0, Senin=1, ..., Sabtu=6).
+     */
+    private function parseDayOfWeek(string $day): int
+    {
+        return match (strtolower(trim($day))) {
+            'minggu' => 0,
+            'senin'  => 1,
+            'selasa' => 2,
+            'rabu'   => 3,
+            'kamis'  => 4,
+            'jumat'  => 5,
+            'sabtu'  => 6,
+            default  => throw new \InvalidArgumentException("Hari tidak valid: {$day}"),
+        };
+    }
+
+    /**
+     * Buat Enrollment, Schedule, dan StudentStatusHistory untuk murid yang diimport.
+     * Hanya dijalankan untuk murid berstatus Aktif.
+     *
+     * StatusHistory selalu dibuat untuk murid Aktif (skip trial = migrasi).
+     * Enrollment + Schedule hanya dibuat jika package_id, assigned_teacher_id,
+     * preferred_day, dan preferred_time tersedia.
+     */
+    private function createEnrollmentAndSchedule(Student $student, array $data): void
+    {
+        // Hanya untuk murid Aktif
+        if ($student->status !== 'Aktif') {
+            return;
+        }
+
+        // Audit trail wajib: skip trial dengan reason migrasi
+        StudentStatusHistory::create([
+            'student_id'    => $student->id,
+            'from_status'   => null,
+            'to_status'     => 'Aktif',
+            'reason'        => 'migrasi',
+            'skipped_trial' => true,
+            'metadata'      => ['skipped_trial' => true],
+            // auth()->id() bisa null jika dipanggil dari CLI/cron — NULL valid di skema (= system)
+            'changed_by'    => auth()->id(),
+        ]);
+
+        // Jangan buat enrollment ganda jika murid sudah punya enrollment ACTIVE
+        if (Enrollment::where('student_id', $student->id)->where('status', 'ACTIVE')->exists()) {
+            return;
+        }
+
+        // Enrollment + Schedule butuh semua field jadwal
+        if (empty($data['package_id']) || empty($data['assigned_teacher_id'])
+            || empty($data['preferred_day']) || empty($data['preferred_time'])) {
+            return;
+        }
+
+        $enrollment = Enrollment::create([
+            'student_id'     => $student->id,
+            'package_id'     => $data['package_id'],
+            'teacher_id'     => $data['assigned_teacher_id'],
+            'effective_date' => $data['active_since'] ?? today()->toDateString(),
+            'status'         => 'ACTIVE',
+        ]);
+
+        // Hitung end_time dari start_time + package.duration_min
+        $package   = Package::findOrFail($data['package_id']);
+        // preferred_time sudah divalidasi format H:i di validateRow() — createFromFormat aman
+        $startTime = Carbon::createFromFormat('H:i', $data['preferred_time']);
+        $endTime   = $startTime->copy()->addMinutes($package->duration_min);
+
+        Schedule::create([
+            'enrollment_id' => $enrollment->id,
+            'day_of_week'   => $this->parseDayOfWeek($data['preferred_day']),
+            'start_time'    => $startTime->format('H:i:s'),
+            'end_time'      => $endTime->format('H:i:s'),
+            'room_id'       => $data['room_id'] ?? null,
+            'is_active'     => true,
+        ]);
+    }
+
+    /**
      * Buat murid baru atau update murid existing dari satu baris data.
-     * Key '_existing_id' digunakan untuk menentukan mode (insert vs update).
+     * Key '_existing_id', '_has_warning', '_warning_message', 'room_id' digunakan internal
+     * dan harus dihapus sebelum simpan ke DB.
      */
     private function upsertStudent(array $data): Student
     {
-        // Ambil dan hapus key internal sebelum simpan ke DB
+        // Pisahkan key internal dari data DB
         $existingId = $data['_existing_id'] ?? null;
+        $roomId     = $data['room_id'] ?? null;
+
+        // Hapus semua key internal sebelum simpan ke DB
         unset($data['_existing_id'], $data['_has_warning'], $data['_warning_message'], $data['room_id']);
 
         if ($existingId) {
@@ -346,6 +433,9 @@ class StudentImportService
             $data['student_code'] = Student::generateCode();
             $student = Student::create($data);
         }
+
+        // Buat enrollment, schedule, dan status history untuk murid Aktif
+        $this->createEnrollmentAndSchedule($student, array_merge($data, ['room_id' => $roomId]));
 
         return $student;
     }

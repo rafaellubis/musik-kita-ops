@@ -2,10 +2,13 @@
 
 namespace Tests\Unit;
 
+use App\Models\Enrollment;
 use App\Models\Instrument;
 use App\Models\Package;
 use App\Models\Room;
+use App\Models\Schedule;
 use App\Models\Student;
+use App\Models\StudentStatusHistory;
 use App\Models\Teacher;
 use App\Services\StudentImportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -174,6 +177,11 @@ class StudentImportServiceTest extends TestCase
         $student->refresh();
         $this->assertEquals('P', $student->gender);
         $this->assertEquals('Aktif', $student->status);
+
+        // Status berubah ke Aktif → StatusHistory dibuat (dengan reason migrasi, skip trial)
+        $this->assertEquals(1, StudentStatusHistory::count());
+        // Tidak ada package_id → tidak ada enrollment
+        $this->assertEquals(0, Enrollment::count());
     }
 
     // ============= HELPER =============
@@ -280,5 +288,177 @@ class StudentImportServiceTest extends TestCase
         $this->assertNull($result['room_id']);
         $this->assertFalse($result['_has_warning']);
         $this->assertNull($result['_warning_message']);
+    }
+
+    // ============= TES ENROLLMENT, SCHEDULE, DAN STATUS HISTORY =============
+
+    public function test_confirm_aktif_buat_enrollment_schedule_dan_status_history(): void
+    {
+        $piano   = Instrument::create(['name' => 'Piano', 'code' => 'PIANO', 'is_active' => true, 'sort_order' => 1]);
+        $package = Package::create([
+            'code' => 'REG-PIANO', 'instrument_id' => $piano->id,
+            'class_type' => 'REGULER', 'grade' => 'Basic',
+            'duration_min' => 30, 'price_per_month' => 340000,
+            'is_active' => true, 'sort_order' => 1,
+        ]);
+        $teacher = Teacher::create(['code' => 'TCH-ADI', 'name' => 'Adi', 'phone' => '08123456789', 'is_active' => true]);
+        $room    = Room::create([
+            'code' => 'R2', 'name' => 'Studio 2', 'capacity' => 1,
+            'supported_instruments' => ['Piano'], 'is_active' => true,
+        ]);
+        $user = \App\Models\User::factory()->create();
+        $this->actingAs($user);
+
+        $this->service->confirm([
+            [
+                'row'  => 2,
+                'data' => [
+                    'full_name'           => 'Budi Santoso',
+                    'gender'              => 'L',
+                    'status'              => 'Aktif',
+                    'package_id'          => $package->id,
+                    'assigned_teacher_id' => $teacher->id,
+                    'room_id'             => $room->id,
+                    'preferred_day'       => 'Senin',
+                    'preferred_time'      => '15:00',
+                    'active_since'        => '2026-01-15',
+                    '_has_warning'        => false,
+                    '_warning_message'    => null,
+                    'nickname' => null, 'birth_date' => null, 'phone' => null,
+                    'email' => null, 'address' => null, 'notes' => null,
+                    'parent_name' => null, 'parent_phone' => null, 'parent_email' => null,
+                    'parent_relationship' => null,
+                ],
+            ],
+        ], []);
+
+        $student = \App\Models\Student::where('full_name', 'Budi Santoso')->first();
+        $this->assertNotNull($student);
+
+        $enrollment = Enrollment::where('student_id', $student->id)->first();
+        $this->assertNotNull($enrollment);
+        $this->assertEquals('ACTIVE', $enrollment->status);
+        $this->assertEquals($package->id, $enrollment->package_id);
+        $this->assertEquals($teacher->id, $enrollment->teacher_id);
+
+        $schedule = Schedule::where('enrollment_id', $enrollment->id)->first();
+        $this->assertNotNull($schedule);
+        $this->assertEquals(1, $schedule->day_of_week); // Senin = 1
+        $this->assertEquals('15:00:00', $schedule->start_time);
+        $this->assertEquals('15:30:00', $schedule->end_time); // +30 menit
+        $this->assertEquals($room->id, $schedule->room_id);
+
+        $history = StudentStatusHistory::where('student_id', $student->id)->first();
+        $this->assertNotNull($history);
+        $this->assertEquals('migrasi', $history->reason);
+        $this->assertTrue((bool)$history->skipped_trial);
+        $this->assertNull($history->from_status);
+        $this->assertEquals('Aktif', $history->to_status);
+    }
+
+    public function test_confirm_aktif_tanpa_preferred_day_skip_schedule_tapi_buat_history(): void
+    {
+        $piano   = Instrument::create(['name' => 'Piano', 'code' => 'PIANO', 'is_active' => true, 'sort_order' => 1]);
+        $package = Package::create([
+            'code' => 'REG-PIANO', 'instrument_id' => $piano->id,
+            'class_type' => 'REGULER', 'grade' => 'Basic',
+            'duration_min' => 30, 'price_per_month' => 340000,
+            'is_active' => true, 'sort_order' => 1,
+        ]);
+        $teacher = Teacher::create(['code' => 'TCH-ADI', 'name' => 'Adi', 'phone' => '08123456789', 'is_active' => true]);
+        $user = \App\Models\User::factory()->create();
+        $this->actingAs($user);
+
+        $this->service->confirm([
+            [
+                'row'  => 3,
+                'data' => [
+                    'full_name'           => 'Tanpa Jadwal',
+                    'gender'              => 'L',
+                    'status'              => 'Aktif',
+                    'package_id'          => $package->id,
+                    'assigned_teacher_id' => $teacher->id,
+                    'room_id'             => null,
+                    'preferred_day'       => null,
+                    'preferred_time'      => null,
+                    'active_since'        => null,
+                    '_has_warning' => false, '_warning_message' => null,
+                    'nickname' => null, 'birth_date' => null, 'phone' => null,
+                    'email' => null, 'address' => null, 'notes' => null,
+                    'parent_name' => null, 'parent_phone' => null, 'parent_email' => null,
+                    'parent_relationship' => null,
+                ],
+            ],
+        ], []);
+
+        $student = \App\Models\Student::where('full_name', 'Tanpa Jadwal')->first();
+        $this->assertNotNull($student);
+        $this->assertEquals(0, Schedule::count());
+        $this->assertEquals(0, Enrollment::count());
+        $this->assertEquals(1, StudentStatusHistory::where('student_id', $student->id)->count());
+    }
+
+    public function test_confirm_calon_tidak_buat_enrollment_atau_history(): void
+    {
+        $user = \App\Models\User::factory()->create();
+        $this->actingAs($user);
+
+        $this->service->confirm([
+            [
+                'row'  => 4,
+                'data' => [
+                    'full_name' => 'Calon Murid', 'gender' => 'L', 'status' => 'Calon',
+                    'package_id' => null, 'assigned_teacher_id' => null, 'room_id' => null,
+                    'preferred_day' => null, 'preferred_time' => null, 'active_since' => null,
+                    '_has_warning' => false, '_warning_message' => null,
+                    'nickname' => null, 'birth_date' => null, 'phone' => null,
+                    'email' => null, 'address' => null, 'notes' => null,
+                    'parent_name' => null, 'parent_phone' => null, 'parent_email' => null,
+                    'parent_relationship' => null,
+                ],
+            ],
+        ], []);
+
+        $student = \App\Models\Student::where('full_name', 'Calon Murid')->first();
+        $this->assertNotNull($student);
+        $this->assertEquals(0, Enrollment::count());
+        $this->assertEquals(0, StudentStatusHistory::count());
+    }
+
+    public function test_end_time_dihitung_dari_duration_min(): void
+    {
+        $piano   = Instrument::create(['name' => 'Piano', 'code' => 'PIANO', 'is_active' => true, 'sort_order' => 1]);
+        $package = Package::create([
+            'code' => 'HOBBY-PIANO-45', 'instrument_id' => $piano->id,
+            'class_type' => 'HOBBY', 'grade' => null,
+            'duration_min' => 45, 'price_per_month' => 450000,
+            'is_active' => true, 'sort_order' => 2,
+        ]);
+        $teacher = Teacher::create(['code' => 'TCH-ADI', 'name' => 'Adi', 'phone' => '08123456789', 'is_active' => true]);
+        $user = \App\Models\User::factory()->create();
+        $this->actingAs($user);
+
+        $this->service->confirm([
+            [
+                'row'  => 5,
+                'data' => [
+                    'full_name' => 'Budi Hobby', 'gender' => 'L', 'status' => 'Aktif',
+                    'package_id' => $package->id, 'assigned_teacher_id' => $teacher->id,
+                    'room_id' => null, 'preferred_day' => 'Rabu', 'preferred_time' => '10:15',
+                    'active_since' => null,
+                    '_has_warning' => false, '_warning_message' => null,
+                    'nickname' => null, 'birth_date' => null, 'phone' => null,
+                    'email' => null, 'address' => null, 'notes' => null,
+                    'parent_name' => null, 'parent_phone' => null, 'parent_email' => null,
+                    'parent_relationship' => null,
+                ],
+            ],
+        ], []);
+
+        $schedule = Schedule::first();
+        $this->assertNotNull($schedule);
+        $this->assertEquals('10:15:00', $schedule->start_time);
+        $this->assertEquals('11:00:00', $schedule->end_time); // 10:15 + 45 = 11:00
+        $this->assertEquals(3, $schedule->day_of_week); // Rabu = 3
     }
 }

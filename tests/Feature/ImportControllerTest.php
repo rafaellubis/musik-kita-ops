@@ -144,4 +144,90 @@ class ImportControllerTest extends TestCase
         $headers = $rows[0] ?? [];
         $this->assertContains('kode_ruangan', $headers, 'Template harus punya kolom kode_ruangan');
     }
+
+    public function test_confirm_buat_schedules_di_db(): void
+    {
+        $admin   = $this->adminUser();
+        $piano   = \App\Models\Instrument::create(['name' => 'Piano', 'code' => 'PIANO', 'is_active' => true, 'sort_order' => 1]);
+        $package = \App\Models\Package::create([
+            'code' => 'REG-PIANO', 'instrument_id' => $piano->id,
+            'class_type' => 'REGULER', 'grade' => 'Basic',
+            'duration_min' => 30, 'price_per_month' => 340000, 'is_active' => true, 'sort_order' => 1,
+        ]);
+        $teacher = \App\Models\Teacher::create(['code' => 'TCH-ADI', 'name' => 'Adi', 'phone' => '081', 'is_active' => true]);
+
+        session(['import_preview' => [
+            'valid' => [
+                [
+                    'row'  => 2,
+                    'data' => [
+                        'full_name' => 'Budi Test', 'gender' => 'L', 'status' => 'Aktif',
+                        'package_id' => $package->id, 'assigned_teacher_id' => $teacher->id,
+                        'room_id' => null, 'preferred_day' => 'Senin', 'preferred_time' => '14:00',
+                        'active_since' => '2026-01-15',
+                        '_has_warning' => false, '_warning_message' => null,
+                        'nickname' => null, 'birth_date' => null, 'phone' => null,
+                        'email' => null, 'address' => null, 'notes' => null,
+                        'parent_name' => null, 'parent_phone' => null, 'parent_email' => null,
+                        'parent_relationship' => null,
+                    ],
+                ],
+            ],
+            'overwrite' => [],
+            'errors'    => [],
+        ]]);
+
+        $this->actingAs($admin)->post(route('import.confirm'));
+
+        $this->assertDatabaseHas('schedules', [
+            'day_of_week' => 1,
+            'start_time'  => '14:00:00',
+            'end_time'    => '14:30:00',
+            'is_active'   => true,
+        ]);
+    }
+
+    public function test_confirm_buat_status_history_migrasi(): void
+    {
+        $admin   = $this->adminUser();
+        $piano   = \App\Models\Instrument::create(['name' => 'Piano', 'code' => 'PIANO', 'is_active' => true, 'sort_order' => 1]);
+        $package = \App\Models\Package::create([
+            'code' => 'REG-PIANO', 'instrument_id' => $piano->id,
+            'class_type' => 'REGULER', 'grade' => 'Basic',
+            'duration_min' => 30, 'price_per_month' => 340000, 'is_active' => true, 'sort_order' => 1,
+        ]);
+        $teacher = \App\Models\Teacher::create(['code' => 'TCH-ADI', 'name' => 'Adi', 'phone' => '081', 'is_active' => true]);
+
+        session(['import_preview' => [
+            'valid' => [
+                [
+                    'row'  => 2,
+                    'data' => [
+                        'full_name' => 'Sejarah Test', 'gender' => 'L', 'status' => 'Aktif',
+                        'package_id' => $package->id, 'assigned_teacher_id' => $teacher->id,
+                        'room_id' => null, 'preferred_day' => 'Selasa', 'preferred_time' => '09:00',
+                        'active_since' => null,
+                        '_has_warning' => false, '_warning_message' => null,
+                        'nickname' => null, 'birth_date' => null, 'phone' => null,
+                        'email' => null, 'address' => null, 'notes' => null,
+                        'parent_name' => null, 'parent_phone' => null, 'parent_email' => null,
+                        'parent_relationship' => null,
+                    ],
+                ],
+            ],
+            'overwrite' => [],
+            'errors'    => [],
+        ]]);
+
+        $this->actingAs($admin)->post(route('import.confirm'));
+
+        $student = \App\Models\Student::where('full_name', 'Sejarah Test')->first();
+        $this->assertDatabaseHas('student_status_histories', [
+            'student_id'    => $student->id,
+            'from_status'   => null,
+            'reason'        => 'migrasi',
+            'skipped_trial' => true,
+            'to_status'     => 'Aktif',
+        ]);
+    }
 }
