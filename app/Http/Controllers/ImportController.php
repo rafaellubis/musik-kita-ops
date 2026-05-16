@@ -60,6 +60,12 @@ class ImportController extends Controller
         try {
             $result = $this->service->validate($request->file('file'));
         } catch (\Throwable $e) {
+            \Log::error('ImportController::validate gagal', [
+                'message' => $e->getMessage(),
+                'class'   => get_class($e),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ]);
             return redirect()->route('import.index')
                 ->with('error', 'File tidak dapat dibaca. Pastikan file tidak rusak dan menggunakan format .xlsx yang benar.');
         }

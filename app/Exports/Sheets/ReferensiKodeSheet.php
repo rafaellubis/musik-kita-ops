@@ -6,10 +6,8 @@ use App\Models\Package;
 use App\Models\Teacher;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithStyles;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ReferensiKodeSheet implements FromArray, WithTitle, WithStyles
+class ReferensiKodeSheet implements FromArray, WithTitle
 {
     public function title(): string
     {
@@ -71,13 +69,5 @@ class ReferensiKodeSheet implements FromArray, WithTitle, WithStyles
         }
 
         return $rows;
-    }
-
-    public function styles(Worksheet $sheet): array
-    {
-        return [
-            // Kolom A ditebalkan (berisi label kode/header seksi)
-            'A' => ['font' => ['bold' => true]],
-        ];
     }
 }

@@ -4,10 +4,8 @@ namespace App\Exports\Sheets;
 
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithStyles;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class DataMuridSheet implements FromArray, WithTitle, WithStyles
+class DataMuridSheet implements FromArray, WithTitle
 {
     public function title(): string
     {
@@ -17,7 +15,7 @@ class DataMuridSheet implements FromArray, WithTitle, WithStyles
     public function array(): array
     {
         return [
-            // Baris header — kolom yang wajib/opsional diisi admin
+            // Baris header
             [
                 'full_name', 'nickname', 'gender', 'birth_date', 'phone', 'email',
                 'address', 'notes', 'parent_name', 'parent_phone', 'parent_email',
@@ -32,14 +30,6 @@ class DataMuridSheet implements FromArray, WithTitle, WithStyles
                 'Aktif', 'KODE-PAKET-CONTOH', 'KODE-GURU-CONTOH',
                 'Senin', '15:30', '2026-01-15',
             ],
-        ];
-    }
-
-    public function styles(Worksheet $sheet): array
-    {
-        return [
-            // Baris header ditebalkan
-            1 => ['font' => ['bold' => true]],
         ];
     }
 }
