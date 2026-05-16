@@ -211,7 +211,8 @@ class StudentImportService
         }
 
         // Tanggal harus format YYYY-MM-DD
-        foreach (['birth_date', 'active_since', 'trial_date'] as $dateField) {
+        // trial_date sengaja dikecualikan — tidak relevan untuk import massal
+        foreach (['birth_date', 'active_since'] as $dateField) {
             if (!empty($row[$dateField])) {
                 $parsed = \DateTime::createFromFormat('Y-m-d', $row[$dateField]);
                 if (!$parsed || $parsed->format('Y-m-d') !== $row[$dateField]) {

@@ -29,7 +29,7 @@ class DataMuridSheet implements FromArray, WithTitle, WithStyles
                 'Budi Santoso', 'Budi', 'L', '2010-05-15', '08111111111',
                 'budi@email.com', 'Jl. Contoh No.1', 'Catatan contoh',
                 'Ayah Budi', '08111111112', 'ayahbudi@email.com', 'Ayah',
-                'Aktif', 'PIANO-REG-BASIC', 'T-ADI',
+                'Aktif', 'KODE-PAKET-CONTOH', 'KODE-GURU-CONTOH',
                 'Senin', '15:30', '2026-01-15',
             ],
         ];
