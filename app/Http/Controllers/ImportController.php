@@ -7,9 +7,10 @@ use App\Models\AuditLog;
 use App\Services\StudentImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Excel as ExcelFormat;
 use Maatwebsite\Excel\Facades\Excel;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ImportController extends Controller
 {
@@ -28,10 +29,19 @@ class ImportController extends Controller
 
     /**
      * Download template .xlsx siap pakai.
+     * Menggunakan Excel::raw() + response() langsung — lebih stabil di Windows/Laragon
+     * dibanding BinaryFileResponse yang bergantung pada temp file.
      */
-    public function downloadTemplate(): BinaryFileResponse
+    public function downloadTemplate(): Response
     {
-        return Excel::download(new StudentTemplateExport(), 'template-import-murid.xlsx');
+        $content = Excel::raw(new StudentTemplateExport(), ExcelFormat::XLSX);
+
+        return response($content, 200, [
+            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="template-import-murid.xlsx"',
+            'Content-Length'      => strlen($content),
+            'Cache-Control'       => 'max-age=0',
+        ]);
     }
 
     /**

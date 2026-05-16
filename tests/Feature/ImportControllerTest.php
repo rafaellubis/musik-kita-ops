@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -67,13 +66,17 @@ class ImportControllerTest extends TestCase
 
     public function test_download_template_returns_xlsx(): void
     {
-        Excel::fake();
+        // Controller menggunakan Excel::raw() + response() langsung (bukan Excel::download())
+        // agar kompatibel dengan Windows/Laragon — assert header response, bukan ExcelFake
+        $response = $this->actingAs($this->adminUser())
+            ->get(route('import.template'));
 
-        $this->actingAs($this->adminUser())
-            ->get(route('import.template'))
-            ->assertStatus(200);
+        $response->assertStatus(200)
+            ->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            ->assertHeader('Content-Disposition', 'attachment; filename="template-import-murid.xlsx"');
 
-        Excel::assertDownloaded('template-import-murid.xlsx');
+        // Verifikasi magic bytes xlsx (PK zip header: 50 4B 03 04)
+        $this->assertStringStartsWith("\x50\x4B\x03\x04", $response->content());
     }
 
     public function test_validate_rejects_non_xlsx_file(): void
