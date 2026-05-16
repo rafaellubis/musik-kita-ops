@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Room;
 use App\Models\Schedule;
 use App\Models\Student;
 use App\Services\ScheduleConflictDetector;
@@ -72,6 +73,19 @@ class ScheduleController extends Controller
             }
         }
 
+        // Validasi: ruangan harus support instrumen murid
+        if (!empty($data['room_id'])) {
+            $room = Room::findOrFail($data['room_id']);
+            $instrumentName = $enrollment->package?->instrument?->name;
+
+            if ($instrumentName && !$room->supportsInstrument($instrumentName)) {
+                return back()->withInput()->with('error',
+                    "Ruangan [{$room->code}] {$room->name} tidak mendukung instrumen {$instrumentName}. " .
+                    "Pilih ruangan lain atau kosongkan field ruangan."
+                );
+            }
+        }
+
         Schedule::create([
             'enrollment_id' => $enrollment->id,
             'day_of_week'   => $data['day_of_week'],
@@ -123,6 +137,19 @@ class ScheduleController extends Controller
             if ($isFull) {
                 return back()->withInput()->with('error',
                     'Kapasitas ruangan sudah penuh di slot ini.');
+            }
+        }
+
+        // Validasi: ruangan harus support instrumen murid (saat update)
+        if (!empty($data['room_id'])) {
+            $room = Room::findOrFail($data['room_id']);
+            $instrumentName = $schedule->enrollment?->package?->instrument?->name;
+
+            if ($instrumentName && !$room->supportsInstrument($instrumentName)) {
+                return back()->withInput()->with('error',
+                    "Ruangan [{$room->code}] {$room->name} tidak mendukung instrumen {$instrumentName}. " .
+                    "Pilih ruangan lain atau kosongkan field ruangan."
+                );
             }
         }
 
