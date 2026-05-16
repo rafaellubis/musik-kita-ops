@@ -93,4 +93,84 @@ class StudentImportServiceTest extends TestCase
         $existing = $this->service->findExisting('Budi Santoso', '08111111111');
         $this->assertNotNull($existing);
     }
+
+    public function test_confirm_inserts_valid_students(): void
+    {
+        $validRows = [
+            [
+                'row'  => 2,
+                'data' => [
+                    'full_name'  => 'Test Import Confirm',
+                    'gender'     => 'L',
+                    'status'     => 'Aktif',
+                    'nickname'   => null,
+                    'birth_date' => null,
+                    'phone'      => null,
+                    'email'      => null,
+                    'address'    => null,
+                    'notes'      => null,
+                    'parent_name'         => null,
+                    'parent_phone'        => null,
+                    'parent_email'        => null,
+                    'parent_relationship' => null,
+                    'package_id'          => null,
+                    'assigned_teacher_id' => null,
+                    'preferred_day'       => null,
+                    'preferred_time'      => null,
+                    'active_since'        => null,
+                    'trial_date'          => null,
+                ],
+            ],
+        ];
+
+        $result = $this->service->confirm($validRows, []);
+
+        $this->assertEquals(1, $result['imported']);
+        $this->assertEquals(0, $result['skipped']);
+        $this->assertDatabaseHas('students', ['full_name' => 'Test Import Confirm']);
+    }
+
+    public function test_confirm_updates_existing_student(): void
+    {
+        $student = Student::factory()->create([
+            'full_name' => 'Murid Existing',
+            'gender'    => 'L',
+            'status'    => 'Calon',
+        ]);
+
+        $overwriteRows = [
+            [
+                'row'  => 2,
+                'data' => [
+                    '_existing_id' => $student->id,
+                    'full_name'    => 'Murid Existing',
+                    'gender'       => 'P',  // berubah dari L ke P
+                    'status'       => 'Aktif',
+                    'nickname'     => null,
+                    'birth_date'   => null,
+                    'phone'        => null,
+                    'email'        => null,
+                    'address'      => null,
+                    'notes'        => null,
+                    'parent_name'          => null,
+                    'parent_phone'         => null,
+                    'parent_email'         => null,
+                    'parent_relationship'  => null,
+                    'package_id'           => null,
+                    'assigned_teacher_id'  => null,
+                    'preferred_day'        => null,
+                    'preferred_time'       => null,
+                    'active_since'         => null,
+                    'trial_date'           => null,
+                ],
+            ],
+        ];
+
+        $result = $this->service->confirm([], $overwriteRows);
+
+        $this->assertEquals(1, $result['imported']);
+        $student->refresh();
+        $this->assertEquals('P', $student->gender);
+        $this->assertEquals('Aktif', $student->status);
+    }
 }

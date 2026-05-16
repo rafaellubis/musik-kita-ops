@@ -7,7 +7,6 @@ use App\Models\Student;
 use App\Models\Teacher;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
 /**
@@ -118,8 +117,9 @@ class StudentImportService
     }
 
     /**
-     * Simpan baris valid + overwrite ke database dalam satu transaksi.
-     * Jika satu baris gagal disimpan, dicatat sebagai 'skipped' tanpa batalkan seluruhnya.
+     * Simpan baris valid + overwrite ke database.
+     * Semua baris disimpan dalam satu transaksi — jika ada yang gagal, seluruh import dibatalkan.
+     * Baris yang diimport sudah divalidasi saat dry run, jadi kegagalan di sini bersifat unexpected.
      *
      * @param  array $valid     Baris baru dari hasil validate()
      * @param  array $overwrite Baris yang akan update murid existing dari hasil validate()
@@ -128,23 +128,15 @@ class StudentImportService
     public function confirm(array $valid, array $overwrite): array
     {
         $imported = 0;
-        $skipped  = 0;
 
-        DB::transaction(function () use ($valid, $overwrite, &$imported, &$skipped) {
+        DB::transaction(function () use ($valid, $overwrite, &$imported) {
             foreach (array_merge($valid, $overwrite) as $item) {
-                $data = $item['data'];
-
-                try {
-                    $this->upsertStudent($data);
-                    $imported++;
-                } catch (\Throwable $e) {
-                    Log::error('Import murid gagal row ' . $item['row'] . ': ' . $e->getMessage());
-                    $skipped++;
-                }
+                $this->upsertStudent($item['data']);
+                $imported++;
             }
         });
 
-        return compact('imported', 'skipped');
+        return ['imported' => $imported, 'skipped' => 0];
     }
 
     /**
@@ -212,14 +204,14 @@ class StudentImportService
             $errors[] = 'preferred_day tidak valid (contoh: Senin, Selasa, ...)';
         }
 
-        // Jam preferensi harus format HH:MM
+        // Jam preferensi harus format HH:MM dengan nilai jam dan menit yang valid
         if (!empty($row['preferred_time'])
-            && !preg_match('/^\d{2}:\d{2}$/', $row['preferred_time'])) {
-            $errors[] = 'preferred_time harus format HH:MM (contoh: 14:30)';
+            && !preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $row['preferred_time'])) {
+            $errors[] = 'preferred_time harus format HH:MM (contoh: 15:30)';
         }
 
         // Tanggal harus format YYYY-MM-DD
-        foreach (['birth_date', 'active_since'] as $dateField) {
+        foreach (['birth_date', 'active_since', 'trial_date'] as $dateField) {
             if (!empty($row[$dateField])) {
                 $parsed = \DateTime::createFromFormat('Y-m-d', $row[$dateField]);
                 if (!$parsed || $parsed->format('Y-m-d') !== $row[$dateField]) {
