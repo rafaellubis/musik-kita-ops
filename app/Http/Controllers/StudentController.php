@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\Instrument;
 use App\Models\Package;
 use App\Models\Room;
+use App\Models\Schedule;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Services\StudentLifecycleService;
@@ -86,6 +87,7 @@ class StudentController extends Controller
             // M03: enrollment ACTIVE + schedules + room
             'enrollments' => fn ($q) => $q->latest('effective_date'),
             'enrollments.package',
+            'enrollments.package.instrument',
             'enrollments.teacher',
             'enrollments.schedules.room',
         ])->findOrFail($id);
@@ -100,6 +102,17 @@ class StudentController extends Controller
             ->orderBy('name')
             ->get();
         $rooms = Room::where('is_active', true)->orderBy('code')->get();
+
+        // Data untuk Alpine.js auto-suggest ruangan di form jadwal
+        // $roomsForFilter: berisi supported_instruments untuk filter client-side
+        $roomsForFilter = Room::where('is_active', true)
+            ->orderBy('code')
+            ->get(['id', 'code', 'name', 'capacity', 'supported_instruments']);
+
+        // $bookedSchedules: jadwal aktif yang sudah ada room_id — untuk cek konflik client-side
+        $bookedSchedules = Schedule::active()
+            ->whereNotNull('room_id')
+            ->get(['room_id', 'day_of_week', 'start_time', 'end_time']);
 
         // M03: Sesi mendatang (5 terdekat dari hari ini)
         $upcomingSessions = $student->classSessions()
@@ -127,6 +140,7 @@ class StudentController extends Controller
 
         return view('students.show', compact(
             'student', 'packages', 'teachers', 'rooms',
+            'roomsForFilter', 'bookedSchedules',
             'upcomingSessions',
             'recentInvoices', 'outstandingBalance', 'unpaidCount',
         ));
