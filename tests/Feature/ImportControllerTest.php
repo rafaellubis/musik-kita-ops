@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Student;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -35,6 +34,16 @@ class ImportControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $user->assignRole('Admin');
+        return $user;
+    }
+
+    /**
+     * Helper: buat user dengan role Owner.
+     */
+    private function ownerUser(): User
+    {
+        $user = User::factory()->create();
+        $user->assignRole('Owner');
         return $user;
     }
 
@@ -94,9 +103,20 @@ class ImportControllerTest extends TestCase
             ]])
             ->post(route('import.cancel'))
             ->assertRedirect(route('import.index'))
-            ->assertSessionHas('info');
+            ->assertSessionHas('info')
+            ->assertSessionMissing('import_preview');  // verifikasi controller menghapus session
+    }
 
-        // Session preview harus sudah dihapus
-        $this->assertNull(session('import_preview'));
+    public function test_import_index_redirects_guest_to_login(): void
+    {
+        $this->get(route('import.index'))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_import_index_accessible_by_owner(): void
+    {
+        $this->actingAs($this->ownerUser())
+            ->get(route('import.index'))
+            ->assertStatus(200);
     }
 }
