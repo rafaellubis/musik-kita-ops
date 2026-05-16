@@ -24,6 +24,13 @@
         </div>
         @endif
 
+        @if(session('warning'))
+        <div class="mb-5 p-3 rounded-lg text-sm"
+             style="background:rgba(251,191,36,0.1);color:#FBBF24;border:1px solid rgba(251,191,36,0.2)">
+            ⚠️ {{ session('warning') }}
+        </div>
+        @endif
+
         <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -31,9 +38,7 @@
                         <th class="px-4 py-2 text-left text-xs font-medium uppercase">Code</th>
                         <th class="px-4 py-2 text-left text-xs font-medium uppercase">Nama</th>
                         <th class="px-4 py-2 text-center text-xs font-medium uppercase">Kapasitas</th>
-                        <th class="px-4 py-2 text-center text-xs font-medium uppercase">Piano</th>
-                        <th class="px-4 py-2 text-center text-xs font-medium uppercase">Drum</th>
-                        <th class="px-4 py-2 text-center text-xs font-medium uppercase">Amplifier</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium uppercase">Instrumen</th>
                         <th class="px-4 py-2 text-left text-xs font-medium uppercase">Catatan</th>
                         <th class="px-4 py-2 text-center text-xs font-medium uppercase">Status</th>
                         <th class="px-4 py-2 text-right text-xs font-medium uppercase">Aksi</th>
@@ -45,23 +50,10 @@
                             <td class="px-4 py-2 font-mono text-sm font-bold">{{ $r->code }}</td>
                             <td class="px-4 py-2 text-sm">{{ $r->name }}</td>
                             <td class="px-4 py-2 text-sm text-center">{{ $r->capacity }} org</td>
-                            <td class="px-4 py-2 text-center">
-                                @if($r->has_piano)
-                                    <span class="text-green-600 font-bold">✓</span>
-                                @else
-                                    <span class="text-gray-300">—</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-2 text-center">
-                                @if($r->has_drum)
-                                    <span class="text-green-600 font-bold">✓</span>
-                                @else
-                                    <span class="text-gray-300">—</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-2 text-center">
-                                @if($r->has_amplifier)
-                                    <span class="text-green-600 font-bold">✓</span>
+                            <td class="px-4 py-2 text-xs text-gray-700">
+                                @php $instrumen = $r->supported_instruments ?? []; @endphp
+                                @if(count($instrumen) > 0)
+                                    {{ implode(', ', $instrumen) }}
                                 @else
                                     <span class="text-gray-300">—</span>
                                 @endif
