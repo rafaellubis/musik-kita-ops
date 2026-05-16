@@ -45,6 +45,7 @@
         $isKidsClass = $student->package
             && in_array($student->package->class_type, ['KIDS_CLASS', 'KIDS_CLASS_BUNDLE']);
         $activeEnrollment = $student->enrollments->firstWhere('status', 'ACTIVE');
+        $studentInstrument = $activeEnrollment?->package?->instrument?->name;
     @endphp
 
     <div class="py-6 px-4 lg:px-8 max-w-4xl mx-auto space-y-5">
@@ -725,6 +726,32 @@
 
                     {{-- Form tambah jadwal --}}
                     <div x-show="openSchedule === 'create'" x-cloak
+                         x-data="{
+                             selectedDay: '',
+                             startTime: '',
+                             endTime: '',
+                             rooms: {{ Js::from($roomsForFilter) }},
+                             booked: {{ Js::from($bookedSchedules) }},
+                             instrument: {{ Js::from($studentInstrument) }},
+                             get availableRooms() {
+                                 return this.rooms.filter(room => {
+                                     if (this.instrument &&
+                                         !room.supported_instruments.includes(this.instrument)) {
+                                         return false;
+                                     }
+                                     if (!this.selectedDay || !this.startTime || !this.endTime) {
+                                         return true;
+                                     }
+                                     const occupants = this.booked.filter(s =>
+                                         s.room_id === room.id &&
+                                         s.day_of_week === parseInt(this.selectedDay) &&
+                                         s.start_time < this.endTime &&
+                                         s.end_time > this.startTime
+                                     ).length;
+                                     return occupants < room.capacity;
+                                 });
+                             }
+                         }"
                          class="mb-4 rounded-xl p-4"
                          style="background:rgba(212,168,83,0.06);border:1px solid rgba(212,168,83,0.2)">
                         <form method="POST" action="{{ route('schedules.store', $student->id) }}">
@@ -732,7 +759,7 @@
                             <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
                                 <div>
                                     <label class="block text-xs text-gray-500 mb-1">Hari <span class="text-red-400">*</span></label>
-                                    <select name="day_of_week" required class="block w-full rounded-lg text-sm px-2 py-1.5">
+                                    <select name="day_of_week" x-model="selectedDay" required class="block w-full rounded-lg text-sm px-2 py-1.5">
                                         <option value="">—</option>
                                         @foreach(\App\Models\Schedule::DAY_NAMES as $val => $label)
                                         <option value="{{ $val }}">{{ $label }}</option>
@@ -741,20 +768,35 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs text-gray-500 mb-1">Mulai <span class="text-red-400">*</span></label>
-                                    <input type="time" name="start_time" required class="block w-full rounded-lg text-sm px-2 py-1.5">
+                                    <input type="time" name="start_time" x-model="startTime" required class="block w-full rounded-lg text-sm px-2 py-1.5">
                                 </div>
                                 <div>
                                     <label class="block text-xs text-gray-500 mb-1">Selesai <span class="text-red-400">*</span></label>
-                                    <input type="time" name="end_time" required class="block w-full rounded-lg text-sm px-2 py-1.5">
+                                    <input type="time" name="end_time" x-model="endTime" required class="block w-full rounded-lg text-sm px-2 py-1.5">
                                 </div>
                                 <div class="col-span-2">
                                     <label class="block text-xs text-gray-500 mb-1">Ruangan</label>
                                     <select name="room_id" class="block w-full rounded-lg text-sm px-2 py-1.5">
                                         <option value="">— Pilih —</option>
-                                        @foreach($rooms as $r)
-                                        <option value="{{ $r->id }}">[{{ $r->code }}] {{ $r->name }} (kap. {{ $r->capacity }})</option>
-                                        @endforeach
+                                        <template x-for="r in availableRooms" :key="r.id">
+                                            <option :value="r.id"
+                                                    x-text="`[${r.code}] ${r.name} (kap. ${r.capacity})`">
+                                            </option>
+                                        </template>
                                     </select>
+                                    <p class="text-xs mt-1"
+                                       x-show="instrument && availableRooms.length === 0 && (selectedDay || startTime)"
+                                       style="color:#F87171">
+                                        Tidak ada ruangan tersedia untuk slot &amp; instrumen ini.
+                                    </p>
+                                    <p class="text-xs mt-1 text-gray-400"
+                                       x-show="instrument && availableRooms.length > 0"
+                                       x-text="`Menampilkan ruangan yang support ${instrument}`">
+                                    </p>
+                                    <p class="text-xs mt-1" style="color:#FBBF24"
+                                       x-show="!instrument">
+                                        Murid belum punya paket aktif — semua ruangan ditampilkan.
+                                    </p>
                                 </div>
                                 <div class="col-span-2 md:col-span-5">
                                     <label class="block text-xs text-gray-500 mb-1">Catatan</label>
