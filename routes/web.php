@@ -19,7 +19,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PayrollConfigController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\RoomController;
+use App\Http\Controllers\Admin\RoomController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\StudentController;
