@@ -12,17 +12,24 @@ class Room extends Model
 
     protected $fillable = [
         'code', 'name', 'capacity',
-        'has_piano', 'has_drum', 'has_amplifier',
+        'supported_instruments',
         'notes', 'is_active',
     ];
 
     protected $casts = [
-        'is_active'     => 'boolean',
-        'has_piano'     => 'boolean',
-        'has_drum'      => 'boolean',
-        'has_amplifier' => 'boolean',
-        'capacity'      => 'integer',
+        'supported_instruments' => 'array',
+        'capacity'              => 'integer',
+        'is_active'             => 'boolean',
     ];
+
+    /**
+     * Cek apakah ruangan mendukung instrumen tertentu.
+     * Dipakai oleh ScheduleController untuk hard block saat assign jadwal.
+     */
+    public function supportsInstrument(string $instrumentName): bool
+    {
+        return in_array($instrumentName, $this->supported_instruments ?? []);
+    }
 
     public function schedules(): HasMany
     {
