@@ -21,6 +21,10 @@
         :active="request()->routeIs('dashboard')" />
     <x-sidebar-item route="students.index" icon="🎓" label="Murid"
         :active="request()->routeIs('students.*')" />
+    @hasanyrole('Owner|Admin')
+    <x-sidebar-item route="import.index" icon="📥" label="Import Excel"
+        :active="request()->routeIs('import.*')" />
+    @endhasanyrole
     <x-sidebar-item route="sessions.index" icon="🎵" label="Sesi"
         :active="request()->routeIs('sessions.*')" />
 
