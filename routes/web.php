@@ -9,6 +9,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\HolidayController;
+use App\Http\Controllers\ImportController;
 use App\Http\Controllers\HonorController;
 use App\Http\Controllers\InstrumentController;
 use App\Http\Controllers\InvoiceComponentController;
@@ -157,6 +158,13 @@ Route::middleware('auth')->group(function () {
         Route::post('invoices/apply-fines',
             [InvoiceController::class, 'applyFines']
         )->name('invoices.apply-fines');
+
+        // Import murid dari Excel (Fase 1 — migrasi data)
+        Route::get('/import',            [ImportController::class, 'index'])->name('import.index');
+        Route::get('/import/template',   [ImportController::class, 'downloadTemplate'])->name('import.template');
+        Route::post('/import/validate',  [ImportController::class, 'validate'])->name('import.validate');
+        Route::post('/import/confirm',   [ImportController::class, 'confirm'])->name('import.confirm');
+        Route::post('/import/cancel',    [ImportController::class, 'cancel'])->name('import.cancel');
     });
 
     /* ======================================================================
