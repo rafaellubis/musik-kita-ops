@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\XlsxBuilder;
 use App\Models\AuditLog;
 use App\Models\Package;
+use App\Models\Room;
 use App\Models\Teacher;
 use App\Services\StudentImportService;
 use Illuminate\Http\RedirectResponse;
@@ -145,14 +146,14 @@ class ImportController extends Controller
                 'full_name', 'nickname', 'gender', 'birth_date', 'phone', 'email',
                 'address', 'notes', 'parent_name', 'parent_phone', 'parent_email',
                 'parent_relationship', 'status', 'package_code', 'teacher_code',
-                'preferred_day', 'preferred_time', 'active_since',
+                'preferred_day', 'preferred_time', 'active_since', 'kode_ruangan',
             ],
             [
                 'Budi Santoso', 'Budi', 'L', '2010-05-15', '08111111111',
                 'budi@email.com', 'Jl. Contoh No.1', 'Catatan contoh',
                 'Ayah Budi', '08111111112', 'ayahbudi@email.com', 'Ayah',
                 'Aktif', 'KODE-PAKET-CONTOH', 'KODE-GURU-CONTOH',
-                'Senin', '15:30', '2026-01-15',
+                'Senin', '15:30', '2026-01-15', 'R2',
             ],
         ];
     }
@@ -188,6 +189,24 @@ class ImportController extends Controller
         } else {
             foreach ($teachers as $teacher) {
                 $rows[] = [$teacher->code, $teacher->name];
+            }
+        }
+
+        $rows[] = [];
+
+        // Kode ruangan aktif
+        $rows[] = ['=== KODE RUANGAN ==='];
+        $rows[] = ['kode_ruangan', 'Nama Studio', 'Instrumen yang Didukung'];
+        $rooms = Room::where('is_active', true)->orderBy('code')->get();
+        if ($rooms->isEmpty()) {
+            $rows[] = ['(tidak ada ruangan aktif)'];
+        } else {
+            foreach ($rooms as $room) {
+                $rows[] = [
+                    $room->code,
+                    $room->name,
+                    implode(', ', $room->supported_instruments ?? []),
+                ];
             }
         }
 

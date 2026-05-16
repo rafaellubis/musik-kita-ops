@@ -122,4 +122,26 @@ class ImportControllerTest extends TestCase
             ->get(route('import.index'))
             ->assertStatus(200);
     }
+
+    public function test_template_berisi_kolom_kode_ruangan(): void
+    {
+        $admin = $this->adminUser();
+
+        $response = $this->actingAs($admin)->get(route('import.template'));
+
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        // Pastikan response adalah binary XLSX (magic bytes PK zip header)
+        $this->assertEquals("\x50\x4B\x03\x04", substr($response->getContent(), 0, 4));
+
+        // Tulis ke temp file dan baca headernya
+        $tmpFile = tempnam(sys_get_temp_dir(), 'test_') . '.xlsx';
+        file_put_contents($tmpFile, $response->getContent());
+        $rows = \Maatwebsite\Excel\Facades\Excel::toArray([], $tmpFile)[0] ?? [];
+        unlink($tmpFile);
+
+        $headers = $rows[0] ?? [];
+        $this->assertContains('kode_ruangan', $headers, 'Template harus punya kolom kode_ruangan');
+    }
 }
