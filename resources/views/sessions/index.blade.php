@@ -63,8 +63,9 @@
                 @if(auth()->user()?->hasAnyRole(['Owner', 'Admin']))
                     <div class="flex items-center gap-2">
                         <a href="{{ route('absensi.index') }}"
-                           class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
-                            ✅ Absensi Hari Ini
+                           class="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                           style="background:#D4A853;color:#1A1000">
+                            Absensi Hari Ini
                         </a>
                         <button type="button" @click="showGenerate = !showGenerate"
                                 class="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
