@@ -184,4 +184,68 @@ class AbsensiControllerTest extends TestCase
 
         $response->assertUnprocessable(); // 422
     }
+
+    // ----------------------------------------------------------------
+    // Task 5 — Validasi TERLAMBAT + DIGANTI
+    // ----------------------------------------------------------------
+
+    public function test_input_hadir_terlambat_tanpa_late_minutes_ditolak(): void
+    {
+        $session = $this->createTestSession();
+
+        $response = $this->actingAs($this->admin)
+            ->patchJson(route('admin.absensi.update', $session), [
+                'status' => 'HADIR_TERLAMBAT',
+                // late_minutes sengaja tidak dikirim
+            ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['late_minutes']);
+    }
+
+    public function test_input_hadir_terlambat_min_1_menit(): void
+    {
+        $session = $this->createTestSession();
+
+        $response = $this->actingAs($this->admin)
+            ->patchJson(route('admin.absensi.update', $session), [
+                'status'       => 'HADIR_TERLAMBAT',
+                'late_minutes' => 0,
+            ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['late_minutes']);
+    }
+
+    public function test_input_diganti_tanpa_guru_pengganti_ditolak(): void
+    {
+        $session = $this->createTestSession();
+
+        $response = $this->actingAs($this->admin)
+            ->patchJson(route('admin.absensi.update', $session), [
+                'status' => 'DIGANTI',
+                // substitute_teacher_id sengaja tidak dikirim
+            ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['substitute_teacher_id']);
+    }
+
+    public function test_input_hadir_terlambat_berhasil_simpan_late_minutes(): void
+    {
+        $session = $this->createTestSession();
+
+        $response = $this->actingAs($this->admin)
+            ->patchJson(route('admin.absensi.update', $session), [
+                'status'       => 'HADIR_TERLAMBAT',
+                'late_minutes' => 20,
+            ]);
+
+        $response->assertOk()->assertJson(['success' => true, 'late_minutes' => 20]);
+        $this->assertDatabaseHas('class_sessions', [
+            'id'           => $session->id,
+            'status'       => 'HADIR_TERLAMBAT',
+            'late_minutes' => 20,
+        ]);
+    }
 }
