@@ -35,6 +35,16 @@ html[data-theme="light"] body { background-color: #F2E9DC; }
    yang perlu override @tailwindcss/forms).
 ================================================================ */
 
+/* === DEFAULT BORDER COLOR OVERRIDE ===
+   Tailwind base set border-color default ke gray-200 (#e5e7eb) —
+   garis terang di dark mode untuk elemen yg pakai border-b/t/l/r
+   tanpa class warna eksplisit. Override di sini sbg fondasi.
+   Specificity (0,1,0) lebih rendah dari explicit color class (0,2,0)
+   jadi border-green-300, border-red-300, dll tetap bekerja benar. */
+.dark-content *,
+.dark-content *::before,
+.dark-content *::after            { border-color: rgba(212,168,83,0.10); }
+
 /* === BACKGROUND CARDS & PANEL === */
 .dark-content .bg-white          { background-color: #241608; }
 .dark-content .bg-gray-50        { background-color: rgba(212,168,83,0.04); }
@@ -284,6 +294,17 @@ html[data-theme="light"] body { background-color: #F2E9DC; }
     border-color: rgba(212,168,83,0.3);
     color: #D4A853;
 }
+
+/* ================================================================
+   DARK MODE STRUKTURAL — sidebar, topbar, page header
+   Elemen-elemen ini pakai kelas mk-* dari tailwind.config (bukan
+   Tailwind standar), dan Blade hardcode border-white/[0.06].
+   Override border di sini agar konsisten dengan palet warm gold.
+================================================================ */
+[data-theme="dark"] aside                        { border-right-color:  rgba(212,168,83,0.08) !important; }
+[data-theme="dark"] .mk-topbar                   { border-bottom-color: rgba(212,168,83,0.08) !important; }
+[data-theme="dark"] .mk-page-header              { border-bottom-color: rgba(212,168,83,0.08) !important; }
+[data-theme="dark"] .hover\:bg-white\/5:hover    { background-color: rgba(212,168,83,0.06) !important; }
 
 /* ================================================================
    STRUCTURAL OVERRIDES — LIGHT MODE (Warm Brown / Daylight)
