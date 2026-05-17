@@ -88,6 +88,22 @@ Saxophone: tidak ada guru aktif -- paket otomatis dinonaktifkan.
 
 ---
 
+## DAFTAR RUANGAN AKTIF KAPASITAS DAN FASILITASNYA
+
+| CODE | NAMA          | Fasilitas                    |
+|------|---------------|------------------------------|
+| R1   | STUDIO 1      | Vocal, Kids Class, Gitar     |
+| R2   | STUDIO 2      | Piano, Vocal, Gitar          |
+| R3   | STUDIO 3      | Piano                        |
+| R4   | STUDIO 4      | Piano, Gitar                 |
+| R5   | STUDIO 5      | Bass, Gitar                  |
+| R6   | STUDIO 6      | Violin                       |
+| R7   | STUDIO 7      | Piano, Vocal                 |
+| R8   | STUDIO 8      | Drum                         |
+| R9   | STUDIO 9      | Drum                         |
+
+---
+
 ## 🔐 USER ROLES (RBAC via Spatie Permission)
 
 ```
@@ -162,6 +178,7 @@ Ujian + Mini Concert  : Rp 395.000
 Mini Concert saja     : Rp 295.000
 Final Project Kids    : Rp 140.000/murid
 Denda SPP             : Rp 5.000/hari mulai tanggal 11
+Biaya buku			  : harga ditentukan oleh owner pengisian manual
 ```
 
 ---
@@ -514,11 +531,20 @@ DENDA    | Denda keterlambatan     | Rp 5.000 x MAX(0, hari - 10)
 ## 🚫 YANG TIDAK BOLEH DILAKUKAN
 
 ```
+ Jika instruksi atau prompt ambigu, TANYA TERLEBIH DAHULU sebelum memulai coding. jangan berasumsi dan langsung mengerjakan tanpa konfirmasi.
+
+STRUKTUR DAN FILE 
+- Jangan hapus file tanpa konfirmasi
+- Jangan pindahkan file tanpa konfirmasi
+
 SKEMA DATABASE:
 X Pakai packages.name      -> harus packages.code
 X Pakai duration_minutes   -> harus duration_min
 X Hardcode 'Kids Class'    -> pakai 'KIDS_CLASS'
 X Hardcode 'Reguler'       -> pakai 'REGULER' (kapital semua)
+
+KODE 
+- jangan gunakan tipe 'any' di Typescrip
 
 BUSINESS RULES:
 X Trial >30 menit          -> semua trial 30 menit [v1.1]
@@ -531,6 +557,7 @@ X Jadwal pindah lintas bulan -> hanya dalam bulan yang sama [v1.1]
 X Void payment oleh Admin  -> hanya Owner
 X Edit slip honor 'Dibayarkan'
 X Hapus audit log via UI
+X Paket reguler tidak ada pembayaran partial, hanya KIDS CLASS BUNDLE yang bisa partian termin 3 bulan dengan harga bagi 3 rata
 
 TECH STACK:
 X Pakai Bootstrap CSS      -> project ini Tailwind CSS (Breeze default)
@@ -588,16 +615,24 @@ Models:
 Student, Teacher, Package, Enrollment, Schedule,
 Session, Invoice, InvoiceItem, Payment, HonorSlip, AuditLog
 
-Controllers (namespace Admin):
-App\Http\Controllers\Admin\StudentController
-App\Http\Controllers\Admin\TeacherController
-App\Http\Controllers\Admin\PackageController
-App\Http\Controllers\Admin\EnrollmentController
-App\Http\Controllers\Admin\ScheduleController
-App\Http\Controllers\Admin\SessionController
-App\Http\Controllers\Admin\InvoiceController
-App\Http\Controllers\Admin\HonorController
-App\Http\Controllers\Admin\EventController
+Controllers (semua di root namespace App\Http\Controllers):
+App\Http\Controllers\StudentController
+App\Http\Controllers\TeacherController
+App\Http\Controllers\PackageController
+App\Http\Controllers\RoomController
+App\Http\Controllers\InstrumentController
+App\Http\Controllers\HolidayController
+App\Http\Controllers\ScheduleController
+App\Http\Controllers\SessionController
+App\Http\Controllers\AbsensiController
+App\Http\Controllers\InvoiceController
+App\Http\Controllers\PaymentController
+App\Http\Controllers\HonorController
+App\Http\Controllers\EventController
+App\Http\Controllers\ImportController
+App\Http\Controllers\DashboardController
+App\Http\Controllers\ReportController
+App\Http\Controllers\AuditLogController
 
 Services:
 App\Services\HonorCalculationService
@@ -611,17 +646,31 @@ App\Services\TrialManagementService
 ```
 app/
   Http/
-    Controllers/
-      Admin/          <- Controller admin panel
+    Controllers/      <- Semua controller di root (TIDAK ada subfolder Admin/)
     Requests/         <- Form Request validasi
-    Resources/        <- API Resources
   Models/
   Services/           <- Business logic kompleks
   Policies/           <- Authorization per model
 
 resources/views/
-  admin/              <- Views admin panel
-  layouts/            <- Layout template Bootstrap 5
+  absensi/            <- Halaman absensi harian (M04)
+  audit-logs/
+  events/
+  expenses/
+  holidays/
+  honors/
+  imports/
+  instruments/
+  invoices/
+  packages/
+  payments/
+  reports/
+  rooms/
+  sessions/
+  students/
+  teachers/
+  layouts/            <- Layout template (app.blade.php, navigation.blade.php)
+  components/         <- Blade components (sidebar-item, dll)
 
 database/
   migrations/
@@ -670,7 +719,7 @@ git checkout .                    <- BATALKAN jika tidak oke
 php artisan migrate
 php artisan migrate:fresh --seed        # HATI-HATI: hapus semua data!
 php artisan make:model NamaModel -mfsc
-php artisan make:controller Admin/NamaController --resource
+php artisan make:controller NamaController --resource
 php artisan make:request StoreNamaRequest
 php artisan route:list
 php artisan cache:clear && php artisan config:clear && php artisan view:clear
