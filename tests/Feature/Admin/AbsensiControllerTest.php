@@ -98,4 +98,32 @@ class AbsensiControllerTest extends TestCase
         // Guest diredirect ke halaman login
         $response->assertRedirect(route('login'));
     }
+
+    public function test_halaman_absensi_tampil_sesi_hari_ini(): void
+    {
+        $session = $this->createTestSession(['session_date' => today()]);
+
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.absensi.index'));
+
+        $response->assertStatus(200);
+        $response->assertViewHas('sessions', fn ($sessions) =>
+            $sessions->contains('id', $session->id)
+        );
+    }
+
+    public function test_absensi_filter_per_tanggal(): void
+    {
+        $sessionHariIni = $this->createTestSession(['session_date' => today()]);
+        $sessionKemarin = $this->createTestSession(['session_date' => today()->subDay()]);
+
+        $response = $this->actingAs($this->admin)->get(
+            route('admin.absensi.index', ['date' => today()->subDay()->toDateString()])
+        );
+
+        $response->assertViewHas('sessions', function ($sessions) use ($sessionKemarin, $sessionHariIni) {
+            return $sessions->contains('id', $sessionKemarin->id)
+                && ! $sessions->contains('id', $sessionHariIni->id);
+        });
+    }
 }

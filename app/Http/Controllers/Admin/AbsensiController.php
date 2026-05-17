@@ -26,16 +26,31 @@ class AbsensiController extends Controller
 {
     /**
      * Tampilkan halaman absensi harian.
-     * Default: hari ini. Bisa difilter via query ?tanggal=YYYY-MM-DD
+     * Default: hari ini. Bisa difilter via query ?date=YYYY-MM-DD
      */
     public function index(Request $request): View
     {
-        // Stub — implementasi penuh di Task 2
+        // Parse tanggal dari query parameter, default hari ini
+        $tanggal = $request->date
+            ? Carbon::parse($request->date)->toDateString()
+            : today()->toDateString();
+
+        // Query sesi pada tanggal terpilih, eager-load relasi untuk performa
+        $sessions = ClassSession::with(['student', 'teacher', 'substituteTeacher', 'room'])
+            ->whereDate('session_date', $tanggal)
+            ->orderBy('start_time')
+            ->get();
+
+        // Query guru aktif untuk dropdown pengganti (M04 Task 3 nanti)
+        $teachers = Teacher::where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
         return view('admin.absensi.index', [
-            'sessions'   => collect(),
-            'teachers'   => collect(),
-            'tanggal'    => today()->toDateString(),
-            'tanggalObj' => today(),
+            'sessions'   => $sessions,
+            'teachers'   => $teachers,
+            'tanggal'    => $tanggal,
+            'tanggalObj' => Carbon::parse($tanggal),
         ]);
     }
 
