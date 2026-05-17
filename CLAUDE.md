@@ -600,6 +600,144 @@ X php artisan migrate:fresh pada database utama (mk_operasional) TANPA konfirmas
 
 ---
 
+## 🎨 UI DESIGN SYSTEM
+
+> Dicatat berdasarkan kondisi aktual kode (Mei 2026).
+> Jangan ubah nilai warna ini tanpa update bagian ini juga.
+
+### Sistem Tema
+
+- **Dua tema**: Dark (default) dan Light, toggle via tombol ☀️/🌙 di topbar
+- **State disimpan** di `localStorage` key `mk-theme` (`'dark'` atau `'light'`)
+- **Alpine.js** mengontrol toggle: `:data-theme="theme"` di-set pada `<div>` root layout
+- **Script inline** di `<head>` mencegah flash: baca localStorage sebelum Alpine load
+- **CSS scope**: `.dark-content` (main + page-header) dan `.light-content` (main + page-header)
+- **Sidebar** tetap gelap di kedua mode — tidak ikut toggle
+- **File CSS utama**: `resources/css/app.css` (semua override tema di sini)
+- **Font**: DM Sans (body), Playfair Display (h1 heading)
+
+### Struktur Layout (`resources/views/layouts/app.blade.php`)
+
+```
+<body class="bg-mk-bg text-mk-text">                  ← warna dari tailwind.config mk.*
+  <div :data-theme="theme">                           ← Alpine toggle
+    <aside class="bg-mk-sidebar border-r ...">        ← sidebar selalu gelap
+    <div class="flex-1 flex flex-col">
+      <div class="mk-topbar bg-mk-sidebar ...">       ← topbar = warna sidebar
+      <div class="mk-page-header bg-mk-card ...">     ← page header, dapat .dark/.light-content
+      <main class="bg-mk-bg ...">                     ← konten, dapat .dark/.light-content
+```
+
+### Token Warna — `tailwind.config.js` (mk.*)
+
+Ini adalah warna **default dark mode**. Light mode di-override via CSS `[data-theme="light"]`.
+
+```js
+mk: {
+    bg:        '#1A0E06',              // body + main background
+    sidebar:   '#1C1410',              // sidebar + topbar background
+    card:      '#241608',              // page header background
+    cardHover: '#2E1C0E',              // hover state card
+    border:    'rgba(212,168,83,0.08)',// border default
+    accent:    '#D4A853',              // gold accent (logo, badge aktif)
+    accentDim: 'rgba(212,168,83,0.15)',// gold subtle (avatar bg)
+    text:      '#EDE0CC',              // teks utama
+    muted:     '#8A6848',              // teks sekunder
+    dim:       '#6B4A2A',              // teks redup (tanggal, placeholder struktural)
+}
+```
+
+### Override Dark Mode — `.dark-content` (di `app.css`)
+
+Semua di-scope ke `.dark-content` agar tidak bocor ke halaman login/print.
+
+```
+Default border (bare border-b/t):  rgba(212,168,83,0.10)   ← universal * override
+bg-white (card utama):             #241608
+bg-gray-50 (thead, section):       rgba(212,168,83,0.04)
+bg-gray-100:                       rgba(212,168,83,0.07)
+hover bg:                          #2E1C0E .. #3F2618
+border-gray-100/200:               rgba(212,168,83,0.10)
+border-gray-300:                   rgba(212,168,83,0.16)
+text-gray-900/800 (teks utama):    #EDE0CC
+text-gray-700:                     #C0A882
+text-gray-600:                     #8A6848
+text-gray-500:                     #6B4A2A
+text-indigo-600 (link):            #C8A870
+Form input bg:                     #2E1C0E
+Form input border:                 rgba(212,168,83,0.18)
+Form input text:                   #EDE0CC
+Form readonly text:                #C0A882  ← WCAG AA ~5.8:1
+Form disabled text:                #4A3020
+Shadow:                            rgba(18,8,2,0.55/0.65)
+Scrollbar thumb:                   rgba(212,168,83,0.20/0.35)
+```
+
+Badge backgrounds dark mode (earthy, bukan neon):
+```
+green-50/100:   rgba(58,125,68,  0.14/0.20)   text: #6BC07A
+yellow/amber:   rgba(212,168,83, 0.12/0.18)   text: #D4A853
+orange-50/100:  rgba(181,101,29, 0.14/0.20)   text: #D4853A
+blue/indigo:    rgba(58,97,134,  0.14/0.18)   text: #7AAAC8 / #8A9AC8
+red-50/100:     rgba(176,58,46,  0.14/0.20)   text: #D07868
+purple-50/100:  rgba(123,94,167, 0.14/0.18)   text: #B09AD8
+```
+
+Action buttons dark mode: blue/purple/indigo → gold `rgba(212,168,83,0.9)` teks `#1A1000`.
+Green dan red button tetap semantik (tidak diubah ke gold).
+
+Structural override dark mode (scoped ke `[data-theme="dark"]`):
+```
+aside border-right:        rgba(212,168,83,0.08)
+.mk-topbar border-bottom:  rgba(212,168,83,0.08)
+.mk-page-header border-b:  rgba(212,168,83,0.08)
+hover:bg-white/5:          rgba(212,168,83,0.06)
+```
+
+### Override Light Mode — `.light-content` + `[data-theme="light"]` (di `app.css`)
+
+```
+body background:           #F2E9DC
+bg-white (card):           #FBF5EC
+bg-gray-50:                rgba(101,65,27,0.04)
+text utama:                #2C1A07
+text-gray-700:             #3D2610
+text-gray-600:             #7A5C3A
+text-indigo-600 (link):    #A0522D
+Form input bg:             #FFFFFF
+Form input border:         rgba(101,65,27,0.25)
+Shadow:                    rgba(101,65,27,0.12/0.16)
+Scrollbar:                 rgba(101,65,27,0.20/0.35)
+Topbar bg:                 rgba(242,233,220,0.96) + blur(8px)
+Topbar border:             rgba(101,65,27,0.15)
+Sidebar bg (light mode):   #3B2208  ← tetap mahoni gelap
+```
+
+Action buttons light mode: blue/purple/indigo → sienna `#A0522D`.
+
+### Aturan Penting untuk Claude
+
+```
+X Jangan hardcode warna cold/navy: #1E2235, #252B42, #161B2E, rgba(255,255,255,0.X)
+  sebagai border atau background di Blade template baru.
+
+X Jangan pakai border-b/t/l/r tanpa class warna di luar .dark-content/.light-content
+  scope — akan muncul sebagai garis putih terang di dark mode.
+
+✓ Untuk elemen baru di Blade: pakai bg-white, bg-gray-50, border-gray-200, dll.
+  (Tailwind standard) — sudah di-override otomatis oleh .dark-content/.light-content.
+
+✓ Untuk warna struktural (sidebar, topbar, page-header): pakai kelas mk-*
+  dari tailwind.config (bg-mk-sidebar, bg-mk-card, text-mk-text, dll).
+
+✓ Setelah tambah class baru yang butuh dark/light override, tambahkan ke
+  resources/css/app.css di blok .dark-content dan .light-content yang sesuai.
+
+✓ Setelah edit app.css atau tailwind.config.js: jalankan npm run build.
+```
+
+---
+
 ## 🎨 CODING CONVENTIONS
 
 ```
