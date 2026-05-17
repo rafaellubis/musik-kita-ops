@@ -277,6 +277,17 @@ html[data-theme="light"] body { background-color: #F2E9DC; }
     letter-spacing: -0.01em;
 }
 
+/* === STATUS CARD INACTIVE — dark mode */
+.dark-content .mk-status-card-inactive {
+    background: rgba(212,168,83,0.06) !important;
+    border: 1px solid rgba(212,168,83,0.20) !important;
+}
+.dark-content .mk-status-card-inactive:hover {
+    background: rgba(212,168,83,0.12) !important;
+    border-color: rgba(212,168,83,0.40) !important;
+}
+.dark-content .mk-status-card-inactive .mk-status-label { color: #8A6848 !important; }
+
 /* === PAGINATION === */
 .dark-content nav[aria-label="Pagination"] span,
 .dark-content nav[aria-label="Pagination"] a {
@@ -599,10 +610,14 @@ html[data-theme="light"] body { background-color: #F2E9DC; }
 /* Tombol / badge inline yang pakai warna dark mode */
 .light-content .mk-filter-btn   { background: rgba(160,82,45,0.12) !important; color: #A0522D !important; }
 .light-content .mk-reset-btn    { background: rgba(101,65,27,0.08) !important; color: #7A5C3A !important; }
-/* Status card inactive (rgba white yang hampir invisible di light mode) */
+/* Status card inactive — light mode */
 .light-content .mk-status-card-inactive {
     background: rgba(101,65,27,0.06) !important;
-    border-color: rgba(101,65,27,0.14) !important;
+    border: 1px solid rgba(101,65,27,0.20) !important;
+}
+.light-content .mk-status-card-inactive:hover {
+    background: rgba(101,65,27,0.12) !important;
+    border-color: rgba(101,65,27,0.35) !important;
 }
 /* Label status tidak aktif pada status card */
 .light-content .mk-status-card-inactive .mk-status-label { color: #9A7050 !important; }
