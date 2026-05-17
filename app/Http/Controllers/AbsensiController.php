@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateAbsensiRequest;
 use App\Models\ClassSession;
 use App\Models\Teacher;
@@ -14,13 +13,12 @@ use Illuminate\View\View;
 /**
  * Absensi Harian (M04) — tampilan per-hari.
  *
- * Berbeda dari AttendanceController (form edit per sesi individual),
- * controller ini menampilkan SEMUA sesi pada satu tanggal sekaligus
+ * Menampilkan SEMUA sesi pada satu tanggal sekaligus
  * agar Admin bisa input absensi dalam satu layar (M04 daily view).
  *
  * Dua endpoint:
- *   GET  /admin/absensi              -> daftar sesi hari ini (filter by tanggal)
- *   PATCH /admin/absensi/{session}   -> update satu sesi via AJAX inline
+ *   GET  /absensi              -> daftar sesi hari ini (filter by tanggal)
+ *   PATCH /absensi/{session}   -> update satu sesi via AJAX inline
  */
 class AbsensiController extends Controller
 {
@@ -41,12 +39,12 @@ class AbsensiController extends Controller
             ->orderBy('start_time')
             ->get();
 
-        // Query guru aktif untuk dropdown pengganti (M04 Task 3 nanti)
+        // Query guru aktif untuk dropdown pengganti di mini-modal DIGANTI
         $teachers = Teacher::where('is_active', true)
             ->orderBy('name')
             ->get();
 
-        return view('admin.absensi.index', [
+        return view('absensi.index', [
             'sessions'   => $sessions,
             'teachers'   => $teachers,
             'tanggal'    => $tanggal,
@@ -61,7 +59,6 @@ class AbsensiController extends Controller
      * - LIBUR tidak bisa diubah (BR-4.10 — sesi libur nasional, honor tetap dibayar)
      * - Edit ulang diizinkan: admin boleh koreksi status yang sudah diinput
      * - late_minutes dan substitute_teacher_id di-null-kan jika status tidak relevan
-     *   (membersihkan data lama saat status berganti)
      */
     public function update(UpdateAbsensiRequest $request, ClassSession $classSession): JsonResponse
     {
@@ -85,7 +82,6 @@ class AbsensiController extends Controller
         ]);
 
         // Muat ulang relasi substituteTeacher setelah update
-        // (Eloquent tidak refresh relasi otomatis setelah update)
         $classSession->load('substituteTeacher');
 
         return response()->json([

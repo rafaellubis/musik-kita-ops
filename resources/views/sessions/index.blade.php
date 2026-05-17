@@ -62,7 +62,7 @@
                 <h3 class="text-sm font-semibold text-gray-700">Sesi {{ $monthName }}</h3>
                 @if(auth()->user()?->hasAnyRole(['Owner', 'Admin']))
                     <div class="flex items-center gap-2">
-                        <a href="{{ route('admin.absensi.index') }}"
+                        <a href="{{ route('absensi.index') }}"
                            class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
                             ✅ Absensi Hari Ini
                         </a>

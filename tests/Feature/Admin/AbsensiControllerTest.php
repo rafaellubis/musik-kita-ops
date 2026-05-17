@@ -77,23 +77,23 @@ class AbsensiControllerTest extends TestCase
     public function test_halaman_absensi_dapat_diakses_admin(): void
     {
         $response = $this->actingAs($this->admin)
-            ->get(route('admin.absensi.index'));
+            ->get(route('absensi.index'));
 
         $response->assertStatus(200);
-        $response->assertViewIs('admin.absensi.index');
+        $response->assertViewIs('absensi.index');
     }
 
     public function test_halaman_absensi_dapat_diakses_owner(): void
     {
         $response = $this->actingAs($this->owner)
-            ->get(route('admin.absensi.index'));
+            ->get(route('absensi.index'));
 
         $response->assertStatus(200);
     }
 
     public function test_halaman_absensi_tidak_bisa_diakses_guest(): void
     {
-        $response = $this->get(route('admin.absensi.index'));
+        $response = $this->get(route('absensi.index'));
 
         // Guest diredirect ke halaman login
         $response->assertRedirect(route('login'));
@@ -104,7 +104,7 @@ class AbsensiControllerTest extends TestCase
         $session = $this->createTestSession(['session_date' => today()]);
 
         $response = $this->actingAs($this->admin)
-            ->get(route('admin.absensi.index'));
+            ->get(route('absensi.index'));
 
         $response->assertStatus(200);
         $response->assertViewHas('sessions', fn ($sessions) =>
@@ -118,7 +118,7 @@ class AbsensiControllerTest extends TestCase
         $sessionKemarin = $this->createTestSession(['session_date' => today()->subDay()]);
 
         $response = $this->actingAs($this->admin)->get(
-            route('admin.absensi.index', ['date' => today()->subDay()->toDateString()])
+            route('absensi.index', ['date' => today()->subDay()->toDateString()])
         );
 
         $response->assertViewHas('sessions', function ($sessions) use ($sessionKemarin, $sessionHariIni) {
@@ -136,7 +136,7 @@ class AbsensiControllerTest extends TestCase
         $session = $this->createTestSession();
 
         $response = $this->actingAs($this->admin)
-            ->patchJson(route('admin.absensi.update', $session), ['status' => 'HADIR']);
+            ->patchJson(route('absensi.update', $session), ['status' => 'HADIR']);
 
         $response->assertOk()->assertJson(['success' => true, 'status' => 'HADIR']);
         $this->assertDatabaseHas('class_sessions', ['id' => $session->id, 'status' => 'HADIR']);
@@ -147,7 +147,7 @@ class AbsensiControllerTest extends TestCase
         $session = $this->createTestSession();
 
         $response = $this->actingAs($this->admin)
-            ->patchJson(route('admin.absensi.update', $session), ['status' => 'HANGUS']);
+            ->patchJson(route('absensi.update', $session), ['status' => 'HANGUS']);
 
         $response->assertOk()->assertJson(['success' => true, 'status' => 'HANGUS']);
         $this->assertDatabaseHas('class_sessions', ['id' => $session->id, 'status' => 'HANGUS']);
@@ -158,7 +158,7 @@ class AbsensiControllerTest extends TestCase
         $session = $this->createTestSession(['status' => 'LIBUR']);
 
         $response = $this->actingAs($this->admin)
-            ->patchJson(route('admin.absensi.update', $session), ['status' => 'HADIR']);
+            ->patchJson(route('absensi.update', $session), ['status' => 'HADIR']);
 
         $response->assertForbidden();
         $this->assertDatabaseHas('class_sessions', ['id' => $session->id, 'status' => 'LIBUR']);
@@ -169,7 +169,7 @@ class AbsensiControllerTest extends TestCase
         $session = $this->createTestSession(['status' => 'HADIR']);
 
         $response = $this->actingAs($this->admin)
-            ->patchJson(route('admin.absensi.update', $session), ['status' => 'HANGUS']);
+            ->patchJson(route('absensi.update', $session), ['status' => 'HANGUS']);
 
         $response->assertOk()->assertJson(['success' => true, 'status' => 'HANGUS']);
         $this->assertDatabaseHas('class_sessions', ['id' => $session->id, 'status' => 'HANGUS']);
@@ -180,7 +180,7 @@ class AbsensiControllerTest extends TestCase
         $session = $this->createTestSession();
 
         $response = $this->actingAs($this->admin)
-            ->patchJson(route('admin.absensi.update', $session), ['status' => 'STATUS_TIDAK_ADA']);
+            ->patchJson(route('absensi.update', $session), ['status' => 'STATUS_TIDAK_ADA']);
 
         $response->assertUnprocessable(); // 422
     }
@@ -194,7 +194,7 @@ class AbsensiControllerTest extends TestCase
         $session = $this->createTestSession();
 
         $response = $this->actingAs($this->admin)
-            ->patchJson(route('admin.absensi.update', $session), [
+            ->patchJson(route('absensi.update', $session), [
                 'status' => 'HADIR_TERLAMBAT',
                 // late_minutes sengaja tidak dikirim
             ]);
@@ -208,7 +208,7 @@ class AbsensiControllerTest extends TestCase
         $session = $this->createTestSession();
 
         $response = $this->actingAs($this->admin)
-            ->patchJson(route('admin.absensi.update', $session), [
+            ->patchJson(route('absensi.update', $session), [
                 'status'       => 'HADIR_TERLAMBAT',
                 'late_minutes' => 0,
             ]);
@@ -222,7 +222,7 @@ class AbsensiControllerTest extends TestCase
         $session = $this->createTestSession();
 
         $response = $this->actingAs($this->admin)
-            ->patchJson(route('admin.absensi.update', $session), [
+            ->patchJson(route('absensi.update', $session), [
                 'status' => 'DIGANTI',
                 // substitute_teacher_id sengaja tidak dikirim
             ]);
@@ -236,7 +236,7 @@ class AbsensiControllerTest extends TestCase
         $session = $this->createTestSession();
 
         $response = $this->actingAs($this->admin)
-            ->patchJson(route('admin.absensi.update', $session), [
+            ->patchJson(route('absensi.update', $session), [
                 'status'       => 'HADIR_TERLAMBAT',
                 'late_minutes' => 20,
             ]);
