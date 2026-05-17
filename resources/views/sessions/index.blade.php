@@ -61,11 +61,17 @@
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-sm font-semibold text-gray-700">Sesi {{ $monthName }}</h3>
                 @if(auth()->user()?->hasAnyRole(['Owner', 'Admin']))
-                    <button type="button" @click="showGenerate = !showGenerate"
-                            class="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                            style="background:#D4A853;color:#1A1000">
-                        Generate Sesi Bulan
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('admin.absensi.index') }}"
+                           class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
+                            ✅ Absensi Hari Ini
+                        </a>
+                        <button type="button" @click="showGenerate = !showGenerate"
+                                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                                style="background:#D4A853;color:#1A1000">
+                            Generate Sesi Bulan
+                        </button>
+                    </div>
                 @endif
             </div>
 
@@ -194,7 +200,6 @@
                             <th class="px-2 py-1.5 text-left text-xs uppercase font-medium">Ruang</th>
                             <th class="px-2 py-1.5 text-center text-xs uppercase font-medium">Status</th>
                             <th class="px-2 py-1.5 text-right text-xs uppercase font-medium">Honor</th>
-                            <th class="px-2 py-1.5 text-center text-xs uppercase font-medium">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -242,20 +247,6 @@
                                         <div class="text-gray-400">{{ $s->honor_code }}</div>
                                     @else
                                         <span class="text-gray-400">—</span>
-                                    @endif
-                                </td>
-                                <td class="px-2 py-1.5 text-center whitespace-nowrap">
-                                    @if(auth()->user()?->hasAnyRole(['Owner', 'Admin']) && $s->status !== 'CANCELLED')
-                                        <a href="{{ route('attendance.edit', $s->id) }}"
-                                           class="text-xs px-2 py-1 rounded
-                                                  {{ $s->status === 'SCHEDULED'
-                                                     ? 'font-bold'
-                                                     : 'border border-gray-300 hover:bg-gray-50 text-gray-700' }}"
-                                           @if($s->status === 'SCHEDULED')
-                                           style="background:#D4A853;color:#1A1000"
-                                           @endif>
-                                            {{ $s->status === 'SCHEDULED' ? 'Absen' : 'Edit' }}
-                                        </a>
                                     @endif
                                 </td>
                             </tr>

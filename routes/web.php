@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
@@ -137,14 +136,6 @@ Route::middleware('auth')->group(function () {
         Route::post('sessions/generate',
             [SessionController::class, 'generate']
         )->name('sessions.generate');
-
-        // ===== M04: Absensi per sesi (form individual) =====
-        Route::get('sessions/{session}/attendance',
-            [AttendanceController::class, 'edit']
-        )->name('attendance.edit');
-        Route::patch('sessions/{session}/attendance',
-            [AttendanceController::class, 'update']
-        )->name('attendance.update');
 
         // ===== M04: Absensi Harian — update inline per sesi via AJAX =====
         Route::patch('/admin/absensi/{classSession}',

@@ -27,6 +27,10 @@
     @endhasanyrole
     <x-sidebar-item route="sessions.index" icon="🎵" label="Sesi"
         :active="request()->routeIs('sessions.*')" />
+    @hasanyrole('Owner|Admin')
+    <x-sidebar-item route="admin.absensi.index" icon="✅" label="Absensi"
+        :active="request()->routeIs('admin.absensi.*')" />
+    @endhasanyrole
 
     {{-- Grup: KEUANGAN --}}
     <div class="px-2 pt-4 pb-1.5 text-[10px] font-semibold tracking-widest text-mk-dim uppercase">Keuangan</div>

@@ -1,6 +1,6 @@
 @php $isLibur = $session->status === 'LIBUR'; @endphp
 
-<tr class="border-t border-stone-800 hover:bg-stone-800/20 transition-colors"
+<tr class="hover:bg-gray-50 transition-colors"
     data-teacher-id="{{ $session->teacher_id }}"
     data-status="{{ $session->status }}"
     data-murid="{{ $session->student->full_name }}"
@@ -41,7 +41,8 @@
     {{-- Jam --}}
     <td class="px-4 py-2.5 font-bold text-sm"
         @if(! $isLibur)
-        :class="status === 'SCHEDULED' ? 'text-amber-400' : 'text-gray-500'"
+        :style="status === 'SCHEDULED' ? 'color:#D4A853;font-weight:700' : ''"
+        :class="status !== 'SCHEDULED' ? 'text-gray-500' : ''"
         @else
         class="text-gray-500"
         @endif>
@@ -51,7 +52,7 @@
     {{-- Murid --}}
     <td class="px-3 py-2.5 text-sm"
         @if(! $isLibur)
-        :class="status === 'SCHEDULED' ? 'text-gray-100 font-medium' : 'text-gray-500'"
+        :class="status === 'SCHEDULED' ? 'text-gray-800 font-medium' : 'text-gray-500'"
         @else
         class="text-gray-500"
         @endif>
@@ -59,16 +60,16 @@
     </td>
 
     {{-- Guru --}}
-    <td class="px-3 py-2.5 text-xs text-gray-400">{{ $session->teacher->name }}</td>
+    <td class="px-3 py-2.5 text-xs text-gray-500">{{ $session->teacher->name }}</td>
 
     {{-- Ruang --}}
-    <td class="px-3 py-2.5 text-xs text-gray-400">{{ $session->room?->code ?? '—' }}</td>
+    <td class="px-3 py-2.5 text-xs text-gray-500">{{ $session->room?->code ?? '—' }}</td>
 
     {{-- Aksi --}}
     <td class="px-4 py-2.5 text-right">
 
         @if($isLibur)
-            <span class="bg-gray-500/10 text-gray-500 border border-gray-500/20 rounded px-3 py-1 text-xs">
+            <span class="bg-gray-100 text-gray-500 border border-gray-200 rounded px-3 py-1 text-xs">
                 🗓 LIBUR
             </span>
 
@@ -77,12 +78,12 @@
             <div x-show="status !== 'SCHEDULED'" class="flex items-center justify-end gap-2">
                 <span class="rounded px-3 py-1 text-xs border"
                     :class="{
-                        'bg-emerald-500/15 text-emerald-400 border-emerald-500/20': status === 'HADIR',
-                        'bg-orange-500/15 text-orange-400 border-orange-500/20': status === 'HADIR_TERLAMBAT',
-                        'bg-red-500/15 text-red-400 border-red-500/20': status === 'HANGUS',
-                        'bg-amber-400/10 text-amber-300 border-amber-400/20': status === 'IZIN_RESCHEDULE',
-                        'bg-blue-500/15 text-blue-400 border-blue-500/20': status === 'IZIN_VIDEO',
-                        'bg-violet-500/15 text-violet-400 border-violet-500/20': status === 'DIGANTI',
+                        'bg-green-100 text-green-700 border-green-200': status === 'HADIR',
+                        'bg-orange-100 text-orange-700 border-orange-200': status === 'HADIR_TERLAMBAT',
+                        'bg-red-100 text-red-700 border-red-200': status === 'HANGUS',
+                        'bg-yellow-100 text-yellow-700 border-yellow-200': status === 'IZIN_RESCHEDULE',
+                        'bg-blue-100 text-blue-700 border-blue-200': status === 'IZIN_VIDEO',
+                        'bg-purple-100 text-purple-700 border-purple-200': status === 'DIGANTI',
                     }"
                     x-text="
                         status === 'HADIR'           ? '✓ HADIR' :
@@ -94,7 +95,7 @@
                     ">
                 </span>
                 <button @click="status = 'SCHEDULED'"
-                    class="text-gray-600 hover:text-gray-300 text-xs underline">ubah</button>
+                    class="text-gray-400 hover:text-gray-600 text-xs underline">ubah</button>
             </div>
 
             {{-- Tombol aksi (status belum diinput) --}}
@@ -103,61 +104,63 @@
                 :class="loading ? 'opacity-50 pointer-events-none' : ''">
 
                 <button @click="save('HADIR')"
-                    class="bg-emerald-600 hover:bg-emerald-500 text-white rounded px-3 py-1.5 text-xs font-semibold">
+                    class="rounded px-3 py-1.5 text-xs font-semibold"
+                    style="background:#D4A853;color:#1A1000">
                     HADIR
                 </button>
                 <button @click="save('HANGUS')"
-                    class="bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/20 rounded px-3 py-1.5 text-xs">
+                    class="border border-red-300 text-red-600 hover:bg-red-50 rounded px-3 py-1.5 text-xs">
                     HANGUS
                 </button>
                 <button @click="save('IZIN_RESCHEDULE')"
-                    class="bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 border border-amber-400/20 rounded px-3 py-1.5 text-xs">
+                    class="border border-yellow-300 text-yellow-700 hover:bg-yellow-50 rounded px-3 py-1.5 text-xs">
                     IZIN
                 </button>
                 <button @click="save('IZIN_VIDEO')"
-                    class="bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 border border-blue-500/20 rounded px-3 py-1.5 text-xs">
+                    class="border border-blue-300 text-blue-600 hover:bg-blue-50 rounded px-3 py-1.5 text-xs">
                     VIDEO
                 </button>
 
                 {{-- Tombol ··· dengan dropdown --}}
                 <div class="relative">
                     <button @click="showModal = showModal === 'menu' ? null : 'menu'"
-                        class="bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/20 rounded px-2.5 py-1.5 text-xs">
+                        class="border border-gray-300 text-gray-600 hover:bg-gray-100 rounded px-2.5 py-1.5 text-xs">
                         ···
                     </button>
 
                     {{-- Dropdown menu --}}
                     <div x-show="showModal === 'menu'" @click.outside="showModal = null"
-                        class="absolute right-0 top-8 z-20 bg-stone-800 border border-stone-600 rounded-lg shadow-xl w-36 py-1">
+                        class="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-lg w-36 py-1">
                         <button @click="showModal = 'terlambat'"
-                            class="w-full text-left px-4 py-2 text-orange-400 text-xs hover:bg-stone-700">
+                            class="w-full text-left px-4 py-2 text-orange-600 text-xs hover:bg-gray-50">
                             Terlambat
                         </button>
                         <button @click="showModal = 'diganti'"
-                            class="w-full text-left px-4 py-2 text-violet-400 text-xs hover:bg-stone-700">
+                            class="w-full text-left px-4 py-2 text-purple-600 text-xs hover:bg-gray-50">
                             Diganti
                         </button>
                     </div>
 
                     {{-- Mini-modal: TERLAMBAT --}}
                     <div x-show="showModal === 'terlambat'" @click.outside="showModal = null"
-                        class="absolute right-0 top-8 z-20 bg-stone-800 border border-stone-600 rounded-xl shadow-xl w-56 p-4">
-                        <p class="text-gray-400 text-xs mb-3 truncate">
+                        class="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-lg w-56 p-4">
+                        <p class="text-gray-500 text-xs mb-3 truncate">
                             {{ $session->student->full_name }} · {{ $session->teacher->name }}
                         </p>
                         <label class="block text-gray-500 text-xs mb-1">Terlambat berapa menit?</label>
                         <div class="flex items-center gap-2 mb-4">
                             <input type="number" x-model.number="lateMinutes" min="1" max="60"
-                                class="bg-stone-700 border border-stone-500 text-gray-100 rounded px-3 py-1.5 w-20 text-center text-sm">
-                            <span class="text-gray-400 text-xs">menit</span>
+                                class="border border-gray-300 text-gray-700 rounded px-3 py-1.5 w-20 text-center text-sm">
+                            <span class="text-gray-500 text-xs">menit</span>
                         </div>
                         <div class="flex gap-2">
                             <button @click="save('HADIR_TERLAMBAT', { late_minutes: lateMinutes })"
-                                class="flex-1 bg-amber-500 hover:bg-amber-400 text-stone-900 font-semibold text-xs py-2 rounded-lg">
+                                class="flex-1 font-semibold text-xs py-2 rounded"
+                                style="background:#D4A853;color:#1A1000">
                                 Simpan
                             </button>
                             <button @click="showModal = null"
-                                class="bg-stone-700 hover:bg-stone-600 text-gray-400 text-xs py-2 px-3 rounded-lg">
+                                class="border border-gray-200 text-gray-500 hover:bg-gray-50 text-xs py-2 px-3 rounded">
                                 Batal
                             </button>
                         </div>
@@ -165,27 +168,28 @@
 
                     {{-- Mini-modal: DIGANTI --}}
                     <div x-show="showModal === 'diganti'" @click.outside="showModal = null"
-                        class="absolute right-0 top-8 z-20 bg-stone-800 border border-stone-600 rounded-xl shadow-xl w-64 p-4">
-                        <p class="text-gray-400 text-xs mb-3 truncate">
+                        class="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-lg w-64 p-4">
+                        <p class="text-gray-500 text-xs mb-3 truncate">
                             {{ $session->student->full_name }} · {{ $session->teacher->name }}
                         </p>
                         <label class="block text-gray-500 text-xs mb-1">Guru pengganti</label>
                         <select x-model="substituteId"
-                            class="w-full bg-stone-700 border border-stone-500 text-gray-100 rounded px-3 py-1.5 text-sm mb-1">
+                            class="w-full border border-gray-300 text-gray-700 rounded px-3 py-1.5 text-sm mb-1">
                             <option value="">— Pilih guru pengganti —</option>
                             @foreach($teachers as $t)
                                 <option value="{{ $t->id }}">{{ $t->name }}</option>
                             @endforeach
                         </select>
-                        <p class="text-gray-600 text-xs mb-3">Honor otomatis ke guru pengganti.</p>
+                        <p class="text-gray-400 text-xs mb-3">Honor otomatis ke guru pengganti.</p>
                         <div class="flex gap-2">
                             <button @click="if(substituteId) save('DIGANTI', { substitute_teacher_id: substituteId })"
                                 :disabled="!substituteId"
-                                class="flex-1 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-stone-900 font-semibold text-xs py-2 rounded-lg">
+                                class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded"
+                                style="background:#D4A853;color:#1A1000">
                                 Simpan
                             </button>
                             <button @click="showModal = null"
-                                class="bg-stone-700 hover:bg-stone-600 text-gray-400 text-xs py-2 px-3 rounded-lg">
+                                class="border border-gray-200 text-gray-500 hover:bg-gray-50 text-xs py-2 px-3 rounded">
                                 Batal
                             </button>
                         </div>
