@@ -19,6 +19,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PayrollConfigController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\AbsensiController;
 use App\Http\Controllers\Admin\RoomController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\SessionController;
@@ -137,13 +138,18 @@ Route::middleware('auth')->group(function () {
             [SessionController::class, 'generate']
         )->name('sessions.generate');
 
-        // ===== M04: Absensi per sesi =====
+        // ===== M04: Absensi per sesi (form individual) =====
         Route::get('sessions/{session}/attendance',
             [AttendanceController::class, 'edit']
         )->name('attendance.edit');
         Route::patch('sessions/{session}/attendance',
             [AttendanceController::class, 'update']
         )->name('attendance.update');
+
+        // ===== M04: Absensi Harian — update inline per sesi via AJAX =====
+        Route::patch('/admin/absensi/{classSession}',
+            [AbsensiController::class, 'update']
+        )->name('admin.absensi.update');
 
         // ===== M05: Catat Pembayaran =====
         // Void payment di-protect role:Owner di group sensitif di bawah.
@@ -310,6 +316,11 @@ Route::middleware('auth')->group(function () {
         Route::get('sessions',
             [SessionController::class, 'index']
         )->name('sessions.index');
+
+        // ===== M04: Absensi Harian — tampilan per tanggal (read + form inline) =====
+        Route::get('/admin/absensi',
+            [AbsensiController::class, 'index']
+        )->name('admin.absensi.index');
 
         // ===== M07: Pengeluaran — read-only =====
         Route::resource('expenses', ExpenseController::class)->only(['index', 'show']);
