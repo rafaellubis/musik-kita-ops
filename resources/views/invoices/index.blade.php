@@ -61,8 +61,8 @@
                 @if($canManage)
                     <div class="flex gap-2">
                         <button type="button" @click="tool = tool === 'spp' ? null : 'spp'"
-                                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                                style="background:#D4A853;color:#1A1000">
+                                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors btn-mk-primary"
+                                >
                             Generate SPP
                         </button>
                         <button type="button" @click="tool = tool === 'fines' ? null : 'fines'"
@@ -99,8 +99,8 @@
                                        class="border-gray-300 rounded text-sm w-20">
                             </div>
                             <button type="submit"
-                                    class="px-4 py-2 rounded-lg text-sm font-bold transition-colors"
-                                    style="background:#D4A853;color:#1A1000">
+                                    class="px-4 py-2 rounded-lg text-sm font-bold transition-colors btn-mk-primary"
+                                    >
                                 Jalankan Generator
                             </button>
                         </div>
@@ -172,8 +172,8 @@
                 </div>
                 <div class="mt-2 flex gap-2">
                     <button type="submit"
-                            class="px-4 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                            style="background:#D4A853;color:#1A1000">
+                            class="px-4 py-1.5 rounded-lg text-xs font-bold transition-colors btn-mk-primary"
+                            >
                         Filter
                     </button>
                     <a href="{{ route('invoices.index') }}"
@@ -229,7 +229,7 @@
                                     {{ $inv->due_date->format('d M Y') }}
                                     @if($inv->balance > 0 && $inv->due_date->lt(now()))
                                         <div class="text-orange-600">
-                                            lewat {{ $inv->due_date->diffInDays(now()) }} hari
+                                            Telat {{ $inv->due_date->diffInDays(now()) }} hari
                                         </div>
                                     @endif
                                 </td>

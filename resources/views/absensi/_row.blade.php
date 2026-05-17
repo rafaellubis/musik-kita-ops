@@ -104,8 +104,8 @@
                 :class="loading ? 'opacity-50 pointer-events-none' : ''">
 
                 <button @click="save('HADIR')"
-                    class="rounded px-3 py-1.5 text-xs font-semibold"
-                    style="background:#D4A853;color:#1A1000">
+                    class="rounded px-3 py-1.5 text-xs font-semibold btn-mk-primary"
+                    >
                     HADIR
                 </button>
                 <button @click="save('HANGUS')"
@@ -155,8 +155,8 @@
                         </div>
                         <div class="flex gap-2">
                             <button @click="save('HADIR_TERLAMBAT', { late_minutes: lateMinutes })"
-                                class="flex-1 font-semibold text-xs py-2 rounded"
-                                style="background:#D4A853;color:#1A1000">
+                                class="flex-1 font-semibold text-xs py-2 rounded btn-mk-primary"
+                                >
                                 Simpan
                             </button>
                             <button @click="showModal = null"
@@ -184,8 +184,8 @@
                         <div class="flex gap-2">
                             <button @click="if(substituteId) save('DIGANTI', { substitute_teacher_id: substituteId })"
                                 :disabled="!substituteId"
-                                class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded"
-                                style="background:#D4A853;color:#1A1000">
+                                class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded btn-mk-primary"
+                                >
                                 Simpan
                             </button>
                             <button @click="showModal = null"

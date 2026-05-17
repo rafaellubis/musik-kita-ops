@@ -22,8 +22,8 @@
                     <a href="{{ route('holidays.index') }}"
                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm">Batal</a>
                     <button type="submit"
-                            class="px-4 py-2 rounded text-sm font-bold transition-colors"
-                            style="background:#D4A853;color:#1A1000">Simpan Perubahan</button>
+                            class="px-4 py-2 rounded text-sm font-bold transition-colors btn-mk-primary"
+                            >Simpan Perubahan</button>
                 </div>
             </form>
         </div>

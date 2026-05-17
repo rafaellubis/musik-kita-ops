@@ -571,6 +571,10 @@ html[data-theme="light"] body { background-color: #F2E9DC; }
 .light-content .bg-green-500   { background-color: rgba(22,163,74,0.9) !important; color: #F0FFF4 !important; }
 .light-content .hover\:bg-green-600:hover { background-color: #16a34a !important; color: #F0FFF4 !important; }
 
+/* === BTN-MK-PRIMARY: tombol aksi utama — gold di dark mode, sienna di light mode === */
+.btn-mk-primary               { background: #D4A853 !important; color: #1A0E06 !important; }
+.light-content .btn-mk-primary { background: #A0522D !important; color: #FBF5EC !important; }
+
 /* Red danger buttons */
 .light-content .bg-red-600    { background-color: #DC2626 !important; color: #FFF5F5 !important; }
 .light-content .hover\:bg-red-700:hover { background-color: #B91C1C !important; color: #FFF5F5 !important; }

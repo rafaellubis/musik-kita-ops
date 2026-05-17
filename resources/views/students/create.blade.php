@@ -28,8 +28,8 @@
                         Batal
                     </a>
                     <button type="submit"
-                            class="px-6 py-2 rounded text-sm font-bold transition-colors"
-                            style="background:#D4A853;color:#1A1000">
+                            class="px-6 py-2 rounded text-sm font-bold transition-colors btn-mk-primary"
+                            >
                         Simpan Murid Baru
                     </button>
                 </div>

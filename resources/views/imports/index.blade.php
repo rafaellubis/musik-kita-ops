@@ -75,8 +75,8 @@
                 @enderror
 
                 <button type="submit"
-                        class="w-full py-2.5 rounded font-bold text-sm transition-colors"
-                        style="background:#D4A853;color:#1A1000">
+                        class="w-full py-2.5 rounded font-bold text-sm transition-colors btn-mk-primary"
+                        >
                     Validasi File
                 </button>
             </form>
@@ -303,8 +303,8 @@
                 <form action="{{ route('import.confirm') }}" method="POST">
                     @csrf
                     <button type="submit"
-                            class="px-5 py-2 rounded font-bold text-sm transition-colors"
-                            style="background:#D4A853;color:#1A1000"
+                            class="px-5 py-2 rounded font-bold text-sm transition-colors btn-mk-primary"
+                            
                             onclick="return confirm('Import {{ $totalOk }} murid ke database?\n\nBaru: {{ count($valid) }}\nOverwrite: {{ count($overwrite) }}\n\nLanjutkan?')">
                         Konfirmasi Import ({{ $totalOk }} data)
                     </button>

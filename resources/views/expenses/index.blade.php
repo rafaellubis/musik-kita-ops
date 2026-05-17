@@ -8,8 +8,8 @@
             </div>
             @hasanyrole('Owner|Admin')
             <a href="{{ route('expenses.create') }}"
-               class="px-4 py-2 rounded-lg text-sm font-bold transition-colors"
-               style="background:#D4A853;color:#1A1000">
+               class="px-4 py-2 rounded-lg text-sm font-bold transition-colors btn-mk-primary"
+               >
                 + Catat Pengeluaran
             </a>
             @endhasanyrole

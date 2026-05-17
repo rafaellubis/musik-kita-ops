@@ -63,13 +63,13 @@
                 @if(auth()->user()?->hasAnyRole(['Owner', 'Admin']))
                     <div class="flex items-center gap-2">
                         <a href="{{ route('absensi.index') }}"
-                           class="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                           style="background:#D4A853;color:#1A1000">
+                           class="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors btn-mk-primary"
+                           >
                             Absensi Hari Ini
                         </a>
                         <button type="button" @click="showGenerate = !showGenerate"
-                                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                                style="background:#D4A853;color:#1A1000">
+                                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors btn-mk-primary"
+                                >
                             Generate Sesi Bulan
                         </button>
                     </div>
@@ -97,8 +97,8 @@
                                        class="border-gray-300 rounded text-sm w-20">
                             </div>
                             <button type="submit"
-                                    class="px-4 py-2 rounded-lg text-sm font-bold transition-colors"
-                                    style="background:#D4A853;color:#1A1000">
+                                    class="px-4 py-2 rounded-lg text-sm font-bold transition-colors btn-mk-primary"
+                                    >
                                 Jalankan Generator
                             </button>
                         </div>
@@ -178,8 +178,8 @@
                 </div>
                 <div class="mt-2 flex gap-2">
                     <button type="submit"
-                            class="px-4 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                            style="background:#D4A853;color:#1A1000">
+                            class="px-4 py-1.5 rounded-lg text-xs font-bold transition-colors btn-mk-primary"
+                            >
                         Filter
                     </button>
                     <a href="{{ route('sessions.index') }}"

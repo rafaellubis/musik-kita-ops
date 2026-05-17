@@ -6,8 +6,8 @@
                 <div class="text-xs text-mk-muted mt-0.5">{{ $instruments->count() }} instrumen terdaftar</div>
             </div>
             <a href="{{ route('instruments.create') }}"
-               class="px-4 py-2 rounded-lg text-sm font-bold transition-colors"
-               style="background:#D4A853;color:#1A1000">
+               class="px-4 py-2 rounded-lg text-sm font-bold transition-colors btn-mk-primary"
+               >
                 + Tambah Instrumen
             </a>
         </div>
