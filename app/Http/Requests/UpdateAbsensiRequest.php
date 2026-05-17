@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ClassSession;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateAbsensiRequest extends FormRequest
 {
@@ -16,12 +18,51 @@ class UpdateAbsensiRequest extends FormRequest
     }
 
     /**
-     * Aturan validasi — stub, diisi di Task 4 saat implementasi update penuh.
+     * Aturan validasi untuk update absensi satu sesi.
+     *
+     * Status yang valid adalah semua status kecuali LIBUR dan SCHEDULED —
+     * LIBUR diblok di controller (BR-4.10), SCHEDULED bukan input valid dari admin.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        return [];
+        return [
+            'status' => [
+                'required',
+                Rule::in([
+                    ClassSession::STATUS_HADIR,
+                    ClassSession::STATUS_HADIR_TERLAMBAT,
+                    ClassSession::STATUS_HANGUS,
+                    ClassSession::STATUS_IZIN_RESCHEDULE,
+                    ClassSession::STATUS_IZIN_VIDEO,
+                    ClassSession::STATUS_DIGANTI,
+                ]),
+            ],
+            // Menit terlambat — wajib jika status HADIR_TERLAMBAT
+            'late_minutes' => [
+                'required_if:status,' . ClassSession::STATUS_HADIR_TERLAMBAT,
+                'nullable', 'integer', 'min:1', 'max:60',
+            ],
+            // Guru pengganti — wajib jika status DIGANTI
+            'substitute_teacher_id' => [
+                'required_if:status,' . ClassSession::STATUS_DIGANTI,
+                'nullable', 'exists:teachers,id',
+            ],
+            'notes' => ['nullable', 'string', 'max:500'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'status.required'                   => 'Status absensi wajib diisi.',
+            'status.in'                         => 'Status tidak valid.',
+            'late_minutes.required_if'          => 'Jumlah menit terlambat wajib diisi.',
+            'late_minutes.min'                  => 'Minimal terlambat 1 menit.',
+            'late_minutes.max'                  => 'Maksimal 60 menit.',
+            'substitute_teacher_id.required_if' => 'Guru pengganti wajib dipilih.',
+            'substitute_teacher_id.exists'      => 'Guru pengganti tidak ditemukan.',
+        ];
     }
 }

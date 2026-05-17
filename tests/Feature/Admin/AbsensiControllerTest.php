@@ -126,4 +126,62 @@ class AbsensiControllerTest extends TestCase
                 && ! $sessions->contains('id', $sessionHariIni->id);
         });
     }
+
+    // ----------------------------------------------------------------
+    // Task 4 — UpdateAbsensiRequest + update()
+    // ----------------------------------------------------------------
+
+    public function test_input_status_hadir_berhasil(): void
+    {
+        $session = $this->createTestSession();
+
+        $response = $this->actingAs($this->admin)
+            ->patchJson(route('admin.absensi.update', $session), ['status' => 'HADIR']);
+
+        $response->assertOk()->assertJson(['success' => true, 'status' => 'HADIR']);
+        $this->assertDatabaseHas('class_sessions', ['id' => $session->id, 'status' => 'HADIR']);
+    }
+
+    public function test_input_status_hangus_berhasil(): void
+    {
+        $session = $this->createTestSession();
+
+        $response = $this->actingAs($this->admin)
+            ->patchJson(route('admin.absensi.update', $session), ['status' => 'HANGUS']);
+
+        $response->assertOk()->assertJson(['success' => true, 'status' => 'HANGUS']);
+        $this->assertDatabaseHas('class_sessions', ['id' => $session->id, 'status' => 'HANGUS']);
+    }
+
+    public function test_status_libur_tidak_bisa_diubah(): void
+    {
+        $session = $this->createTestSession(['status' => 'LIBUR']);
+
+        $response = $this->actingAs($this->admin)
+            ->patchJson(route('admin.absensi.update', $session), ['status' => 'HADIR']);
+
+        $response->assertForbidden();
+        $this->assertDatabaseHas('class_sessions', ['id' => $session->id, 'status' => 'LIBUR']);
+    }
+
+    public function test_edit_ulang_status_yang_sudah_diinput(): void
+    {
+        $session = $this->createTestSession(['status' => 'HADIR']);
+
+        $response = $this->actingAs($this->admin)
+            ->patchJson(route('admin.absensi.update', $session), ['status' => 'HANGUS']);
+
+        $response->assertOk()->assertJson(['success' => true, 'status' => 'HANGUS']);
+        $this->assertDatabaseHas('class_sessions', ['id' => $session->id, 'status' => 'HANGUS']);
+    }
+
+    public function test_status_tidak_valid_ditolak(): void
+    {
+        $session = $this->createTestSession();
+
+        $response = $this->actingAs($this->admin)
+            ->patchJson(route('admin.absensi.update', $session), ['status' => 'STATUS_TIDAK_ADA']);
+
+        $response->assertUnprocessable(); // 422
+    }
 }

@@ -56,11 +56,44 @@ class AbsensiController extends Controller
 
     /**
      * Update status absensi satu sesi (AJAX inline).
-     * Implementasi penuh di Task 4.
+     *
+     * Business rules:
+     * - LIBUR tidak bisa diubah (BR-4.10 — sesi libur nasional, honor tetap dibayar)
+     * - Edit ulang diizinkan: admin boleh koreksi status yang sudah diinput
+     * - late_minutes dan substitute_teacher_id di-null-kan jika status tidak relevan
+     *   (membersihkan data lama saat status berganti)
      */
     public function update(UpdateAbsensiRequest $request, ClassSession $classSession): JsonResponse
     {
-        // Stub — implementasi di Task 4
-        return response()->json(['success' => true]);
+        // LIBUR tidak bisa diubah oleh admin (BR-4.10)
+        if ($classSession->status === ClassSession::STATUS_LIBUR) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sesi libur nasional tidak bisa diubah.',
+            ], 403);
+        }
+
+        $classSession->update([
+            'status'                => $request->status,
+            // Simpan late_minutes hanya jika status HADIR_TERLAMBAT, selain itu null
+            'late_minutes'          => $request->status === ClassSession::STATUS_HADIR_TERLAMBAT
+                                        ? $request->late_minutes : null,
+            // Simpan substitute_teacher_id hanya jika status DIGANTI, selain itu null
+            'substitute_teacher_id' => $request->status === ClassSession::STATUS_DIGANTI
+                                        ? $request->substitute_teacher_id : null,
+            'notes'                 => $request->notes,
+        ]);
+
+        // Muat ulang relasi substituteTeacher setelah update
+        // (Eloquent tidak refresh relasi otomatis setelah update)
+        $classSession->load('substituteTeacher');
+
+        return response()->json([
+            'success'                 => true,
+            'session_id'              => $classSession->id,
+            'status'                  => $classSession->status,
+            'late_minutes'            => $classSession->late_minutes,
+            'substitute_teacher_name' => $classSession->substituteTeacher?->name,
+        ]);
     }
 }
