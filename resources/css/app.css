@@ -8,8 +8,8 @@
 /* Scrollbar tipis untuk area scroll */
 .overflow-y-auto::-webkit-scrollbar { width: 4px; }
 .overflow-y-auto::-webkit-scrollbar-track { background: transparent; }
-.overflow-y-auto::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
-.overflow-y-auto::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+.overflow-y-auto::-webkit-scrollbar-thumb { background: rgba(212,168,83,0.20); border-radius: 4px; }
+.overflow-y-auto::-webkit-scrollbar-thumb:hover { background: rgba(212,168,83,0.35); }
 
 /* Transisi halus saat toggle tema dark ↔ light.
    PENTING: selector tidak boleh bergantung pada theme class (.dark-content / .light-content)
@@ -36,107 +36,110 @@ html[data-theme="light"] body { background-color: #F2E9DC; }
 ================================================================ */
 
 /* === BACKGROUND CARDS & PANEL === */
-.dark-content .bg-white          { background-color: #1E2235; }
-.dark-content .bg-gray-50        { background-color: rgba(255,255,255,0.03); }
-.dark-content .bg-gray-100       { background-color: rgba(255,255,255,0.06); }
-.dark-content .bg-gray-200       { background-color: rgba(255,255,255,0.09); }
-.dark-content .bg-gray-300       { background-color: rgba(255,255,255,0.14); }
-.dark-content .bg-gray-400       { background-color: rgba(255,255,255,0.20); }
-.dark-content .bg-gray-500       { background-color: rgba(255,255,255,0.28); }
-.dark-content .bg-gray-600       { background-color: rgba(255,255,255,0.35); }
+.dark-content .bg-white          { background-color: #241608; }
+.dark-content .bg-gray-50        { background-color: rgba(212,168,83,0.04); }
+.dark-content .bg-gray-100       { background-color: rgba(212,168,83,0.07); }
+.dark-content .bg-gray-200       { background-color: rgba(212,168,83,0.11); }
+.dark-content .bg-gray-300       { background-color: rgba(212,168,83,0.17); }
+.dark-content .bg-gray-400       { background-color: rgba(212,168,83,0.24); }
+.dark-content .bg-gray-500       { background-color: rgba(212,168,83,0.32); }
+.dark-content .bg-gray-600       { background-color: rgba(212,168,83,0.40); }
 
 /* === HOVER BACKGROUNDS === */
-.dark-content .hover\:bg-gray-50:hover   { background-color: #252B42; }
-.dark-content .hover\:bg-gray-100:hover  { background-color: #252B42; }
-.dark-content .hover\:bg-gray-200:hover  { background-color: #2E3552; }
-.dark-content .hover\:bg-white:hover     { background-color: #252B42; }
+.dark-content .hover\:bg-gray-50:hover   { background-color: #2E1C0E; }
+.dark-content .hover\:bg-gray-100:hover  { background-color: #351F10; }
+.dark-content .hover\:bg-gray-200:hover  { background-color: #3A2214; }
+.dark-content .hover\:bg-gray-300:hover  { background-color: #3F2618; }
+.dark-content .hover\:bg-white:hover     { background-color: #2E1C0E; }
 
 /* === BORDERS === */
 .dark-content .border-gray-100,
-.dark-content .border-gray-200           { border-color: rgba(255,255,255,0.07); }
-.dark-content .border-gray-300           { border-color: rgba(255,255,255,0.12); }
+.dark-content .border-gray-200           { border-color: rgba(212,168,83,0.10); }
+.dark-content .border-gray-300           { border-color: rgba(212,168,83,0.16); }
 .dark-content .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
 .dark-content .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
-    border-color: rgba(255,255,255,0.07);
+    border-color: rgba(212,168,83,0.10);
 }
 
 /* === TEXT === */
 .dark-content .text-gray-900,
-.dark-content .text-gray-800             { color: #E8EAF0; }
-.dark-content .text-gray-700             { color: #C5C9D4; }
-.dark-content .text-gray-600             { color: #8B92A8; }
-.dark-content .text-gray-500             { color: #6B7494; }
-.dark-content .text-gray-400             { color: #555D7A; }
-.dark-content .text-gray-300             { color: #3B4260; }
+.dark-content .text-gray-800             { color: #EDE0CC; }
+.dark-content .text-gray-700             { color: #C0A882; }
+.dark-content .text-gray-600             { color: #8A6848; }
+.dark-content .text-gray-500             { color: #6B4A2A; }
+.dark-content .text-gray-400             { color: #4A3020; }
+.dark-content .text-gray-300             { color: #382010; }
 
 /* === HOVER TEXT === */
-.dark-content .hover\:text-gray-700:hover  { color: #C5C9D4; }
+.dark-content .hover\:text-gray-700:hover  { color: #C0A882; }
 .dark-content .hover\:text-gray-800:hover,
-.dark-content .hover\:text-gray-900:hover  { color: #E8EAF0; }
+.dark-content .hover\:text-gray-900:hover  { color: #EDE0CC; }
 
 /* === LINKS (indigo) === */
-.dark-content .text-indigo-600           { color: #818CF8; }
-.dark-content .text-indigo-700           { color: #818CF8; }
+/* text-indigo-700/800 di-handle di blok STATUS BADGE — TEXT (lebih bawah) */
+.dark-content .text-indigo-600           { color: #C8A870; }
 .dark-content .hover\:text-indigo-700:hover,
-.dark-content .hover\:text-indigo-800:hover { color: #A5B4FC; }
-.dark-content a.text-indigo-600:hover    { color: #A5B4FC; }
+.dark-content .hover\:text-indigo-800:hover { color: #EDE0CC; }
+.dark-content a.text-indigo-600:hover    { color: #EDE0CC; }
 
 /* === STATUS BADGE — BACKGROUND (bg-*-50 dan bg-*-100) === */
 /* Green: Aktif, PAID, HADIR, Lunas */
-.dark-content .bg-green-50               { background-color: rgba(52,211,153,0.08); }
-.dark-content .bg-green-100              { background-color: rgba(52,211,153,0.12); }
+.dark-content .bg-green-50               { background-color: rgba(58,125,68,0.14); }
+.dark-content .bg-green-100              { background-color: rgba(58,125,68,0.20); }
 /* Yellow: Trial, PARTIAL */
-.dark-content .bg-yellow-50              { background-color: rgba(251,191,36,0.08); }
-.dark-content .bg-yellow-100             { background-color: rgba(251,191,36,0.12); }
+.dark-content .bg-yellow-50              { background-color: rgba(212,168,83,0.12); }
+.dark-content .bg-yellow-100             { background-color: rgba(212,168,83,0.18); }
 /* Orange: Cuti, DIGANTI */
-.dark-content .bg-orange-50              { background-color: rgba(251,146,60,0.08); }
-.dark-content .bg-orange-100             { background-color: rgba(251,146,60,0.12); }
+.dark-content .bg-orange-50              { background-color: rgba(181,101,29,0.14); }
+.dark-content .bg-orange-100             { background-color: rgba(181,101,29,0.20); }
 /* Amber: LIFECYCLE, CALCULATED */
-.dark-content .bg-amber-50               { background-color: rgba(251,191,36,0.08); }
-.dark-content .bg-amber-100              { background-color: rgba(251,191,36,0.12); }
+.dark-content .bg-amber-50               { background-color: rgba(212,168,83,0.12); }
+.dark-content .bg-amber-100              { background-color: rgba(212,168,83,0.18); }
 /* Blue: Selesai, info */
-.dark-content .bg-blue-50                { background-color: rgba(96,165,250,0.08); }
-.dark-content .bg-blue-100               { background-color: rgba(96,165,250,0.10); }
+.dark-content .bg-blue-50                { background-color: rgba(58,97,134,0.14); }
+.dark-content .bg-blue-100               { background-color: rgba(58,97,134,0.20); }
 /* Indigo: PAID, Aktif alt */
-.dark-content .bg-indigo-50              { background-color: rgba(129,140,248,0.08); }
-.dark-content .bg-indigo-100             { background-color: rgba(129,140,248,0.10); }
+.dark-content .bg-indigo-50              { background-color: rgba(58,97,134,0.14); }
+.dark-content .bg-indigo-100             { background-color: rgba(58,97,134,0.18); }
 /* Red: UNPAID, Void, Mengundurkan Diri, HANGUS */
-.dark-content .bg-red-50                 { background-color: rgba(248,113,113,0.08); }
-.dark-content .bg-red-100                { background-color: rgba(248,113,113,0.12); }
+.dark-content .bg-red-50                 { background-color: rgba(176,58,46,0.14); }
+.dark-content .bg-red-100                { background-color: rgba(176,58,46,0.20); }
 /* Purple: Trial alt, IZIN */
-.dark-content .bg-purple-50              { background-color: rgba(167,139,250,0.08); }
-.dark-content .bg-purple-100             { background-color: rgba(167,139,250,0.12); }
+.dark-content .bg-purple-50              { background-color: rgba(123,94,167,0.14); }
+.dark-content .bg-purple-100             { background-color: rgba(123,94,167,0.18); }
 
 /* === STATUS BADGE — TEXT === */
 .dark-content .text-green-600,
 .dark-content .text-green-700,
-.dark-content .text-green-800            { color: #34D399; }
+.dark-content .text-green-800            { color: #6BC07A; }
 .dark-content .text-yellow-600,
 .dark-content .text-yellow-700,
-.dark-content .text-yellow-800           { color: #FCD34D; }
+.dark-content .text-yellow-800           { color: #D4A853; }
 .dark-content .text-orange-600,
-.dark-content .text-orange-700           { color: #FB923C; }
+.dark-content .text-orange-700,
+.dark-content .text-orange-800           { color: #D4853A; }
 .dark-content .text-amber-600,
-.dark-content .text-amber-700            { color: #FBBF24; }
+.dark-content .text-amber-700            { color: #D4A853; }
 .dark-content .text-blue-600,
 .dark-content .text-blue-700,
-.dark-content .text-blue-800             { color: #60A5FA; }
+.dark-content .text-blue-800             { color: #7AAAC8; }
 .dark-content .text-indigo-700,
-.dark-content .text-indigo-800           { color: #818CF8; }
+.dark-content .text-indigo-800           { color: #8A9AC8; }
 .dark-content .text-red-500,
 .dark-content .text-red-600,
-.dark-content .text-red-700              { color: #F87171; }
+.dark-content .text-red-700              { color: #D07868; }
 .dark-content .text-purple-600,
-.dark-content .text-purple-700           { color: #A78BFA; }
+.dark-content .text-purple-700           { color: #B09AD8; }
 
 /* === BADGE — BORDERS === */
-.dark-content .border-green-300          { border-color: rgba(52,211,153,0.25); }
-.dark-content .border-yellow-300         { border-color: rgba(251,191,36,0.25); }
-.dark-content .border-orange-300         { border-color: rgba(251,146,60,0.25); }
-.dark-content .border-red-300            { border-color: rgba(248,113,113,0.25); }
-.dark-content .border-blue-300           { border-color: rgba(96,165,250,0.25); }
-.dark-content .border-indigo-300         { border-color: rgba(129,140,248,0.25); }
-.dark-content .border-purple-300         { border-color: rgba(167,139,250,0.25); }
+.dark-content .border-green-300          { border-color: rgba(58,125,68,0.35); }
+.dark-content .border-yellow-300,
+.dark-content .border-amber-300          { border-color: rgba(212,168,83,0.35); }
+.dark-content .border-orange-300         { border-color: rgba(181,101,29,0.35); }
+.dark-content .border-red-300            { border-color: rgba(176,58,46,0.35); }
+.dark-content .border-blue-300           { border-color: rgba(58,97,134,0.35); }
+.dark-content .border-indigo-300         { border-color: rgba(58,97,134,0.35); }
+.dark-content .border-purple-300         { border-color: rgba(123,94,167,0.35); }
 
 /* === FORM INPUTS ===
    Butuh !important karena @tailwindcss/forms plugin memakai
@@ -155,9 +158,9 @@ html[data-theme="light"] body { background-color: #F2E9DC; }
 .dark-content input[type="file"],
 .dark-content select,
 .dark-content textarea {
-    background-color: #252B42 !important;
-    border-color: rgba(255,255,255,0.12) !important;
-    color: #E8EAF0 !important;
+    background-color: #2E1C0E !important;
+    border-color: rgba(212,168,83,0.18) !important;
+    color: #EDE0CC !important;
 }
 
 /* Tombol "Pilih File" di dalam input file */
@@ -177,10 +180,10 @@ html[data-theme="light"] body { background-color: #F2E9DC; }
 }
 
 .dark-content input::placeholder,
-.dark-content textarea::placeholder      { color: #555D7A !important; }
+.dark-content textarea::placeholder      { color: #7A5540 !important; }
 
 /* Dropdown option styling */
-.dark-content select option              { background-color: #252B42; color: #E8EAF0; }
+.dark-content select option              { background-color: #2E1C0E; color: #EDE0CC; }
 
 /* Focus ring: gold accent sesuai tema sidebar */
 .dark-content input:focus,
@@ -193,10 +196,11 @@ html[data-theme="light"] body { background-color: #F2E9DC; }
 
 /* Input readonly — jelas tidak bisa diedit, berbeda dari disabled */
 .dark-content input[readonly],
+.dark-content select[readonly],
 .dark-content textarea[readonly] {
     background-color: rgba(212,168,83,0.06) !important;
     border-color: rgba(212,168,83,0.18) !important;
-    color: #8B92A8 !important;
+    color: #C0A882 !important;  /* #8A6848 hanya 3.14:1 — gagal WCAG AA; #C0A882 ~5.8:1 */
     cursor: not-allowed;
 }
 
@@ -204,20 +208,20 @@ html[data-theme="light"] body { background-color: #F2E9DC; }
 .dark-content input:disabled,
 .dark-content select:disabled,
 .dark-content textarea:disabled {
-    background-color: rgba(255,255,255,0.02) !important;
-    border-color: rgba(255,255,255,0.04) !important;
-    color: #3B4260 !important;
+    background-color: rgba(212,168,83,0.04) !important;
+    border-color: rgba(212,168,83,0.08) !important;
+    color: #4A3020 !important;
     cursor: not-allowed;
     opacity: 0.5;
 }
 
 /* Checkbox dan radio tetap berwarna */
 .dark-content input[type="checkbox"],
-.dark-content input[type="radio"]        { background-color: #252B42 !important; }
+.dark-content input[type="radio"]        { background-color: #2E1C0E !important; }
 
 /* === SHADOW — lebih dalam di dark background === */
-.dark-content .shadow-sm                 { box-shadow: 0 1px 4px rgba(0,0,0,0.5); }
-.dark-content .shadow                    { box-shadow: 0 2px 10px rgba(0,0,0,0.6); }
+.dark-content .shadow-sm                 { box-shadow: 0 1px 4px rgba(18,8,2,0.55); }
+.dark-content .shadow                    { box-shadow: 0 2px 10px rgba(18,8,2,0.65); }
 
 /* ===== ANIMASI FADE-IN UNTUK CARD DASHBOARD ===== */
 @keyframes fadeInUp {
@@ -266,13 +270,13 @@ html[data-theme="light"] body { background-color: #F2E9DC; }
 /* === PAGINATION === */
 .dark-content nav[aria-label="Pagination"] span,
 .dark-content nav[aria-label="Pagination"] a {
-    background-color: #1E2235;
-    border-color: rgba(255,255,255,0.08);
-    color: #8B92A8;
+    background-color: #241608;
+    border-color: rgba(212,168,83,0.12);
+    color: #8A6848;
 }
 .dark-content nav[aria-label="Pagination"] a:hover {
-    background-color: #252B42;
-    color: #E8EAF0;
+    background-color: #2E1C0E;
+    color: #EDE0CC;
 }
 /* Halaman aktif */
 .dark-content nav[aria-label="Pagination"] [aria-current="page"] > span {
