@@ -70,10 +70,7 @@ class Event extends Model
         return $this->hasMany(EventParticipant::class);
     }
 
-    public function honorSlips(): HasMany
-    {
-        return $this->hasMany(EventHonorSlip::class);
-    }
+
 
     public function createdBy(): BelongsTo
     {

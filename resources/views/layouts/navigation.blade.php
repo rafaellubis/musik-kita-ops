@@ -42,7 +42,7 @@
     <x-sidebar-item route="expenses.index" icon="📊" label="Pengeluaran"
         :active="request()->routeIs('expenses.*') || request()->routeIs('expense-categories.*')" />
     <x-sidebar-item route="events.index" icon="🎤" label="Event"
-        :active="request()->routeIs('events.*') || request()->routeIs('event-honor-slips.*') || request()->routeIs('event-participants.*')" />
+        :active="request()->routeIs('events.*') || request()->routeIs('event-participants.*')" />
 
     {{-- Grup: LAPORAN --}}
     <div class="px-2 pt-4 pb-1.5 text-[10px] font-semibold tracking-widest text-mk-dim uppercase">Laporan</div>
