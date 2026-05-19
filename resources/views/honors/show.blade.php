@@ -112,6 +112,19 @@
                         </div>
                         <div class="text-xs text-gray-400 mt-1">dari {{ $sessions->count() }} sesi</div>
                     </div>
+                    @if($honor->hasEventHonor())
+                    <div class="bg-gray-50 rounded p-3">
+                        <div class="text-xs text-gray-500">Honor Event (Manual)</div>
+                        <div class="text-lg font-bold mt-1">
+                            Rp {{ number_format($honor->event_honor, 0, ',', '.') }}
+                        </div>
+                        @if($honor->event_honor_note)
+                            <div class="text-xs text-gray-500 mt-1 italic">
+                                {{ $honor->event_honor_note }}
+                            </div>
+                        @endif
+                    </div>
+                    @endif
                     <div class="bg-gray-50 rounded p-3">
                         <div class="text-xs text-gray-500">Transport (Manual)</div>
                         <div class="text-lg font-bold mt-1">
