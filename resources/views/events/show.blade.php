@@ -274,133 +274,20 @@
             @endif
             @endif
 
-            {{-- ===== SLIP HONOR GURU ===== --}}
-            <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
-                <div class="px-4 py-3 border-b bg-gray-50 flex justify-between items-center">
-                    <h3 class="font-semibold text-sm">Slip Honor Guru ({{ $event->honorSlips->count() }})</h3>
-                </div>
-
-                @if($event->honorSlips->count() > 0)
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b text-xs text-gray-500 uppercase text-left">
-                            <th class="px-4 py-2">Nomor</th>
-                            <th class="px-4 py-2">Guru</th>
-                            <th class="px-4 py-2">Peran</th>
-                            <th class="px-4 py-2 text-right">Honor Pokok</th>
-                            <th class="px-4 py-2 text-right">Transport</th>
-                            <th class="px-4 py-2 text-right">Total</th>
-                            <th class="px-4 py-2 text-center">Status</th>
-                            <th class="px-4 py-2 text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($event->honorSlips as $slip)
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="px-4 py-2 font-mono text-xs text-gray-500">{{ $slip->slip_number }}</td>
-                            <td class="px-4 py-2 font-medium">{{ $slip->teacher->name }}</td>
-                            <td class="px-4 py-2 text-xs text-gray-500">{{ $slip->role ?? '—' }}</td>
-                            <td class="px-4 py-2 text-right font-mono text-xs">
-                                Rp {{ number_format($slip->base_honor, 0, ',', '.') }}
-                            </td>
-                            <td class="px-4 py-2 text-right font-mono text-xs">
-                                Rp {{ number_format($slip->transport_honor, 0, ',', '.') }}
-                            </td>
-                            <td class="px-4 py-2 text-right font-semibold font-mono text-xs">
-                                Rp {{ number_format($slip->total_honor, 0, ',', '.') }}
-                            </td>
-                            <td class="px-4 py-2 text-center">
-                                @if($slip->status === 'PAID')
-                                    <span class="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">Dibayarkan</span>
-                                @else
-                                    <span class="px-2 py-0.5 rounded text-xs bg-yellow-100 text-yellow-700">Draft</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-2 text-right whitespace-nowrap">
-                                @if(auth()->user()->hasRole('Owner'))
-                                    @if(!$slip->isLocked())
-                                        <a href="{{ route('event-honor-slips.edit', $slip) }}"
-                                           class="text-xs text-indigo-600 hover:underline">Edit</a>
-                                        ·
-                                        <form method="POST"
-                                              action="{{ route('event-honor-slips.mark-paid', $slip) }}"
-                                              class="inline"
-                                              onsubmit="return confirm('Tandai slip ini sudah dibayarkan?')">
-                                            @csrf
-                                            <button type="submit" class="text-xs text-green-600 hover:underline">
-                                                Bayarkan
-                                            </button>
-                                        </form>
-                                        ·
-                                        <form method="POST"
-                                              action="{{ route('event-honor-slips.destroy', $slip) }}"
-                                              class="inline"
-                                              onsubmit="return confirm('Hapus slip honor ini?')">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="text-xs text-red-600 hover:underline">Hapus</button>
-                                        </form>
-                                        ·
-                                    @endif
-                                @endif
-                                <a href="{{ route('event-honor-slips.print', $slip) }}"
-                                   target="_blank"
-                                   class="text-xs text-gray-600 hover:underline">Cetak</a>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot class="bg-gray-50">
-                        <tr>
-                            <td colspan="5" class="px-4 py-2 text-sm font-medium">Total Seluruh Slip</td>
-                            <td class="px-4 py-2 text-right font-bold font-mono text-sm">
-                                Rp {{ number_format($event->honorSlips->sum('total_honor'), 0, ',', '.') }}
-                            </td>
-                            <td colspan="2"></td>
-                        </tr>
-                    </tfoot>
-                </table>
-                @endif
-
-                {{-- Form buat slip honor baru (Owner only) --}}
-                @if(auth()->user()->hasRole('Owner'))
-                <div class="px-4 py-4 border-t bg-gray-50">
-                    <h4 class="text-xs font-medium text-gray-700 mb-3">Buat Slip Honor Guru</h4>
-                    <form method="POST" action="{{ route('event-honor-slips.store', $event) }}"
-                          class="flex flex-wrap gap-3 items-end">
-                        @csrf
-
-                        <div>
-                            <label class="block text-xs text-gray-600 mb-1">Guru</label>
-                            <select name="teacher_id" required class="border-gray-300 rounded text-sm">
-                                <option value="">-- Pilih guru --</option>
-                                @foreach($teachers as $t)
-                                    <option value="{{ $t->id }}">{{ $t->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs text-gray-600 mb-1">Peran / Keterangan</label>
-                            <input type="text" name="role" maxlength="100" placeholder="Pengawas Ujian"
-                                   class="border-gray-300 rounded text-sm w-48">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs text-gray-600 mb-1">Honor Pokok (Rp)</label>
-                            <input type="number" name="base_honor" required min="0" value="250000"
-                                   class="border-gray-300 rounded text-sm w-36">
-                        </div>
-
-                        <button type="submit"
-                                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm">
-                            + Buat Slip
-                        </button>
-                    </form>
-                    <p class="mt-2 text-xs text-gray-400">
-                        Default Rp 250.000 sesuai honor pengawas ujian (H_UJIAN). Transport & lain-lain diisi di halaman edit slip.
-                    </p>
-                </div>
-                @endif
+            {{-- Honor guru masuk ke slip bulanan M06, bukan slip terpisah --}}
+            <div class="bg-white shadow-sm sm:rounded-lg p-4">
+                <h3 class="font-semibold text-sm mb-2">Honor Guru</h3>
+                <p class="text-sm text-gray-600">
+                    Honor guru untuk event ini dimasukkan manual ke slip honor bulanan
+                    masing-masing guru di bulan yang sama dengan event berlangsung.
+                </p>
+                <a href="{{ route('honors.index', [
+                            'year'  => $event->event_date->year,
+                            'month' => $event->event_date->month,
+                           ]) }}"
+                   class="inline-block mt-3 text-sm text-indigo-600 hover:underline">
+                    → Lihat Slip Honor {{ $event->event_date->format('F Y') }}
+                </a>
             </div>
 
         </div>

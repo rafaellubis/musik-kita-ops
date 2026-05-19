@@ -9,7 +9,6 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Package;
 use App\Models\Student;
-use App\Models\Teacher;
 use App\Services\InvoiceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -74,7 +73,7 @@ class EventController extends Controller
 
     public function show(Event $event)
     {
-        $event->load(['participants.student', 'participants.enrollment.package', 'honorSlips.teacher']);
+        $event->load(['participants.student', 'participants.enrollment.package']);
 
         // Daftar murid aktif yang belum terdaftar sebagai peserta event ini
         $registeredStudentIds = $event->participants->pluck('student_id')->toArray();
@@ -83,9 +82,7 @@ class EventController extends Controller
             ->orderBy('full_name')
             ->get(['id', 'full_name', 'student_code', 'status']);
 
-        $teachers = Teacher::where('is_active', true)->orderBy('name')->get(['id', 'name']);
-
-        return view('events.show', compact('event', 'availableStudents', 'teachers'));
+        return view('events.show', compact('event', 'availableStudents'));
     }
 
     public function edit(Event $event)
