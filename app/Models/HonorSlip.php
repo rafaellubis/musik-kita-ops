@@ -15,10 +15,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *   PAID       → Owner tandai sudah dibayar; slip terkunci dari edit
  *
  * Komponen gaji sesuai BRD revisi v1.1:
- *   base_honor      → otomatis dari aggregate class_sessions.honor_amount
- *   transport_honor → INPUT MANUAL (tidak ada formula)
- *   other_honor     → INPUT MANUAL + wajib isi other_honor_note
- *   total_honor     → base + transport + other (dihitung saat save)
+ *   base_honor        → otomatis dari aggregate class_sessions.honor_amount
+ *   event_honor       → otomatis dari sesi event (Mini Concert / Ujian)
+ *   event_honor_note  → keterangan event (opsional)
+ *   transport_honor   → INPUT MANUAL (tidak ada formula)
+ *   other_honor       → INPUT MANUAL + wajib isi other_honor_note
+ *   total_honor       → base + event + transport + other (dihitung saat save)
  */
 class HonorSlip extends Model
 {
@@ -29,7 +31,9 @@ class HonorSlip extends Model
     protected $fillable = [
         'slip_number', 'teacher_id',
         'month', 'year',
-        'base_honor', 'transport_honor', 'other_honor', 'other_honor_note',
+        'base_honor',
+        'event_honor', 'event_honor_note',   // honor dari sesi event (Mini Concert / Ujian)
+        'transport_honor', 'other_honor', 'other_honor_note',
         'total_honor',
         'status', 'paid_at', 'paid_by', 'created_by',
     ];
@@ -38,6 +42,7 @@ class HonorSlip extends Model
         'month'           => 'integer',
         'year'            => 'integer',
         'base_honor'      => 'integer',
+        'event_honor'     => 'integer',   // honor event (Mini Concert / Ujian)
         'transport_honor' => 'integer',
         'other_honor'     => 'integer',
         'total_honor'     => 'integer',
@@ -65,8 +70,18 @@ class HonorSlip extends Model
     public function recalcTotal(): void
     {
         $this->total_honor = ($this->base_honor ?? 0)
+            + ($this->event_honor ?? 0)
             + ($this->transport_honor ?? 0)
             + ($this->other_honor ?? 0);
+    }
+
+    /**
+     * Cek apakah slip ini memiliki komponen honor event (Mini Concert / Ujian).
+     * Digunakan di view untuk menampilkan/menyembunyikan baris event honor.
+     */
+    public function hasEventHonor(): bool
+    {
+        return ($this->event_honor ?? 0) > 0;
     }
 
     /**
