@@ -46,12 +46,12 @@ class ImportControllerTest extends TestCase
         return $user;
     }
 
-    public function test_import_index_accessible_by_admin(): void
+    public function test_import_index_inaccessible_by_admin(): void
     {
+        // Import dipindah ke Owner-only — Admin tidak boleh akses
         $this->actingAs($this->adminUser())
             ->get(route('import.index'))
-            ->assertStatus(200)
-            ->assertSee('Import Murid dari Excel');
+            ->assertStatus(403);
     }
 
     public function test_import_index_inaccessible_by_auditor(): void
@@ -68,7 +68,7 @@ class ImportControllerTest extends TestCase
     {
         // Controller menggunakan Excel::raw() + response() langsung (bukan Excel::download())
         // agar kompatibel dengan Windows/Laragon — assert header response, bukan ExcelFake
-        $response = $this->actingAs($this->adminUser())
+        $response = $this->actingAs($this->ownerUser())
             ->get(route('import.template'));
 
         $response->assertStatus(200)
@@ -83,14 +83,14 @@ class ImportControllerTest extends TestCase
     {
         $file = UploadedFile::fake()->create('data.csv', 100, 'text/csv');
 
-        $this->actingAs($this->adminUser())
+        $this->actingAs($this->ownerUser())
             ->post(route('import.validate'), ['file' => $file])
             ->assertSessionHasErrors('file');
     }
 
     public function test_confirm_redirects_with_error_if_no_session(): void
     {
-        $this->actingAs($this->adminUser())
+        $this->actingAs($this->ownerUser())
             ->post(route('import.confirm'))
             ->assertRedirect(route('import.index'))
             ->assertSessionHas('error');
@@ -98,7 +98,7 @@ class ImportControllerTest extends TestCase
 
     public function test_cancel_clears_session_and_redirects(): void
     {
-        $this->actingAs($this->adminUser())
+        $this->actingAs($this->ownerUser())
             ->withSession(['import_preview' => [
                 'valid'    => [],
                 'overwrite'=> [],
@@ -125,9 +125,9 @@ class ImportControllerTest extends TestCase
 
     public function test_template_berisi_kolom_kode_ruangan(): void
     {
-        $admin = $this->adminUser();
+        $owner = $this->ownerUser();
 
-        $response = $this->actingAs($admin)->get(route('import.template'));
+        $response = $this->actingAs($owner)->get(route('import.template'));
 
         $response->assertStatus(200);
         $response->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -147,7 +147,7 @@ class ImportControllerTest extends TestCase
 
     public function test_confirm_buat_schedules_di_db(): void
     {
-        $admin   = $this->adminUser();
+        $owner   = $this->ownerUser();
         $piano   = \App\Models\Instrument::create(['name' => 'Piano', 'code' => 'PIANO', 'is_active' => true, 'sort_order' => 1]);
         $package = \App\Models\Package::create([
             'code' => 'REG-PIANO', 'instrument_id' => $piano->id,
@@ -177,7 +177,7 @@ class ImportControllerTest extends TestCase
             'errors'    => [],
         ]]);
 
-        $this->actingAs($admin)->post(route('import.confirm'));
+        $this->actingAs($owner)->post(route('import.confirm'));
 
         $this->assertDatabaseHas('schedules', [
             'day_of_week' => 1,
@@ -189,7 +189,7 @@ class ImportControllerTest extends TestCase
 
     public function test_confirm_buat_status_history_migrasi(): void
     {
-        $admin   = $this->adminUser();
+        $owner   = $this->ownerUser();
         $piano   = \App\Models\Instrument::create(['name' => 'Piano', 'code' => 'PIANO', 'is_active' => true, 'sort_order' => 1]);
         $package = \App\Models\Package::create([
             'code' => 'REG-PIANO', 'instrument_id' => $piano->id,
@@ -219,7 +219,7 @@ class ImportControllerTest extends TestCase
             'errors'    => [],
         ]]);
 
-        $this->actingAs($admin)->post(route('import.confirm'));
+        $this->actingAs($owner)->post(route('import.confirm'));
 
         $student = \App\Models\Student::where('full_name', 'Sejarah Test')->first();
         $this->assertDatabaseHas('student_status_histories', [
