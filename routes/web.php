@@ -3,7 +3,6 @@
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
-use App\Http\Controllers\EventHonorSlipController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
@@ -232,22 +231,6 @@ Route::middleware('auth')->group(function () {
             [EventController::class, 'saveExamResults']
         )->name('events.exam-results');
 
-        // Slip honor event
-        Route::post('events/{event}/honor-slips',
-            [EventHonorSlipController::class, 'store']
-        )->name('event-honor-slips.store');
-        Route::get('event-honor-slips/{eventHonorSlip}/edit',
-            [EventHonorSlipController::class, 'edit']
-        )->name('event-honor-slips.edit');
-        Route::patch('event-honor-slips/{eventHonorSlip}',
-            [EventHonorSlipController::class, 'update']
-        )->name('event-honor-slips.update');
-        Route::post('event-honor-slips/{eventHonorSlip}/mark-paid',
-            [EventHonorSlipController::class, 'markPaid']
-        )->name('event-honor-slips.mark-paid');
-        Route::delete('event-honor-slips/{eventHonorSlip}',
-            [EventHonorSlipController::class, 'destroy']
-        )->name('event-honor-slips.destroy');
     });
 
     /* ======================================================================
@@ -347,10 +330,6 @@ Route::middleware('auth')->group(function () {
 
         // ===== M08: Event — read-only =====
         Route::resource('events', EventController::class)->only(['index', 'show']);
-        // print harus sebelum show agar tidak ditangkap wildcard
-        Route::get('event-honor-slips/{eventHonorSlip}/print',
-            [EventHonorSlipController::class, 'print']
-        )->name('event-honor-slips.print');
 
         // ===== M09: Laporan statistik murid (read-only, semua role) =====
         Route::get('reports/students',
