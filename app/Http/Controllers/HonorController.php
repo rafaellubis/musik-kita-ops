@@ -109,8 +109,8 @@ class HonorController extends Controller
     }
 
     /**
-     * Simpan komponen manual (transport + other_honor + catatan).
-     * Recalc total_honor otomatis.
+     * Simpan komponen manual (transport + event_honor + other_honor + catatan).
+     * Recalc total_honor otomatis setelah semua komponen tersimpan.
      */
     public function update(Request $request, HonorSlip $honor)
     {
@@ -121,16 +121,27 @@ class HonorController extends Controller
 
         $data = $request->validate([
             'transport_honor'  => 'required|integer|min:0|max:99999999',
+            'event_honor'      => 'required|integer|min:0|max:99999999',
+            'event_honor_note' => 'nullable|string|max:255',
             'other_honor'      => 'required|integer|min:0|max:99999999',
             'other_honor_note' => 'nullable|string|max:255',
         ], [
             'transport_honor.required' => 'Honor transport wajib diisi (isi 0 jika tidak ada).',
             'transport_honor.min'      => 'Honor transport tidak boleh negatif.',
+            'event_honor.required'     => 'Honor event wajib diisi (isi 0 jika tidak ada event).',
+            'event_honor.min'          => 'Honor event tidak boleh negatif.',
             'other_honor.required'     => 'Honor lain-lain wajib diisi (isi 0 jika tidak ada).',
             'other_honor.min'          => 'Honor lain-lain tidak boleh negatif.',
         ]);
 
-        // required_if Laravel tidak support operator > — validasi manual
+        // Keterangan wajib jika event_honor > 0
+        if ((int) $data['event_honor'] > 0 && empty(trim($data['event_honor_note'] ?? ''))) {
+            return back()
+                ->withErrors(['event_honor_note' => 'Keterangan event wajib diisi jika ada honor event.'])
+                ->withInput();
+        }
+
+        // Keterangan wajib jika other_honor > 0
         if ((int) $data['other_honor'] > 0 && empty(trim($data['other_honor_note'] ?? ''))) {
             return back()
                 ->withErrors(['other_honor_note' => 'Keterangan lain-lain wajib diisi jika ada honor lain-lain.'])
@@ -138,6 +149,8 @@ class HonorController extends Controller
         }
 
         $honor->transport_honor  = $data['transport_honor'];
+        $honor->event_honor      = $data['event_honor'];
+        $honor->event_honor_note = $data['event_honor_note'] ?? null;
         $honor->other_honor      = $data['other_honor'];
         $honor->other_honor_note = $data['other_honor_note'] ?? null;
         $honor->recalcTotal();
