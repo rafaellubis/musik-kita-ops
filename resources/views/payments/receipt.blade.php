@@ -29,10 +29,33 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
+            background: #f0fdf4;
             border-bottom: 3px solid #166534;
-            padding-bottom: 16px;
+            padding: 14px 40px 12px;
             margin-bottom: 24px;
         }
+        .tagline-badge {
+            display: inline-block;
+            border: 1px solid #166534;
+            color: #14532d;
+            font-size: 7pt;
+            padding: 1px 8px;
+            border-radius: 3px;
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+        }
+        .contact-info {
+            font-size: 7pt;
+            color: #166534;
+            margin-top: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            opacity: 0.85;
+        }
+        .contact-row { display: flex; align-items: center; gap: 5px; }
+        .contact-icon { width: 9px; height: 9px; flex-shrink: 0; }
+        .wa-icon     { width: 11px; height: 11px; flex-shrink: 0; }
         .studio-name {
             font-size: 18pt;
             font-weight: bold;
@@ -162,10 +185,23 @@
         <div>
             <img src="{{ asset('images/logo-musikkita-light-mode.PNG') }}"
                  alt="Musik KITA"
-                 style="height:52px; max-width:200px; object-fit:contain; object-position:left; display:block;">
-            <div style="font-size: 10pt; color: #555; margin-top:4px;">
-                Studio Musik & Sekolah Musik<br>
-                — alamat dan kontak studio —
+                 style="height:44px; max-width:180px; object-fit:contain; object-position:left; display:block;">
+            <div class="tagline-badge">Les Musik &nbsp;·&nbsp; Toko Alat Musik</div>
+            <div class="contact-info">
+                <div class="contact-row">
+                    <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                        <circle cx="12" cy="9" r="2.5"/>
+                    </svg>
+                    Ruko Serpong Garden 1 Ruko 2 No. 19, Tangerang - Banten
+                </div>
+                <div class="contact-row">
+                    <svg class="wa-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="16" cy="16" r="14" fill="#25D366"/>
+                        <path fill="#fff" d="M22.5 19.4c-.3-.2-1.9-.9-2.2-1s-.5-.2-.7.2c-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.5-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-1-2.3c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1 2.8 1.2 3c.2.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.6-.7 1.9-1.3.3-.6.3-1.2.2-1.3z"/>
+                    </svg>
+                    0816-92-05-92
+                </div>
             </div>
         </div>
         <div class="receipt-title">
@@ -226,7 +262,7 @@
 
     <div class="signature">
         <div class="signature-block">
-            <div class="city">Jakarta, {{ $payment->payment_date->format('d F Y') }}</div>
+            <div class="city">Tangerang, {{ $payment->payment_date->format('d F Y') }}</div>
             <div class="name">
                 {{ $payment->createdBy->name ?? 'Admin Studio' }}<br>
                 <span style="font-size: 9pt; color: #777;">Penerima Pembayaran</span>
