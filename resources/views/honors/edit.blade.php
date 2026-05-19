@@ -90,8 +90,7 @@
                            id="other_honor"
                            value="{{ old('other_honor', $honor->other_honor) }}"
                            min="0" max="99999999" required
-                           class="mt-1 block w-full border-gray-300 rounded @error('other_honor') border-red-500 @enderror"
-                           oninput="toggleNote()">
+                           class="mt-1 block w-full border-gray-300 rounded @error('other_honor') border-red-500 @enderror">
                     @error('other_honor')
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                     @enderror
