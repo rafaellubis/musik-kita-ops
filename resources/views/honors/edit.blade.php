@@ -32,6 +32,39 @@
                 @csrf
                 @method('PATCH')
 
+                {{-- Honor Event (isi 0 jika bulan ini tidak ada event) --}}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">
+                        Honor Event (Rp)
+                        <span class="text-gray-400 font-normal text-xs ml-1">— isi 0 jika tidak ada event bulan ini</span>
+                    </label>
+                    <input type="number"
+                           name="event_honor"
+                           value="{{ old('event_honor', $honor->event_honor) }}"
+                           min="0" max="99999999" required
+                           class="mt-1 block w-full border-gray-300 rounded @error('event_honor') border-red-500 @enderror">
+                    @error('event_honor')
+                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">
+                        Keterangan Event
+                        <span class="text-red-500">*</span>
+                        <span class="text-gray-400 font-normal text-xs ml-1">— wajib diisi jika ada honor event</span>
+                    </label>
+                    <input type="text"
+                           name="event_honor_note"
+                           value="{{ old('event_honor_note', $honor->event_honor_note) }}"
+                           maxlength="255"
+                           placeholder="Contoh: Mini Concert Mei 2026, Ujian Grade Semester 1"
+                           class="mt-1 block w-full border-gray-300 rounded @error('event_honor_note') border-red-500 @enderror">
+                    @error('event_honor_note')
+                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">
                         Honor Transport (Rp)
@@ -86,6 +119,7 @@
                     <div class="text-xs text-gray-500 mb-1">Preview Total Honor</div>
                     <div class="font-bold text-blue-700">
                         Rp {{ number_format($honor->base_honor, 0, ',', '.') }}
+                        + <span id="preview_event">Rp {{ number_format($honor->event_honor, 0, ',', '.') }}</span>
                         + <span id="preview_transport">Rp {{ number_format($honor->transport_honor, 0, ',', '.') }}</span>
                         + <span id="preview_other">Rp {{ number_format($honor->other_honor, 0, ',', '.') }}</span>
                         = <span id="preview_total" class="text-lg">Rp {{ number_format($honor->total_honor, 0, ',', '.') }}</span>
@@ -108,18 +142,16 @@
     <script>
         const baseHonor = {{ $honor->base_honor }};
 
-        function toggleNote() {
-            // selalu tampil
-        }
-
         document.addEventListener('input', function () {
+            const event     = parseInt(document.querySelector('[name=event_honor]')?.value) || 0;
             const transport = parseInt(document.querySelector('[name=transport_honor]')?.value) || 0;
             const other     = parseInt(document.querySelector('[name=other_honor]')?.value) || 0;
-            const total     = baseHonor + transport + other;
+            const total     = baseHonor + event + transport + other;
 
             const fmt = (n) => 'Rp ' + n.toLocaleString('id-ID');
             const el  = (id) => document.getElementById(id);
 
+            if (el('preview_event'))     el('preview_event').textContent     = fmt(event);
             if (el('preview_transport')) el('preview_transport').textContent = fmt(transport);
             if (el('preview_other'))     el('preview_other').textContent     = fmt(other);
             if (el('preview_total'))     el('preview_total').textContent     = fmt(total);
