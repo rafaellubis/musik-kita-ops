@@ -229,7 +229,7 @@
                                     {{ $inv->due_date->format('d M Y') }}
                                     @if($inv->balance > 0 && $inv->due_date->lt(now()))
                                         <div class="text-orange-600">
-                                            Telat {{ $inv->due_date->diffInDays(now()) }} hari
+                                            Telat {{ (int) $inv->due_date->diffInDays(now()) }} hari
                                         </div>
                                     @endif
                                 </td>

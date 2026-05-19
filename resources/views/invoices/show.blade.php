@@ -80,7 +80,7 @@
                             Jatuh tempo: {{ $invoice->due_date->format('d M Y') }}
                             @if($invoice->balance > 0 && $invoice->due_date->lt(now()))
                                 <span class="text-orange-600">
-                                    (Telat {{ $invoice->due_date->diffInDays(now()) }} hari)
+                                    (Telat {{ (int) $invoice->due_date->diffInDays(now()) }} hari)
                                 </span>
                             @endif
                         </span>
