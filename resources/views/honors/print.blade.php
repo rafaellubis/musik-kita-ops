@@ -143,6 +143,13 @@
                 </td>
                 <td class="text-right">{{ number_format($honor->base_honor, 0, ',', '.') }}</td>
             </tr>
+            @if($honor->event_honor > 0)
+            <tr>
+                <td>Honor Event</td>
+                <td>{{ $honor->event_honor_note ?: 'Input manual' }}</td>
+                <td class="text-right">{{ number_format($honor->event_honor, 0, ',', '.') }}</td>
+            </tr>
+            @endif
             <tr>
                 <td>Honor Transport</td>
                 <td>Input manual</td>
