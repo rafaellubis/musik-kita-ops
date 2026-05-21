@@ -85,9 +85,126 @@
             </form>
         </div>
 
-        {{-- Grid diisi di Task 4 --}}
-        <div class="bg-white shadow-sm sm:rounded-lg p-4">
-            <p class="text-sm text-gray-500">Grid sedang dibangun (Task 4).</p>
+        {{-- ===== GRID KALENDER ===== --}}
+        @php
+            // Warna background per status sesi
+            $statusColors = [
+                'SCHEDULED'        => 'bg-gray-100 text-gray-600',
+                'HADIR'            => 'bg-green-100 text-green-700',
+                'HADIR_TERLAMBAT'  => 'bg-green-100 text-green-700',
+                'IZIN_RESCHEDULE'  => 'bg-yellow-100 text-yellow-700',
+                'IZIN_VIDEO'       => 'bg-yellow-100 text-yellow-700',
+                'HANGUS'           => 'bg-red-100 text-red-700',
+                'LIBUR'            => 'bg-gray-50 text-gray-400',
+                'DIGANTI'          => 'bg-gray-50 text-gray-400',
+                'CANCELLED'        => 'bg-gray-50 text-gray-400',
+            ];
+            $statusLabels = [
+                'SCHEDULED'        => 'Terjadwal',
+                'HADIR'            => 'Hadir',
+                'HADIR_TERLAMBAT'  => 'Hadir (Terlambat)',
+                'IZIN_RESCHEDULE'  => 'Izin – Reschedule',
+                'IZIN_VIDEO'       => 'Izin – Video',
+                'HANGUS'           => 'Hangus',
+                'LIBUR'            => 'Libur',
+                'DIGANTI'          => 'Diganti',
+                'CANCELLED'        => 'Dibatalkan',
+            ];
+            $statusCoretan = ['LIBUR', 'DIGANTI', 'CANCELLED'];
+        @endphp
+
+        <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden"
+             x-data="{ open: false, sesi: {} }">
+
+            {{-- Pesan minggu kosong --}}
+            @if($timeSlots->isEmpty())
+                <div class="p-6 text-center">
+                    @if(request('teacher_id') || request('room_id'))
+                        <p class="text-gray-500 text-sm">Tidak ada sesi untuk filter ini minggu ini.</p>
+                    @else
+                        <div class="p-4 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm inline-block">
+                            Sesi belum di-generate untuk minggu ini.
+                            Generator otomatis berjalan tanggal 25 setiap bulan.
+                        </div>
+                    @endif
+                </div>
+            @else
+
+            {{-- Tabel grid --}}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse">
+                    {{-- Header: Jam + Senin–Sabtu --}}
+                    <thead>
+                        <tr class="border-b bg-gray-50">
+                            <th class="py-2 px-3 text-left text-xs font-semibold text-gray-500 w-16">Jam</th>
+                            @foreach($days as $dow => $date)
+                                <th class="py-2 px-2 text-center text-xs font-semibold
+                                    {{ $date->isToday() ? 'text-indigo-600 bg-indigo-50' : 'text-gray-600' }}">
+                                    <div>{{ $date->translatedFormat('D') }}</div>
+                                    <div class="font-normal text-gray-400">{{ $date->format('d/m') }}</div>
+                                </th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($timeSlots as $time)
+                            <tr class="border-b hover:bg-gray-50/50">
+                                {{-- Label jam --}}
+                                <td class="py-2 px-3 text-xs text-gray-400 align-top whitespace-nowrap">
+                                    {{ substr($time, 0, 5) }}
+                                </td>
+                                {{-- Sel per hari --}}
+                                @foreach($days as $dow => $date)
+                                    <td class="py-1.5 px-1.5 align-top min-w-[110px]">
+                                        @foreach($grid[$dow][$time] ?? [] as $session)
+                                            @php
+                                                $colorClass = $statusColors[$session->status] ?? 'bg-gray-100 text-gray-600';
+                                                $isCoretan  = in_array($session->status, $statusCoretan);
+                                                $instrumen  = $session->enrollment->package->instrument->name ?? '?';
+                                                $guruNama   = $session->teacher->name ?? '?';
+                                                $roomCode   = $session->room->code ?? '?';
+
+                                                // Data untuk popup Alpine (Task 5)
+                                                $popupData = [
+                                                    'studentName'  => $session->student->full_name ?? '?',
+                                                    'studentCode'  => $session->student->student_code ?? '?',
+                                                    'studentId'    => $session->student_id,
+                                                    'teacherName'  => $guruNama,
+                                                    'roomCode'     => $roomCode,
+                                                    'roomName'     => $session->room->name ?? '?',
+                                                    'startTime'    => substr($session->start_time, 0, 5),
+                                                    'endTime'      => substr($session->end_time ?? '', 0, 5),
+                                                    'status'       => $session->status,
+                                                    'statusLabel'  => $statusLabels[$session->status] ?? $session->status,
+                                                    'instrumen'    => $instrumen,
+                                                    'isScheduled'  => $session->status === 'SCHEDULED',
+                                                    'detailUrl'    => route('students.show', $session->student_id),
+                                                    'absensiUrl'   => route('sessions.index'),
+                                                ];
+                                            @endphp
+                                            <button type="button"
+                                                    @click="sesi = {{ Js::from($popupData) }}; open = true"
+                                                    class="w-full text-left rounded px-1.5 py-1 mb-1 text-xs
+                                                           {{ $colorClass }} hover:opacity-80 transition-opacity">
+                                                <div class="{{ $isCoretan ? 'line-through' : '' }} font-medium truncate">
+                                                    {{ $instrumen }} · {{ $guruNama }}
+                                                </div>
+                                                <div class="text-xs opacity-70 truncate">
+                                                    {{ $roomCode }} · {{ substr($session->start_time, 0, 5) }}
+                                                </div>
+                                            </button>
+                                        @endforeach
+                                    </td>
+                                @endforeach
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @endif
+
+            {{-- Popup detail diisi di Task 5 --}}
+
         </div>
 
     </div>
