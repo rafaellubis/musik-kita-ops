@@ -304,6 +304,17 @@
                         <td>{{ $item->description }}</td>
                         <td class="right">Rp {{ number_format($item->amount, 0, ',', '.') }}</td>
                     </tr>
+                    @if($item->discountItem)
+                        <tr style="color:#b45309;font-size:9.5pt;">
+                            <td class="code" style="padding-left:12pt;">DISKON</td>
+                            <td>↳ {{ $item->discountItem->discount_reason }}
+                                @if($item->discountItem->discount_type === 'PERCENT')
+                                    ({{ $item->discountItem->discount_value }}%)
+                                @endif
+                            </td>
+                            <td class="right">–Rp {{ number_format(abs($item->discountItem->amount), 0, ',', '.') }}</td>
+                        </tr>
+                    @endif
                 @endforeach
             </tbody>
         </table>
