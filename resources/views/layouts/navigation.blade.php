@@ -24,6 +24,8 @@
 
     <x-sidebar-item route="sessions.index" icon="🎵" label="Sesi"
         :active="request()->routeIs('sessions.*')" />
+    <x-sidebar-item route="kalender.index" icon="📅" label="Kalender"
+        :active="request()->routeIs('kalender.*')" />
     @hasanyrole('Owner|Admin')
     <x-sidebar-item route="absensi.index" icon="✅" label="Absensi"
         :active="request()->routeIs('absensi.*')" />
