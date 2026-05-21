@@ -29,7 +29,7 @@
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
             {{-- ===== STATISTIK BULAN INI ===== --}}
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 <div class="bg-white shadow-sm rounded-lg p-4 text-center">
                     <div class="text-2xl font-bold text-green-700">{{ $muridBaru }}</div>
                     <div class="text-xs text-gray-500 mt-1">Murid Baru Aktif</div>
@@ -53,7 +53,8 @@
                 <div class="px-4 py-3 bg-gray-50 border-b">
                     <h3 class="font-semibold text-sm">Distribusi per Status</h3>
                 </div>
-                <table class="w-full text-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
                     <tbody>
                         @php
                             $statusColors = [
@@ -94,6 +95,7 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
             </div>
 
             {{-- ===== DISTRIBUSI PER INSTRUMEN ===== --}}
@@ -102,7 +104,8 @@
                 <div class="px-4 py-3 bg-gray-50 border-b">
                     <h3 class="font-semibold text-sm">Distribusi Murid Aktif per Instrumen</h3>
                 </div>
-                <table class="w-full text-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
                     <thead class="border-b text-xs text-gray-500 uppercase">
                         <tr>
                             <th class="px-4 py-2 text-left">Instrumen</th>
@@ -130,6 +133,7 @@
                         </tr>
                     </tfoot>
                 </table>
+                </div>
             </div>
             @endif
 
