@@ -104,7 +104,8 @@
 
         {{-- ===== TABEL MURID ===== --}}
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden fade-in-up" style="animation-delay:140ms">
-            <table class="w-full">
+            <div class="overflow-x-auto">
+                <table class="w-full">
                 <thead>
                     <tr class="border-b border-gray-100 bg-gray-50">
                         <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-gray-500">Kode</th>
@@ -178,6 +179,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
 
             {{-- Pagination --}}
             <div class="px-4 py-3 border-t border-gray-100">
