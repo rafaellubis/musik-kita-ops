@@ -118,6 +118,8 @@ class StudentSeeder extends Seeder
                 'email' => 'eka.s@example.com',
                 'address' => 'Jl. Kebayoran No. 33, Jakarta Selatan',
                 'status' => 'Cuti',
+                'cuti_from' => now()->startOfMonth()->toDateString(),
+                'cuti_until' => now()->endOfMonth()->toDateString(),
                 'package_id' => $vocalRegBasic?->id,
                 'assigned_teacher_id' => $teacherDevi?->id,
                 'preferred_day' => 'Selasa',
