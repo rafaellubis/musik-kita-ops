@@ -70,7 +70,8 @@
                     <span class="text-sm text-gray-600">{{ $logs->total() }} entri ditemukan</span>
                 </div>
 
-                <table class="w-full text-xs">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
                     <thead class="border-b text-gray-500 uppercase">
                         <tr>
                             <th class="px-3 py-2 text-left">Waktu</th>
@@ -130,6 +131,7 @@
                         @endforelse
                     </tbody>
                 </table>
+                </div>
 
                 <div class="px-4 py-3 border-t">
                     {{ $logs->links() }}
