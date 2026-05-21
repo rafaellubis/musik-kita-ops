@@ -162,6 +162,7 @@
                     @endhasanyrole
                 </div>
             @else
+                <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50">
                         <tr class="border-b text-xs text-gray-500 uppercase text-left">
@@ -229,6 +230,7 @@
                         </tr>
                     </tfoot>
                 </table>
+                </div>
                 <div class="p-4">{{ $expenses->withQueryString()->links() }}</div>
             @endif
         </div>
