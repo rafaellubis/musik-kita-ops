@@ -42,6 +42,8 @@
         ];
         $cfg      = $statusCfg[$student->status] ?? $statusCfg['Calon'];
         $hariMap  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        // Cuti selesai jika tidak ada cuti_until, atau tanggal hari ini >= cuti_until
+        $cutiSelesai = !$student->cuti_until || now()->toDateString() >= $student->cuti_until->format('Y-m-d');
         $isKidsClass = $student->package
             && in_array($student->package->class_type, ['KIDS_CLASS', 'KIDS_CLASS_BUNDLE']);
         $activeEnrollment = $student->enrollments->firstWhere('status', 'ACTIVE');
@@ -103,6 +105,12 @@
                                 <span class="w-1.5 h-1.5 rounded-full" style="background:{{ $cfg['dot'] }}"></span>
                                 {{ $student->status }}
                             </span>
+                            {{-- Sub-teks periode cuti, hanya tampil jika status Cuti dan cuti_until terisi --}}
+                            @if($student->status === 'Cuti' && $student->cuti_until)
+                            <div class="text-xs mt-1" style="color:#FBBF24">
+                                Cuti s/d: {{ $student->cuti_until->format('d M Y') }}
+                            </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -163,6 +171,8 @@
                 @endif
 
                 @if($student->status === 'Cuti')
+                {{-- Tombol akhiri cuti: aktif jika periode cuti sudah selesai, disabled jika belum --}}
+                @if($cutiSelesai)
                 <form method="POST" action="{{ route('students.return-from-cuti', $student->id) }}"
                       onsubmit="return confirm('Akhiri cuti dan kembalikan ke Aktif?')" class="inline">
                     @csrf
@@ -172,6 +182,14 @@
                         ✅ Akhiri Cuti → Aktif
                     </button>
                 </form>
+                @else
+                <button disabled
+                        title="Cuti berlaku hingga {{ $student->cuti_until->format('d M Y') }}"
+                        class="px-4 py-2 rounded-lg text-sm font-semibold cursor-not-allowed"
+                        style="background:rgba(52,211,153,0.05);color:rgba(52,211,153,0.35);border:1px solid rgba(52,211,153,0.1)">
+                    ✅ Akhiri Cuti → Aktif
+                </button>
+                @endif
                 <button type="button" @click="openForm = openForm === 'cuti' ? null : 'cuti'"
                         class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
                         style="background:rgba(251,191,36,0.15);color:#FBBF24;border:1px solid rgba(251,191,36,0.3)">
@@ -419,11 +437,14 @@
                     </div>
                     <div class="text-xs text-gray-500 mb-3">Biaya Rp 100.000/pengajuan. Maks 1 bulan + perpanjang 1x.</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {{-- cuti_from hanya tampil saat ajukan baru (status Aktif); perpanjang tidak perlu --}}
+                        @if($student->status !== 'Cuti')
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Mulai Cuti <span class="text-red-400">*</span></label>
                             <input type="date" name="cuti_from" required min="{{ now()->toDateString() }}"
                                    class="block w-full rounded-lg text-sm px-3 py-2">
                         </div>
+                        @endif
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Sampai <span class="text-red-400">*</span></label>
                             <input type="date" name="cuti_until" required class="block w-full rounded-lg text-sm px-3 py-2">
