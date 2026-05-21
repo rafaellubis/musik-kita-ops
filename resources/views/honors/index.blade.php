@@ -136,79 +136,79 @@
                 </div>
             @else
                 <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50">
-                        <tr class="border-b text-left text-xs text-gray-500 uppercase">
-                            <th class="px-4 py-3">No. Slip</th>
-                            <th class="px-4 py-3">Guru</th>
-                            <th class="px-4 py-3 text-right">Honor Pokok</th>
-                            <th class="px-4 py-3 text-right">Transport</th>
-                            <th class="px-4 py-3 text-right">Lain-lain</th>
-                            <th class="px-4 py-3 text-right font-bold">Total</th>
-                            <th class="px-4 py-3 text-center">Status</th>
-                            <th class="px-4 py-3 text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($slips as $slip)
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="px-4 py-3 font-mono text-xs text-gray-500">{{ $slip->slip_number }}</td>
-                                <td class="px-4 py-3 font-medium">{{ $slip->teacher->name ?? '?' }}</td>
-                                <td class="px-4 py-3 text-right">
-                                    Rp {{ number_format($slip->base_honor, 0, ',', '.') }}
-                                </td>
-                                <td class="px-4 py-3 text-right">
-                                    {{ $slip->transport_honor > 0
-                                        ? 'Rp ' . number_format($slip->transport_honor, 0, ',', '.')
-                                        : '—' }}
-                                </td>
-                                <td class="px-4 py-3 text-right">
-                                    {{ $slip->other_honor > 0
-                                        ? 'Rp ' . number_format($slip->other_honor, 0, ',', '.')
-                                        : '—' }}
-                                </td>
-                                <td class="px-4 py-3 text-right font-bold">
-                                    Rp {{ number_format($slip->total_honor, 0, ',', '.') }}
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <span class="px-2 py-0.5 rounded text-xs border {{ $statusColors[$slip->status] }}">
-                                        {{ $statusLabels[$slip->status] }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 text-right whitespace-nowrap">
-                                    <a href="{{ route('honors.show', $slip) }}"
-                                       class="text-xs text-blue-600 hover:underline">Detail</a>
-                                    @if($isOwner && !$slip->isLocked())
-                                        ·
-                                        <a href="{{ route('honors.edit', $slip) }}"
-                                           class="text-xs text-indigo-600 hover:underline">Edit</a>
-                                    @endif
-                                    ·
-                                    <a href="{{ route('honors.print', $slip) }}" target="_blank"
-                                       class="text-xs text-gray-600 hover:underline">Cetak</a>
-                                </td>
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr class="border-b text-left text-xs text-gray-500 uppercase">
+                                <th class="px-4 py-3">No. Slip</th>
+                                <th class="px-4 py-3">Guru</th>
+                                <th class="px-4 py-3 text-right">Honor Pokok</th>
+                                <th class="px-4 py-3 text-right">Transport</th>
+                                <th class="px-4 py-3 text-right">Lain-lain</th>
+                                <th class="px-4 py-3 text-right font-bold">Total</th>
+                                <th class="px-4 py-3 text-center">Status</th>
+                                <th class="px-4 py-3 text-right">Aksi</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot class="bg-gray-50">
-                        <tr>
-                            <td colspan="2" class="px-4 py-2 text-xs text-gray-500">{{ $slips->total() }} slip</td>
-                            <td class="px-4 py-2 text-right text-sm font-medium">
-                                Rp {{ number_format($slips->sum('base_honor'), 0, ',', '.') }}
-                            </td>
-                            <td class="px-4 py-2 text-right text-sm font-medium">
-                                Rp {{ number_format($slips->sum('transport_honor'), 0, ',', '.') }}
-                            </td>
-                            <td class="px-4 py-2 text-right text-sm font-medium">
-                                Rp {{ number_format($slips->sum('other_honor'), 0, ',', '.') }}
-                            </td>
-                            <td class="px-4 py-2 text-right text-sm font-bold">
-                                Rp {{ number_format($slips->sum('total_honor'), 0, ',', '.') }}
-                            </td>
-                            <td colspan="2"></td>
-                        </tr>
-                    </tfoot>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach($slips as $slip)
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-mono text-xs text-gray-500">{{ $slip->slip_number }}</td>
+                                    <td class="px-4 py-3 font-medium">{{ $slip->teacher->name ?? '?' }}</td>
+                                    <td class="px-4 py-3 text-right">
+                                        Rp {{ number_format($slip->base_honor, 0, ',', '.') }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        {{ $slip->transport_honor > 0
+                                            ? 'Rp ' . number_format($slip->transport_honor, 0, ',', '.')
+                                            : '—' }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        {{ $slip->other_honor > 0
+                                            ? 'Rp ' . number_format($slip->other_honor, 0, ',', '.')
+                                            : '—' }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right font-bold">
+                                        Rp {{ number_format($slip->total_honor, 0, ',', '.') }}
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span class="px-2 py-0.5 rounded text-xs border {{ $statusColors[$slip->status] }}">
+                                            {{ $statusLabels[$slip->status] }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-right whitespace-nowrap">
+                                        <a href="{{ route('honors.show', $slip) }}"
+                                           class="text-xs text-blue-600 hover:underline">Detail</a>
+                                        @if($isOwner && !$slip->isLocked())
+                                            ·
+                                            <a href="{{ route('honors.edit', $slip) }}"
+                                               class="text-xs text-indigo-600 hover:underline">Edit</a>
+                                        @endif
+                                        ·
+                                        <a href="{{ route('honors.print', $slip) }}" target="_blank"
+                                           class="text-xs text-gray-600 hover:underline">Cetak</a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="bg-gray-50">
+                            <tr>
+                                <td colspan="2" class="px-4 py-2 text-xs text-gray-500">{{ $slips->total() }} slip</td>
+                                <td class="px-4 py-2 text-right text-sm font-medium">
+                                    Rp {{ number_format($slips->sum('base_honor'), 0, ',', '.') }}
+                                </td>
+                                <td class="px-4 py-2 text-right text-sm font-medium">
+                                    Rp {{ number_format($slips->sum('transport_honor'), 0, ',', '.') }}
+                                </td>
+                                <td class="px-4 py-2 text-right text-sm font-medium">
+                                    Rp {{ number_format($slips->sum('other_honor'), 0, ',', '.') }}
+                                </td>
+                                <td class="px-4 py-2 text-right text-sm font-bold">
+                                    Rp {{ number_format($slips->sum('total_honor'), 0, ',', '.') }}
+                                </td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
                 <div class="p-4">{{ $slips->withQueryString()->links() }}</div>
             @endif

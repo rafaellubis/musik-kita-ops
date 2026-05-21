@@ -155,12 +155,6 @@ Route::middleware('auth')->group(function () {
             [InvoiceController::class, 'applyFines']
         )->name('invoices.apply-fines');
 
-        // Import murid dari Excel (Fase 1 — migrasi data)
-        Route::get('/import',            [ImportController::class, 'index'])->name('import.index');
-        Route::get('/import/template',   [ImportController::class, 'downloadTemplate'])->name('import.template');
-        Route::post('/import/validate',  [ImportController::class, 'validate'])->name('import.validate');
-        Route::post('/import/confirm',   [ImportController::class, 'confirm'])->name('import.confirm');
-        Route::post('/import/cancel',    [ImportController::class, 'cancel'])->name('import.cancel');
     });
 
     /* ======================================================================
@@ -168,8 +162,16 @@ Route::middleware('auth')->group(function () {
      | - Paket: ubah harga = berdampak ke tagihan + honor
      | - PayrollConfig: ubah formula honor
      | - InvoiceComponent: ubah komponen tagihan
+     | - Import murid dari Excel (sekali pakai, migrasi data)
      |====================================================================== */
     Route::middleware('role:Owner')->group(function () {
+
+        // Import murid dari Excel (Fase 1 — migrasi data, akses dari halaman profil)
+        Route::get('/import',            [ImportController::class, 'index'])->name('import.index');
+        Route::get('/import/template',   [ImportController::class, 'downloadTemplate'])->name('import.template');
+        Route::post('/import/validate',  [ImportController::class, 'validate'])->name('import.validate');
+        Route::post('/import/confirm',   [ImportController::class, 'confirm'])->name('import.confirm');
+        Route::post('/import/cancel',    [ImportController::class, 'cancel'])->name('import.cancel');
 
         Route::resource('packages', PackageController::class)->except(['index', 'show']);
 

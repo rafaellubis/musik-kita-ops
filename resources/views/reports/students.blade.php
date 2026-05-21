@@ -55,46 +55,46 @@
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
-                    <tbody>
-                        @php
-                            $statusColors = [
-                                'Aktif'               => 'bg-green-100 text-green-700',
-                                'Trial'               => 'bg-yellow-100 text-yellow-700',
-                                'Calon'               => 'bg-gray-100 text-gray-600',
-                                'Cuti'                => 'bg-orange-100 text-orange-700',
-                                'Selesai'             => 'bg-blue-100 text-blue-700',
-                                'Mengundurkan Diri'   => 'bg-red-100 text-red-700',
-                            ];
-                            $total = max(1, array_sum($byStatus));
-                        @endphp
-                        @foreach($statusColors as $status => $colorClass)
-                            @php $count = $byStatus[$status] ?? 0; @endphp
-                            @if($count > 0)
-                            <tr class="border-b">
-                                <td class="px-4 py-2 w-8/12">
-                                    <div class="flex items-center gap-2">
-                                        <span class="px-2 py-0.5 rounded text-xs {{ $colorClass }}">{{ $status }}</span>
-                                        {{-- Progress bar --}}
-                                        <div class="flex-1 bg-gray-100 rounded h-1.5">
-                                            <div class="{{ str_replace('text-', 'bg-', explode(' ', $colorClass)[1]) }} h-1.5 rounded"
-                                                 style="width: {{ round($count / $total * 100) }}%"></div>
+                        <tbody>
+                            @php
+                                $statusColors = [
+                                    'Aktif'               => 'bg-green-100 text-green-700',
+                                    'Trial'               => 'bg-yellow-100 text-yellow-700',
+                                    'Calon'               => 'bg-gray-100 text-gray-600',
+                                    'Cuti'                => 'bg-orange-100 text-orange-700',
+                                    'Selesai'             => 'bg-blue-100 text-blue-700',
+                                    'Mengundurkan Diri'   => 'bg-red-100 text-red-700',
+                                ];
+                                $total = max(1, array_sum($byStatus));
+                            @endphp
+                            @foreach($statusColors as $status => $colorClass)
+                                @php $count = $byStatus[$status] ?? 0; @endphp
+                                @if($count > 0)
+                                <tr class="border-b">
+                                    <td class="px-4 py-2 w-8/12">
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-2 py-0.5 rounded text-xs {{ $colorClass }}">{{ $status }}</span>
+                                            {{-- Progress bar --}}
+                                            <div class="flex-1 bg-gray-100 rounded h-1.5">
+                                                <div class="{{ str_replace('text-', 'bg-', explode(' ', $colorClass)[1]) }} h-1.5 rounded"
+                                                     style="width: {{ round($count / $total * 100) }}%"></div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td class="px-4 py-2 text-right font-semibold">{{ $count }}</td>
-                                <td class="px-4 py-2 text-right text-gray-400 text-xs">
-                                    {{ round($count / $total * 100) }}%
-                                </td>
+                                    </td>
+                                    <td class="px-4 py-2 text-right font-semibold">{{ $count }}</td>
+                                    <td class="px-4 py-2 text-right text-gray-400 text-xs">
+                                        {{ round($count / $total * 100) }}%
+                                    </td>
+                                </tr>
+                                @endif
+                            @endforeach
+                            <tr class="bg-gray-50">
+                                <td class="px-4 py-2 font-medium">Total</td>
+                                <td class="px-4 py-2 text-right font-bold">{{ array_sum($byStatus) }}</td>
+                                <td class="px-4 py-2 text-right text-gray-400 text-xs">100%</td>
                             </tr>
-                            @endif
-                        @endforeach
-                        <tr class="bg-gray-50">
-                            <td class="px-4 py-2 font-medium">Total</td>
-                            <td class="px-4 py-2 text-right font-bold">{{ array_sum($byStatus) }}</td>
-                            <td class="px-4 py-2 text-right text-gray-400 text-xs">100%</td>
-                        </tr>
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -106,33 +106,33 @@
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
-                    <thead class="border-b text-xs text-gray-500 uppercase">
-                        <tr>
-                            <th class="px-4 py-2 text-left">Instrumen</th>
-                            <th class="px-4 py-2 text-right">Murid Aktif</th>
-                            <th class="px-4 py-2 text-right">%</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php $totalAktif = $byInstrument->sum('total'); @endphp
-                        @foreach($byInstrument as $row)
-                        <tr class="border-b">
-                            <td class="px-4 py-2 font-medium">{{ $row->instr_name }}</td>
-                            <td class="px-4 py-2 text-right font-semibold">{{ $row->total }}</td>
-                            <td class="px-4 py-2 text-right text-gray-400 text-xs">
-                                {{ $totalAktif > 0 ? round($row->total / $totalAktif * 100) : 0 }}%
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot class="bg-gray-50">
-                        <tr>
-                            <td class="px-4 py-2 font-medium">Total</td>
-                            <td class="px-4 py-2 text-right font-bold">{{ $totalAktif }}</td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
-                </table>
+                        <thead class="border-b text-xs text-gray-500 uppercase">
+                            <tr>
+                                <th class="px-4 py-2 text-left">Instrumen</th>
+                                <th class="px-4 py-2 text-right">Murid Aktif</th>
+                                <th class="px-4 py-2 text-right">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php $totalAktif = $byInstrument->sum('total'); @endphp
+                            @foreach($byInstrument as $row)
+                            <tr class="border-b">
+                                <td class="px-4 py-2 font-medium">{{ $row->instr_name }}</td>
+                                <td class="px-4 py-2 text-right font-semibold">{{ $row->total }}</td>
+                                <td class="px-4 py-2 text-right text-gray-400 text-xs">
+                                    {{ $totalAktif > 0 ? round($row->total / $totalAktif * 100) : 0 }}%
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="bg-gray-50">
+                            <tr>
+                                <td class="px-4 py-2 font-medium">Total</td>
+                                <td class="px-4 py-2 text-right font-bold">{{ $totalAktif }}</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
             </div>
             @endif

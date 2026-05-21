@@ -72,65 +72,65 @@
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-xs">
-                    <thead class="border-b text-gray-500 uppercase">
-                        <tr>
-                            <th class="px-3 py-2 text-left">Waktu</th>
-                            <th class="px-3 py-2 text-left">User</th>
-                            <th class="px-3 py-2 text-center">Aksi</th>
-                            <th class="px-3 py-2 text-left">Entitas</th>
-                            <th class="px-3 py-2 text-left">Label</th>
-                            <th class="px-3 py-2 text-left">Catatan</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($logs as $log)
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="px-3 py-2 whitespace-nowrap text-gray-500">
-                                    {{ $log->created_at->format('d/m H:i') }}
-                                    <div class="text-gray-300">{{ $log->created_at->format('Y') }}</div>
-                                </td>
-                                <td class="px-3 py-2 font-medium">
-                                    {{ $log->user_name ?? '(sistem)' }}
-                                </td>
-                                <td class="px-3 py-2 text-center">
-                                    @php
-                                        $actionColors = [
-                                            'CREATE'    => 'bg-green-100 text-green-700',
-                                            'UPDATE'    => 'bg-blue-100 text-blue-700',
-                                            'DELETE'    => 'bg-red-100 text-red-700',
-                                            'LOGIN'     => 'bg-gray-100 text-gray-600',
-                                            'LOGOUT'    => 'bg-gray-100 text-gray-600',
-                                            'PRINT'     => 'bg-purple-100 text-purple-700',
-                                            'VOID'      => 'bg-orange-100 text-orange-700',
-                                            'LIFECYCLE' => 'bg-yellow-100 text-yellow-700',
-                                        ];
-                                    @endphp
-                                    <span class="px-2 py-0.5 rounded {{ $actionColors[$log->action] ?? 'bg-gray-100' }}">
-                                        {{ $log->action_label }}
-                                    </span>
-                                </td>
-                                <td class="px-3 py-2 text-gray-500">
-                                    {{ $log->entity_type ?? '—' }}
-                                    @if($log->entity_id)
-                                        <span class="text-gray-300">#{{ $log->entity_id }}</span>
-                                    @endif
-                                </td>
-                                <td class="px-3 py-2 font-medium">
-                                    {{ Str::limit($log->entity_label, 40) ?? '—' }}
-                                </td>
-                                <td class="px-3 py-2 text-gray-500">
-                                    {{ Str::limit($log->notes, 50) ?? '—' }}
-                                </td>
-                            </tr>
-                        @empty
+                        <thead class="border-b text-gray-500 uppercase">
                             <tr>
-                                <td colspan="6" class="px-4 py-8 text-center text-gray-400">
-                                    Belum ada entri audit log.
-                                </td>
+                                <th class="px-3 py-2 text-left">Waktu</th>
+                                <th class="px-3 py-2 text-left">User</th>
+                                <th class="px-3 py-2 text-center">Aksi</th>
+                                <th class="px-3 py-2 text-left">Entitas</th>
+                                <th class="px-3 py-2 text-left">Label</th>
+                                <th class="px-3 py-2 text-left">Catatan</th>
                             </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @forelse($logs as $log)
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-500">
+                                        {{ $log->created_at->format('d/m H:i') }}
+                                        <div class="text-gray-300">{{ $log->created_at->format('Y') }}</div>
+                                    </td>
+                                    <td class="px-3 py-2 font-medium">
+                                        {{ $log->user_name ?? '(sistem)' }}
+                                    </td>
+                                    <td class="px-3 py-2 text-center">
+                                        @php
+                                            $actionColors = [
+                                                'CREATE'    => 'bg-green-100 text-green-700',
+                                                'UPDATE'    => 'bg-blue-100 text-blue-700',
+                                                'DELETE'    => 'bg-red-100 text-red-700',
+                                                'LOGIN'     => 'bg-gray-100 text-gray-600',
+                                                'LOGOUT'    => 'bg-gray-100 text-gray-600',
+                                                'PRINT'     => 'bg-purple-100 text-purple-700',
+                                                'VOID'      => 'bg-orange-100 text-orange-700',
+                                                'LIFECYCLE' => 'bg-yellow-100 text-yellow-700',
+                                            ];
+                                        @endphp
+                                        <span class="px-2 py-0.5 rounded {{ $actionColors[$log->action] ?? 'bg-gray-100' }}">
+                                            {{ $log->action_label }}
+                                        </span>
+                                    </td>
+                                    <td class="px-3 py-2 text-gray-500">
+                                        {{ $log->entity_type ?? '—' }}
+                                        @if($log->entity_id)
+                                            <span class="text-gray-300">#{{ $log->entity_id }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-3 py-2 font-medium">
+                                        {{ Str::limit($log->entity_label, 40) ?? '—' }}
+                                    </td>
+                                    <td class="px-3 py-2 text-gray-500">
+                                        {{ Str::limit($log->notes, 50) ?? '—' }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="px-4 py-8 text-center text-gray-400">
+                                        Belum ada entri audit log.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
 
                 <div class="px-4 py-3 border-t">

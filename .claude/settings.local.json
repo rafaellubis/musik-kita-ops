@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan *)",
+      "Bash(php -l resources/views/invoices/print.blade.php)",
+      "Bash(php -l resources/views/payments/receipt.blade.php)",
+      "Bash(xargs cat)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(php -r ' *)",
+      "Bash(curl *)",
+      "Bash(node *)",
+      "Bash(powershell *)",
+      "Bash(cmd *)",
+      "PowerShell(node \"C:/Users/Rafael/.claude/plugins/cache/understand-anything/understand-anything/2.6.3/skills/understand/extract-structure.mjs\" \"C:/laragon/www/musik-kita-ops/.understand-anything/tmp/ua-file-analyzer-input-5.json\" \"C:/laragon/www/musik-kita-ops/.understand-anything/tmp/ua-file-extract-results-5.json\" 2>&1)",
+      "Bash(bash -c \"node '/c/Users/Rafael/.claude/plugins/cache/understand-anything/understand-anything/2.6.3/skills/understand/extract-structure.mjs' '/c/laragon/www/musik-kita-ops/.understand-anything/tmp/ua-file-analyzer-input-1.json' '/c/laragon/www/musik-kita-ops/.understand-anything/tmp/ua-file-extract-results-1.json'\")",
+      "PowerShell($env:NODE_PATH = \"C:\\\\Users\\\\Rafael\\\\.claude\\\\plugins\\\\cache\\\\understand-anything\\\\understand-anything\\\\2.6.3\\\\skills\\\\understand\"; node --input-type=module --eval \"import\\('./extract-structure.mjs'\\)\" 2>&1 | Select-Object -First 5)",
+      "Read(//c/laragon/bin/**)",
+      "Read(//c/laragon//**)",
+      "Bash(composer dump-autoload *)",
+      "Bash(git *)",
+      "Bash(php -l database/migrations/2026_05_15_233801_add_cancelled_status_to_class_sessions.php)",
+      "Bash(php -l app/Models/ClassSession.php)",
+      "Bash(php *)",
+      "Bash(mysql -u root mk_operasional -e \"DESCRIBE rooms;\")",
+      "Bash(python3 *)",
+      "Bash(claude plugin *)"
+    ]
+  }
+}

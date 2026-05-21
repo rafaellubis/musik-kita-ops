@@ -106,79 +106,79 @@
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden fade-in-up" style="animation-delay:140ms">
             <div class="overflow-x-auto">
                 <table class="w-full">
-                <thead>
-                    <tr class="border-b border-gray-100 bg-gray-50">
-                        <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-gray-500">Kode</th>
-                        <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-gray-500">Murid</th>
-                        <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-gray-500">L/P</th>
-                        <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-gray-500">Umur</th>
-                        <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-gray-500">Paket</th>
-                        <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-gray-500">Guru</th>
-                        <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-gray-500">Jadwal</th>
-                        <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-gray-500">Status</th>
-                        <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-gray-500">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($students as $s)
-                    @php $cfg = $statusCfg[$s->status] ?? $statusCfg['Calon']; @endphp
-                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
-                        onclick="window.location='{{ route('students.show', $s->id) }}'">
-                        <td class="px-4 py-3 font-mono text-xs font-semibold" style="color:#D4A853">
-                            {{ $s->student_code }}
-                        </td>
-                        <td class="px-4 py-3">
-                            <div class="text-sm font-semibold text-gray-800">{{ $s->full_name }}</div>
-                            @if($s->nickname)
-                            <div class="text-xs text-gray-500">"{{ $s->nickname }}"</div>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3 text-center text-sm text-gray-500">{{ $s->gender }}</td>
-                        <td class="px-4 py-3 text-center text-sm text-gray-700">{{ $s->age ?? '—' }}</td>
-                        <td class="px-4 py-3 text-xs text-gray-500 max-w-[130px] truncate">
-                            {{ $s->package?->code ?? '—' }}
-                        </td>
-                        <td class="px-4 py-3 text-sm text-gray-700">
-                            {{ $s->assignedTeacher?->name ?? '—' }}
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            @if($s->preferred_day !== null)
-                            @php
-                                $hariMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-                                $hari    = $hariMap[$s->preferred_day] ?? '—';
-                                $jam     = $s->preferred_time ? substr($s->preferred_time, 0, 5) : '—';
-                            @endphp
-                            <div class="text-xs text-gray-700">{{ $hari }}</div>
-                            <div class="text-xs text-gray-500">{{ $jam }}</div>
-                            @else
-                            <span class="text-xs text-gray-400">—</span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
-                                  style="background:{{ $cfg['bg'] }};color:{{ $cfg['color'] }}">
-                                <span class="w-1.5 h-1.5 rounded-full shrink-0"
-                                      style="background:{{ $cfg['dot'] }}"></span>
-                                {{ $s->status }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 text-center" onclick="event.stopPropagation()">
-                            <a href="{{ route('students.show', $s->id) }}"
-                               class="inline-block px-3 py-1 rounded-lg text-xs font-semibold transition-colors"
-                               style="background:rgba(212,168,83,0.15);color:#D4A853">
-                                Detail →
-                            </a>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="9" class="px-4 py-12 text-center text-sm text-gray-400">
-                            Tidak ada murid yang sesuai filter.
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    <thead>
+                        <tr class="border-b border-gray-100 bg-gray-50">
+                            <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-gray-500">Kode</th>
+                            <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-gray-500">Murid</th>
+                            <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-gray-500">L/P</th>
+                            <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-gray-500">Umur</th>
+                            <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-gray-500">Paket</th>
+                            <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-gray-500">Guru</th>
+                            <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-gray-500">Jadwal</th>
+                            <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-gray-500">Status</th>
+                            <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-gray-500">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($students as $s)
+                        @php $cfg = $statusCfg[$s->status] ?? $statusCfg['Calon']; @endphp
+                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
+                            onclick="window.location='{{ route('students.show', $s->id) }}'">
+                            <td class="px-4 py-3 font-mono text-xs font-semibold" style="color:#D4A853">
+                                {{ $s->student_code }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="text-sm font-semibold text-gray-800">{{ $s->full_name }}</div>
+                                @if($s->nickname)
+                                <div class="text-xs text-gray-500">"{{ $s->nickname }}"</div>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-center text-sm text-gray-500">{{ $s->gender }}</td>
+                            <td class="px-4 py-3 text-center text-sm text-gray-700">{{ $s->age ?? '—' }}</td>
+                            <td class="px-4 py-3 text-xs text-gray-500 max-w-[130px] truncate">
+                                {{ $s->package?->code ?? '—' }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700">
+                                {{ $s->assignedTeacher?->name ?? '—' }}
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                @if($s->preferred_day !== null)
+                                @php
+                                    $hariMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+                                    $hari    = $hariMap[$s->preferred_day] ?? '—';
+                                    $jam     = $s->preferred_time ? substr($s->preferred_time, 0, 5) : '—';
+                                @endphp
+                                <div class="text-xs text-gray-700">{{ $hari }}</div>
+                                <div class="text-xs text-gray-500">{{ $jam }}</div>
+                                @else
+                                <span class="text-xs text-gray-400">—</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                                      style="background:{{ $cfg['bg'] }};color:{{ $cfg['color'] }}">
+                                    <span class="w-1.5 h-1.5 rounded-full shrink-0"
+                                          style="background:{{ $cfg['dot'] }}"></span>
+                                    {{ $s->status }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-center" onclick="event.stopPropagation()">
+                                <a href="{{ route('students.show', $s->id) }}"
+                                   class="inline-block px-3 py-1 rounded-lg text-xs font-semibold transition-colors"
+                                   style="background:rgba(212,168,83,0.15);color:#D4A853">
+                                    Detail →
+                                </a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="9" class="px-4 py-12 text-center text-sm text-gray-400">
+                                Tidak ada murid yang sesuai filter.
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
 
             {{-- Pagination --}}
