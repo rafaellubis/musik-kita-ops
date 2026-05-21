@@ -135,6 +135,7 @@
                     @endif
                 </div>
             @else
+                <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50">
                         <tr class="border-b text-left text-xs text-gray-500 uppercase">
@@ -208,6 +209,7 @@
                         </tr>
                     </tfoot>
                 </table>
+                </div>
                 <div class="p-4">{{ $slips->withQueryString()->links() }}</div>
             @endif
         </div>
