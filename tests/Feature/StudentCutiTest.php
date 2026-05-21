@@ -131,6 +131,23 @@ class StudentCutiTest extends TestCase
         ]);
     }
 
+    public function test_perpanjang_cuti_dengan_tanggal_lebih_awal_ditolak(): void
+    {
+        $this->student->update([
+            'status'     => 'Cuti',
+            'cuti_from'  => '2026-07-01',
+            'cuti_until' => '2026-07-31',
+        ]);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/melebihi tanggal cuti saat ini/i');
+
+        $this->lifecycle->ajukanCuti($this->student, [
+            'cuti_until' => '2026-07-20', // lebih awal dari cuti_until sekarang (2026-07-31)
+            'reason'     => 'Coba persingkat',
+        ]);
+    }
+
     // ===== aktifkanDariCuti() =====
 
     public function test_akhiri_cuti_sebelum_cuti_until_ditolak(): void

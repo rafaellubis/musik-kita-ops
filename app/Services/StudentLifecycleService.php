@@ -261,10 +261,21 @@ class StudentLifecycleService
 
         $isExtension = $student->status === 'Cuti';
 
-        // Validasi maks 2 bulan total (berlaku hanya untuk perpanjang)
+        // Validasi perpanjang cuti
         if ($isExtension) {
-            $originalFrom = \Carbon\Carbon::parse($student->cuti_from);
+            // Perpanjang harus memperpanjang, bukan mempersingkat — cuti_until baru
+            // HARUS melebihi cuti_until saat ini.
+            $currentUntil = \Carbon\Carbon::parse($student->cuti_until);
             $newUntil     = \Carbon\Carbon::parse($data['cuti_until']);
+            if (!$newUntil->gt($currentUntil)) {
+                throw new InvalidArgumentException(
+                    'Perpanjang cuti harus melebihi tanggal cuti saat ini (' .
+                    $currentUntil->format('d M Y') . ').'
+                );
+            }
+
+            // Validasi maks 2 bulan total (dihitung dari cuti_from awal)
+            $originalFrom = \Carbon\Carbon::parse($student->cuti_from);
             if ($originalFrom->diffInDays($newUntil) > 62) {
                 throw new InvalidArgumentException(
                     'Total cuti melebihi batas maksimal 2 bulan.'
