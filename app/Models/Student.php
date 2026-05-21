@@ -23,6 +23,8 @@ class Student extends Model
         'preferred_day', 'preferred_time', 'trial_date', 'active_since',
         // Tracking
         'last_session_at',
+        // Cuti
+        'cuti_from', 'cuti_until',
     ];
 
     protected $casts = [
@@ -30,6 +32,8 @@ class Student extends Model
         'trial_date' => 'datetime',
         'active_since' => 'date',
         'last_session_at' => 'datetime',
+        'cuti_from' => 'date',
+        'cuti_until' => 'date',
     ];
 
     // ============= RELATIONSHIPS =============
