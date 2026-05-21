@@ -262,6 +262,15 @@ Route::middleware('auth')->group(function () {
         Route::delete('invoice-items/{invoiceItem}',
             [InvoiceItemController::class, 'destroy']
         )->name('invoice-items.destroy');
+
+        // Diskon per item invoice — beri/update dan hapus
+        Route::post('invoice-items/{invoiceItem}/discount',
+            [\App\Http\Controllers\DiscountController::class, 'store']
+        )->name('invoice-items.discount.store');
+
+        Route::delete('invoice-items/{invoiceItem}/discount',
+            [\App\Http\Controllers\DiscountController::class, 'destroy']
+        )->name('invoice-items.discount.destroy');
     });
 
     /* ======================================================================
