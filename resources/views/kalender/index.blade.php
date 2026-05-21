@@ -18,7 +18,7 @@
                        class="px-3 py-1.5 rounded text-sm border border-gray-200 hover:bg-gray-50 transition-colors">
                         ← Minggu Lalu
                     </a>
-                    <span class="px-4 py-1.5 text-sm font-semibold text-gray-800 whitespace-nowrap">
+                    <span class="px-4 py-1.5 text-sm font-semibold text-mk-text whitespace-nowrap">
                         {{ $weekStart->translatedFormat('d M') }}
                         –
                         {{ $weekEnd->translatedFormat('d M Y') }}
@@ -39,8 +39,7 @@
         </div>
 
         {{-- ===== FILTER BAR ===== --}}
-        <div class="bg-white shadow-sm sm:rounded-lg p-4"
-             x-data>
+        <div class="bg-white shadow-sm sm:rounded-lg p-4">
             <form method="GET" action="{{ route('kalender.index') }}" id="filter-form">
                 {{-- Pertahankan week aktif --}}
                 <input type="hidden" name="week" value="{{ $weekStart->format('Y-m-d') }}">
@@ -49,7 +48,7 @@
                     <div>
                         <label class="block text-xs font-medium text-gray-600 mb-1">Guru</label>
                         <select name="teacher_id"
-                                class="border-gray-300 rounded text-sm"
+                                class="border border-gray-300 rounded px-2 py-1.5 text-sm"
                                 @change="$el.form.submit()">
                             <option value="">Semua Guru</option>
                             @foreach($teachers as $t)
@@ -64,7 +63,7 @@
                     <div>
                         <label class="block text-xs font-medium text-gray-600 mb-1">Ruangan</label>
                         <select name="room_id"
-                                class="border-gray-300 rounded text-sm"
+                                class="border border-gray-300 rounded px-2 py-1.5 text-sm"
                                 @change="$el.form.submit()">
                             <option value="">Semua Ruangan</option>
                             @foreach($rooms as $r)
