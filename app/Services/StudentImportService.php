@@ -254,6 +254,18 @@ class StudentImportService
             }
         }
 
+        // cuti_until: wajib jika status = Cuti, harus format YYYY-MM-DD
+        if (($row['status'] ?? '') === 'Cuti') {
+            if (empty($row['cuti_until'])) {
+                $errors[] = 'cuti_until wajib diisi jika status = Cuti (format: YYYY-MM-DD)';
+            } else {
+                $parsed = \DateTime::createFromFormat('Y-m-d', $row['cuti_until']);
+                if (!$parsed || $parsed->format('Y-m-d') !== $row['cuti_until']) {
+                    $errors[] = 'cuti_until harus format YYYY-MM-DD (contoh: 2026-07-31)';
+                }
+            }
+        }
+
         // ---------- FOREIGN KEY ----------
 
         // Kode paket harus ditemukan di tabel packages dan statusnya aktif
