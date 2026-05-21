@@ -203,7 +203,69 @@
             </div>
             @endif
 
-            {{-- Popup detail diisi di Task 5 --}}
+            {{-- ===== POPUP DETAIL SESI (Alpine) ===== --}}
+            <div x-show="open"
+                 x-cloak
+                 @click.self="open = false"
+                 class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-5"
+                     @click.stop>
+
+                    {{-- Header popup --}}
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="font-semibold text-gray-800" x-text="sesi.studentName"></h3>
+                            <div class="text-xs text-gray-400 font-mono" x-text="sesi.studentCode"></div>
+                        </div>
+                        <button type="button"
+                                @click="open = false"
+                                class="text-gray-400 hover:text-gray-600 text-lg leading-none p-1">
+                            ×
+                        </button>
+                    </div>
+
+                    {{-- Detail sesi --}}
+                    <div class="space-y-1.5 text-sm text-gray-600 border-t pt-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Instrumen</span>
+                            <span class="font-medium" x-text="sesi.instrumen"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Guru</span>
+                            <span x-text="sesi.teacherName"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Ruangan</span>
+                            <span x-text="sesi.roomCode + ' – ' + sesi.roomName"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Jam</span>
+                            <span x-text="sesi.startTime + (sesi.endTime ? ' – ' + sesi.endTime : '')"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Status</span>
+                            <span class="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700"
+                                  x-text="sesi.statusLabel"></span>
+                        </div>
+                    </div>
+
+                    {{-- Tombol aksi --}}
+                    <div class="mt-4 flex gap-2">
+                        <a :href="sesi.detailUrl"
+                           class="flex-1 text-center px-3 py-2 rounded text-sm border border-gray-200
+                                  text-gray-600 hover:bg-gray-50 transition-colors">
+                            Detail Murid
+                        </a>
+                        <a x-show="sesi.isScheduled"
+                           :href="sesi.absensiUrl"
+                           class="flex-1 text-center px-3 py-2 rounded text-sm font-medium
+                                  bg-indigo-600 hover:bg-indigo-700 text-white transition-colors">
+                            Catat Absensi
+                        </a>
+                    </div>
+
+                </div>
+            </div>
 
         </div>
 
