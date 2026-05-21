@@ -136,49 +136,51 @@
                     @endif
                 </span>
             </div>
-            <table class="w-full text-sm">
-                <thead class="border-b text-xs text-gray-500 uppercase">
-                    <tr>
-                        <th class="px-4 py-2 text-left">Guru</th>
-                        <th class="px-4 py-2 text-right">Honor Pokok</th>
-                        <th class="px-4 py-2 text-right">Transport</th>
-                        <th class="px-4 py-2 text-right">Total</th>
-                        <th class="px-4 py-2 text-center">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($honorSlips as $slip)
-                    <tr class="border-b">
-                        <td class="px-4 py-2 font-medium">{{ $slip->teacher->name }}</td>
-                        <td class="px-4 py-2 text-right font-mono text-xs">
-                            Rp {{ number_format($slip->base_honor, 0, ',', '.') }}
-                        </td>
-                        <td class="px-4 py-2 text-right font-mono text-xs">
-                            Rp {{ number_format($slip->transport_honor, 0, ',', '.') }}
-                        </td>
-                        <td class="px-4 py-2 text-right font-mono text-xs font-semibold">
-                            Rp {{ number_format($slip->total_honor, 0, ',', '.') }}
-                        </td>
-                        <td class="px-4 py-2 text-center">
-                            @if($slip->status === 'PAID')
-                                <span class="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">Dibayar</span>
-                            @else
-                                <span class="px-2 py-0.5 rounded text-xs bg-yellow-100 text-yellow-700">{{ $slip->status_label }}</span>
-                            @endif
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-                <tfoot class="bg-gray-50">
-                    <tr>
-                        <td colspan="3" class="px-4 py-2 text-sm font-medium">Total Honor</td>
-                        <td class="px-4 py-2 text-right font-bold font-mono text-sm">
-                            Rp {{ number_format($totalHonor, 0, ',', '.') }}
-                        </td>
-                        <td></td>
-                    </tr>
-                </tfoot>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="border-b text-xs text-gray-500 uppercase">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Guru</th>
+                            <th class="px-4 py-2 text-right">Honor Pokok</th>
+                            <th class="px-4 py-2 text-right">Transport</th>
+                            <th class="px-4 py-2 text-right">Total</th>
+                            <th class="px-4 py-2 text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($honorSlips as $slip)
+                        <tr class="border-b">
+                            <td class="px-4 py-2 font-medium">{{ $slip->teacher->name }}</td>
+                            <td class="px-4 py-2 text-right font-mono text-xs">
+                                Rp {{ number_format($slip->base_honor, 0, ',', '.') }}
+                            </td>
+                            <td class="px-4 py-2 text-right font-mono text-xs">
+                                Rp {{ number_format($slip->transport_honor, 0, ',', '.') }}
+                            </td>
+                            <td class="px-4 py-2 text-right font-mono text-xs font-semibold">
+                                Rp {{ number_format($slip->total_honor, 0, ',', '.') }}
+                            </td>
+                            <td class="px-4 py-2 text-center">
+                                @if($slip->status === 'PAID')
+                                    <span class="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">Dibayar</span>
+                                @else
+                                    <span class="px-2 py-0.5 rounded text-xs bg-yellow-100 text-yellow-700">{{ $slip->status_label }}</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot class="bg-gray-50">
+                        <tr>
+                            <td colspan="3" class="px-4 py-2 text-sm font-medium">Total Honor</td>
+                            <td class="px-4 py-2 text-right font-bold font-mono text-sm">
+                                Rp {{ number_format($totalHonor, 0, ',', '.') }}
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
         @endif
 
@@ -191,33 +193,35 @@
                 </span>
             </div>
             @if($expenseByCategory->count() > 0)
-            <table class="w-full text-sm">
-                <thead class="border-b text-xs text-gray-500 uppercase">
-                    <tr>
-                        <th class="px-4 py-2 text-left">Kategori</th>
-                        <th class="px-4 py-2 text-center">Transaksi</th>
-                        <th class="px-4 py-2 text-right">Total</th>
-                        <th class="px-4 py-2 text-right">%</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($expenseByCategory as $cat)
-                    <tr class="border-b">
-                        <td class="px-4 py-2">
-                            <span class="font-medium">{{ $cat->cat_name }}</span>
-                            <span class="text-xs text-gray-400 ml-1">{{ $cat->cat_code }}</span>
-                        </td>
-                        <td class="px-4 py-2 text-center text-gray-500">{{ $cat->cnt }}</td>
-                        <td class="px-4 py-2 text-right font-mono text-xs">
-                            Rp {{ number_format($cat->total, 0, ',', '.') }}
-                        </td>
-                        <td class="px-4 py-2 text-right text-gray-500 text-xs">
-                            {{ $totalPengeluaran > 0 ? number_format($cat->total / $totalPengeluaran * 100, 1) : 0 }}%
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="border-b text-xs text-gray-500 uppercase">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Kategori</th>
+                            <th class="px-4 py-2 text-center">Transaksi</th>
+                            <th class="px-4 py-2 text-right">Total</th>
+                            <th class="px-4 py-2 text-right">%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($expenseByCategory as $cat)
+                        <tr class="border-b">
+                            <td class="px-4 py-2">
+                                <span class="font-medium">{{ $cat->cat_name }}</span>
+                                <span class="text-xs text-gray-400 ml-1">{{ $cat->cat_code }}</span>
+                            </td>
+                            <td class="px-4 py-2 text-center text-gray-500">{{ $cat->cnt }}</td>
+                            <td class="px-4 py-2 text-right font-mono text-xs">
+                                Rp {{ number_format($cat->total, 0, ',', '.') }}
+                            </td>
+                            <td class="px-4 py-2 text-right text-gray-500 text-xs">
+                                {{ $totalPengeluaran > 0 ? number_format($cat->total / $totalPengeluaran * 100, 1) : 0 }}%
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
             @else
             <div class="px-4 py-6 text-center text-gray-400 text-sm">Tidak ada pengeluaran bulan ini.</div>
             @endif
