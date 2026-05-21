@@ -168,70 +168,74 @@
                 <p class="text-sm text-gray-500">Belum ada sesi yang dihitung untuk bulan ini.</p>
             @else
                 {{-- Tabel ringkasan per kode --}}
-                <table class="w-full text-sm mb-6">
-                    <thead>
-                        <tr class="border-b text-xs text-gray-500 uppercase text-left">
-                            <th class="py-1.5">Kode</th>
-                            <th class="py-1.5">Keterangan</th>
-                            <th class="py-1.5 text-right">Jumlah Sesi</th>
-                            <th class="py-1.5 text-right">Total Honor</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($breakdown as $code => $row)
-                            <tr class="border-b">
-                                <td class="py-2 font-mono text-xs text-gray-600">{{ $code }}</td>
-                                <td class="py-2">{{ $honorLabels[$code] ?? $code }}</td>
-                                <td class="py-2 text-right">{{ $row['count'] }}</td>
-                                <td class="py-2 text-right font-medium">
-                                    Rp {{ number_format($row['total'], 0, ',', '.') }}
+                <div class="overflow-x-auto mb-6">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b text-xs text-gray-500 uppercase text-left">
+                                <th class="py-1.5">Kode</th>
+                                <th class="py-1.5">Keterangan</th>
+                                <th class="py-1.5 text-right">Jumlah Sesi</th>
+                                <th class="py-1.5 text-right">Total Honor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($breakdown as $code => $row)
+                                <tr class="border-b">
+                                    <td class="py-2 font-mono text-xs text-gray-600">{{ $code }}</td>
+                                    <td class="py-2">{{ $honorLabels[$code] ?? $code }}</td>
+                                    <td class="py-2 text-right">{{ $row['count'] }}</td>
+                                    <td class="py-2 text-right font-medium">
+                                        Rp {{ number_format($row['total'], 0, ',', '.') }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                            <tr class="font-bold border-t-2">
+                                <td colspan="2" class="py-2 text-gray-700">Total</td>
+                                <td class="py-2 text-right">{{ $sessions->count() }}</td>
+                                <td class="py-2 text-right">
+                                    Rp {{ number_format($sessions->sum('honor_amount'), 0, ',', '.') }}
                                 </td>
                             </tr>
-                        @endforeach
-                        <tr class="font-bold border-t-2">
-                            <td colspan="2" class="py-2 text-gray-700">Total</td>
-                            <td class="py-2 text-right">{{ $sessions->count() }}</td>
-                            <td class="py-2 text-right">
-                                Rp {{ number_format($sessions->sum('honor_amount'), 0, ',', '.') }}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
 
                 {{-- Detail sesi (collapsible per murid) --}}
                 <details>
                     <summary class="cursor-pointer text-sm text-blue-600 hover:underline mb-3">
                         Lihat detail {{ $sessions->count() }} sesi →
                     </summary>
-                    <table class="w-full text-xs mt-2">
-                        <thead>
-                            <tr class="border-b text-gray-500 uppercase text-left">
-                                <th class="py-1.5">Tanggal</th>
-                                <th class="py-1.5">Murid</th>
-                                <th class="py-1.5">Status</th>
-                                <th class="py-1.5">Kode</th>
-                                <th class="py-1.5 text-right">Honor</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($sessions as $sesi)
-                                <tr class="border-b hover:bg-gray-50">
-                                    <td class="py-1.5">{{ $sesi->session_date->format('d M') }}</td>
-                                    <td class="py-1.5">
-                                        {{ $sesi->student->full_name ?? '?' }}
-                                        @if($sesi->substitute_teacher_id == $honor->teacher_id)
-                                            <span class="text-orange-600">(pengganti)</span>
-                                        @endif
-                                    </td>
-                                    <td class="py-1.5">{{ $sesi->status }}</td>
-                                    <td class="py-1.5 font-mono">{{ $sesi->honor_code ?? '—' }}</td>
-                                    <td class="py-1.5 text-right">
-                                        Rp {{ number_format($sesi->honor_amount, 0, ',', '.') }}
-                                    </td>
+                    <div class="overflow-x-auto mt-2">
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="border-b text-gray-500 uppercase text-left">
+                                    <th class="py-1.5">Tanggal</th>
+                                    <th class="py-1.5">Murid</th>
+                                    <th class="py-1.5">Status</th>
+                                    <th class="py-1.5">Kode</th>
+                                    <th class="py-1.5 text-right">Honor</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach($sessions as $sesi)
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-1.5">{{ $sesi->session_date->format('d M') }}</td>
+                                        <td class="py-1.5">
+                                            {{ $sesi->student->full_name ?? '?' }}
+                                            @if($sesi->substitute_teacher_id == $honor->teacher_id)
+                                                <span class="text-orange-600">(pengganti)</span>
+                                            @endif
+                                        </td>
+                                        <td class="py-1.5">{{ $sesi->status }}</td>
+                                        <td class="py-1.5 font-mono">{{ $sesi->honor_code ?? '—' }}</td>
+                                        <td class="py-1.5 text-right">
+                                            Rp {{ number_format($sesi->honor_amount, 0, ',', '.') }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </details>
             @endif
         </div>
