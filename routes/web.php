@@ -23,6 +23,7 @@ use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\KalenderController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -306,6 +307,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/absensi',
             [AbsensiController::class, 'index']
         )->name('absensi.index');
+
+        // ===== Kalender Jadwal Mingguan (read-only, semua role) =====
+        Route::get('/kalender',
+            [KalenderController::class, 'index']
+        )->name('kalender.index');
 
         // ===== M07: Pengeluaran — read-only =====
         Route::resource('expenses', ExpenseController::class)->only(['index', 'show']);
