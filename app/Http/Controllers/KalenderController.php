@@ -18,9 +18,14 @@ class KalenderController extends Controller
     public function index(Request $request): View
     {
         // --- 1. Resolve minggu yang ditampilkan ---
-        $weekStart = $request->filled('week')
-            ? Carbon::parse($request->input('week'))->startOfWeek(Carbon::MONDAY)
-            : Carbon::now()->startOfWeek(Carbon::MONDAY);
+        try {
+            $weekStart = $request->filled('week')
+                ? Carbon::parse($request->input('week'))->startOfWeek(Carbon::MONDAY)
+                : Carbon::now()->startOfWeek(Carbon::MONDAY);
+        } catch (\Exception $e) {
+            // Param week tidak valid — fallback ke minggu ini
+            $weekStart = Carbon::now()->startOfWeek(Carbon::MONDAY);
+        }
         $weekEnd = $weekStart->copy()->addDays(5); // Sabtu
 
         // --- 2. Query sesi minggu ini dengan eager load ---
