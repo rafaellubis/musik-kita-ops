@@ -73,7 +73,9 @@ class InvoiceController extends Controller
     {
         $invoice->load([
             'student',
-            'items.addedBy',
+            // Hanya item induk (bukan item DISKON) + eager load diskon tiap item
+            'items' => fn ($q) => $q->whereNull('parent_item_id')
+                                    ->with(['discountItem', 'addedBy']),
             'payments' => fn ($q) => $q->latest('payment_date'),
             'payments.createdBy',
             'payments.voidedBy',
@@ -195,7 +197,7 @@ class InvoiceController extends Controller
     {
         $invoice->load([
             'student.package.instrument',
-            'items',
+            'items' => fn ($q) => $q->whereNull('parent_item_id')->with('discountItem'),
             'validPayments',
         ]);
 
