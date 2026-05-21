@@ -310,170 +310,172 @@
                         @endhasanyrole
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach($invoice->items as $item)
-                        {{-- ===== Baris item induk ===== --}}
-                        <tr class="border-b" x-data="{
-                            showDiscount: false,
-                            type: '{{ $item->discountItem?->discount_type ?? 'NOMINAL' }}',
-                            value: '{{ $item->discountItem?->discount_value ?? '' }}',
-                            itemAmount: {{ $item->amount }},
-                            get preview() {
-                                const v = parseInt(this.value) || 0;
-                                if (v <= 0) return 0;
-                                if (this.type === 'PERCENT') return Math.floor(this.itemAmount * v / 100);
-                                return v;
-                            },
-                            get previewFormatted() {
-                                return this.preview.toLocaleString('id-ID');
-                            }
-                        }">
-                            <td class="py-2 font-mono text-xs">{{ $item->item_code }}</td>
-                            <td class="py-2">
-                                {{ $item->description }}
-                                @if($item->isManual() && $item->addedBy)
-                                    <div class="text-xs text-gray-400">+ oleh {{ $item->addedBy->name }}</div>
+                @foreach($invoice->items as $item)
+                <tbody x-data="{
+                    showDiscount: false,
+                    type: '{{ $item->discountItem?->discount_type ?? 'NOMINAL' }}',
+                    value: '{{ $item->discountItem?->discount_value ?? '' }}',
+                    itemAmount: {{ $item->amount }},
+                    get preview() {
+                        const v = parseInt(this.value) || 0;
+                        if (v <= 0) return 0;
+                        if (this.type === 'PERCENT') return Math.floor(this.itemAmount * v / 100);
+                        return v;
+                    },
+                    get previewFormatted() {
+                        return this.preview.toLocaleString('id-ID');
+                    }
+                }">
+                    {{-- ===== Baris item induk ===== --}}
+                    <tr class="border-b">
+                        <td class="py-2 font-mono text-xs">{{ $item->item_code }}</td>
+                        <td class="py-2">
+                            {{ $item->description }}
+                            @if($item->isManual() && $item->addedBy)
+                                <div class="text-xs text-gray-400">+ oleh {{ $item->addedBy->name }}</div>
+                            @endif
+                        </td>
+                        <td class="py-2 text-right">Rp {{ number_format($item->amount, 0, ',', '.') }}</td>
+                        <td class="py-2 text-center">
+                            @if($item->isManual())
+                                <span class="px-2 py-0.5 rounded text-xs bg-indigo-100 text-indigo-700">Manual</span>
+                            @else
+                                <span class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-500">Sistem</span>
+                            @endif
+                        </td>
+                        @hasanyrole('Owner|Admin')
+                            @if($canEditItems)
+                                <td class="py-2 text-right space-x-2 whitespace-nowrap">
+                                    @if($item->isManual())
+                                        <form method="POST"
+                                              action="{{ route('invoice-items.destroy', $item->id) }}"
+                                              class="inline"
+                                              onsubmit="return confirm('Hapus item {{ $item->item_code }} dari invoice ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-xs text-red-600 hover:underline">Hapus</button>
+                                        </form>
+                                    @else
+                                        <span class="text-xs text-gray-300">—</span>
+                                    @endif
+                                    @if($canDiscount && $item->item_code !== 'DENDA')
+                                        <button type="button"
+                                                @click="showDiscount = !showDiscount"
+                                                class="text-xs text-amber-700 hover:underline">
+                                            {{ $item->discountItem ? 'Edit Diskon' : 'Beri Diskon' }}
+                                        </button>
+                                    @endif
+                                </td>
+                            @endif
+                        @endhasanyrole
+                    </tr>
+
+                    {{-- ===== Form beri/edit diskon (inline expand, Alpine.js) ===== --}}
+                    @hasanyrole('Owner|Admin')
+                        @if($canDiscount && $item->item_code !== 'DENDA')
+                            <tr x-show="showDiscount" x-cloak>
+                                <td colspan="{{ $canEditItems ? 5 : 4 }}"
+                                    class="py-3 px-4 bg-amber-50 border-b border-amber-200">
+                                    <form method="POST"
+                                          action="{{ route('invoice-items.discount.store', $item->id) }}">
+                                        @csrf
+                                        <p class="text-xs font-semibold text-amber-800 mb-2">
+                                            Beri Diskon untuk: <span class="font-normal">{{ $item->description }}</span>
+                                        </p>
+                                        <div class="flex gap-3 items-end flex-wrap">
+                                            <div>
+                                                <label class="block text-xs font-medium text-gray-700 mb-1">Tipe</label>
+                                                <select name="discount_type" x-model="type"
+                                                        class="block border-gray-300 rounded text-sm">
+                                                    <option value="NOMINAL">Nominal (Rp)</option>
+                                                    <option value="PERCENT">Persentase (%)</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-medium text-gray-700 mb-1">
+                                                    Nilai <span class="text-red-500">*</span>
+                                                </label>
+                                                <input type="number" name="discount_value"
+                                                       x-model="value"
+                                                       min="1"
+                                                       :max="type === 'PERCENT' ? 100 : itemAmount - 1"
+                                                       required
+                                                       class="block w-28 border-gray-300 rounded text-sm"
+                                                       placeholder="0">
+                                                <p class="text-xs text-amber-700 mt-1">
+                                                    Preview: –Rp <span x-text="previewFormatted">0</span>
+                                                </p>
+                                            </div>
+                                            <div class="flex-1" style="min-width:180px">
+                                                <label class="block text-xs font-medium text-gray-700 mb-1">
+                                                    Alasan <span class="text-red-500">*</span>
+                                                </label>
+                                                <input type="text" name="discount_reason"
+                                                       required minlength="3" maxlength="500"
+                                                       value="{{ $item->discountItem?->discount_reason }}"
+                                                       class="block w-full border-gray-300 rounded text-sm"
+                                                       placeholder="Mis: Diskon ulang tahun, promosi bulan ini...">
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <button type="submit"
+                                                        class="px-3 py-1.5 rounded text-sm font-medium"
+                                                        style="background:rgba(212,168,83,0.9);color:#1A1000">
+                                                    Simpan Diskon
+                                                </button>
+                                                <button type="button"
+                                                        @click="showDiscount = false"
+                                                        class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800">
+                                                    Batal
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endif
+                    @endhasanyrole
+
+                    {{-- ===== Sub-baris diskon (jika ada) ===== --}}
+                    @if($item->discountItem)
+                        <tr class="border-b">
+                            <td class="py-1.5 pl-6 font-mono text-xs">
+                                <span class="px-1.5 py-0.5 rounded text-xs bg-amber-100 text-amber-800">DISKON</span>
+                            </td>
+                            <td class="py-1.5 text-xs text-gray-600">
+                                ↳ {{ $item->discountItem->discount_reason }}
+                                @if($item->discountItem->discount_type === 'PERCENT')
+                                    <span class="text-gray-400">({{ $item->discountItem->discount_value }}%)</span>
                                 @endif
                             </td>
-                            <td class="py-2 text-right">Rp {{ number_format($item->amount, 0, ',', '.') }}</td>
-                            <td class="py-2 text-center">
-                                @if($item->isManual())
-                                    <span class="px-2 py-0.5 rounded text-xs bg-indigo-100 text-indigo-700">Manual</span>
-                                @else
-                                    <span class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-500">Sistem</span>
-                                @endif
+                            <td class="py-1.5 text-right text-red-600 text-xs font-medium">
+                                –Rp {{ number_format(abs($item->discountItem->amount), 0, ',', '.') }}
+                            </td>
+                            <td class="py-1.5 text-center">
+                                <span class="px-1.5 py-0.5 rounded text-xs bg-amber-100 text-amber-700">Diskon</span>
                             </td>
                             @hasanyrole('Owner|Admin')
-                                @if($canEditItems)
-                                    <td class="py-2 text-right space-x-2 whitespace-nowrap">
-                                        @if($item->isManual())
-                                            <form method="POST"
-                                                  action="{{ route('invoice-items.destroy', $item->id) }}"
-                                                  class="inline"
-                                                  onsubmit="return confirm('Hapus item {{ $item->item_code }} dari invoice ini?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-xs text-red-600 hover:underline">Hapus</button>
-                                            </form>
-                                        @else
-                                            <span class="text-xs text-gray-300">—</span>
-                                        @endif
-                                        @if($canDiscount && $item->item_code !== 'DENDA')
-                                            <button type="button"
-                                                    @click="showDiscount = !showDiscount"
-                                                    class="text-xs text-amber-700 hover:underline">
-                                                {{ $item->discountItem ? 'Edit Diskon' : 'Beri Diskon' }}
+                                @if($canDiscount)
+                                    <td class="py-1.5 text-right">
+                                        <form method="POST"
+                                              action="{{ route('invoice-items.discount.destroy', $item->id) }}"
+                                              class="inline"
+                                              onsubmit="return confirm('Hapus diskon dari item {{ $item->item_code }}?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-xs text-red-600 hover:underline">
+                                                Hapus Diskon
                                             </button>
-                                        @endif
+                                        </form>
                                     </td>
                                 @endif
                             @endhasanyrole
                         </tr>
+                    @endif
+                </tbody>
+                @endforeach
 
-                        {{-- ===== Form beri/edit diskon (inline expand, Alpine.js) ===== --}}
-                        @hasanyrole('Owner|Admin')
-                            @if($canDiscount && $item->item_code !== 'DENDA')
-                                <tr x-show="showDiscount" x-cloak>
-                                    <td colspan="{{ $canEditItems ? 5 : 4 }}"
-                                        class="py-3 px-4 bg-amber-50 border-b border-amber-200">
-                                        <form method="POST"
-                                              action="{{ route('invoice-items.discount.store', $item->id) }}">
-                                            @csrf
-                                            <p class="text-xs font-semibold text-amber-800 mb-2">
-                                                Beri Diskon untuk: <span class="font-normal">{{ $item->description }}</span>
-                                            </p>
-                                            <div class="flex gap-3 items-end flex-wrap">
-                                                <div>
-                                                    <label class="block text-xs font-medium text-gray-700 mb-1">Tipe</label>
-                                                    <select name="discount_type" x-model="type"
-                                                            class="block border-gray-300 rounded text-sm">
-                                                        <option value="NOMINAL">Nominal (Rp)</option>
-                                                        <option value="PERCENT">Persentase (%)</option>
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <label class="block text-xs font-medium text-gray-700 mb-1">
-                                                        Nilai <span class="text-red-500">*</span>
-                                                    </label>
-                                                    <input type="number" name="discount_value"
-                                                           x-model="value"
-                                                           min="1"
-                                                           :max="type === 'PERCENT' ? 100 : itemAmount - 1"
-                                                           required
-                                                           class="block w-28 border-gray-300 rounded text-sm"
-                                                           placeholder="0">
-                                                    <p class="text-xs text-amber-700 mt-1">
-                                                        Preview: –Rp <span x-text="previewFormatted">0</span>
-                                                    </p>
-                                                </div>
-                                                <div class="flex-1" style="min-width:180px">
-                                                    <label class="block text-xs font-medium text-gray-700 mb-1">
-                                                        Alasan <span class="text-red-500">*</span>
-                                                    </label>
-                                                    <input type="text" name="discount_reason"
-                                                           required minlength="3" maxlength="500"
-                                                           value="{{ $item->discountItem?->discount_reason }}"
-                                                           class="block w-full border-gray-300 rounded text-sm"
-                                                           placeholder="Mis: Diskon ulang tahun, promosi bulan ini...">
-                                                </div>
-                                                <div class="flex gap-2">
-                                                    <button type="submit"
-                                                            class="px-3 py-1.5 rounded text-sm font-medium"
-                                                            style="background:rgba(212,168,83,0.9);color:#1A1000">
-                                                        Simpan Diskon
-                                                    </button>
-                                                    <button type="button"
-                                                            @click="showDiscount = false"
-                                                            class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800">
-                                                        Batal
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @endif
-                        @endhasanyrole
-
-                        {{-- ===== Sub-baris diskon (jika ada) ===== --}}
-                        @if($item->discountItem)
-                            <tr class="border-b">
-                                <td class="py-1.5 pl-6 font-mono text-xs">
-                                    <span class="px-1.5 py-0.5 rounded text-xs bg-amber-100 text-amber-800">DISKON</span>
-                                </td>
-                                <td class="py-1.5 text-xs text-gray-600">
-                                    ↳ {{ $item->discountItem->discount_reason }}
-                                    @if($item->discountItem->discount_type === 'PERCENT')
-                                        <span class="text-gray-400">({{ $item->discountItem->discount_value }}%)</span>
-                                    @endif
-                                </td>
-                                <td class="py-1.5 text-right text-red-600 text-xs font-medium">
-                                    –Rp {{ number_format(abs($item->discountItem->amount), 0, ',', '.') }}
-                                </td>
-                                <td class="py-1.5 text-center">
-                                    <span class="px-1.5 py-0.5 rounded text-xs bg-amber-100 text-amber-700">Diskon</span>
-                                </td>
-                                @hasanyrole('Owner|Admin')
-                                    @if($canDiscount)
-                                        <td class="py-1.5 text-right">
-                                            <form method="POST"
-                                                  action="{{ route('invoice-items.discount.destroy', $item->id) }}"
-                                                  class="inline"
-                                                  onsubmit="return confirm('Hapus diskon dari item {{ $item->item_code }}?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-xs text-red-600 hover:underline">
-                                                    Hapus Diskon
-                                                </button>
-                                            </form>
-                                        </td>
-                                    @endif
-                                @endhasanyrole
-                            </tr>
-                        @endif
-                    @endforeach
-
-                    {{-- Baris total — pakai total_amount dari DB (sudah termasuk diskon) --}}
+                {{-- Baris total — pakai total_amount dari DB (sudah termasuk diskon) --}}
+                <tbody>
                     <tr class="font-bold border-t-2">
                         <td colspan="2" class="py-2 text-right text-gray-700">Total</td>
                         <td class="py-2 text-right">
