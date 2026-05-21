@@ -361,22 +361,32 @@ class StudentController extends Controller
 
     public function startCuti(Request $request, string $id)
     {
-        $student = Student::findOrFail($id);
-        $data = $request->validate([
-            'cuti_from'  => 'required|date|after_or_equal:today',
-            'cuti_until' => 'required|date|after:cuti_from',
-            'reason'     => 'required|string|max:500',
-        ], [
-            'cuti_from.required'  => 'Tanggal mulai cuti wajib diisi.',
-            'cuti_until.required' => 'Tanggal akhir cuti wajib diisi.',
-            'cuti_until.after'    => 'Tanggal akhir cuti harus setelah tanggal mulai.',
-            'reason.required'     => 'Alasan cuti wajib diisi.',
-        ]);
+        $student     = Student::findOrFail($id);
+        $isExtension = $student->status === 'Cuti';
+
+        // Perpanjang: hanya butuh cuti_until baru (cuti_from tetap dari pengajuan awal).
+        // Baru: butuh cuti_from dan cuti_until.
+        $rules    = ['reason' => 'required|string|max:500'];
+        $messages = ['reason.required' => 'Alasan cuti wajib diisi.'];
+
+        if ($isExtension) {
+            $rules['cuti_until']             = 'required|date|after:today';
+            $messages['cuti_until.required'] = 'Tanggal akhir cuti baru wajib diisi.';
+            $messages['cuti_until.after']    = 'Tanggal akhir cuti harus setelah hari ini.';
+        } else {
+            $rules['cuti_from']              = 'required|date|after_or_equal:today';
+            $rules['cuti_until']             = 'required|date|after:cuti_from';
+            $messages['cuti_from.required']  = 'Tanggal mulai cuti wajib diisi.';
+            $messages['cuti_until.required'] = 'Tanggal akhir cuti wajib diisi.';
+            $messages['cuti_until.after']    = 'Tanggal akhir cuti harus setelah tanggal mulai.';
+        }
+
+        $data = $request->validate($rules, $messages);
 
         return $this->runLifecycle(
             fn () => $this->lifecycle->ajukanCuti($student, $data),
             $student,
-            'Pengajuan cuti tercatat. Tagihan biaya cuti Rp 100.000 perlu diterbitkan.'
+            'Pengajuan cuti tercatat. Tagihan biaya cuti Rp 100.000 telah diterbitkan.'
         );
     }
 

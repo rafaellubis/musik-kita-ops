@@ -228,13 +228,14 @@ class StudentLifecycleService
      * Aktif -> Cuti. Berbayar Rp 100rb/pengajuan, maks 1 bulan + perpanjang 1x (BR-9).
      * Method ini juga handle perpanjang cuti (Cuti -> Cuti).
      *
-     * Guard (Gap 3): Blok pengajuan cuti jika ada invoice SPP UNPAID/PARTIAL di bulan berjalan.
+     * Guard: Blok pengajuan cuti jika ada invoice SPP UNPAID/PARTIAL.
+     * Perpanjang: hanya butuh cuti_until baru — cuti_from TIDAK diubah.
+     * Validasi maks 62 hari total dihitung dari cuti_from awal.
      *
      * @param array{
-     *     cuti_from: string,
+     *     cuti_from?: string,   // wajib untuk pengajuan baru; diabaikan saat perpanjang
      *     cuti_until: string,
      *     reason: string,
-     *     is_extension?: bool,
      * } $data
      */
     public function ajukanCuti(Student $student, array $data): Student
@@ -260,24 +261,57 @@ class StudentLifecycleService
 
         $isExtension = $student->status === 'Cuti';
 
+        // Validasi maks 2 bulan total (berlaku hanya untuk perpanjang)
+        if ($isExtension) {
+            $originalFrom = \Carbon\Carbon::parse($student->cuti_from);
+            $newUntil     = \Carbon\Carbon::parse($data['cuti_until']);
+            if ($originalFrom->diffInDays($newUntil) > 62) {
+                throw new InvalidArgumentException(
+                    'Total cuti melebihi batas maksimal 2 bulan.'
+                );
+            }
+        }
+
         return DB::transaction(function () use ($student, $data, $isExtension) {
             $from = $student->status;
 
-            $student->update(['status' => 'Cuti']);
+            // Simpan cuti_until lama sebelum diupdate — dipakai untuk range cancel pada perpanjang
+            $oldCutiUntil = $student->cuti_until;
+
+            // Update student: cuti_from hanya diset pada pengajuan baru, bukan perpanjang
+            $updateData = ['status' => 'Cuti', 'cuti_until' => $data['cuti_until']];
+            if (!$isExtension) {
+                $updateData['cuti_from'] = $data['cuti_from'];
+            }
+            $student->update($updateData);
+            $student->refresh();
+
+            // Cancel sesi SCHEDULED dalam range cuti.
+            // Perpanjang: cancel hanya range tambahan (oldCutiUntil → newCutiUntil).
+            // Baru: cancel seluruh range (cuti_from → cuti_until).
+            $cancelFrom = $isExtension ? $oldCutiUntil : $data['cuti_from'];
+            ClassSession::whereIn('enrollment_id', $student->enrollments()->pluck('id'))
+                ->where('status', ClassSession::STATUS_SCHEDULED)
+                ->whereBetween('session_date', [$cancelFrom, $data['cuti_until']])
+                ->update([
+                    'status' => ClassSession::STATUS_CANCELLED,
+                    'notes'  => 'Sesi dibatalkan otomatis — murid cuti ' .
+                                $student->cuti_from . ' s/d ' . $data['cuti_until'],
+                ]);
 
             // Terbitkan invoice biaya cuti Rp 100.000 (BR-9)
             $invoice = $this->invoiceService->createOneOff(
                 student: $student,
                 items: [[
                     'code'        => 'CUTI',
-                    'description' => "Biaya cuti " .
-                        \Carbon\Carbon::parse($data['cuti_from'])->format('d M') . " - " .
+                    'description' => 'Biaya cuti ' .
+                        \Carbon\Carbon::parse($student->cuti_from)->format('d M') . ' - ' .
                         \Carbon\Carbon::parse($data['cuti_until'])->format('d M Y') .
                         ($isExtension ? ' (perpanjangan)' : ''),
                     'amount'      => InvoiceService::FEE_CUTI,
                     'metadata'    => [
-                        'cuti_from'  => $data['cuti_from'],
-                        'cuti_until' => $data['cuti_until'],
+                        'cuti_from'    => $student->cuti_from,
+                        'cuti_until'   => $data['cuti_until'],
                         'is_extension' => $isExtension,
                     ],
                 ]],
@@ -290,7 +324,7 @@ class StudentLifecycleService
                 to:       'Cuti',
                 reason:   $data['reason'],
                 metadata: [
-                    'cuti_from'      => $data['cuti_from'],
+                    'cuti_from'      => $student->cuti_from,
                     'cuti_until'     => $data['cuti_until'],
                     'is_extension'   => $isExtension,
                     'invoice_id'     => $invoice->id,
@@ -476,6 +510,9 @@ class StudentLifecycleService
      * TIDAK ada tagihan tambahan — biaya cuti sudah ditagih saat pengajuan.
      * Paket & guru tetap (tidak perlu input ulang).
      *
+     * Hard block: tidak bisa diakhiri sebelum cuti_until tiba (BR: cuti tidak bisa dipotong).
+     * Diizinkan pada hari cuti_until itu sendiri (today >= cuti_until).
+     *
      * Idealnya method ini dipanggil cron otomatis saat cuti_until berakhir,
      * tapi untuk Fase 1 admin bisa trigger manual lewat tombol "Akhiri Cuti".
      */
@@ -487,10 +524,23 @@ class StudentLifecycleService
             );
         }
 
+        // Hard block: cuti belum selesai — bandingkan tanggal saja (abaikan jam).
+        // cuti_until di-cast sebagai 'date' di model, jadi sudah Carbon instance.
+        if ($student->cuti_until && now()->toDateString() < $student->cuti_until->format('Y-m-d')) {
+            throw new InvalidArgumentException(
+                'Cuti belum selesai. Cuti berlaku hingga ' .
+                $student->cuti_until->format('d M Y') . '.'
+            );
+        }
+
         return DB::transaction(function () use ($student, $data) {
             $from = $student->status;
 
-            $student->update(['status' => 'Aktif']);
+            $student->update([
+                'status'     => 'Aktif',
+                'cuti_from'  => null,
+                'cuti_until' => null,
+            ]);
 
             $this->recordHistory(
                 student: $student,
