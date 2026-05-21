@@ -146,14 +146,14 @@ class ImportController extends Controller
                 'full_name', 'nickname', 'gender', 'birth_date', 'phone', 'email',
                 'address', 'notes', 'parent_name', 'parent_phone', 'parent_email',
                 'parent_relationship', 'status', 'package_code', 'teacher_code',
-                'preferred_day', 'preferred_time', 'active_since', 'kode_ruangan',
+                'preferred_day', 'preferred_time', 'active_since', 'kode_ruangan', 'cuti_until',
             ],
             [
                 'Budi Santoso', 'Budi', 'L', '2010-05-15', '08111111111',
                 'budi@email.com', 'Jl. Contoh No.1', 'Catatan contoh',
                 'Ayah Budi', '08111111112', 'ayahbudi@email.com', 'Ayah',
                 'Aktif', 'KODE-PAKET-CONTOH', 'KODE-GURU-CONTOH',
-                'Senin', '15:30', '2026-01-15', 'R2',
+                'Senin', '15:30', '2026-01-15', 'R2', '',
             ],
         ];
     }
@@ -231,6 +231,11 @@ class ImportController extends Controller
         foreach (['Ayah', 'Ibu', 'Wali'] as $r) {
             $rows[] = [$r];
         }
+
+        $rows[] = [];
+        $rows[] = ['=== CATATAN KOLOM CUTI_UNTIL ==='];
+        $rows[] = ['Wajib diisi jika status = Cuti (format: YYYY-MM-DD, contoh: 2026-07-31)'];
+        $rows[] = ['Kosongkan jika status bukan Cuti'];
 
         return $rows;
     }
