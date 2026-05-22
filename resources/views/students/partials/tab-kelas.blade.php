@@ -221,7 +221,22 @@
         </div>
 
         {{-- Body scrollable --}}
-        <form method="POST" action="{{ route('students.enrollments.store', $student) }}" class="flex flex-col flex-1 min-h-0">
+        {{-- packageMap: mapping package_id → instrument_id untuk filter guru --}}
+        <form method="POST" action="{{ route('students.enrollments.store', $student) }}" class="flex flex-col flex-1 min-h-0"
+              x-data="{
+                packageMap: {{ json_encode($allPackages->mapWithKeys(fn($p) => [$p->id => $p->instrument_id])) }},
+                teachers: [],
+                loadingTeachers: false,
+                onPackageChange(pkgId) {
+                    const instrId = this.packageMap[pkgId];
+                    if (!instrId) { this.teachers = []; return; }
+                    this.loadingTeachers = true;
+                    fetch('{{ route('api.teachers-by-instrument', '') }}/' + instrId)
+                        .then(r => r.json())
+                        .then(data => { this.teachers = data; this.loadingTeachers = false; })
+                        .catch(() => { this.teachers = []; this.loadingTeachers = false; });
+                }
+              }">
             @csrf
             <div class="px-5 py-4 grid grid-cols-2 gap-x-4 gap-y-3 overflow-y-auto flex-1">
 
@@ -230,7 +245,9 @@
                     <label class="block text-xs text-gray-500 mb-1">
                         Paket <span class="text-red-400">*</span>
                     </label>
-                    <select name="package_id" required class="block w-full rounded-lg text-sm px-3 py-2 border border-gray-200">
+                    <select name="package_id" required
+                            @change="onPackageChange($event.target.value)"
+                            class="block w-full rounded-lg text-sm px-3 py-2 border border-gray-200">
                         <option value="">— Pilih Paket —</option>
                         @foreach($allPackages as $pkg)
                             <option value="{{ $pkg->id }}">
@@ -241,17 +258,22 @@
                     </select>
                 </div>
 
-                {{-- Pilih guru --}}
+                {{-- Pilih guru — difilter sesuai instrumen paket yang dipilih --}}
                 <div>
                     <label class="block text-xs text-gray-500 mb-1">
                         Guru <span class="text-red-400">*</span>
                     </label>
-                    <select name="teacher_id" required class="block w-full rounded-lg text-sm px-3 py-2 border border-gray-200">
-                        <option value="">— Pilih —</option>
-                        @foreach($allTeachers as $teacher)
-                            <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
-                        @endforeach
+                    <select name="teacher_id" required class="block w-full rounded-lg text-sm px-3 py-2 border border-gray-200"
+                            :disabled="!teachers.length">
+                        <option value="">
+                            <span x-show="!teachers.length">— Pilih paket dulu —</span>
+                            <span x-show="teachers.length">— Pilih Guru —</span>
+                        </option>
+                        <template x-for="t in teachers" :key="t.id">
+                            <option :value="t.id" x-text="t.name"></option>
+                        </template>
                     </select>
+                    <p x-show="loadingTeachers" class="text-xs text-gray-400 mt-1">Memuat guru…</p>
                 </div>
 
                 {{-- Pilih ruangan --}}
