@@ -140,7 +140,7 @@ class InvoiceController extends Controller
     public function print(Invoice $invoice)
     {
         $invoice->load([
-            'student.package.instrument',
+            'student.primaryEnrollment.package.instrument',
             'items' => fn ($q) => $q->whereNull('parent_item_id')->with('discountItem'),
             'validPayments',
         ]);
