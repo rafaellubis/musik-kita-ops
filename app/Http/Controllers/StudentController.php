@@ -138,11 +138,30 @@ class StudentController extends Controller
             ->whereIn('status', ['UNPAID', 'PARTIAL'])
             ->count();
 
+        // M-Kelas: Kelas berjalan — enrollment ACTIVE diurutkan: utama dulu
+        $activeEnrollments = $student->enrollments()
+            ->active()
+            ->with([
+                'package.instrument',
+                'teacher',
+                'schedules' => fn ($q) => $q->where('is_active', true)->with('room'),
+            ])
+            ->orderByDesc('is_primary')
+            ->get();
+
+        // M-Kelas: Riwayat kelas — enrollment yang sudah tidak aktif
+        $historyEnrollments = $student->enrollments()
+            ->whereIn('status', ['INACTIVE', 'COMPLETED'])
+            ->with(['package.instrument', 'teacher'])
+            ->orderByDesc('end_date')
+            ->get();
+
         return view('students.show', compact(
             'student', 'packages', 'teachers', 'rooms',
             'roomsForFilter', 'bookedSchedules',
             'upcomingSessions',
             'recentInvoices', 'outstandingBalance', 'unpaidCount',
+            'activeEnrollments', 'historyEnrollments',
         ));
     }
 
