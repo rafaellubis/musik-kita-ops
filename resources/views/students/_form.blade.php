@@ -318,102 +318,49 @@
     @endif
 </div>
 
-        {{-- Paket --}}
-		<div>
-			<label class="block text-sm font-medium">Paket</label>
-			<select name="package_id"
-				id="package-select"
-				class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-				onchange="handlePackageChange(this)">
-			<option value="" data-instrument-id="">— Belum ditentukan —</option>
-			@foreach($packages as $pkg)
-				<option value="{{ $pkg->id }}"
-					data-instrument-id="{{ $pkg->instrument->id }}"
-					{{ old('package_id', $student?->package_id) == $pkg->id ? 'selected' : '' }}>
-					[{{ $pkg->code }}] {{ $pkg->instrument->name }}
-					- {{ $pkg->class_type }}
-					@if($pkg->grade) - {{ $pkg->grade }} @endif
-					({{ $pkg->formatted_price }})
-				</option>
-			@endforeach
-			</select>
-				<p class="text-xs text-gray-500 mt-1">Wajib untuk status Aktif.</p>
-			@error('package_id')
-				<p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-			@enderror
-		</div>
+        {{-- Paket — hanya ditampilkan saat mode create (dipakai lifecycle service) --}}
+        {{-- Mode edit: kelas dikelola via tab Kelas di halaman Detail --}}
+        @if(($mode ?? 'create') === 'create')
+        <div>
+            <label class="block text-sm font-medium">Paket</label>
+            <select name="package_id"
+                id="package-select"
+                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                onchange="handlePackageChange(this)">
+            <option value="" data-instrument-id="">— Belum ditentukan —</option>
+            @foreach($packages as $pkg)
+                <option value="{{ $pkg->id }}"
+                    data-instrument-id="{{ $pkg->instrument->id }}"
+                    {{ old('package_id') == $pkg->id ? 'selected' : '' }}>
+                    [{{ $pkg->code }}] {{ $pkg->instrument->name }}
+                    - {{ $pkg->class_type }}
+                    @if($pkg->grade) - {{ $pkg->grade }} @endif
+                    ({{ $pkg->formatted_price }})
+                </option>
+            @endforeach
+            </select>
+            <p class="text-xs text-gray-500 mt-1">Wajib untuk status Aktif.</p>
+            @error('package_id')
+                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+            @enderror
+        </div>
 
-        {{-- Guru --}}
-<div>
-    <label class="block text-sm font-medium">Guru Utama</label>
-    <select name="assigned_teacher_id"
-            id="teacher-select"
-            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-        {{-- Default: kosong kalau belum pilih paket --}}
-        @if($student?->package_id && $student?->assigned_teacher_id)
-            {{-- Mode edit: pre-load guru yang sudah assign --}}
-            <option value="">— Pilih Guru —</option>
-            <option value="{{ $student->assignedTeacher->id }}" selected>
-                [{{ $student->assignedTeacher->code }}] {{ $student->assignedTeacher->name }}
-            </option>
-        @else
-            <option value="">— Pilih paket dulu —</option>
+        {{-- Guru Utama — hanya saat mode create --}}
+        <div>
+            <label class="block text-sm font-medium">Guru Utama</label>
+            <select name="assigned_teacher_id"
+                    id="teacher-select"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">— Pilih paket dulu —</option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1" id="teacher-hint">
+                Pilih paket terlebih dahulu untuk melihat daftar guru.
+            </p>
+            @error('assigned_teacher_id')
+                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+            @enderror
+        </div>
         @endif
-    </select>
-    <p class="text-xs text-gray-500 mt-1" id="teacher-hint">
-        Pilih paket terlebih dahulu untuk melihat daftar guru.
-    </p>
-    @error('assigned_teacher_id')
-        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-    @enderror
-</div>
-
-        {{-- Ruangan --}}
-        <div>
-            <label class="block text-sm font-medium">Ruangan Default</label>
-            <select name="assigned_room_id"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                <option value="">— Belum ditentukan —</option>
-                @foreach($rooms as $r)
-                    <option value="{{ $r->id }}"
-                        {{ old('assigned_room_id', $student?->assigned_room_id) == $r->id ? 'selected' : '' }}>
-                        [{{ $r->code }}] {{ $r->name }}
-                    </option>
-                @endforeach
-            </select>
-            @error('assigned_room_id')
-                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-            @enderror
-        </div>
-
-        {{-- Hari Preferensi --}}
-        <div>
-            <label class="block text-sm font-medium">Hari Preferensi</label>
-            <select name="preferred_day"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                <option value="">— Tidak dipilih —</option>
-                @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'] as $d)
-                    <option value="{{ $d }}"
-                        {{ old('preferred_day', $student?->preferred_day) == $d ? 'selected' : '' }}>
-                        {{ $d }}
-                    </option>
-                @endforeach
-            </select>
-            @error('preferred_day')
-                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-            @enderror
-        </div>
-
-        {{-- Jam Preferensi --}}
-        <div>
-            <label class="block text-sm font-medium">Jam Preferensi</label>
-            <input type="time" name="preferred_time"
-                   value="{{ old('preferred_time', $student?->preferred_time ? \Carbon\Carbon::parse($student->preferred_time)->format('H:i') : '') }}"
-                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-            @error('preferred_time')
-                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-            @enderror
-        </div>
 
     </div>
 </fieldset>
@@ -487,8 +434,8 @@ function handlePackageChange(selectEl) {
                 option.value = teacher.id;
                 option.textContent = `[${teacher.code}] ${teacher.name}`;
 
-                // Pre-select kalau ada current value (mode edit / old input)
-                const currentTeacherId = '{{ $student?->assigned_teacher_id ?? '' }}';
+                // Pre-select kalau ada old input (setelah validation error)
+                const currentTeacherId = '';
                 const oldTeacherId = '{{ old('assigned_teacher_id', '') }}';
                 if (option.value == oldTeacherId || option.value == currentTeacherId) {
                     option.selected = true;

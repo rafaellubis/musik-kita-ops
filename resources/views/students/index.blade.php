@@ -142,14 +142,13 @@
                                 {{ $s->assignedTeacher?->name ?? '—' }}
                             </td>
                             <td class="px-4 py-3 text-center">
-                                @if($s->preferred_day !== null)
                                 @php
+                                    $sch = $s->primaryEnrollment?->schedules->where('is_active', true)->first();
                                     $hariMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-                                    $hari    = $hariMap[$s->preferred_day] ?? '—';
-                                    $jam     = $s->preferred_time ? substr($s->preferred_time, 0, 5) : '—';
                                 @endphp
-                                <div class="text-xs text-gray-700">{{ $hari }}</div>
-                                <div class="text-xs text-gray-500">{{ $jam }}</div>
+                                @if($sch)
+                                <div class="text-xs text-gray-700">{{ $hariMap[$sch->day_of_week] ?? '—' }}</div>
+                                <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($sch->start_time)->format('H:i') }}</div>
                                 @else
                                 <span class="text-xs text-gray-400">—</span>
                                 @endif

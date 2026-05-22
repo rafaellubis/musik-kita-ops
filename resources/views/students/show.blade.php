@@ -239,7 +239,7 @@
                             <select name="package_id" class="block w-full rounded-lg text-sm px-3 py-2">
                                 <option value="">— Pilih —</option>
                                 @foreach($packages as $pkg)
-                                <option value="{{ $pkg->id }}" {{ $student->package_id == $pkg->id ? 'selected' : '' }}>
+                                <option value="{{ $pkg->id }}" {{ $student->package?->id == $pkg->id ? 'selected' : '' }}>
                                     [{{ $pkg->code }}] {{ $pkg->instrument->name }}
                                 </option>
                                 @endforeach
@@ -250,7 +250,7 @@
                             <select name="assigned_teacher_id" class="block w-full rounded-lg text-sm px-3 py-2">
                                 <option value="">— Pilih —</option>
                                 @foreach($teachers as $t)
-                                <option value="{{ $t->id }}" {{ $student->assigned_teacher_id == $t->id ? 'selected' : '' }}>
+                                <option value="{{ $t->id }}" {{ $student->assignedTeacher?->id == $t->id ? 'selected' : '' }}>
                                     [{{ $t->code }}] {{ $t->name }}
                                 </option>
                                 @endforeach
@@ -261,7 +261,7 @@
                             <select name="assigned_room_id" class="block w-full rounded-lg text-sm px-3 py-2">
                                 <option value="">— Pilih —</option>
                                 @foreach($rooms as $r)
-                                <option value="{{ $r->id }}" {{ $student->assigned_room_id == $r->id ? 'selected' : '' }}>
+                                <option value="{{ $r->id }}" {{ $student->primaryEnrollment?->schedules->first()?->room_id == $r->id ? 'selected' : '' }}>
                                     [{{ $r->code }}] {{ $r->name }}
                                 </option>
                                 @endforeach
@@ -377,7 +377,7 @@
                                 <option value="{{ $pkg->id }}"
                                         data-instrument-id="{{ $pkg->instrument->id }}"
                                         data-class-type="{{ $pkg->class_type }}"
-                                        {{ $student->package_id == $pkg->id ? 'selected' : '' }}>
+                                        {{ $student->package?->id == $pkg->id ? 'selected' : '' }}>
                                     [{{ $pkg->code }}] {{ $pkg->instrument->name }} ({{ $pkg->formatted_price }})
                                 </option>
                                 @endforeach
@@ -395,7 +395,7 @@
                             <select name="assigned_room_id" class="block w-full rounded-lg text-sm px-3 py-2">
                                 <option value="">— Pilih —</option>
                                 @foreach($rooms as $r)
-                                <option value="{{ $r->id }}" {{ $student->assigned_room_id == $r->id ? 'selected' : '' }}>
+                                <option value="{{ $r->id }}" {{ $student->primaryEnrollment?->schedules->first()?->room_id == $r->id ? 'selected' : '' }}>
                                     [{{ $r->code }}] {{ $r->name }}
                                 </option>
                                 @endforeach
@@ -659,11 +659,18 @@
                                     @else <span class="text-gray-400">—</span>@endif
                                 </div>
                             </div>
+                            @php
+                                // Ambil jadwal aktif dari primary enrollment
+                                $infoSch = $student->primaryEnrollment?->schedules()->where('is_active', true)->first();
+                                $jadwalText = $infoSch
+                                    ? (($hariMap[$infoSch->day_of_week] ?? '—') . ', ' . \Carbon\Carbon::parse($infoSch->start_time)->format('H:i'))
+                                    : '—';
+                            @endphp
                             @foreach([
                                 ['Instrumen',   $student->package?->instrument?->name ?? '—'],
                                 ['Guru Utama',  ($student->assignedTeacher?->name ?? '—') . ($student->assignedTeacher ? ' (' . $student->assignedTeacher->code . ')' : '')],
                                 ['Ruangan',     ($student->assignedRoom?->name ?? '—') . ($student->assignedRoom ? ' (' . $student->assignedRoom->code . ')' : '')],
-                                ['Jadwal',      ($student->preferred_day !== null ? ($hariMap[$student->preferred_day] ?? '—') : '—') . ($student->preferred_time ? ', ' . substr($student->preferred_time, 0, 5) : '')],
+                                ['Jadwal',      $jadwalText],
                                 ['Aktif Sejak', $student->active_since?->format('d M Y') ?? '—'],
                                 ['Trial',       $student->trial_date?->format('d M Y, H:i') ?? '—'],
                             ] as [$label, $value])
@@ -1192,7 +1199,7 @@ document.addEventListener('DOMContentLoaded', () => {
         lifecycleFilterTeacher(
             pkgConvert,
             'teacher-convert',
-            '{{ $student->assigned_teacher_id }}'
+            '{{ $student->assignedTeacher?->id ?? '' }}'
         );
     }
 });

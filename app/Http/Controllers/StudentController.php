@@ -25,23 +25,26 @@ class StudentController extends Controller
     {
         // Build query bertahap berdasarkan filter
         $query = Student::query()
-            ->with(['primaryEnrollment.package.instrument', 'primaryEnrollment.teacher']);
+            ->with([
+                'primaryEnrollment.package.instrument',
+                'primaryEnrollment.teacher',
+                'primaryEnrollment.schedules' => fn ($q) => $q->where('is_active', true),
+            ]);
 
         // Filter status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Filter instrumen (via relasi packages)
+        // Filter instrumen (via enrollments aktif — kolom instrument ada di packages)
         if ($request->filled('instrument_id')) {
-            $query->whereHas('package', function ($q) use ($request) {
-                $q->where('instrument_id', $request->instrument_id);
-            });
+            $query->whereHas('enrollments', fn ($q) => $q->where('status', 'ACTIVE')
+                ->whereHas('package', fn ($pq) => $pq->where('instrument_id', $request->instrument_id)));
         }
 
-        // Filter paket
+        // Filter paket (via enrollments aktif — kolom package_id sudah tidak ada di students)
         if ($request->filled('package_id')) {
-            $query->where('package_id', $request->package_id);
+            $query->whereHas('enrollments', fn ($q) => $q->where('status', 'ACTIVE')->where('package_id', $request->package_id));
         }
 
         // Search by name atau code

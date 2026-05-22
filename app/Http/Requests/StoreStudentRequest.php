@@ -37,9 +37,8 @@ class StoreStudentRequest extends FormRequest
             'status'              => 'required|in:Calon,Trial,Aktif',
             'package_id'          => 'nullable|exists:packages,id',
             'assigned_teacher_id' => 'nullable|exists:teachers,id',
-            'assigned_room_id'    => 'nullable|exists:rooms,id',
-            'preferred_day'       => 'nullable|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu,Minggu',
-            'preferred_time'      => 'nullable|date_format:H:i',
+            // assigned_room_id, preferred_day, preferred_time sudah dihapus dari schema students
+            // Ruangan dikelola via schedules (tab Kelas di halaman Detail)
             'trial_date'          => 'nullable|date|after:now',
 
             // ============= HYBRID: ALASAN SKIP TRIAL =============
@@ -65,9 +64,7 @@ class StoreStudentRequest extends FormRequest
             'status.in'                    => 'Status hanya boleh Calon, Trial, atau Aktif.',
             'package_id.exists'            => 'Paket yang dipilih tidak valid.',
             'assigned_teacher_id.exists'   => 'Guru yang dipilih tidak valid.',
-            'assigned_room_id.exists'      => 'Ruangan yang dipilih tidak valid.',
             'trial_date.after'             => 'Jadwal trial harus setelah sekarang.',
-            'preferred_time.date_format'   => 'Format jam preferensi salah (gunakan HH:MM).',
             'skip_trial_reason.max'        => 'Alasan maksimal 500 karakter.',
             'reason_code.in'               => 'Kode alasan tidak valid.',
         ];
