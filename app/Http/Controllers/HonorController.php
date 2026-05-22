@@ -215,16 +215,13 @@ class HonorController extends Controller
     {
         $honor->load('teacher.instruments', 'paidBy');
 
-        $sessions  = $this->service->getSessionBreakdown($honor);
-        $breakdown = $sessions->groupBy('honor_code')
-            ->map(fn ($group) => [
-                'code'  => $group->first()->honor_code ?? '—',
-                'count' => $group->count(),
-                'total' => $group->sum('honor_amount'),
-            ]);
+        $studentBreakdown = $this->service->getStudentBreakdown($honor);
+        $hasKids          = $studentBreakdown->where('is_kids', true)->isNotEmpty();
 
         $monthName = Carbon::create($honor->year, $honor->month, 1)->format('F Y');
 
-        return view('honors.print', compact('honor', 'breakdown', 'monthName'));
+        return view('honors.print', compact(
+            'honor', 'studentBreakdown', 'hasKids', 'monthName'
+        ));
     }
 }
