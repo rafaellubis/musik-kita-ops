@@ -44,6 +44,8 @@ class StudentFactory extends Factory
             'trial_date'          => null,
             'active_since'        => null,
             'last_session_at'     => null,
+            'cuti_from'           => null,
+            'cuti_until'          => null,
         ];
     }
 }
