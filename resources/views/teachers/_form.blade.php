@@ -47,6 +47,13 @@
                class="mt-1 block w-full border-gray-300 rounded-md">
     </div>
     <div>
+        <label class="block text-sm font-medium">Nama Pemilik Rekening</label>
+        <input type="text" name="bank_account_holder" maxlength="100"
+               value="{{ old('bank_account_holder', $teacher->bank_account_holder ?? '') }}"
+               class="mt-1 block w-full border-gray-300 rounded-md"
+               placeholder="Nama sesuai buku tabungan">
+    </div>
+    <div>
         <label class="block text-sm font-medium">Tgl Bergabung</label>
         <input type="date" name="joined_date"
                value="{{ old('joined_date', $teacher?->joined_date?->format('Y-m-d') ?? '') }}"

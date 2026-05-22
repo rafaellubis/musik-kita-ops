@@ -11,7 +11,7 @@ class Teacher extends Model
 
     protected $fillable = [
         'code', 'name', 'email', 'phone', 'bank_name', 'bank_account',
-        'joined_date', 'is_active', 'notes',
+        'bank_account_holder', 'joined_date', 'is_active', 'notes',
     ];
 
     protected $casts = [
