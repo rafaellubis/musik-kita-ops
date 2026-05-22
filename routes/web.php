@@ -23,6 +23,7 @@ use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\KalenderController;
 use Illuminate\Support\Facades\Route;
 
@@ -131,6 +132,18 @@ Route::middleware('auth')->group(function () {
         Route::post('schedules/{schedule}/toggle-active',
             [ScheduleController::class, 'toggleActive']
         )->name('schedules.toggle-active');
+
+        // ===== Multi-Kelas: Manajemen enrollment per murid =====
+        // Tambah kelas baru, jadikan utama, dan hentikan kelas
+        Route::post('students/{student}/enrollments',
+            [EnrollmentController::class, 'store']
+        )->name('students.enrollments.store');
+        Route::patch('students/{student}/enrollments/{enrollment}/primary',
+            [EnrollmentController::class, 'setPrimary']
+        )->name('students.enrollments.set-primary');
+        Route::delete('students/{student}/enrollments/{enrollment}',
+            [EnrollmentController::class, 'destroy']
+        )->name('students.enrollments.destroy');
 
         // ===== M03: Generator sesi manual =====
         Route::post('sessions/generate',
