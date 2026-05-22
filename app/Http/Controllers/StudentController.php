@@ -185,20 +185,7 @@ class StudentController extends Controller
 
     public function create()
     {
-        $packages = Package::where('is_active', true)
-            ->with('instrument')
-            ->orderBy('sort_order')
-            ->get();
-
-        $teachers = Teacher::where('is_active', true)
-            ->orderBy('name')
-            ->get();
-
-        $rooms = Room::where('is_active', true)
-            ->orderBy('code')
-            ->get();
-
-        return view('students.create', compact('packages', 'teachers', 'rooms'));
+        return view('students.create');
     }
 
     /**
@@ -235,33 +222,9 @@ class StudentController extends Controller
             'status' => 'Calon',
         ]);
 
-        // Transisi sesuai pilihan form
-        try {
-            if ($validated['status'] === 'Trial') {
-                $this->lifecycle->mulaiTrial($student, [
-                    'trial_date' => $validated['trial_date'],
-                    'package_id' => $validated['package_id'] ?? null,
-                    'assigned_teacher_id' => $validated['assigned_teacher_id'] ?? null,
-                    'assigned_room_id' => $validated['assigned_room_id'] ?? null,
-                ]);
-            } elseif ($validated['status'] === 'Aktif') {
-                $this->lifecycle->skipTrial($student, [
-                    'reason_code'         => $validated['reason_code'],
-                    'reason'              => $validated['skip_trial_reason'],
-                    'package_id'          => $validated['package_id'],
-                    'assigned_teacher_id' => $validated['assigned_teacher_id'],
-                    'assigned_room_id'    => $validated['assigned_room_id'] ?? null,
-                ]);
-            }
-            // status === 'Calon' -> tidak perlu transisi tambahan
-        } catch (InvalidArgumentException $e) {
-            // Rollback manual: hapus murid yang baru saja dibuat
-            $student->delete();
-            return back()->withInput()->with('error', $e->getMessage());
-        }
-
         return redirect()->route('students.show', $student->id)
-            ->with('success', "Murid {$student->full_name} ({$student->student_code}) berhasil ditambahkan.");
+            ->withFragment('tab-kelas')
+            ->with('success', "Murid {$student->full_name} ({$student->student_code}) berhasil didaftarkan. Silakan tambahkan kelas via Tab Kelas.");
     }
 
     public function edit(string $id)

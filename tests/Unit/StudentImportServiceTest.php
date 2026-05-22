@@ -425,6 +425,64 @@ class StudentImportServiceTest extends TestCase
         $this->assertEquals(0, StudentStatusHistory::count());
     }
 
+    // ============= TES VALIDASI PARENT_RELATIONSHIP =============
+
+    public function test_kids_class_tanpa_parent_relationship_error(): void
+    {
+        $result = $this->service->validateRow(1, [
+            'full_name'    => 'Anak Kids',
+            'gender'       => 'P',
+            'status'       => 'Aktif',
+            'package_code' => 'KIDS-001',
+        ], ['KIDS-001' => 99], [], [], [], [], [], ['KIDS-001' => 'KIDS_CLASS']);
+
+        $this->assertIsString($result);
+        $this->assertStringContainsString('parent_relationship', $result);
+    }
+
+    public function test_usia_12_atau_kurang_tanpa_parent_relationship_error(): void
+    {
+        $birthDate = \Carbon\Carbon::now()->subYears(10)->format('Y-m-d');
+
+        $result = $this->service->validateRow(2, [
+            'full_name'  => 'Murid Muda',
+            'gender'     => 'L',
+            'status'     => 'Aktif',
+            'birth_date' => $birthDate,
+        ]);
+
+        $this->assertIsString($result);
+        $this->assertStringContainsString('parent_relationship', $result);
+    }
+
+    public function test_dewasa_bukan_kids_class_tanpa_parent_relationship_ok(): void
+    {
+        $birthDate = \Carbon\Carbon::now()->subYears(25)->format('Y-m-d');
+
+        $result = $this->service->validateRow(3, [
+            'full_name'  => 'Murid Dewasa',
+            'gender'     => 'L',
+            'status'     => 'Aktif',
+            'birth_date' => $birthDate,
+        ]);
+
+        $this->assertIsArray($result);
+    }
+
+    public function test_kids_class_dengan_parent_relationship_ok(): void
+    {
+        $result = $this->service->validateRow(4, [
+            'full_name'           => 'Anak Kids Lengkap',
+            'gender'              => 'P',
+            'status'              => 'Aktif',
+            'package_code'        => 'KIDS-001',
+            'parent_relationship' => 'Ibu',
+        ], ['KIDS-001' => 99], [], [], [], [], [], ['KIDS-001' => 'KIDS_CLASS']);
+
+        $this->assertIsArray($result);
+        $this->assertEquals('Ibu', $result['parent_relationship']);
+    }
+
     public function test_end_time_dihitung_dari_duration_min(): void
     {
         $piano   = Instrument::create(['name' => 'Piano', 'code' => 'PIANO', 'is_active' => true, 'sort_order' => 1]);

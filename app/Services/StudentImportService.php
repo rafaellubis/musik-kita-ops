@@ -88,6 +88,11 @@ class StudentImportService
             ->filter()
             ->toArray();
 
+        // Cache class_type per package_code (untuk validasi parent_relationship)
+        $packageClassTypeMap = Package::where('is_active', true)
+            ->pluck('class_type', 'code')
+            ->toArray();
+
         // Cache duration_min per package_code (untuk tampilkan end_time di preview)
         $packageDurationMap = Package::where('is_active', true)
             ->pluck('duration_min', 'code')
@@ -116,7 +121,8 @@ class StudentImportService
                 $roomCodes,
                 $packageInstrumentMap,
                 $roomInstrumentsMap,
-                $packageDurationMap
+                $packageDurationMap,
+                $packageClassTypeMap
             );
 
             if (is_string($result)) {
@@ -190,7 +196,8 @@ class StudentImportService
         array $roomCodes = [],
         array $packageInstrumentMap = [],
         array $roomInstrumentsMap = [],
-        array $packageDurationMap = []
+        array $packageDurationMap = [],
+        array $packageClassTypeMap = []
     ): array|string {
         $errors = [];
 
@@ -229,6 +236,28 @@ class StudentImportService
         if (!empty($row['parent_relationship'])
             && !in_array($row['parent_relationship'], self::VALID_RELATIONSHIPS, true)) {
             $errors[] = 'parent_relationship harus Ayah, Ibu, atau Wali';
+        }
+
+        // parent_relationship WAJIB untuk murid Kids Class atau usia ≤ 12 tahun.
+        // Murid dewasa di paket reguler/hobby tidak diwajibkan mengisi.
+        $isKidsClass = false;
+        if (!empty($row['package_code']) && isset($packageClassTypeMap[$row['package_code']])) {
+            $isKidsClass = in_array(
+                $packageClassTypeMap[$row['package_code']],
+                ['KIDS_CLASS', 'KIDS_CLASS_BUNDLE']
+            );
+        }
+
+        $isYoung = false;
+        if (!empty($row['birth_date'])) {
+            $parsed = \DateTime::createFromFormat('Y-m-d', $row['birth_date']);
+            if ($parsed && $parsed->format('Y-m-d') === $row['birth_date']) {
+                $isYoung = \Carbon\Carbon::parse($row['birth_date'])->age <= 12;
+            }
+        }
+
+        if (($isKidsClass || $isYoung) && empty($row['parent_relationship'])) {
+            $errors[] = 'parent_relationship wajib untuk murid Kids Class atau usia ≤ 12 tahun';
         }
 
         // Hari preferensi harus nama hari Indonesia yang valid
