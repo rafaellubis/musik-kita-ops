@@ -157,8 +157,11 @@ class EnrollmentControllerTest extends TestCase
         );
 
         $e1->refresh();
+        $e2->refresh();
         $this->student->refresh();
         $this->assertEquals('INACTIVE', $e1->status);
         $this->assertEquals($e2->id, $this->student->primary_enrollment_id);
+        // Pastikan enrollment pengganti benar-benar ditandai sebagai utama
+        $this->assertTrue((bool) $e2->is_primary);
     }
 }

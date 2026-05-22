@@ -9,6 +9,7 @@ use App\Models\Schedule;
 use App\Models\Student;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -115,7 +116,7 @@ class EnrollmentController extends Controller
      * Jika 'new_primary_enrollment_id' disertakan di request, konfirmasi
      * dianggap sudah diberikan dan proses langsung dieksekusi.
      */
-    public function destroy(Student $student, Enrollment $enrollment): RedirectResponse
+    public function destroy(Student $student, Enrollment $enrollment, Request $request): RedirectResponse
     {
         // Pastikan enrollment milik murid ini
         abort_if($enrollment->student_id !== $student->id, 403);
@@ -130,7 +131,11 @@ class EnrollmentController extends Controller
 
         // Kasus: menghentikan kelas UTAMA sementara masih ada kelas aktif lain
         if ($isPrimary && $otherActives->isNotEmpty()) {
-            $newPrimaryId = request()->input('new_primary_enrollment_id');
+            // Validasi input new_primary_enrollment_id sebelum digunakan
+            $validated    = $request->validate([
+                'new_primary_enrollment_id' => ['sometimes', 'nullable', 'exists:enrollments,id'],
+            ]);
+            $newPrimaryId = $validated['new_primary_enrollment_id'] ?? null;
 
             // Belum ada konfirmasi — kembalikan ke halaman murid dengan data konfirmasi
             if (!$newPrimaryId) {
@@ -142,10 +147,12 @@ class EnrollmentController extends Controller
                     ]);
             }
 
-            // Konfirmasi sudah diberikan — lanjutkan proses swap + hentikan
+            // Konfirmasi sudah diberikan — validasi enrollment pengganti
             $newPrimary = Enrollment::findOrFail($newPrimaryId);
             abort_if($newPrimary->student_id !== $student->id, 403);
+            abort_if($newPrimary->status !== 'ACTIVE', 422, 'Kelas pengganti harus berstatus aktif.');
 
+            // Lanjutkan proses swap + hentikan dalam satu transaksi
             DB::transaction(function () use ($student, $enrollment, $newPrimary) {
                 // Lepas flag utama dari semua enrollment
                 $student->enrollments()->where('is_primary', true)->update(['is_primary' => false]);
@@ -162,7 +169,10 @@ class EnrollmentController extends Controller
         }
 
         // Kasus normal: hentikan kelas non-utama, atau kelas utama satu-satunya
-        $this->hentikanEnrollment($enrollment);
+        // Dibungkus dalam transaksi agar enrollment->update dan schedules->update atomic
+        DB::transaction(function () use ($enrollment) {
+            $this->hentikanEnrollment($enrollment);
+        });
 
         return redirect()
             ->route('students.show', $student)
