@@ -33,7 +33,7 @@ class ClassSession extends Model
     ];
 
     protected $casts = [
-        'session_date'  => 'date',
+        'session_date'  => 'date:Y-m-d',  // format eksplisit agar SQLite simpan Y-m-d bukan Y-m-d H:i:s
         'late_minutes'  => 'integer',
         'honor_amount'  => 'integer',
     ];

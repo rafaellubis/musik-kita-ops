@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateAbsensiRequest;
 use App\Models\ClassSession;
+use App\Models\Room;
 use App\Models\Teacher;
+use App\Services\RescheduleService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
@@ -22,31 +25,30 @@ use Illuminate\View\View;
  */
 class AbsensiController extends Controller
 {
+    public function __construct(private RescheduleService $rescheduleService) {}
+
     /**
      * Tampilkan halaman absensi harian.
      * Default: hari ini. Bisa difilter via query ?date=YYYY-MM-DD
      */
     public function index(Request $request): View
     {
-        // Parse tanggal dari query parameter, default hari ini
         $tanggal = $request->date
             ? Carbon::parse($request->date)->toDateString()
             : today()->toDateString();
 
-        // Query sesi pada tanggal terpilih, eager-load relasi untuk performa
         $sessions = ClassSession::with(['student', 'teacher', 'substituteTeacher', 'room'])
             ->whereDate('session_date', $tanggal)
             ->orderBy('start_time')
             ->get();
 
-        // Query guru aktif untuk dropdown pengganti di mini-modal DIGANTI
-        $teachers = Teacher::where('is_active', true)
-            ->orderBy('name')
-            ->get();
+        $teachers = Teacher::where('is_active', true)->orderBy('name')->get();
+        $rooms    = Room::where('is_active', true)->orderBy('code')->get();
 
         return view('absensi.index', [
             'sessions'   => $sessions,
             'teachers'   => $teachers,
+            'rooms'      => $rooms,
             'tanggal'    => $tanggal,
             'tanggalObj' => Carbon::parse($tanggal),
         ]);
@@ -56,13 +58,12 @@ class AbsensiController extends Controller
      * Update status absensi satu sesi (AJAX inline).
      *
      * Business rules:
-     * - LIBUR tidak bisa diubah (BR-4.10 — sesi libur nasional, honor tetap dibayar)
-     * - Edit ulang diizinkan: admin boleh koreksi status yang sudah diinput
-     * - late_minutes dan substitute_teacher_id di-null-kan jika status tidak relevan
+     * - LIBUR tidak bisa diubah (BR-4.10)
+     * - IZIN_RESCHEDULE: buat sesi pengganti via RescheduleService
+     *   Jika ada konflik guru/ruangan → rollback via DB transaction, return 422
      */
     public function update(UpdateAbsensiRequest $request, ClassSession $classSession): JsonResponse
     {
-        // LIBUR tidak bisa diubah oleh admin (BR-4.10)
         if ($classSession->status === ClassSession::STATUS_LIBUR) {
             return response()->json([
                 'success' => false,
@@ -70,19 +71,37 @@ class AbsensiController extends Controller
             ], 403);
         }
 
-        $classSession->update([
-            'status'                => $request->status,
-            // Simpan late_minutes hanya jika status HADIR_TERLAMBAT, selain itu null
-            'late_minutes'          => $request->status === ClassSession::STATUS_HADIR_TERLAMBAT
-                                        ? $request->late_minutes : null,
-            // Simpan substitute_teacher_id hanya jika status DIGANTI, selain itu null
-            'substitute_teacher_id' => $request->status === ClassSession::STATUS_DIGANTI
-                                        ? $request->substitute_teacher_id : null,
-            'notes'                 => $request->notes,
-        ]);
+        try {
+            DB::transaction(function () use ($request, $classSession) {
+                $classSession->update([
+                    'status'                => $request->status,
+                    'late_minutes'          => $request->status === ClassSession::STATUS_HADIR_TERLAMBAT
+                                                ? $request->late_minutes : null,
+                    'substitute_teacher_id' => $request->status === ClassSession::STATUS_DIGANTI
+                                                ? $request->substitute_teacher_id : null,
+                    // Notes untuk IZIN_RESCHEDULE di-set otomatis oleh service
+                    'notes'                 => $request->status !== ClassSession::STATUS_IZIN_RESCHEDULE
+                                                ? $request->notes : null,
+                ]);
 
-        // Muat ulang relasi substituteTeacher setelah update
-        $classSession->load('substituteTeacher');
+                if ($request->status === ClassSession::STATUS_IZIN_RESCHEDULE) {
+                    $this->rescheduleService->createReplacement(
+                        $classSession,
+                        $request->replacement_date,
+                        $request->replacement_time,
+                        $request->replacement_room_id,
+                    );
+                }
+            });
+        } catch (\InvalidArgumentException $e) {
+            // Konflik guru atau ruangan — transaction di-rollback otomatis
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+
+        $classSession->refresh()->load('substituteTeacher');
 
         return response()->json([
             'success'                 => true,
@@ -90,6 +109,10 @@ class AbsensiController extends Controller
             'status'                  => $classSession->status,
             'late_minutes'            => $classSession->late_minutes,
             'substitute_teacher_name' => $classSession->substituteTeacher?->name,
+            // notes berisi "Sesi pengganti: 2026-06-05 14:00" untuk IZIN_RESCHEDULE
+            'replacement_label'       => $classSession->status === ClassSession::STATUS_IZIN_RESCHEDULE
+                                            ? str_replace('Sesi pengganti: ', '', $classSession->notes ?? '')
+                                            : null,
         ]);
     }
 }
