@@ -417,7 +417,11 @@ class StudentImportService
             'teacher_id'     => $data['assigned_teacher_id'],
             'effective_date' => $data['active_since'] ?? today()->toDateString(),
             'status'         => 'ACTIVE',
+            'is_primary'     => true,
         ]);
+
+        // Set pointer kelas utama di student (BR-MK-2)
+        $student->update(['primary_enrollment_id' => $enrollment->id]);
 
         // Hitung end_time dari start_time + package.duration_min
         $package   = Package::findOrFail($data['package_id']);
