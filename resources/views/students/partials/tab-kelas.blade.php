@@ -4,7 +4,7 @@
 <div class="space-y-4">
 
     {{-- Notifikasi konfirmasi swap kelas utama (muncul setelah DELETE enrollment primer dengan >1 kelas aktif) --}}
-    @if(session('confirm_primary_swap'))
+    @if(session('confirm_primary_swap') && auth()->user()->hasAnyRole(['Owner', 'Admin']))
         @php $swap = session('confirm_primary_swap'); @endphp
         <div class="rounded-xl p-4"
              style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25)">
@@ -21,7 +21,7 @@
                             style="border:1px solid rgba(251,191,36,0.3)">
                         @foreach($swap['other_actives'] as $other)
                             <option value="{{ $other['id'] }}">
-                                {{ optional(\App\Models\Package::find($other['package_id']))->code ?? 'ID '.$other['id'] }}
+                                {{ $other['package_code'] ?? $other['package_id'] }}
                             </option>
                         @endforeach
                     </select>
@@ -169,7 +169,7 @@
             @foreach($historyEnrollments as $enrollment)
                 <div class="px-5 py-3.5 flex items-center gap-4 border-b border-gray-100 last:border-0 opacity-60">
                     <div class="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0"
-                         style="background:rgba(139,146,168,0.1)">
+                         style="background:rgba(212,168,83,0.07)">
                         🎵
                     </div>
                     <div class="flex-1 min-w-0">
@@ -228,7 +228,7 @@
                     </label>
                     <select name="package_id" required class="block w-full rounded-lg text-sm px-3 py-2">
                         <option value="">— Pilih Paket —</option>
-                        @foreach(\App\Models\Package::where('is_active', true)->with('instrument')->orderBy('sort_order')->get() as $pkg)
+                        @foreach($allPackages as $pkg)
                             <option value="{{ $pkg->id }}">
                                 [{{ $pkg->code }}] {{ $pkg->instrument->name ?? '-' }}
                                 ({{ $pkg->formatted_price }}/bln)
@@ -244,7 +244,7 @@
                     </label>
                     <select name="teacher_id" required class="block w-full rounded-lg text-sm px-3 py-2">
                         <option value="">— Pilih —</option>
-                        @foreach(\App\Models\Teacher::where('is_active', true)->orderBy('name')->get() as $teacher)
+                        @foreach($allTeachers as $teacher)
                             <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
                         @endforeach
                     </select>
@@ -255,7 +255,7 @@
                     <label class="block text-xs text-gray-500 mb-1">Ruangan</label>
                     <select name="room_id" class="block w-full rounded-lg text-sm px-3 py-2">
                         <option value="">— Pilih —</option>
-                        @foreach(\App\Models\Room::where('is_active', true)->orderBy('code')->get() as $room)
+                        @foreach($allRooms as $room)
                             <option value="{{ $room->id }}">[{{ $room->code }}] {{ $room->name }}</option>
                         @endforeach
                     </select>
@@ -309,7 +309,7 @@
                 <button type="button"
                         onclick="document.getElementById('modal-tambah-kelas').classList.add('hidden')"
                         class="px-4 py-2 text-sm text-gray-600 rounded-lg transition-colors"
-                        style="border:1px solid rgba(139,146,168,0.3)">
+                        style="border:1px solid rgba(212,168,83,0.2)">
                     Batal
                 </button>
                 <button type="submit"

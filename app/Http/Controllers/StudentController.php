@@ -156,12 +156,28 @@ class StudentController extends Controller
             ->orderByDesc('end_date')
             ->get();
 
+        // Data untuk modal "Tambah Kelas" — dipindah dari query inline Blade
+        // agar tidak ada Eloquent query di dalam template (separation of concerns)
+        $allPackages = Package::where('is_active', true)
+            ->with('instrument')
+            ->orderBy('sort_order')
+            ->get();
+
+        $allTeachers = Teacher::where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        $allRooms = Room::where('is_active', true)
+            ->orderBy('code')
+            ->get();
+
         return view('students.show', compact(
             'student', 'packages', 'teachers', 'rooms',
             'roomsForFilter', 'bookedSchedules',
             'upcomingSessions',
             'recentInvoices', 'outstandingBalance', 'unpaidCount',
             'activeEnrollments', 'historyEnrollments',
+            'allPackages', 'allTeachers', 'allRooms',
         ));
     }
 

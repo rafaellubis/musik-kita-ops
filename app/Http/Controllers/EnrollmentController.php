@@ -137,13 +137,18 @@ class EnrollmentController extends Controller
             ]);
             $newPrimaryId = $validated['new_primary_enrollment_id'] ?? null;
 
-            // Belum ada konfirmasi — kembalikan ke halaman murid dengan data konfirmasi
+            // Belum ada konfirmasi — kembalikan ke halaman murid dengan data konfirmasi.
+            // Package di-load sekalian agar Blade tidak perlu query per-item (hindari N+1).
             if (!$newPrimaryId) {
                 return redirect()
                     ->route('students.show', $student)
                     ->with('confirm_primary_swap', [
                         'enrollment_id' => $enrollment->id,
-                        'other_actives' => $otherActives->toArray(),
+                        'other_actives' => $otherActives->load('package')->map(fn ($e) => [
+                            'id'           => $e->id,
+                            'package_id'   => $e->package_id,
+                            'package_code' => $e->package->code ?? ('Kelas #' . $e->id),
+                        ])->values()->toArray(),
                     ]);
             }
 
