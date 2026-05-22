@@ -25,7 +25,7 @@ class StudentController extends Controller
     {
         // Build query bertahap berdasarkan filter
         $query = Student::query()
-            ->with(['package.instrument', 'assignedTeacher', 'assignedRoom']);
+            ->with(['primaryEnrollment.package.instrument', 'primaryEnrollment.teacher']);
 
         // Filter status
         if ($request->filled('status')) {
