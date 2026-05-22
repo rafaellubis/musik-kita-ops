@@ -203,7 +203,7 @@
 {{-- ===== MODAL: TAMBAH KELAS ===== --}}
 {{-- Modal ditutup dengan klik backdrop atau tombol batal/× --}}
 <div id="modal-tambah-kelas"
-     class="hidden fixed inset-0 z-50 flex items-start justify-center p-4 pt-16"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
      style="background:rgba(0,0,0,0.55)"
      onclick="if(event.target===this) this.classList.add('hidden')">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[80vh] flex flex-col"
