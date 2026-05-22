@@ -134,62 +134,6 @@ class InvoiceController extends Controller
     }
 
     /**
-     * Hapus seluruh item DENDA dari invoice secara manual (Owner only).
-     *
-     * Cron tetap dapat menambah denda kembali jika invoice masih UNPAID besoknya.
-     * Hanya berlaku untuk invoice berstatus UNPAID.
-     */
-    public function removeDenda(Request $request, Invoice $invoice, InvoiceService $service)
-    {
-        // Hanya invoice UNPAID atau PARTIAL yang bisa dihapus dendanya
-        if (!in_array($invoice->status, [Invoice::STATUS_UNPAID, Invoice::STATUS_PARTIAL], true)) {
-            return back()->with('error',
-                'Hapus denda hanya berlaku untuk invoice berstatus UNPAID atau PARTIAL.');
-        }
-
-        // Pastikan ada item DENDA
-        $dendaItems = $invoice->items()->where('item_code', 'DENDA')->get();
-        if ($dendaItems->isEmpty()) {
-            return back()->with('error', 'Tidak ada item denda di invoice ini.');
-        }
-
-        $data = $request->validate([
-            'reason' => 'required|string|min:5|max:500',
-        ], [
-            'reason.required' => 'Alasan penghapusan denda wajib diisi.',
-            'reason.min'      => 'Alasan minimal 5 karakter.',
-        ]);
-
-        $totalDenda = $dendaItems->sum('amount');
-
-        DB::transaction(function () use ($invoice, $totalDenda, $data, $service) {
-            // Hapus semua item DENDA sekaligus
-            $invoice->items()->where('item_code', 'DENDA')->delete();
-
-            // Recalc total tagihan dan status invoice
-            $newTotal = $invoice->items()->sum('amount');
-            $invoice->update(['total_amount' => $newTotal]);
-            $service->recalcStatus($invoice->fresh());
-
-            // Catat di audit log
-            AuditLog::record(
-                AuditLog::ACTION_DELETE,
-                $invoice,
-                $invoice->invoice_number,
-                ['denda_amount' => $totalDenda],
-                null,
-                'Hapus denda manual. Alasan: ' . $data['reason'],
-            );
-        });
-
-        return back()->with('success', sprintf(
-            'Denda sebesar Rp %s berhasil dihapus dari invoice %s.',
-            number_format($totalDenda, 0, ',', '.'),
-            $invoice->invoice_number,
-        ));
-    }
-
-    /**
      * Halaman A4 untuk dicetak (Ctrl+P → save PDF / cetak fisik).
      * Layout minimalist tanpa nav. CSS @media print untuk auto-hide tombol.
      */

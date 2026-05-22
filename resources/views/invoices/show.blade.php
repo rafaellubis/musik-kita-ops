@@ -28,10 +28,6 @@
         $canEditItems = in_array($invoice->status, ['UNPAID', 'PARTIAL']);
         // Diskon: boleh selama UNPAID atau PARTIAL (sama dengan canEditItems)
         $canDiscount = $canEditItems;
-        // Hapus denda: Owner only, invoice UNPAID atau PARTIAL, dan harus ada item DENDA
-        $hasDenda        = $invoice->items->where('item_code', 'DENDA')->isNotEmpty();
-        $canRemoveDenda  = $isOwner && in_array($invoice->status, ['UNPAID', 'PARTIAL']) && $hasDenda;
-        $totalDenda      = $invoice->items->where('item_code', 'DENDA')->sum('amount');
         // Semua invoice harus dibayar penuh — field amount selalu di-lock = saldo.
         // Untuk KIDS_CLASS_BUNDLE, "cicilan" berarti 3 invoice terpisah yang masing-masing lunas.
         $lockAmount = true;
@@ -316,6 +312,7 @@
                     type: '{{ $item->discountItem?->discount_type ?? 'NOMINAL' }}',
                     value: '{{ $item->discountItem?->discount_value ?? '' }}',
                     itemAmount: {{ $item->amount }},
+                    isDenda: {{ $item->item_code === 'DENDA' ? 'true' : 'false' }},
                     get preview() {
                         const v = parseInt(this.value) || 0;
                         if (v <= 0) return 0;
@@ -398,7 +395,7 @@
                                                 <input type="number" name="discount_value"
                                                        x-model="value"
                                                        min="1"
-                                                       :max="type === 'PERCENT' ? 90 : itemAmount - 1"
+                                                       :max="type === 'PERCENT' ? (isDenda ? 100 : 90) : (isDenda ? itemAmount : itemAmount - 1)"
                                                        required
                                                        class="block w-28 border-gray-300 rounded text-sm"
                                                        placeholder="0">
@@ -485,61 +482,6 @@
                     </tr>
                 </tbody>
             </table>
-            {{-- ===== Hapus Denda (Owner only, UNPAID, ada DENDA) ===== --}}
-            @if($canRemoveDenda)
-                <div class="mt-4 pt-4 border-t border-dashed border-red-200"
-                     x-data="{ showForm: false }">
-                    <div class="flex justify-between items-center">
-                        <div class="text-sm text-gray-500">
-                            Total denda aktif:
-                            <span class="font-semibold text-red-600">
-                                Rp {{ number_format($totalDenda, 0, ',', '.') }}
-                            </span>
-                        </div>
-                        <button type="button" @click="showForm = !showForm"
-                                class="px-3 py-1.5 text-sm rounded border border-red-300 text-red-600
-                                       hover:bg-red-50 transition-colors">
-                            Hapus Denda
-                        </button>
-                    </div>
-
-                    <div x-show="showForm" x-cloak
-                         class="mt-3 p-4 bg-red-50 border border-red-200 rounded">
-                        <form method="POST"
-                              action="{{ route('invoices.remove-denda', $invoice->id) }}"
-                              onsubmit="return confirm('Hapus denda Rp {{ number_format($totalDenda, 0, ',', '.') }} dari invoice ini?\n\nCron otomatis dapat menambah denda kembali jika invoice masih UNPAID.')">
-                            @csrf
-                            <p class="text-sm text-red-700 font-medium mb-3">
-                                Hapus seluruh denda (Rp {{ number_format($totalDenda, 0, ',', '.') }}) dari invoice ini.
-                            </p>
-                            <p class="text-xs text-red-500 mb-3">
-                                Perhatian: jika invoice masih belum dibayar, sistem otomatis dapat menambah denda kembali keesokan harinya.
-                            </p>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">
-                                    Alasan Penghapusan <span class="text-red-500">*</span>
-                                </label>
-                                <textarea name="reason" required minlength="5" maxlength="500" rows="2"
-                                          class="block w-full border-gray-300 rounded text-sm"
-                                          placeholder="Mis: konfirmasi terlambat masuk sistem, kesalahan input tanggal, dispensasi khusus..."></textarea>
-                                @error('reason')
-                                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div class="mt-3 flex gap-2">
-                                <button type="submit"
-                                        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium">
-                                    Konfirmasi Hapus Denda
-                                </button>
-                                <button type="button" @click="showForm = false"
-                                        class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm">
-                                    Batal
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            @endif
         </div>
 
         {{-- ============= PAYMENTS ============= --}}

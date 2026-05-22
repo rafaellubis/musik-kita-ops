@@ -45,13 +45,19 @@ class DiscountService
         }
 
         // Validasi nilai diskon berdasarkan tipe
+        // Item DENDA boleh didiskon penuh (100%) — item lain maks 90% persen dan tidak boleh genap 100% nominal
+        $isDenda = $item->item_code === 'DENDA';
         if ($type === InvoiceItem::DISCOUNT_TYPE_NOMINAL) {
-            if ($value <= 0 || $value >= $item->amount) {
-                throw new \InvalidArgumentException('Nilai diskon nominal harus lebih dari 0 dan kurang dari harga item.');
+            $maxNominal = $isDenda ? $item->amount : $item->amount - 1;
+            if ($value <= 0 || $value > $maxNominal) {
+                $label = $isDenda ? 'maksimal sama dengan harga item' : 'kurang dari harga item';
+                throw new \InvalidArgumentException("Nilai diskon nominal harus lebih dari 0 dan {$label}.");
             }
         } elseif ($type === InvoiceItem::DISCOUNT_TYPE_PERCENT) {
-            if ($value < 1 || $value > 90) {
-                throw new \InvalidArgumentException('Persentase diskon harus antara 1% dan 90%.');
+            $maxPercent = $isDenda ? 100 : 90;
+            if ($value < 1 || $value > $maxPercent) {
+                $label = $isDenda ? '1% dan 100%' : '1% dan 90%';
+                throw new \InvalidArgumentException("Persentase diskon harus antara {$label}.");
             }
         } else {
             throw new \InvalidArgumentException('Tipe diskon tidak valid. Gunakan NOMINAL atau PERCENT.');

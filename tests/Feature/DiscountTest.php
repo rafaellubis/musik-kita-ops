@@ -395,7 +395,7 @@ class DiscountTest extends TestCase
         $this->assertEquals(377500, $this->invoice->total_amount);
     }
 
-    public function test_apply_diskon_nominal_gagal_jika_sama_dengan_amount_denda(): void
+    public function test_apply_diskon_nominal_full_waiver_pada_denda_berhasil(): void
     {
         $this->actingAs($this->owner);
 
@@ -407,13 +407,58 @@ class DiscountTest extends TestCase
         ]);
         $this->invoice->update(['total_amount' => 370000 + 15000]);
 
-        // Diskon nominal = amount denda (100%) → harus ditolak
-        $this->expectException(\InvalidArgumentException::class);
-        $this->service->applyDiscount(
+        // Diskon nominal = amount denda (100%) → sekarang DIIZINKAN untuk DENDA
+        $discountItem = $this->service->applyDiscount(
             $dendaItem,
             InvoiceItem::DISCOUNT_TYPE_NOMINAL,
             15000,
-            'Test full waiver via nominal',
+            'Dispensasi penuh — konfirmasi salah input tanggal',
+            $this->owner,
+        );
+
+        $this->assertEquals(-15000, $discountItem->amount);
+        $this->invoice->refresh();
+        // total = sppItem(370000) + dendaItem(15000) + discountItem(-15000) = 370000
+        $this->assertEquals(370000, $this->invoice->total_amount);
+    }
+
+    public function test_apply_diskon_persen_100_pada_denda_berhasil(): void
+    {
+        $this->actingAs($this->owner);
+
+        $dendaItem = InvoiceItem::create([
+            'invoice_id'  => $this->invoice->id,
+            'item_code'   => 'DENDA',
+            'description' => 'Denda keterlambatan (3 hari × Rp 5.000)',
+            'amount'      => 15000,
+        ]);
+        $this->invoice->update(['total_amount' => 370000 + 15000]);
+
+        $discountItem = $this->service->applyDiscount(
+            $dendaItem,
+            InvoiceItem::DISCOUNT_TYPE_PERCENT,
+            100,
+            'Dispensasi penuh 100%',
+            $this->owner,
+        );
+
+        // intdiv(15000 * 100, 100) = 15000
+        $this->assertEquals(-15000, $discountItem->amount);
+        $this->invoice->refresh();
+        $this->assertEquals(370000, $this->invoice->total_amount);
+    }
+
+    public function test_apply_diskon_persen_lebih_dari_90_tetap_gagal_untuk_spp(): void
+    {
+        $this->actingAs($this->owner);
+
+        // Item SPP (bukan DENDA) tetap dibatasi maks 90%
+        $this->expectException(\InvalidArgumentException::class);
+        $this->service->applyDiscount(
+            $this->sppItem,
+            InvoiceItem::DISCOUNT_TYPE_PERCENT,
+            100,
+            'Test SPP tidak boleh 100%',
             $this->owner,
         );
     }
