@@ -51,7 +51,7 @@ class DiscountService
             }
         } elseif ($type === InvoiceItem::DISCOUNT_TYPE_PERCENT) {
             if ($value < 1 || $value > 90) {
-                throw new \InvalidArgumentException('Persentase diskon maksimal 90% dari harga item.');
+                throw new \InvalidArgumentException('Persentase diskon harus antara 1% dan 90%.');
             }
         } else {
             throw new \InvalidArgumentException('Tipe diskon tidak valid. Gunakan NOMINAL atau PERCENT.');

@@ -151,6 +151,7 @@ class DiscountTest extends TestCase
     public function test_apply_diskon_persen_gagal_jika_lebih_dari_90(): void
     {
         $this->actingAs($this->owner);
+
         $this->expectException(\InvalidArgumentException::class);
         $this->service->applyDiscount(
             $this->sppItem,
@@ -177,6 +178,38 @@ class DiscountTest extends TestCase
         $this->assertEquals(-333000, $discountItem->amount);
         $this->invoice->refresh();
         $this->assertEquals(37000, $this->invoice->total_amount);
+    }
+
+    public function test_apply_diskon_persen_gagal_jika_nol(): void
+    {
+        $this->actingAs($this->owner);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->service->applyDiscount(
+            $this->sppItem,
+            InvoiceItem::DISCOUNT_TYPE_PERCENT,
+            0,
+            'Test lower boundary',
+            $this->owner,
+        );
+    }
+
+    public function test_apply_diskon_persen_minimum_1_berhasil(): void
+    {
+        $this->actingAs($this->owner);
+
+        $discountItem = $this->service->applyDiscount(
+            $this->sppItem,
+            InvoiceItem::DISCOUNT_TYPE_PERCENT,
+            1,
+            'Diskon 1%',
+            $this->owner,
+        );
+
+        // intdiv(370000 * 1, 100) = 3700
+        $this->assertEquals(-3700, $discountItem->amount);
+        $this->invoice->refresh();
+        $this->assertEquals(366300, $this->invoice->total_amount);
     }
 
     public function test_remove_diskon_berhasil(): void
