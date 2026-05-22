@@ -18,6 +18,7 @@ class Enrollment extends Model
     protected $fillable = [
         'student_id', 'package_id', 'teacher_id',
         'effective_date', 'end_date', 'status', 'notes',
+        'is_primary',
     ];
 
     protected $casts = [

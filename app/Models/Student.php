@@ -18,9 +18,10 @@ class Student extends Model
         'birth_date', 'phone', 'email', 'address', 'notes',
         // Parent
         'parent_name', 'parent_phone', 'parent_email', 'parent_relationship',
-        // Status
-        'status', 'package_id', 'assigned_teacher_id', 'assigned_room_id',
-        'preferred_day', 'preferred_time', 'trial_date', 'active_since',
+        // Status & pointer ke enrollment utama
+        'status', 'primary_enrollment_id',
+        // Tanggal penting
+        'trial_date', 'active_since',
         // Tracking
         'last_session_at',
         // Cuti
@@ -28,29 +29,23 @@ class Student extends Model
     ];
 
     protected $casts = [
-        'birth_date' => 'date',
-        'trial_date' => 'datetime',
-        'active_since' => 'date',
+        'birth_date'    => 'date',
+        'trial_date'    => 'datetime',
+        'active_since'  => 'date',
         'last_session_at' => 'datetime',
-        'cuti_from' => 'date',
-        'cuti_until' => 'date',
+        'cuti_from'     => 'date',
+        'cuti_until'    => 'date',
     ];
 
     // ============= RELATIONSHIPS =============
 
-    public function package(): BelongsTo
+    /**
+     * Enrollment utama murid — pointer ke paket/guru yang sedang aktif.
+     * Murid bisa punya banyak enrollment, tapi hanya satu yang menjadi "primary".
+     */
+    public function primaryEnrollment(): BelongsTo
     {
-        return $this->belongsTo(Package::class);
-    }
-
-    public function assignedTeacher(): BelongsTo
-    {
-        return $this->belongsTo(Teacher::class, 'assigned_teacher_id');
-    }
-
-    public function assignedRoom(): BelongsTo
-    {
-        return $this->belongsTo(Room::class, 'assigned_room_id');
+        return $this->belongsTo(Enrollment::class, 'primary_enrollment_id');
     }
 
     /**
@@ -95,7 +90,7 @@ class Student extends Model
      */
     public static function generateCode(): string
     {
-        $year = now()->year;
+        $year   = now()->year;
         $prefix = "M-{$year}-";
 
         $latest = static::where('student_code', 'like', $prefix . '%')
@@ -109,12 +104,12 @@ class Student extends Model
 
         // Extract nomor (4 digit terakhir), parse, increment
         $lastNumber = (int) substr($latest->student_code, -4);
-        $newNumber = $lastNumber + 1;
+        $newNumber  = $lastNumber + 1;
 
         return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 
-    // ============= ACCESSOR =============
+    // ============= ACCESSORS =============
 
     /**
      * Hitung umur murid berdasarkan birth_date.
@@ -123,5 +118,33 @@ class Student extends Model
     public function getAgeAttribute(): ?int
     {
         return $this->birth_date ? $this->birth_date->age : null;
+    }
+
+    /**
+     * Backward-compat: views yang pakai $student->package masih bisa jalan.
+     * Sekarang dibaca dari primaryEnrollment, bukan kolom langsung di students.
+     */
+    public function getPackageAttribute(): ?Package
+    {
+        return $this->primaryEnrollment?->package;
+    }
+
+    /**
+     * Backward-compat: views yang pakai $student->assignedTeacher masih bisa jalan.
+     * Guru diambil dari primaryEnrollment.
+     */
+    public function getAssignedTeacherAttribute(): ?Teacher
+    {
+        return $this->primaryEnrollment?->teacher;
+    }
+
+    /**
+     * Backward-compat: views yang pakai $student->assignedRoom masih bisa jalan.
+     * Ruangan diambil dari jadwal aktif pertama di primaryEnrollment.
+     */
+    public function getAssignedRoomAttribute(): ?Room
+    {
+        // Enrollment punya banyak schedules — ambil yang aktif pertama
+        return $this->primaryEnrollment?->schedules()->where('is_active', true)->first()?->room;
     }
 }

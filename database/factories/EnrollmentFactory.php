@@ -27,6 +27,7 @@ class EnrollmentFactory extends Factory
             'effective_date' => today(),
             'end_date'       => null,
             'status'         => 'ACTIVE',
+            'is_primary'     => false,
             'notes'          => null,
         ];
     }
