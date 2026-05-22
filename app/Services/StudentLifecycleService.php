@@ -571,6 +571,11 @@ class StudentLifecycleService
      * Tutup semua enrollment ACTIVE milik murid: set status target + end_date=today.
      * Dipanggil sebelum bikin enrollment baru (ganti paket) atau saat
      * murid Mundur/Selesai.
+     *
+     * primary_enrollment_id di-null setelah enrollment ditutup agar tidak ada
+     * stale FK pointer ke enrollment INACTIVE/COMPLETED. Jika pemanggil
+     * (openEnrollment) langsung membuat enrollment baru, pointer ini akan
+     * segera diisi ulang — null sementara tidak masalah dalam satu transaksi.
      */
     private function closeActiveEnrollments(Student $student, string $status): void
     {
@@ -580,6 +585,10 @@ class StudentLifecycleService
                 'status'   => $status,
                 'end_date' => now()->toDateString(),
             ]);
+
+        // Hapus pointer ke enrollment yang sudah tidak aktif
+        // agar accessor ->primaryEnrollment tidak mengembalikan data lama.
+        $student->update(['primary_enrollment_id' => null]);
     }
 
     /**
