@@ -64,9 +64,6 @@ class StudentLifecycleService
      *
      * @param array{
      *     trial_date: string,
-     *     package_id?: int,
-     *     assigned_teacher_id?: int,
-     *     assigned_room_id?: int,
      *     notes?: string|null,
      * } $data
      */
@@ -78,11 +75,8 @@ class StudentLifecycleService
             $from = $student->status;
 
             $student->update([
-                'status' => 'Trial',
+                'status'     => 'Trial',
                 'trial_date' => $data['trial_date'],
-                'package_id' => $data['package_id'] ?? $student->package_id,
-                'assigned_teacher_id' => $data['assigned_teacher_id'] ?? $student->assigned_teacher_id,
-                'assigned_room_id' => $data['assigned_room_id'] ?? $student->assigned_room_id,
             ]);
 
             $this->recordHistory(
@@ -106,7 +100,6 @@ class StudentLifecycleService
      * @param array{
      *     package_id: int,
      *     assigned_teacher_id: int,
-     *     assigned_room_id?: int,
      *     notes?: string|null,
      * } $data
      */
@@ -118,10 +111,7 @@ class StudentLifecycleService
             $from = $student->status;
 
             $student->update([
-                'status' => 'Aktif',
-                'package_id' => $data['package_id'],
-                'assigned_teacher_id' => $data['assigned_teacher_id'],
-                'assigned_room_id' => $data['assigned_room_id'] ?? $student->assigned_room_id,
+                'status'       => 'Aktif',
                 'active_since' => now()->toDateString(),
             ]);
 
@@ -163,7 +153,6 @@ class StudentLifecycleService
      *     reason: string,
      *     package_id: int,
      *     assigned_teacher_id: int,
-     *     assigned_room_id?: int,
      * } $data
      */
     public function skipTrial(Student $student, array $data): Student
@@ -185,10 +174,7 @@ class StudentLifecycleService
             $from = $student->status;
 
             $student->update([
-                'status' => 'Aktif',
-                'package_id' => $data['package_id'],
-                'assigned_teacher_id' => $data['assigned_teacher_id'],
-                'assigned_room_id' => $data['assigned_room_id'] ?? null,
+                'status'       => 'Aktif',
                 'active_since' => now()->toDateString(),
             ]);
 
@@ -445,7 +431,6 @@ class StudentLifecycleService
      * @param array{
      *     package_id: int,
      *     assigned_teacher_id: int,
-     *     assigned_room_id?: int,
      *     notes?: string|null,
      * } $data
      */
@@ -478,10 +463,7 @@ class StudentLifecycleService
             $from = $student->status;
 
             $student->update([
-                'status' => 'Aktif',
-                'package_id' => $data['package_id'],
-                'assigned_teacher_id' => $data['assigned_teacher_id'],
-                'assigned_room_id' => $data['assigned_room_id'] ?? $student->assigned_room_id,
+                'status'       => 'Aktif',
                 'active_since' => now()->toDateString(),
             ]);
 
@@ -702,19 +684,30 @@ class StudentLifecycleService
      * Bikin enrollment ACTIVE baru. Dipanggil saat skipTrial / konversiAktif /
      * aktifkanKembali. Tutup enrollment ACTIVE existing dulu biar tidak
      * ada 2 ACTIVE bersamaan.
+     *
+     * is_primary=true: tandai ini sebagai kelas utama murid.
+     * primary_enrollment_id di student diupdate agar accessor ->package,
+     * ->teacher, dll bisa berjalan tanpa kolom denormalisasi di students.
      */
     private function openEnrollment(Student $student, int $packageId, int $teacherId): Enrollment
     {
         // Defensive: tutup ACTIVE existing kalau paket/guru beda dengan yang baru.
         $this->closeActiveEnrollments($student, status: 'INACTIVE');
 
-        return Enrollment::create([
+        $enrollment = Enrollment::create([
             'student_id'     => $student->id,
             'package_id'     => $packageId,
             'teacher_id'     => $teacherId,
             'effective_date' => now()->toDateString(),
             'status'         => 'ACTIVE',
+            'is_primary'     => true,
         ]);
+
+        // Tandai sebagai kelas utama murid agar primaryEnrollment() bekerja
+        // tanpa perlu query tambahan di setiap accessor.
+        $student->update(['primary_enrollment_id' => $enrollment->id]);
+
+        return $enrollment;
     }
 
     /**
