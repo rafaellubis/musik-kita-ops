@@ -51,7 +51,7 @@
 
         /* Catatan kaki Kids Class */
         .kids-note { font-size: 10px; color: #888; font-style: italic;
-                     margin-top: -10px; margin-bottom: 16px; padding-left: 6px; }
+                     margin-top: 4px; margin-bottom: 16px; padding-left: 6px; }
 
         /* Status badge */
         .status-badge { display: inline-block; padding: 2px 8px; border-radius: 3px;
