@@ -330,4 +330,89 @@ class DiscountTest extends TestCase
         $response->assertRedirect(route('invoices.show', $this->invoice->id));
         $this->assertDatabaseMissing('invoice_items', ['id' => $discountItem->id]);
     }
+
+    // ===== Test Diskon pada Item DENDA =====
+    // DiscountService tidak memblokir item DENDA secara eksplisit.
+    // Test-test ini mendokumentasikan perilaku dan mengunci agar tidak regresi.
+
+    public function test_apply_diskon_nominal_pada_denda_berhasil(): void
+    {
+        $this->actingAs($this->owner);
+
+        // Dibuat inline — tidak di setUp() agar tidak merusak total invoice test lain
+        $dendaItem = InvoiceItem::create([
+            'invoice_id'  => $this->invoice->id,
+            'item_code'   => 'DENDA',
+            'description' => 'Denda keterlambatan (3 hari × Rp 5.000)',
+            'amount'      => 15000,
+        ]);
+        $this->invoice->update(['total_amount' => 370000 + 15000]);
+
+        $discountItem = $this->service->applyDiscount(
+            $dendaItem,
+            InvoiceItem::DISCOUNT_TYPE_NOMINAL,
+            5000,
+            'Diskon denda — konfirmasi terlambat masuk sistem',
+            $this->owner,
+        );
+
+        $this->assertEquals('DISKON', $discountItem->item_code);
+        $this->assertEquals(-5000, $discountItem->amount);
+        $this->assertEquals($dendaItem->id, $discountItem->parent_item_id);
+
+        $this->invoice->refresh();
+        // total = sppItem(370000) + dendaItem(15000) + discountItem(-5000) = 380000
+        $this->assertEquals(380000, $this->invoice->total_amount);
+    }
+
+    public function test_apply_diskon_persen_pada_denda_berhasil(): void
+    {
+        $this->actingAs($this->owner);
+
+        $dendaItem = InvoiceItem::create([
+            'invoice_id'  => $this->invoice->id,
+            'item_code'   => 'DENDA',
+            'description' => 'Denda keterlambatan (3 hari × Rp 5.000)',
+            'amount'      => 15000,
+        ]);
+        $this->invoice->update(['total_amount' => 370000 + 15000]);
+
+        $discountItem = $this->service->applyDiscount(
+            $dendaItem,
+            InvoiceItem::DISCOUNT_TYPE_PERCENT,
+            50,
+            'Diskon denda 50%',
+            $this->owner,
+        );
+
+        // intdiv(15000 * 50, 100) = 7500
+        $this->assertEquals(-7500, $discountItem->amount);
+
+        $this->invoice->refresh();
+        // total = 370000 + 15000 - 7500 = 377500
+        $this->assertEquals(377500, $this->invoice->total_amount);
+    }
+
+    public function test_apply_diskon_nominal_gagal_jika_sama_dengan_amount_denda(): void
+    {
+        $this->actingAs($this->owner);
+
+        $dendaItem = InvoiceItem::create([
+            'invoice_id'  => $this->invoice->id,
+            'item_code'   => 'DENDA',
+            'description' => 'Denda keterlambatan (3 hari × Rp 5.000)',
+            'amount'      => 15000,
+        ]);
+        $this->invoice->update(['total_amount' => 370000 + 15000]);
+
+        // Diskon nominal = amount denda (100%) → harus ditolak
+        $this->expectException(\InvalidArgumentException::class);
+        $this->service->applyDiscount(
+            $dendaItem,
+            InvoiceItem::DISCOUNT_TYPE_NOMINAL,
+            15000,
+            'Test full waiver via nominal',
+            $this->owner,
+        );
+    }
 }
