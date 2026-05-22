@@ -67,7 +67,7 @@
                         </thead>
                         <tbody class="divide-y divide-gray-200">
                             @foreach($sessions as $session)
-                                @include('absensi._row', ['session' => $session, 'teachers' => $teachers])
+                                @include('absensi._row', ['session' => $session, 'teachers' => $teachers, 'rooms' => $rooms])
                             @endforeach
                         </tbody>
                     </table>

@@ -1,4 +1,13 @@
-@php $isLibur = $session->status === 'LIBUR'; @endphp
+@php
+    $isLibur = $session->status === 'LIBUR';
+
+    // Ekstrak label replacement dari notes sesi asli (jika sudah pernah di-reschedule)
+    $replacementLabel = '';
+    if ($session->status === 'IZIN_RESCHEDULE' && $session->notes
+        && str_starts_with($session->notes, 'Sesi pengganti: ')) {
+        $replacementLabel = substr($session->notes, strlen('Sesi pengganti: '));
+    }
+@endphp
 
 <tr class="hover:bg-gray-50 transition-colors"
     data-teacher-id="{{ $session->teacher_id }}"
@@ -10,10 +19,16 @@
         lateMinutes: {{ $session->late_minutes ?? 15 }},
         substituteId: {{ $session->substitute_teacher_id ?? 'null' }},
         substituteLabel: @js($session->substituteTeacher?->name ?? ''),
+        replacementLabel: @js($replacementLabel),
+        rescheduleDate: '',
+        rescheduleTime: '',
+        rescheduleRoomId: null,
         showModal: null,
         loading: false,
+        errorMsg: '',
         async save(newStatus, extra = {}) {
-            this.loading = true;
+            this.loading  = true;
+            this.errorMsg = '';
             try {
                 const res = await fetch('{{ route('absensi.update', $session) }}', {
                     method: 'PATCH',
@@ -27,12 +42,23 @@
                 const data = await res.json();
                 if (data.success) {
                     this.status = data.status;
-                    if (data.late_minutes) this.lateMinutes = data.late_minutes;
+                    if (data.late_minutes)            this.lateMinutes     = data.late_minutes;
                     if (data.substitute_teacher_name) this.substituteLabel = data.substitute_teacher_name;
+                    if (data.replacement_label)       this.replacementLabel = data.replacement_label;
                     this.showModal = null;
                     this.$el.dataset.status = data.status;
+                } else {
+                    this.errorMsg = data.message || 'Gagal menyimpan.';
                 }
             } finally { this.loading = false; }
+        },
+        saveReschedule() {
+            if (!this.rescheduleDate || !this.rescheduleTime) return;
+            this.save('IZIN_RESCHEDULE', {
+                replacement_date:    this.rescheduleDate,
+                replacement_time:    this.rescheduleTime,
+                replacement_room_id: this.rescheduleRoomId || null,
+            });
         }
     }"
     :class="status !== 'SCHEDULED' ? 'opacity-60' : ''"
@@ -74,27 +100,27 @@
             </span>
 
         @else
-            {{-- Badge (setelah status diinput / baru di-update via AJAX) --}}
+            {{-- Badge setelah status diinput --}}
             <div x-show="status !== 'SCHEDULED'" class="flex items-center justify-end gap-2">
                 <span class="rounded px-3 py-1 text-xs border"
                     :class="{
-                        'bg-green-100 text-green-700 border-green-200': status === 'HADIR',
+                        'bg-green-100 text-green-700 border-green-200':    status === 'HADIR',
                         'bg-orange-100 text-orange-700 border-orange-200': status === 'HADIR_TERLAMBAT',
-                        'bg-red-100 text-red-700 border-red-200': status === 'HANGUS',
+                        'bg-red-100 text-red-700 border-red-200':          status === 'HANGUS',
                         'bg-yellow-100 text-yellow-700 border-yellow-200': status === 'IZIN_RESCHEDULE',
-                        'bg-blue-100 text-blue-700 border-blue-200': status === 'IZIN_VIDEO',
+                        'bg-blue-100 text-blue-700 border-blue-200':       status === 'IZIN_VIDEO',
                         'bg-purple-100 text-purple-700 border-purple-200': status === 'DIGANTI',
                     }"
                     x-text="
-                        status === 'HADIR'           ? '✓ HADIR' :
-                        status === 'HADIR_TERLAMBAT' ? '⏱ +' + lateMinutes + ' mnt' :
-                        status === 'HANGUS'          ? '✕ HANGUS' :
-                        status === 'IZIN_RESCHEDULE' ? '📅 IZIN' :
-                        status === 'IZIN_VIDEO'      ? '📹 VIDEO' :
-                        status === 'DIGANTI'         ? '↔ ' + substituteLabel : status
+                        status === 'HADIR'            ? '✓ HADIR' :
+                        status === 'HADIR_TERLAMBAT'  ? '⏱ +' + lateMinutes + ' mnt' :
+                        status === 'HANGUS'            ? '✕ HANGUS' :
+                        status === 'IZIN_RESCHEDULE'   ? '📅 ' + (replacementLabel || 'IZIN') :
+                        status === 'IZIN_VIDEO'        ? '📹 VIDEO' :
+                        status === 'DIGANTI'           ? '↔ ' + substituteLabel : status
                     ">
                 </span>
-                <button @click="status = 'SCHEDULED'"
+                <button @click="status = 'SCHEDULED'; errorMsg = ''"
                     class="text-gray-400 hover:text-gray-600 text-xs underline">ubah</button>
             </div>
 
@@ -104,15 +130,15 @@
                 :class="loading ? 'opacity-50 pointer-events-none' : ''">
 
                 <button @click="save('HADIR')"
-                    class="rounded px-3 py-1.5 text-xs font-semibold btn-mk-primary"
-                    >
+                    class="rounded px-3 py-1.5 text-xs font-semibold btn-mk-primary">
                     HADIR
                 </button>
                 <button @click="save('HANGUS')"
                     class="border border-red-300 text-red-600 hover:bg-red-50 rounded px-3 py-1.5 text-xs">
                     HANGUS
                 </button>
-                <button @click="save('IZIN_RESCHEDULE')"
+                {{-- IZIN → buka mini-modal (bukan langsung save) --}}
+                <button @click="showModal = 'reschedule'"
                     class="border border-yellow-300 text-yellow-700 hover:bg-yellow-50 rounded px-3 py-1.5 text-xs">
                     IZIN
                 </button>
@@ -155,8 +181,7 @@
                         </div>
                         <div class="flex gap-2">
                             <button @click="save('HADIR_TERLAMBAT', { late_minutes: lateMinutes })"
-                                class="flex-1 font-semibold text-xs py-2 rounded btn-mk-primary"
-                                >
+                                class="flex-1 font-semibold text-xs py-2 rounded btn-mk-primary">
                                 Simpan
                             </button>
                             <button @click="showModal = null"
@@ -184,8 +209,7 @@
                         <div class="flex gap-2">
                             <button @click="if(substituteId) save('DIGANTI', { substitute_teacher_id: substituteId })"
                                 :disabled="!substituteId"
-                                class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded btn-mk-primary"
-                                >
+                                class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded btn-mk-primary">
                                 Simpan
                             </button>
                             <button @click="showModal = null"
@@ -193,6 +217,53 @@
                                 Batal
                             </button>
                         </div>
+                    </div>
+
+                </div>
+            </div>
+
+            {{-- Mini-modal: RESCHEDULE (di luar tombol ···, karena dipanggil dari tombol IZIN) --}}
+            <div x-show="showModal === 'reschedule'" @click.outside="showModal = null"
+                class="fixed inset-0 z-40 flex items-center justify-center"
+                style="display: none;">
+                <div class="bg-white border border-gray-200 rounded-lg shadow-xl w-80 p-5">
+                    <p class="text-gray-700 text-sm font-medium mb-1">Jadwalkan Sesi Pengganti</p>
+                    <p class="text-gray-400 text-xs mb-4 truncate">
+                        {{ $session->student->full_name }} · {{ $session->teacher->name }}
+                    </p>
+
+                    {{-- Error message dari server (konflik guru/ruangan) --}}
+                    <p x-show="errorMsg" x-text="errorMsg"
+                        class="bg-red-50 border border-red-200 text-red-600 text-xs rounded px-3 py-2 mb-3">
+                    </p>
+
+                    <label class="block text-gray-500 text-xs mb-1">Tanggal Pengganti</label>
+                    <input type="date" x-model="rescheduleDate"
+                        class="w-full border border-gray-300 text-gray-700 rounded px-3 py-1.5 text-sm mb-3">
+
+                    <label class="block text-gray-500 text-xs mb-1">Jam Mulai</label>
+                    <input type="time" x-model="rescheduleTime"
+                        class="w-full border border-gray-300 text-gray-700 rounded px-3 py-1.5 text-sm mb-3">
+
+                    <label class="block text-gray-500 text-xs mb-1">Ruangan <span class="text-gray-400">(opsional)</span></label>
+                    <select x-model="rescheduleRoomId"
+                        class="w-full border border-gray-300 text-gray-700 rounded px-3 py-1.5 text-sm mb-4">
+                        <option value="">— Tanpa ruangan —</option>
+                        @foreach($rooms as $room)
+                            <option value="{{ $room->id }}">{{ $room->code }} — {{ $room->name }}</option>
+                        @endforeach
+                    </select>
+
+                    <div class="flex gap-2">
+                        <button @click="saveReschedule()"
+                            :disabled="!rescheduleDate || !rescheduleTime"
+                            class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded btn-mk-primary">
+                            Buat Sesi Pengganti
+                        </button>
+                        <button @click="showModal = null; errorMsg = ''"
+                            class="border border-gray-200 text-gray-500 hover:bg-gray-50 text-xs py-2 px-3 rounded">
+                            Batal
+                        </button>
                     </div>
                 </div>
             </div>
