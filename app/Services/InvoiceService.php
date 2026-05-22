@@ -62,6 +62,7 @@ class InvoiceService
      * @param  string       $paymentMode        FULL atau INSTALLMENT (default FULL).
      * @param  int|null     $installmentNumber  Nomor termin 1/2/3 (hanya untuk INSTALLMENT).
      * @param  string|null  $installmentGroupId UUID pengikat 3 invoice cicilan (hanya untuk INSTALLMENT).
+     * @param  int|null     $enrollmentId       FK ke enrollment spesifik (multi-kelas: 1 invoice per enrollment).
      */
     public function createOneOff(
         Student $student,
@@ -73,6 +74,7 @@ class InvoiceService
         string $paymentMode = Invoice::MODE_FULL,
         ?int $installmentNumber = null,
         ?string $installmentGroupId = null,
+        ?int $enrollmentId = null,
     ): Invoice {
         if (empty($items)) {
             throw new \InvalidArgumentException('Items invoice tidak boleh kosong.');
@@ -90,13 +92,14 @@ class InvoiceService
 
         return DB::transaction(function () use (
             $student, $items, $description, $year, $month, $dueDate, $issuedAt,
-            $classType, $paymentMode, $installmentNumber, $installmentGroupId
+            $classType, $paymentMode, $installmentNumber, $installmentGroupId, $enrollmentId
         ) {
             $total = array_sum(array_column($items, 'amount'));
 
             $invoice = Invoice::create([
                 'invoice_number'      => $this->generateNumber($year, $month, 'INV'),
                 'student_id'          => $student->id,
+                'enrollment_id'       => $enrollmentId,
                 'year'                => $year,
                 'month'               => $month,
                 'description'         => $description ?? $this->summarizeItems($items),
@@ -191,64 +194,84 @@ class InvoiceService
     }
 
     /**
-     * Generate SPP bulanan untuk semua murid AKTIF yang punya enrollment ACTIVE.
-     * Idempotent: kalau invoice SPP untuk (student, year, month) sudah ada, skip.
+     * Generate SPP bulanan untuk semua enrollment ACTIVE murid Aktif.
+     *
+     * Multi-kelas: 1 murid dengan 2 enrollment ACTIVE → 2 invoice SPP terpisah,
+     * masing-masing terikat ke enrollment_id spesifik.
+     *
+     * Idempotent: cek berdasarkan (student_id, enrollment_id, year, month) + item SPP.
+     * Jalankan berkali-kali dalam bulan yang sama tetap aman.
      *
      * @return array{created:int, skipped:int}
      */
     public function generateMonthlySPP(int $year, int $month): array
     {
         $issuedAt = Carbon::create($year, $month, 1)->startOfMonth();
-        $dueDate = $issuedAt->copy()->day(self::DUE_DAY)->endOfDay();
+        $dueDate  = $issuedAt->copy()->day(self::DUE_DAY)->endOfDay();
 
         $report = ['created' => 0, 'skipped' => 0];
 
-        // Murid Aktif dengan enrollment ACTIVE yang belum berakhir (end_date IS NULL)
+        // Ambil semua murid Aktif yang punya minimal 1 enrollment ACTIVE.
+        // Eager-load hanya enrollment ACTIVE (end_date IS NULL) beserta package + instrument.
         $students = Student::where('status', 'Aktif')
             ->whereHas('enrollments', fn ($q) => $q->where('status', 'ACTIVE')->whereNull('end_date'))
             ->with(['enrollments' => fn ($q) => $q->where('status', 'ACTIVE')->whereNull('end_date')->with('package.instrument')])
             ->get();
 
         foreach ($students as $student) {
-            $enrollment = $student->enrollments->first();
-            if (!$enrollment || !$enrollment->package) continue;
+            // Loop per enrollment — multi-kelas: 1 murid bisa dapat 2+ invoice SPP
+            foreach ($student->enrollments as $enrollment) {
+                if (!$enrollment->package) continue;
 
-            $package = $enrollment->package;
+                $package = $enrollment->package;
 
-            // KIDS_CLASS_BUNDLE tidak kena SPP bulanan — tagihan mereka sudah
-            // di-generate sebagai 3 cicilan saat aktivasi (BR-10.10).
-            if ($package->class_type === 'KIDS_CLASS_BUNDLE') {
-                $report['skipped']++;
-                continue;
+                // KIDS_CLASS_BUNDLE tidak kena SPP bulanan — tagihan mereka sudah
+                // di-generate sebagai 3 cicilan saat aktivasi (BR-10.10).
+                if ($package->class_type === 'KIDS_CLASS_BUNDLE') {
+                    $report['skipped']++;
+                    continue;
+                }
+
+                // Idempotency: cek per (student, enrollment, year, month) + item SPP.
+                // Beda dari versi lama yang cek per (student, year, month) saja —
+                // versi baru memastikan setiap enrollment dapat invoice sendiri.
+                $exists = Invoice::where('student_id', $student->id)
+                    ->where('enrollment_id', $enrollment->id)
+                    ->where('year', $year)
+                    ->where('month', $month)
+                    ->whereHas('items', fn ($q) => $q->where('item_code', 'SPP'))
+                    ->exists();
+
+                if ($exists) {
+                    $report['skipped']++;
+                    continue;
+                }
+
+                // Deskripsi invoice menyertakan nama instrumen agar mudah dibedakan
+                // ketika 1 murid punya 2+ invoice di bulan yang sama.
+                $instrNama   = $package->instrument->name ?? $package->code;
+                $description = "SPP {$instrNama} — " . $issuedAt->translatedFormat('F Y');
+
+                $this->createOneOff(
+                    student:      $student,
+                    items: [[
+                        'code'        => 'SPP',
+                        'description' => $description,
+                        'amount'      => $package->price_per_month,
+                        'metadata'    => [
+                            'package_id'    => $package->id,
+                            'enrollment_id' => $enrollment->id,
+                        ],
+                    ]],
+                    description:  $description,
+                    dueDate:      $dueDate,
+                    issuedAt:     $issuedAt,
+                    classType:    $package->class_type,
+                    enrollmentId: $enrollment->id,
+                );
+
+                $report['created']++;
             }
-
-            // Skip kalau invoice SPP untuk bulan ini sudah ada
-            $exists = Invoice::where('student_id', $student->id)
-                ->where('year', $year)
-                ->where('month', $month)
-                ->whereHas('items', fn ($q) => $q->where('item_code', 'SPP'))
-                ->exists();
-
-            if ($exists) {
-                $report['skipped']++;
-                continue;
-            }
-
-            $this->createOneOff(
-                student: $student,
-                items: [[
-                    'code'        => 'SPP',
-                    'description' => "SPP {$package->code} {$package->instrument->name} "
-                                     . $issuedAt->format('F Y'),
-                    'amount'      => $package->price_per_month,
-                    'metadata'    => ['package_id' => $package->id],
-                ]],
-                description: 'SPP ' . $issuedAt->format('F Y'),
-                dueDate: $dueDate,
-                issuedAt: $issuedAt,
-                classType: $package->class_type,
-            );
-            $report['created']++;
         }
 
         return $report;

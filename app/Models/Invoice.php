@@ -25,6 +25,7 @@ class Invoice extends Model
     protected $fillable = [
         'invoice_number',
         'student_id',
+        'enrollment_id',
         'year', 'month',
         'description',
         'total_amount', 'paid_amount',
@@ -112,6 +113,11 @@ class Invoice extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
+    }
+
+    public function enrollment(): BelongsTo
+    {
+        return $this->belongsTo(Enrollment::class);
     }
 
     public function items(): HasMany
