@@ -66,6 +66,7 @@ class RescheduleService
                 ->where('start_time', '<', $endTime)
                 ->where('end_time', '>', $startTimeFull)
                 ->where('status', '!=', ClassSession::STATUS_CANCELLED)
+                ->where('id', '!=', $original->id)
                 ->first();
 
             if ($roomConflict) {
