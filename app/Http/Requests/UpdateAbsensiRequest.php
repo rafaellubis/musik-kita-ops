@@ -50,6 +50,20 @@ class UpdateAbsensiRequest extends FormRequest
                 'nullable', 'exists:teachers,id',
             ],
             'notes' => ['nullable', 'string', 'max:500'],
+            // Tanggal pengganti — wajib jika status IZIN_RESCHEDULE
+            'replacement_date' => [
+                'required_if:status,' . ClassSession::STATUS_IZIN_RESCHEDULE,
+                'nullable', 'date', 'date_format:Y-m-d',
+            ],
+            // Jam mulai pengganti — wajib jika status IZIN_RESCHEDULE
+            'replacement_time' => [
+                'required_if:status,' . ClassSession::STATUS_IZIN_RESCHEDULE,
+                'nullable', 'date_format:H:i',
+            ],
+            // Ruangan pengganti — opsional
+            'replacement_room_id' => [
+                'nullable', 'exists:rooms,id',
+            ],
         ];
     }
 
@@ -63,6 +77,11 @@ class UpdateAbsensiRequest extends FormRequest
             'late_minutes.max'                  => 'Maksimal 60 menit.',
             'substitute_teacher_id.required_if' => 'Guru pengganti wajib dipilih.',
             'substitute_teacher_id.exists'      => 'Guru pengganti tidak ditemukan.',
+            'replacement_date.required_if'      => 'Tanggal pengganti wajib diisi.',
+            'replacement_date.date_format'      => 'Format tanggal harus YYYY-MM-DD.',
+            'replacement_time.required_if'      => 'Jam mulai pengganti wajib diisi.',
+            'replacement_time.date_format'      => 'Format jam harus HH:MM.',
+            'replacement_room_id.exists'        => 'Ruangan tidak ditemukan.',
         ];
     }
 }
