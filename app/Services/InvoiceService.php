@@ -212,10 +212,12 @@ class InvoiceService
         $report = ['created' => 0, 'skipped' => 0];
 
         // Ambil semua murid Aktif yang punya minimal 1 enrollment ACTIVE.
-        // Eager-load hanya enrollment ACTIVE (end_date IS NULL) beserta package + instrument.
+        // status = ACTIVE adalah sumber kebenaran tunggal — whereNull('end_date') tidak diperlukan
+        // dan justru berbahaya: enrollment ACTIVE yang kebetulan punya end_date (bug data) akan
+        // lolos tanpa peringatan, murid tidak dapat invoice SPP tanpa ada error apapun.
         $students = Student::where('status', 'Aktif')
-            ->whereHas('enrollments', fn ($q) => $q->where('status', 'ACTIVE')->whereNull('end_date'))
-            ->with(['enrollments' => fn ($q) => $q->where('status', 'ACTIVE')->whereNull('end_date')->with('package.instrument')])
+            ->whereHas('enrollments', fn ($q) => $q->where('status', 'ACTIVE'))
+            ->with(['enrollments' => fn ($q) => $q->where('status', 'ACTIVE')->with('package.instrument')])
             ->get();
 
         foreach ($students as $student) {

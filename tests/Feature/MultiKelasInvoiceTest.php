@@ -53,8 +53,14 @@ class MultiKelasInvoiceTest extends TestCase
 
         $invoices = Invoice::where('student_id', $student->id)->get();
         $this->assertCount(2, $invoices);
-        $this->assertEquals(340000, $invoices->firstWhere('enrollment_id', $e1->id)->total_amount);
-        $this->assertEquals(390000, $invoices->firstWhere('enrollment_id', $e2->id)->total_amount);
+
+        // Guard: pastikan invoice ditemukan sebelum akses properti (hindari null pointer error)
+        $inv1 = $invoices->firstWhere('enrollment_id', $e1->id);
+        $inv2 = $invoices->firstWhere('enrollment_id', $e2->id);
+        $this->assertNotNull($inv1, 'Invoice untuk enrollment pertama tidak ditemukan');
+        $this->assertNotNull($inv2, 'Invoice untuk enrollment kedua tidak ditemukan');
+        $this->assertEquals(340000, $inv1->total_amount);
+        $this->assertEquals(390000, $inv2->total_amount);
     }
 
     public function test_generate_spp_idempotent_per_enrollment(): void
@@ -90,5 +96,9 @@ class MultiKelasInvoiceTest extends TestCase
 
         // Hanya 1 invoice — enrollment INACTIVE tidak dapat SPP
         $this->assertEquals(1, $report['created']);
+
+        // Verifikasi invoice terikat ke enrollment ACTIVE yang benar, bukan yang INACTIVE
+        $invoice = Invoice::where('student_id', $student->id)->first();
+        $this->assertEquals($e1->id, $invoice->enrollment_id);
     }
 }
