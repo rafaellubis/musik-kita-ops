@@ -162,6 +162,46 @@ class HonorCalculationService
     }
 
     /**
+     * Ringkasan honor per murid untuk slip cetak (M06 print view).
+     *
+     * Mengolah hasil getSessionBreakdown() menjadi 1 baris per murid.
+     * Urutan: privat (urut nama A-Z) dulu, lalu Kids Class (urut nama A-Z).
+     *
+     * @return Collection — tiap item: [student_id, student_name, instrument,
+     *                                   session_count, total_amount, is_kids]
+     */
+    public function getStudentBreakdown(HonorSlip $slip): Collection
+    {
+        $sessions = $this->getSessionBreakdown($slip);
+
+        // Group by student_id, hitung session_count dan total_amount per murid
+        $grouped = $sessions->groupBy('student_id')->map(function ($rows) {
+            $first  = $rows->first();
+            $isKids = $first->honor_code === 'H_KIDS';
+
+            // Nama instrumen: dari enrollment.package.instrument, fallback 'Kids Class'
+            $instrument = $isKids
+                ? 'Kids Class'
+                : optional(optional(optional($first->enrollment)->package)->instrument)->name ?? '—';
+
+            return [
+                'student_id'    => $first->student_id,
+                'student_name'  => optional($first->student)->full_name ?? '—',
+                'instrument'    => $instrument,
+                'session_count' => $rows->count(),
+                'total_amount'  => $rows->sum('honor_amount'),
+                'is_kids'       => $isKids,
+            ];
+        })->values();
+
+        // Privat dulu (urut nama), lalu Kids Class (urut nama)
+        $privat = $grouped->where('is_kids', false)->sortBy('student_name')->values();
+        $kids   = $grouped->where('is_kids', true)->sortBy('student_name')->values();
+
+        return $privat->concat($kids);
+    }
+
+    /**
      * Tandai slip sebagai PAID. Hanya dipanggil oleh Owner.
      */
     public function markPaid(HonorSlip $slip, int $userId): HonorSlip
