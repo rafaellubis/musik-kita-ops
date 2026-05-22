@@ -358,7 +358,7 @@
                                     @else
                                         <span class="text-xs text-gray-300">—</span>
                                     @endif
-                                    @if($canDiscount && $item->item_code !== 'DENDA')
+                                    @if($canDiscount)
                                         <button type="button"
                                                 @click="showDiscount = !showDiscount"
                                                 class="text-xs text-amber-700 hover:underline">
@@ -372,7 +372,7 @@
 
                     {{-- ===== Form beri/edit diskon (inline expand, Alpine.js) ===== --}}
                     @hasanyrole('Owner|Admin')
-                        @if($canDiscount && $item->item_code !== 'DENDA')
+                        @if($canDiscount)
                             <tr x-show="showDiscount" x-cloak>
                                 <td colspan="{{ $canEditItems ? 5 : 4 }}"
                                     class="py-3 px-4 bg-amber-50 border-b border-amber-200">
@@ -383,30 +383,27 @@
                                             Beri Diskon untuk: <span class="font-normal">{{ $item->description }}</span>
                                         </p>
                                         <div class="flex gap-3 items-end flex-wrap">
-                                            <div>
+                                            <div class="shrink-0">
                                                 <label class="block text-xs font-medium text-gray-700 mb-1">Tipe</label>
                                                 <select name="discount_type" x-model="type"
-                                                        class="block border-gray-300 rounded text-sm">
+                                                        class="block w-36 border-gray-300 rounded text-sm">
                                                     <option value="NOMINAL">Nominal (Rp)</option>
                                                     <option value="PERCENT">Persentase (%)</option>
                                                 </select>
                                             </div>
-                                            <div>
+                                            <div class="shrink-0">
                                                 <label class="block text-xs font-medium text-gray-700 mb-1">
                                                     Nilai <span class="text-red-500">*</span>
                                                 </label>
                                                 <input type="number" name="discount_value"
                                                        x-model="value"
                                                        min="1"
-                                                       :max="type === 'PERCENT' ? 100 : itemAmount - 1"
+                                                       :max="type === 'PERCENT' ? 90 : itemAmount - 1"
                                                        required
                                                        class="block w-28 border-gray-300 rounded text-sm"
                                                        placeholder="0">
-                                                <p class="text-xs text-amber-700 mt-1">
-                                                    Preview: –Rp <span x-text="previewFormatted">0</span>
-                                                </p>
                                             </div>
-                                            <div class="flex-1" style="min-width:180px">
+                                            <div class="flex-1 min-w-[180px]">
                                                 <label class="block text-xs font-medium text-gray-700 mb-1">
                                                     Alasan <span class="text-red-500">*</span>
                                                 </label>
@@ -416,19 +413,22 @@
                                                        class="block w-full border-gray-300 rounded text-sm"
                                                        placeholder="Mis: Diskon ulang tahun, promosi bulan ini...">
                                             </div>
-                                            <div class="flex gap-2">
+                                            <div class="flex gap-2 shrink-0">
                                                 <button type="submit"
-                                                        class="px-3 py-1.5 rounded text-sm font-medium"
+                                                        class="px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap"
                                                         style="background:rgba(212,168,83,0.9);color:#1A1000">
                                                     Simpan Diskon
                                                 </button>
                                                 <button type="button"
                                                         @click="showDiscount = false"
-                                                        class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800">
+                                                        class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 whitespace-nowrap">
                                                     Batal
                                                 </button>
                                             </div>
                                         </div>
+                                        <p class="text-xs text-amber-700 mt-2">
+                                            Preview diskon: –Rp <span x-text="previewFormatted">0</span>
+                                        </p>
                                     </form>
                                 </td>
                             </tr>
