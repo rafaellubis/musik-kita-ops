@@ -387,6 +387,8 @@ class DiscountTest extends TestCase
 
         // intdiv(15000 * 50, 100) = 7500
         $this->assertEquals(-7500, $discountItem->amount);
+        $this->assertEquals($dendaItem->id, $discountItem->parent_item_id);
+        $this->assertEquals('PERCENT', $discountItem->discount_type);
 
         $this->invoice->refresh();
         // total = 370000 + 15000 - 7500 = 377500
