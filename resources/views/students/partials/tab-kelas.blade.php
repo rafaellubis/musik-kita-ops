@@ -203,35 +203,39 @@
 {{-- ===== MODAL: TAMBAH KELAS ===== --}}
 {{-- Modal ditutup dengan klik backdrop atau tombol batal/× --}}
 <div id="modal-tambah-kelas"
-     class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+     class="hidden fixed inset-0 z-50 flex items-start justify-center p-4 pt-16"
      style="background:rgba(0,0,0,0.55)"
      onclick="if(event.target===this) this.classList.add('hidden')">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg" onclick="event.stopPropagation()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[80vh] flex flex-col"
+         onclick="event.stopPropagation()">
 
-        {{-- Header modal --}}
-        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h4 class="font-semibold text-gray-800">Tambah Kelas — {{ $student->full_name }}</h4>
+        {{-- Header modal — fixed, tidak ikut scroll --}}
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+            <div>
+                <h4 class="font-semibold text-gray-800 text-sm">Tambah Kelas</h4>
+                <p class="text-xs text-gray-400 mt-0.5">{{ $student->full_name }}</p>
+            </div>
             <button type="button"
                     onclick="document.getElementById('modal-tambah-kelas').classList.add('hidden')"
-                    class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+                    class="text-gray-400 hover:text-gray-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded">&times;</button>
         </div>
 
-        {{-- Form tambah enrollment baru --}}
-        <form method="POST" action="{{ route('students.enrollments.store', $student) }}">
+        {{-- Body scrollable --}}
+        <form method="POST" action="{{ route('students.enrollments.store', $student) }}" class="flex flex-col flex-1 min-h-0">
             @csrf
-            <div class="px-5 py-4 grid grid-cols-2 gap-4">
+            <div class="px-5 py-4 grid grid-cols-2 gap-x-4 gap-y-3 overflow-y-auto flex-1">
 
                 {{-- Pilih paket --}}
                 <div class="col-span-2">
                     <label class="block text-xs text-gray-500 mb-1">
                         Paket <span class="text-red-400">*</span>
                     </label>
-                    <select name="package_id" required class="block w-full rounded-lg text-sm px-3 py-2">
+                    <select name="package_id" required class="block w-full rounded-lg text-sm px-3 py-2 border border-gray-200">
                         <option value="">— Pilih Paket —</option>
                         @foreach($allPackages as $pkg)
                             <option value="{{ $pkg->id }}">
                                 [{{ $pkg->code }}] {{ $pkg->instrument->name ?? '-' }}
-                                ({{ $pkg->formatted_price }}/bln)
+                                · {{ $pkg->formatted_price }}/bln
                             </option>
                         @endforeach
                     </select>
@@ -242,7 +246,7 @@
                     <label class="block text-xs text-gray-500 mb-1">
                         Guru <span class="text-red-400">*</span>
                     </label>
-                    <select name="teacher_id" required class="block w-full rounded-lg text-sm px-3 py-2">
+                    <select name="teacher_id" required class="block w-full rounded-lg text-sm px-3 py-2 border border-gray-200">
                         <option value="">— Pilih —</option>
                         @foreach($allTeachers as $teacher)
                             <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
@@ -252,8 +256,10 @@
 
                 {{-- Pilih ruangan --}}
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">Ruangan</label>
-                    <select name="room_id" class="block w-full rounded-lg text-sm px-3 py-2">
+                    <label class="block text-xs text-gray-500 mb-1">
+                        Ruangan <span class="text-red-400">*</span>
+                    </label>
+                    <select name="room_id" required class="block w-full rounded-lg text-sm px-3 py-2 border border-gray-200">
                         <option value="">— Pilih —</option>
                         @foreach($allRooms as $room)
                             <option value="{{ $room->id }}">[{{ $room->code }}] {{ $room->name }}</option>
@@ -266,7 +272,7 @@
                     <label class="block text-xs text-gray-500 mb-1">
                         Hari <span class="text-red-400">*</span>
                     </label>
-                    <select name="day_of_week" required class="block w-full rounded-lg text-sm px-3 py-2">
+                    <select name="day_of_week" required class="block w-full rounded-lg text-sm px-3 py-2 border border-gray-200">
                         @foreach(['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $i => $hari)
                             <option value="{{ $i }}" {{ $i === 1 ? 'selected' : '' }}>{{ $hari }}</option>
                         @endforeach
@@ -279,7 +285,7 @@
                         Jam Mulai <span class="text-red-400">*</span>
                     </label>
                     <input type="time" name="start_time" value="15:00" required
-                           class="block w-full rounded-lg text-sm px-3 py-2">
+                           class="block w-full rounded-lg text-sm px-3 py-2 border border-gray-200">
                 </div>
 
                 {{-- Berlaku mulai --}}
@@ -289,23 +295,23 @@
                     </label>
                     <input type="date" name="effective_date"
                            value="{{ now()->addDay()->format('Y-m-d') }}" required
-                           class="block w-full rounded-lg text-sm px-3 py-2">
+                           class="block w-full rounded-lg text-sm px-3 py-2 border border-gray-200">
                 </div>
 
                 {{-- Jadikan utama (checkbox) --}}
-                <div class="col-span-2 flex items-center gap-2">
+                <div class="col-span-2 flex items-center gap-2 pt-1">
                     <input type="checkbox" name="jadikan_utama" value="1" id="modal-jadikan-utama"
                            class="rounded border-gray-300">
                     <label for="modal-jadikan-utama" class="text-sm text-gray-600 cursor-pointer">
                         Jadikan kelas utama
-                        <span class="text-xs text-gray-400">(kelas referensi SPP & honor)</span>
+                        <span class="text-xs text-gray-400">(kelas referensi SPP &amp; honor)</span>
                     </label>
                 </div>
 
             </div>
 
-            {{-- Footer modal --}}
-            <div class="px-5 py-3 border-t border-gray-100 flex justify-end gap-2">
+            {{-- Footer modal — fixed, tidak ikut scroll --}}
+            <div class="px-5 py-3 border-t border-gray-100 flex justify-end gap-2 flex-shrink-0">
                 <button type="button"
                         onclick="document.getElementById('modal-tambah-kelas').classList.add('hidden')"
                         class="px-4 py-2 text-sm text-gray-600 rounded-lg transition-colors"
