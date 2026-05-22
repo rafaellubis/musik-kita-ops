@@ -33,14 +33,9 @@ class UpdateStudentRequest extends FormRequest
             'parent_email'        => 'nullable|email|max:100',
             'parent_relationship' => 'nullable|in:Ayah,Ibu,Wali',
 
-            // ============= STATUS BELAJAR =============
             // CATATAN: 'status' TIDAK ada di sini — immutable via form edit
             // Status hanya berubah lewat lifecycle action (Sesi 6-8)
-            'package_id'          => 'nullable|exists:packages,id',
-            'assigned_teacher_id' => 'nullable|exists:teachers,id',
-            'assigned_room_id'    => 'nullable|exists:rooms,id',
-            'preferred_day'       => 'nullable|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu,Minggu',
-            'preferred_time'      => 'nullable|date_format:H:i',
+            // package, teacher, room dikelola via tab Kelas (enrollments) — bukan form edit
         ];
     }
 
@@ -55,9 +50,6 @@ class UpdateStudentRequest extends FormRequest
             'phone.regex'                  => 'Nomor HP hanya boleh angka, +, -, spasi, dan kurung.',
             'parent_email.email'           => 'Format email orang tua tidak valid.',
             'parent_phone.regex'           => 'Nomor HP orang tua hanya boleh angka.',
-            'package_id.exists'            => 'Paket yang dipilih tidak valid.',
-            'assigned_teacher_id.exists'   => 'Guru yang dipilih tidak valid.',
-            'assigned_room_id.exists'      => 'Ruangan yang dipilih tidak valid.',
         ];
     }
 
@@ -72,48 +64,8 @@ class UpdateStudentRequest extends FormRequest
             $currentStudent = \App\Models\Student::find($studentId);
             if (!$currentStudent) return;
 
-            // Rule 1: Kalau status saat ini Aktif, package tidak boleh dikosongkan
-            if ($currentStudent->status === 'Aktif' && !$this->package_id) {
-                $validator->errors()->add(
-                    'package_id',
-                    'Paket tidak boleh kosong untuk murid Aktif.'
-                );
-            }
-
-            // Rule 2: Kalau status saat ini Aktif, teacher tidak boleh dikosongkan
-            if ($currentStudent->status === 'Aktif' && !$this->assigned_teacher_id) {
-                $validator->errors()->add(
-                    'assigned_teacher_id',
-                    'Guru tidak boleh kosong untuk murid Aktif.'
-                );
-            }
-
-            // Rule 3: Kids Class — validasi umur
-            // ⚠ Pakai enum value yang BENAR: KIDS_CLASS / KIDS_CLASS_BUNDLE
-            if ($this->package_id) {
-                $package = Package::find($this->package_id);
-                $isKidsClass = $package && in_array(
-                    $package->class_type,
-                    ['KIDS_CLASS', 'KIDS_CLASS_BUNDLE']
-                );
-
-                if ($isKidsClass && $this->birth_date) {
-                    $age = \Carbon\Carbon::parse($this->birth_date)->age;
-                    if ($age < 4 || $age >= 5) {
-                        $validator->errors()->add(
-                            'birth_date',
-                            'Kids Class hanya untuk anak usia 4 sampai kurang dari 5 tahun.'
-                        );
-                    }
-                }
-
-                if ($isKidsClass && !$this->parent_name) {
-                    $validator->errors()->add(
-                        'parent_name',
-                        'Nama orang tua wajib untuk Kids Class.'
-                    );
-                }
-            }
+            // Validasi package/teacher/room tidak diperlukan di sini —
+            // sekarang dikelola via tab Kelas (enrollment) di halaman detail murid.
         });
     }
 }

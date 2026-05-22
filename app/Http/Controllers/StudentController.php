@@ -80,9 +80,8 @@ class StudentController extends Controller
     public function show(string $id)
     {
         $student = Student::with([
-            'package.instrument',
-            'assignedTeacher',
-            'assignedRoom',
+            'primaryEnrollment.package.instrument',
+            'primaryEnrollment.teacher',
             'histories.changedBy',
             // M03: enrollment ACTIVE + schedules + room
             'enrollments' => fn ($q) => $q->latest('effective_date'),
@@ -230,12 +229,7 @@ class StudentController extends Controller
             'parent_phone'        => $validated['parent_phone'] ?? null,
             'parent_email'        => $validated['parent_email'] ?? null,
             'parent_relationship' => $validated['parent_relationship'] ?? null,
-            'preferred_day'       => $validated['preferred_day'] ?? null,
-            'preferred_time'      => $validated['preferred_time'] ?? null,
-            'package_id'          => $validated['package_id'] ?? null,
-            'assigned_teacher_id' => $validated['assigned_teacher_id'] ?? null,
-            'assigned_room_id'    => $validated['assigned_room_id'] ?? null,
-            'status'              => 'Calon',
+            'status' => 'Calon',
         ]);
 
         // Transisi sesuai pilihan form
