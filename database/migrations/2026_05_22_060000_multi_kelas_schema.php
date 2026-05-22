@@ -37,17 +37,20 @@ return new class extends Migration
 
         // 4. Data migration: isi is_primary + primary_enrollment_id dari data existing
         //    Enrollment ACTIVE pertama (MIN id) per murid dijadikan primary.
-        //    Gunakan Eloquent agar kompatibel dengan MySQL dan SQLite (test environment).
-        $primaryIds = DB::table('enrollments')
+        //    Gunakan loop per-student agar kompatibel dengan MySQL dan SQLite (test environment).
+        $studentIds = DB::table('enrollments')
             ->where('status', 'ACTIVE')
-            ->select('student_id', DB::raw('MIN(id) as min_id'))
-            ->groupBy('student_id')
-            ->pluck('min_id');
+            ->distinct()
+            ->pluck('student_id');
 
-        if ($primaryIds->isNotEmpty()) {
-            DB::table('enrollments')
-                ->whereIn('id', $primaryIds)
-                ->update(['is_primary' => true]);
+        foreach ($studentIds as $studentId) {
+            $minId = DB::table('enrollments')
+                ->where('status', 'ACTIVE')
+                ->where('student_id', $studentId)
+                ->min('id');
+            if ($minId) {
+                DB::table('enrollments')->where('id', $minId)->update(['is_primary' => true]);
+            }
         }
 
         // Set primary_enrollment_id di students
@@ -83,7 +86,7 @@ return new class extends Migration
             $table->foreignId('package_id')->nullable()->constrained('packages');
             $table->foreignId('assigned_teacher_id')->nullable()->constrained('teachers');
             $table->foreignId('assigned_room_id')->nullable()->constrained('rooms');
-            $table->string('preferred_day')->nullable();
+            $table->enum('preferred_day', ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'])->nullable();
             $table->time('preferred_time')->nullable();
         });
 
