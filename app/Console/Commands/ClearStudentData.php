@@ -23,6 +23,8 @@ class ClearStudentData extends Command
      */
     private array $tables = [
         'event_participants'       => 'Peserta Event',
+        'events'                   => 'Event (Mini Concert / Ujian)',
+        'teacher_honor_slips'      => 'Slip Honor Guru',
         'payments'                 => 'Pembayaran',
         'invoice_items'            => 'Item Invoice',
         'invoices'                 => 'Invoice / Tagihan',
