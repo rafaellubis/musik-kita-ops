@@ -58,3 +58,13 @@ Schedule::command('invoices:apply-fines')
     ->when(fn () => now()->day >= 11)
     ->name('m05-apply-late-fines')
     ->withoutOverlapping();
+
+// ===== M05: Deteksi murid overdue & notif Admin/Owner =====
+// Tgl 1 tiap bulan jam 06:05 — setelah generate-spp (06:00).
+// Kirim MuridOverdueNotification ke Admin + Owner untuk murid
+// Aktif dengan invoice UNPAID/PARTIAL dari bulan sebelumnya.
+// Idempotent: murid yang sudah dinotif bulan ini tidak dinotif ulang.
+Schedule::command('students:check-overdue')
+    ->monthlyOn(1, '06:05')
+    ->name('m05-check-overdue-students')
+    ->withoutOverlapping();
