@@ -219,7 +219,9 @@
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 font-medium">
-                                    @if(!empty($item['data']['_has_warning']))
+                                    @if(!empty($item['data']['_conflict_warning']))
+                                        <span style="color:#FB923C" title="{{ $item['data']['_conflict_warning'] }}">⚠️ Konflik jadwal</span>
+                                    @elseif(!empty($item['data']['_has_warning']))
                                         <span style="color:#FBBF24" title="{{ $item['data']['_warning_message'] ?? '' }}">⚠️ Warning ruangan</span>
                                     @elseif(!empty($item['data']['preferred_day']) && ($item['data']['status'] ?? '') === 'Aktif')
                                         <span style="color:#34D399">✓ Murid + Jadwal</span>
@@ -268,7 +270,9 @@
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 font-medium">
-                                    @if(!empty($item['data']['_has_warning']))
+                                    @if(!empty($item['data']['_conflict_warning']))
+                                        <span style="color:#FB923C" title="{{ $item['data']['_conflict_warning'] }}">⚠️ Konflik jadwal</span>
+                                    @elseif(!empty($item['data']['_has_warning']))
                                         <span style="color:#FBBF24" title="{{ $item['data']['_warning_message'] ?? '' }}">⚠️ Warning ruangan</span>
                                     @elseif(!empty($item['data']['preferred_day']) && ($item['data']['status'] ?? '') === 'Aktif')
                                         <span style="color:#F59E0B">✓ Murid + Jadwal</span>

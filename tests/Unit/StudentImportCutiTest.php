@@ -15,7 +15,7 @@ class StudentImportCutiTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new StudentImportService();
+        $this->service = app(StudentImportService::class);
     }
 
     public function test_status_cuti_tanpa_cuti_until_error(): void

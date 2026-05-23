@@ -24,7 +24,7 @@ class StudentImportServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new StudentImportService();
+        $this->service = app(StudentImportService::class);
     }
 
     public function test_valid_row_returns_data_array(): void

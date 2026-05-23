@@ -10,6 +10,7 @@ use App\Models\Student;
 use App\Models\StudentStatusHistory;
 use App\Models\Teacher;
 use Carbon\Carbon;
+use App\Services\ScheduleConflictDetector;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -25,6 +26,11 @@ use Maatwebsite\Excel\Facades\Excel;
  */
 class StudentImportService
 {
+    /**
+     * Inject ScheduleConflictDetector untuk cek konflik jadwal saat validasi import.
+     */
+    public function __construct(private ScheduleConflictDetector $conflictDetector) {}
+
     /**
      * Status murid yang valid (Title Case — sesuai skema enum students.status).
      */
@@ -370,6 +376,42 @@ class StudentImportService
         $data['_warning_message']    = $roomWarning;
         unset($data['package_code'], $data['teacher_code'], $data['kode_ruangan']);
 
+        // Cek konflik jadwal guru/ruang — non-blocking (warning saja, tidak block import).
+        // Import adalah migrasi data lama; konflik mungkin ada dan perlu diketahui admin.
+        $conflictWarning = null;
+        if (!empty($data['assigned_teacher_id'])
+            && !empty($row['preferred_day'])
+            && !empty($row['preferred_time'])
+            && !empty($data['_duration_min'])) {
+            $dayOfWeek = $this->parseDayOfWeek($row['preferred_day']);
+            $startTime = $row['preferred_time'];
+            $endTime   = Carbon::createFromFormat('H:i', $startTime)
+                ->addMinutes((int) $data['_duration_min'])
+                ->format('H:i');
+
+            $teacherClash = $this->conflictDetector->findTeacherConflicts(
+                teacherId: (int) $data['assigned_teacher_id'],
+                dayOfWeek: $dayOfWeek,
+                startTime: $startTime,
+                endTime:   $endTime,
+            );
+            if ($teacherClash->isNotEmpty()) {
+                $conflictWarning = "Guru sudah punya jadwal di {$row['preferred_day']} {$startTime}.";
+            }
+
+            if ($conflictWarning === null && !empty($data['room_id'])) {
+                if ($this->conflictDetector->isRoomFull(
+                    roomId:    (int) $data['room_id'],
+                    dayOfWeek: $dayOfWeek,
+                    startTime: $startTime,
+                    endTime:   $endTime,
+                )) {
+                    $conflictWarning = "Ruangan {$data['_room_code']} sudah penuh di {$row['preferred_day']} {$startTime}.";
+                }
+            }
+        }
+        $data['_conflict_warning'] = $conflictWarning;
+
         // Normalisasi string kosong ke null agar konsisten dengan schema DB
         foreach ($data as $key => $value) {
             if ($value === '') {
@@ -511,7 +553,7 @@ class StudentImportService
         $roomId     = $data['room_id'] ?? null;
 
         // Hapus semua key internal sebelum simpan ke DB
-        unset($data['_existing_id'], $data['_has_warning'], $data['_warning_message'], $data['room_id'], $data['_room_code'], $data['_duration_min']);
+        unset($data['_existing_id'], $data['_has_warning'], $data['_warning_message'], $data['_conflict_warning'], $data['room_id'], $data['_room_code'], $data['_duration_min']);
 
         if ($existingId) {
             // Mode update: murid sudah ada di DB
