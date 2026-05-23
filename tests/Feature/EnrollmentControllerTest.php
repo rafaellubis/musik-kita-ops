@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Enrollment;
 use App\Models\Package;
 use App\Models\Room;
+use App\Models\Schedule;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
@@ -127,6 +128,90 @@ class EnrollmentControllerTest extends TestCase
         $e1->refresh();
         $this->assertFalse((bool) $e1->is_primary);
         $this->assertNotEquals($e1->id, $this->student->primary_enrollment_id);
+    }
+
+    // ===== CONFLICT VALIDATION =====
+
+    public function test_tambah_kelas_gagal_jika_guru_sudah_punya_jadwal_di_jam_sama(): void
+    {
+        $room  = Room::factory()->create(['capacity' => 1]);
+        $room2 = Room::factory()->create(['capacity' => 1]);
+
+        // Guru sudah punya jadwal hari Senin 15:00 untuk murid lain
+        $otherStudent    = Student::factory()->create(['status' => 'Aktif']);
+        $otherEnrollment = Enrollment::factory()->for($otherStudent)->create([
+            'teacher_id' => $this->teacher->id,
+            'status'     => 'ACTIVE',
+        ]);
+        Schedule::factory()->create([
+            'enrollment_id' => $otherEnrollment->id,
+            'day_of_week'   => 1,
+            'start_time'    => '15:00',
+            'end_time'      => '15:30',
+            'room_id'       => $room->id,
+            'is_active'     => true,
+        ]);
+
+        // Buat enrollment utama agar $this->student lolos lifecycle gate
+        $e1 = Enrollment::factory()->for($this->student)->create(['is_primary' => true, 'status' => 'ACTIVE']);
+        $this->student->update(['primary_enrollment_id' => $e1->id]);
+
+        $response = $this->actingAs($this->admin)->post(
+            route('students.enrollments.store', $this->student),
+            [
+                'package_id'     => $this->package->id,
+                'teacher_id'     => $this->teacher->id,
+                'room_id'        => $room2->id, // ruang beda — tetap konflik karena gurunya sama
+                'day_of_week'    => 1,
+                'start_time'     => '15:00',
+                'effective_date' => now()->addDay()->format('Y-m-d'),
+            ]
+        );
+
+        $response->assertRedirect();
+        $response->assertSessionHasErrors(['teacher_id']);
+        // Hanya e1 yang ada, enrollment baru tidak terbuat
+        $this->assertEquals(1, $this->student->enrollments()->active()->count());
+    }
+
+    public function test_tambah_kelas_gagal_jika_ruangan_sudah_penuh(): void
+    {
+        $room = Room::factory()->create(['capacity' => 1]);
+
+        // Ruangan sudah terisi murid lain di hari Rabu 14:00
+        $otherTeacher    = Teacher::factory()->create();
+        $otherStudent    = Student::factory()->create(['status' => 'Aktif']);
+        $otherEnrollment = Enrollment::factory()->for($otherStudent)->create([
+            'teacher_id' => $otherTeacher->id,
+            'status'     => 'ACTIVE',
+        ]);
+        Schedule::factory()->create([
+            'enrollment_id' => $otherEnrollment->id,
+            'day_of_week'   => 3, // Rabu
+            'start_time'    => '14:00',
+            'end_time'      => '14:30',
+            'room_id'       => $room->id,
+            'is_active'     => true,
+        ]);
+
+        $e1 = Enrollment::factory()->for($this->student)->create(['is_primary' => true, 'status' => 'ACTIVE']);
+        $this->student->update(['primary_enrollment_id' => $e1->id]);
+
+        $response = $this->actingAs($this->admin)->post(
+            route('students.enrollments.store', $this->student),
+            [
+                'package_id'     => $this->package->id,
+                'teacher_id'     => $this->teacher->id, // guru beda — tetap konflik karena ruangnya penuh
+                'room_id'        => $room->id,
+                'day_of_week'    => 3,
+                'start_time'     => '14:00',
+                'effective_date' => now()->addDay()->format('Y-m-d'),
+            ]
+        );
+
+        $response->assertRedirect();
+        $response->assertSessionHasErrors(['room_id']);
+        $this->assertEquals(1, $this->student->enrollments()->active()->count());
     }
 
     // ===== SET PRIMARY =====

@@ -7,6 +7,7 @@ use App\Models\Enrollment;
 use App\Models\Package;
 use App\Models\Schedule;
 use App\Models\Student;
+use App\Services\ScheduleConflictDetector;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,12 @@ use Illuminate\Support\Facades\DB;
  */
 class EnrollmentController extends Controller
 {
+    /**
+     * Inject ScheduleConflictDetector untuk cek konflik guru dan ruang
+     * sebelum enrollment baru dibuat.
+     */
+    public function __construct(private ScheduleConflictDetector $conflictDetector) {}
+
     /**
      * Tambah kelas baru ke murid yang sudah aktif.
      *
@@ -46,6 +53,31 @@ class EnrollmentController extends Controller
         $endTime   = Carbon::createFromFormat('H:i', $startTime)
             ->addMinutes($package->duration_min)
             ->format('H:i');
+
+        // Cek konflik guru — 1 guru tidak boleh punya 2 jadwal di hari dan jam yang sama
+        $teacherConflicts = $this->conflictDetector->findTeacherConflicts(
+            teacherId: $data['teacher_id'],
+            dayOfWeek: $data['day_of_week'],
+            startTime: $startTime,
+            endTime:   $endTime,
+        );
+        if ($teacherConflicts->isNotEmpty()) {
+            return back()
+                ->withErrors(['teacher_id' => 'Guru sudah punya jadwal di hari dan jam tersebut.'])
+                ->withInput();
+        }
+
+        // Cek konflik ruang — kapasitas ruang tidak boleh terlampaui
+        if ($this->conflictDetector->isRoomFull(
+            roomId:    $data['room_id'],
+            dayOfWeek: $data['day_of_week'],
+            startTime: $startTime,
+            endTime:   $endTime,
+        )) {
+            return back()
+                ->withErrors(['room_id' => 'Ruangan sudah penuh di hari dan jam tersebut.'])
+                ->withInput();
+        }
 
         DB::transaction(function () use ($student, $data, $startTime, $endTime) {
             $jadikanUtama = (bool) ($data['jadikan_utama'] ?? false);
