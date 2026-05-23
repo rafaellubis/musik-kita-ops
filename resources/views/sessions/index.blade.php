@@ -55,7 +55,7 @@
         </div>
 
         <div class="bg-white shadow-sm sm:rounded-lg p-5"
-             x-data="{ showGenerate: false }">
+             x-data="{ showGenerate: false, editSession: null }">
 
             {{-- ===== HEADER: Period + Generate Button ===== --}}
             <div class="flex justify-between items-center mb-4">
@@ -201,6 +201,9 @@
                             <th class="px-2 py-1.5 text-left text-xs uppercase font-medium">Ruang</th>
                             <th class="px-2 py-1.5 text-center text-xs uppercase font-medium">Status</th>
                             <th class="px-2 py-1.5 text-right text-xs uppercase font-medium">Honor</th>
+                            @if(auth()->user()?->hasAnyRole(['Owner', 'Admin']))
+                            <th class="px-2 py-1.5 text-center text-xs uppercase font-medium">Aksi</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -250,6 +253,23 @@
                                         <span class="text-gray-400">—</span>
                                     @endif
                                 </td>
+                                @if(auth()->user()?->hasAnyRole(['Owner', 'Admin']))
+                                <td class="px-2 py-1.5 text-center">
+                                    <button type="button"
+                                            @click="editSession = {
+                                                id: {{ $s->id }},
+                                                action: '{{ route('sessions.update', $s->id) }}',
+                                                sessionDate: '{{ \Carbon\Carbon::parse($s->session_date)->format('D, d M Y') }}',
+                                                startTime: '{{ \Carbon\Carbon::parse($s->start_time)->format('H:i') }}',
+                                                endTime: '{{ \Carbon\Carbon::parse($s->end_time)->format('H:i') }}',
+                                                teacherId: {{ $s->teacher_id ?? 'null' }},
+                                                roomId: {{ $s->room_id ?? 'null' }}
+                                            }"
+                                            class="text-xs text-indigo-600 hover:underline px-1">
+                                        Edit
+                                    </button>
+                                </td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
@@ -268,6 +288,95 @@
             <div class="mt-4">
                 {{ $sessions->links() }}
             </div>
+
+            {{-- ===== MODAL EDIT SESI ===== --}}
+            @if(auth()->user()?->hasAnyRole(['Owner', 'Admin']))
+            <div x-show="editSession !== null" x-cloak
+                 class="fixed inset-0 z-50 flex items-center justify-center"
+                 style="background: rgba(0,0,0,0.6);"
+                 @click.self="editSession = null">
+                <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-semibold text-gray-800">
+                            Edit Sesi — <span x-text="editSession?.sessionDate" class="font-mono"></span>
+                        </h3>
+                        <button @click="editSession = null"
+                                class="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+                    </div>
+
+                    @if($errors->any())
+                    <div class="mb-3 p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                        @foreach($errors->all() as $e)
+                            <p>{{ $e }}</p>
+                        @endforeach
+                    </div>
+                    @endif
+
+                    <form :action="editSession?.action" method="POST" class="space-y-4">
+                        @csrf
+                        @method('PATCH')
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Jam Mulai</label>
+                                <input type="time" name="start_time"
+                                       :value="editSession?.startTime"
+                                       required
+                                       class="block w-full border-gray-300 rounded-lg text-sm px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Jam Selesai</label>
+                                <input type="time" name="end_time"
+                                       :value="editSession?.endTime"
+                                       required
+                                       class="block w-full border-gray-300 rounded-lg text-sm px-3 py-2">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Guru</label>
+                            <select name="teacher_id" required
+                                    class="block w-full border-gray-300 rounded-lg text-sm px-3 py-2">
+                                <option value="">— Pilih Guru —</option>
+                                @foreach($teachers as $t)
+                                <option value="{{ $t->id }}"
+                                        :selected="editSession?.teacherId == {{ $t->id }}">
+                                    {{ $t->name }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">
+                                Ruang <span class="text-gray-400">(opsional)</span>
+                            </label>
+                            <select name="room_id"
+                                    class="block w-full border-gray-300 rounded-lg text-sm px-3 py-2">
+                                <option value="">— Tidak Ditentukan —</option>
+                                @foreach($rooms as $r)
+                                <option value="{{ $r->id }}"
+                                        :selected="editSession?.roomId == {{ $r->id }}">
+                                    {{ $r->code }} — {{ $r->name }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="flex justify-end gap-2 pt-2">
+                            <button type="button" @click="editSession = null"
+                                    class="px-4 py-2 text-xs bg-gray-100 rounded-lg hover:bg-gray-200">
+                                Batal
+                            </button>
+                            <button type="submit"
+                                    class="px-4 py-2 text-xs font-bold rounded-lg btn-mk-primary">
+                                Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            @endif
         </div>
 
     </div>
