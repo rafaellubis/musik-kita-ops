@@ -212,6 +212,20 @@
                                     @foreach($inv->items as $item)
                                         <span class="inline-block px-1 bg-gray-100 rounded mr-0.5">{{ $item->item_code }}</span>
                                     @endforeach
+                                    {{-- Badge khusus KIDS_CLASS_BUNDLE --}}
+                                    @if($inv->class_type === 'KIDS_CLASS_BUNDLE')
+                                        @if($inv->payment_mode === 'INSTALLMENT' && $inv->installment_number)
+                                            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold ml-1
+                                                         bg-purple-50 text-purple-700">Kids Bundle</span>
+                                            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold
+                                                         bg-blue-100 text-blue-700">
+                                                Termin {{ $inv->installment_number }}/3
+                                            </span>
+                                        @elseif($inv->payment_mode === 'FULL')
+                                            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold ml-1
+                                                         bg-purple-50 text-purple-700">Kids Bundle – Lunas</span>
+                                        @endif
+                                    @endif
                                 </td>
                                 <td class="px-2 py-1.5 text-right text-sm">
                                     Rp {{ number_format($inv->total_amount, 0, ',', '.') }}
