@@ -21,6 +21,7 @@ class EventParticipant extends Model
 
     protected $fillable = [
         'event_id', 'student_id', 'enrollment_id',
+        'accompanying_teacher_id',
         'participation_type', 'fee_amount',
         'invoice_id', 'invoice_item_id',
         'exam_result', 'grade_before', 'grade_after', 'exam_notes',
@@ -74,6 +75,11 @@ class EventParticipant extends Model
     public function invoiceItem(): BelongsTo
     {
         return $this->belongsTo(InvoiceItem::class);
+    }
+
+    public function accompaniyingTeacher(): BelongsTo
+    {
+        return $this->belongsTo(Teacher::class, 'accompanying_teacher_id');
     }
 
     // ============= HELPERS =============
