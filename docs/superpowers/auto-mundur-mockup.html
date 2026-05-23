@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Auto-Mundur — Perbandingan 3 Opsi</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #111; color: #eee; padding: 24px; }
+  h1 { font-size: 18px; color: #D4A853; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #888; margin-bottom: 32px; }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+  .card { background: #1C1410; border: 1px solid rgba(212,168,83,0.15); border-radius: 12px; overflow: hidden; }
+  .card-header { padding: 14px 18px; border-bottom: 1px solid rgba(212,168,83,0.10); }
+  .card-title { font-size: 13px; font-weight: 700; color: #D4A853; }
+  .card-sub   { font-size: 11px; color: #8A6848; margin-top: 2px; }
+  .card-body  { padding: 16px 18px; }
+
+  /* Topbar mockup */
+  .topbar {
+    background: #1C1410;
+    border: 1px solid rgba(212,168,83,0.12);
+    border-radius: 8px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .topbar-logo { font-size: 12px; font-weight: 700; color: #D4A853; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .badge-btn {
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 16px;
+  }
+  .badge {
+    position: absolute;
+    top: -2px; right: -4px;
+    background: #EF4444;
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    border-radius: 99px;
+    padding: 1px 4px;
+    min-width: 16px;
+    text-align: center;
+    line-height: 14px;
+  }
+  .avatar { width: 26px; height: 26px; border-radius: 50%; background: rgba(212,168,83,0.2); display:flex;align-items:center;justify-content:center;font-size:11px;color:#D4A853; }
+
+  /* Dropdown */
+  .dropdown {
+    background: #241608;
+    border: 1px solid rgba(212,168,83,0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .dropdown-header {
+    padding: 8px 12px;
+    background: rgba(212,168,83,0.06);
+    border-bottom: 1px solid rgba(212,168,83,0.10);
+    font-size: 11px;
+    font-weight: 700;
+    color: #D4A853;
+    display: flex;
+    justify-content: space-between;
+  }
+  .dropdown-item {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(212,168,83,0.06);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dropdown-item:last-child { border-bottom: none; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .dot-red { background: #EF4444; }
+  .dot-orange { background: #F97316; }
+  .dot-yellow { background: #EAB308; }
+  .item-name { color: #EDE0CC; flex: 1; }
+  .item-meta { font-size: 10px; color: #8A6848; }
+  .item-link { font-size: 10px; color: #D4A853; text-decoration: none; }
+  .btn-small {
+    font-size: 10px;
+    background: rgba(212,168,83,0.15);
+    color: #D4A853;
+    border: none;
+    border-radius: 4px;
+    padding: 2px 7px;
+    cursor: pointer;
+  }
+  .btn-read { font-size: 10px; color: #6B4A2A; background: none; border: none; cursor: pointer; }
+
+  /* Flow diagram */
+  .flow { margin-top: 4px; }
+  .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 11px;
+  }
+  .step-num {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .num-a { background: rgba(99,102,241,0.25); color: #818CF8; }
+  .num-b { background: rgba(212,168,83,0.20); color: #D4A853; }
+  .num-c { background: rgba(16,185,129,0.20); color: #34D399; }
+  .step-text { color: #C0A882; line-height: 1.5; padding-top: 2px; }
+  .step-text strong { color: #EDE0CC; }
+
+  .pros-cons { margin-top: 12px; font-size: 11px; }
+  .pros-cons .label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .pros .label { color: #34D399; }
+  .cons .label { color: #F87171; }
+  .pros, .cons { margin-bottom: 6px; }
+  .pros li { color: #6EE7B7; list-style: none; padding-left: 12px; position: relative; }
+  .pros li::before { content: '✓'; position: absolute; left: 0; color: #34D399; }
+  .cons li { color: #FCA5A5; list-style: none; padding-left: 12px; position: relative; }
+  .cons li::before { content: '✗'; position: absolute; left: 0; color: #F87171; }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 10px;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+  .tag-rec { background: rgba(212,168,83,0.2); color: #D4A853; }
+  .tag-complex { background: rgba(99,102,241,0.15); color: #818CF8; }
+  .tag-simple { background: rgba(16,185,129,0.15); color: #34D399; }
+
+  .divider { height: 1px; background: rgba(212,168,83,0.08); margin: 10px 0; }
+
+  /* Read-state visual for A */
+  .unread { background: rgba(99,102,241,0.05); }
+  .read { opacity: 0.5; }
+</style>
+</head>
+<body>
+
+<h1>Auto-Mundur — Perbandingan 3 Opsi</h1>
+<p class="subtitle">Mockup UI + flow backend untuk setiap pendekatan</p>
+
+<div class="grid">
+
+  <!-- OPSI A -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Opsi A — Laravel Database Notifications</div>
+      <div class="card-sub">Sistem notifikasi umum, read/unread state</div>
+      <span class="tag tag-complex">Paling Kompleks</span>
+    </div>
+    <div class="card-body">
+
+      <!-- Topbar mockup -->
+      <div class="topbar">
+        <div class="topbar-logo">🎵 MUSIK KITA</div>
+        <div class="topbar-right">
+          <div class="badge-btn">
+            🔔<span class="badge">3</span>
+          </div>
+          <div class="avatar">A</div>
+        </div>
+      </div>
+
+      <!-- Dropdown notifikasi -->
+      <div class="dropdown">
+        <div class="dropdown-header">
+          <span>Notifikasi</span>
+          <button class="btn-read">Tandai semua dibaca</button>
+        </div>
+        <div class="dropdown-item unread">
+          <div class="dot dot-red"></div>
+          <div style="flex:1">
+            <div class="item-name">Budi Santoso perlu ditinjau</div>
+            <div class="item-meta">Invoice April belum lunas · 1 jam lalu</div>
+          </div>
+          <a class="item-link" href="#">Detail →</a>
+        </div>
+        <div class="dropdown-item unread">
+          <div class="dot dot-red"></div>
+          <div style="flex:1">
+            <div class="item-name">Sari Wulandari perlu ditinjau</div>
+            <div class="item-meta">Invoice April belum lunas · 1 jam lalu</div>
+          </div>
+          <a class="item-link" href="#">Detail →</a>
+        </div>
+        <div class="dropdown-item read">
+          <div class="dot dot-orange"></div>
+          <div style="flex:1">
+            <div class="item-name">Andi Pratama perlu ditinjau</div>
+            <div class="item-meta">Invoice April belum lunas · kemarin</div>
+          </div>
+          <a class="item-link" href="#">Detail →</a>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Flow -->
+      <div class="flow">
+        <div class="flow-step">
+          <div class="step-num num-a">1</div>
+          <div class="step-text"><strong>Tgl 1:</strong> Cron query murid eligible → buat record di tabel <code>notifications</code></div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num num-a">2</div>
+          <div class="step-text"><strong>Topbar badge</strong> muncul via View Composer (inject ke semua halaman)</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num num-a">3</div>
+          <div class="step-text"><strong>Admin klik notif</strong> → redirect ke halaman detail murid</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num num-a">4</div>
+          <div class="step-text"><strong>Admin klik Mundurkan</strong> di halaman murid → notifikasi otomatis mark as read</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="label">Kelebihan</div>
+          <ul>
+            <li>Bisa dipakai untuk notif lain di masa depan</li>
+            <li>Read/unread state yang proper</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <div class="label">Kekurangan</div>
+          <ul>
+            <li>Butuh migration tabel notifications</li>
+            <li>Butuh View Composer baru</li>
+            <li>Paling banyak file yang diubah</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPSI B -->
+  <div class="card" style="border-color: rgba(212,168,83,0.35);">
+    <div class="card-header" style="background: rgba(212,168,83,0.04);">
+      <div class="card-title">Opsi B — Tabel auto_mundur_queue</div>
+      <div class="card-sub">Tabel khusus, status pending/resolved</div>
+      <span class="tag tag-rec">⭐ Rekomendasi</span>
+    </div>
+    <div class="card-body">
+
+      <!-- Topbar mockup -->
+      <div class="topbar" style="border-color: rgba(212,168,83,0.25);">
+        <div class="topbar-logo">🎵 MUSIK KITA</div>
+        <div class="topbar-right">
+          <div class="badge-btn">
+            ⚠️<span class="badge">3</span>
+          </div>
+          <div class="avatar">A</div>
+        </div>
+      </div>
+
+      <!-- Dropdown -->
+      <div class="dropdown" style="border-color: rgba(212,168,83,0.20);">
+        <div class="dropdown-header">
+          <span>Konfirmasi Auto-Mundur (3)</span>
+        </div>
+        <div class="dropdown-item">
+          <div class="dot dot-red"></div>
+          <div style="flex:1">
+            <div class="item-name">Budi Santoso</div>
+            <div class="item-meta">Invoice April · Rp 340.000 belum lunas</div>
+          </div>
+          <a class="item-link" href="#">Tinjau →</a>
+        </div>
+        <div class="dropdown-item">
+          <div class="dot dot-red"></div>
+          <div style="flex:1">
+            <div class="item-name">Sari Wulandari</div>
+            <div class="item-meta">Invoice April · Rp 450.000 belum lunas</div>
+          </div>
+          <a class="item-link" href="#">Tinjau →</a>
+        </div>
+        <div class="dropdown-item">
+          <div class="dot dot-orange"></div>
+          <div style="flex:1">
+            <div class="item-name">Andi Pratama</div>
+            <div class="item-meta">Invoice April · Rp 370.000 belum lunas</div>
+          </div>
+          <a class="item-link" href="#">Tinjau →</a>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Flow -->
+      <div class="flow">
+        <div class="flow-step">
+          <div class="step-num num-b">1</div>
+          <div class="step-text"><strong>Tgl 1:</strong> Cron query murid eligible → insert ke tabel <code>auto_mundur_queue</code> (status: pending)</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num num-b">2</div>
+          <div class="step-text"><strong>Topbar badge</strong> hitung COUNT dari tabel queue status pending</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num num-b">3</div>
+          <div class="step-text"><strong>Admin klik badge</strong> → dropdown tampil list murid dengan link ke detail murid</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num num-b">4</div>
+          <div class="step-text"><strong>Admin klik Mundurkan</strong> di halaman murid → queue entry diupdate status: resolved</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="label">Kelebihan</div>
+          <ul>
+            <li>Simpel dan terfokus</li>
+            <li>State jelas: pending vs resolved</li>
+            <li>Tidak perlu View Composer global</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <div class="label">Kekurangan</div>
+          <ul>
+            <li>Butuh 1 tabel baru (migration)</li>
+            <li>Hanya untuk fitur auto-mundur</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPSI C -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Opsi C — Query Real-time, No Table</div>
+      <div class="card-sub">Badge langsung query DB, tanpa tabel baru</div>
+      <span class="tag tag-simple">Paling Simpel</span>
+    </div>
+    <div class="card-body">
+
+      <!-- Topbar mockup -->
+      <div class="topbar">
+        <div class="topbar-logo">🎵 MUSIK KITA</div>
+        <div class="topbar-right">
+          <div class="badge-btn">
+            ⚠️<span class="badge">3</span>
+          </div>
+          <div class="avatar">A</div>
+        </div>
+      </div>
+
+      <!-- Dropdown -->
+      <div class="dropdown">
+        <div class="dropdown-header">
+          <span>Tunggakan &gt;1 Bulan (3)</span>
+        </div>
+        <div class="dropdown-item">
+          <div class="dot dot-red"></div>
+          <div style="flex:1">
+            <div class="item-name">Budi Santoso</div>
+            <div class="item-meta">Invoice April · +21 hari overdue</div>
+          </div>
+          <a class="item-link" href="#">Detail →</a>
+        </div>
+        <div class="dropdown-item">
+          <div class="dot dot-red"></div>
+          <div style="flex:1">
+            <div class="item-name">Sari Wulandari</div>
+            <div class="item-meta">Invoice April · +21 hari overdue</div>
+          </div>
+          <a class="item-link" href="#">Detail →</a>
+        </div>
+        <div class="dropdown-item">
+          <div class="dot dot-orange"></div>
+          <div style="flex:1">
+            <div class="item-name">Andi Pratama</div>
+            <div class="item-meta">Invoice April · +21 hari overdue</div>
+          </div>
+          <a class="item-link" href="#">Detail →</a>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Flow -->
+      <div class="flow">
+        <div class="flow-step">
+          <div class="step-num num-c">1</div>
+          <div class="step-text"><strong>Tidak ada cron</strong> — atau cron hanya log tanpa simpan apapun</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num num-c">2</div>
+          <div class="step-text"><strong>Setiap page load:</strong> View Composer query murid Aktif dengan invoice UNPAID bulan lalu</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num num-c">3</div>
+          <div class="step-text"><strong>Admin klik badge</strong> → dropdown tampil list murid + link ke detail</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num num-c">4</div>
+          <div class="step-text"><strong>Admin klik Mundurkan</strong> di halaman murid → badge otomatis hilang (query tidak match lagi)</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="pros-cons">
+        <div class="pros">
+          <div class="label">Kelebihan</div>
+          <ul>
+            <li>Zero migration, tidak ada tabel baru</li>
+            <li>Cron tidak perlu (opsional)</li>
+            <li>Selalu sinkron dengan kondisi aktual DB</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <div class="label">Kekurangan</div>
+          <ul>
+            <li>Query tiap page load (bisa lambat)</li>
+            <li>Tidak ada history kapan murid masuk list</li>
+            <li>Tidak bisa dismiss tanpa mundurkan</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top: 28px; padding: 16px; background: rgba(212,168,83,0.06); border: 1px solid rgba(212,168,83,0.15); border-radius: 8px; font-size: 12px; color: #C0A882;">
+  <strong style="color:#D4A853">Rekomendasi:</strong> Opsi B — Sederhana, focused, mudah dipahami, dan punya state yang jelas.
+  Tidak perlu sistem notifikasi umum yang over-engineered untuk satu fitur.
+  Satu-satunya downside (migration 1 tabel) sangat worth it untuk kejelasan state.
+</div>
+
+</body>
+</html>
