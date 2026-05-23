@@ -30,6 +30,14 @@ class EnrollmentController extends Controller
      */
     public function store(StoreEnrollmentRequest $request, Student $student): RedirectResponse
     {
+        // Hanya murid Aktif yang boleh ditambah kelas baru via multi-kelas.
+        // Status lain harus melalui flow lifecycle masing-masing terlebih dahulu.
+        abort_if(
+            $student->status !== 'Aktif',
+            422,
+            'Kelas baru hanya bisa ditambah untuk murid yang sedang Aktif.'
+        );
+
         $data = $request->validated();
 
         // Hitung end_time berdasarkan durasi paket

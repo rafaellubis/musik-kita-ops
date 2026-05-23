@@ -67,6 +67,41 @@ class EnrollmentControllerTest extends TestCase
         $this->assertEquals($e1->id, $this->student->primary_enrollment_id);
     }
 
+    // ===== LIFECYCLE GATE — hanya murid Aktif boleh tambah kelas =====
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('statusYangDiblokProvider')]
+    public function test_murid_non_aktif_tidak_bisa_tambah_kelas(string $status): void
+    {
+        $room    = Room::factory()->create();
+        $student = Student::factory()->create(['status' => $status]);
+
+        $response = $this->actingAs($this->admin)->post(
+            route('students.enrollments.store', $student),
+            [
+                'package_id'     => $this->package->id,
+                'teacher_id'     => $this->teacher->id,
+                'room_id'        => $room->id,
+                'day_of_week'    => 1,
+                'start_time'     => '16:00',
+                'effective_date' => now()->addDay()->format('Y-m-d'),
+            ]
+        );
+
+        $response->assertStatus(422);
+        $this->assertEquals(0, $student->enrollments()->count());
+    }
+
+    public static function statusYangDiblokProvider(): array
+    {
+        return [
+            'Mengundurkan Diri' => ['Mengundurkan Diri'],
+            'Calon'             => ['Calon'],
+            'Trial'             => ['Trial'],
+            'Cuti'              => ['Cuti'],
+            'Selesai'           => ['Selesai'],
+        ];
+    }
+
     public function test_tambah_kelas_dengan_jadikan_utama(): void
     {
         $room = Room::factory()->create();

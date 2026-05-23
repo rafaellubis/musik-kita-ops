@@ -49,7 +49,7 @@
                     {{ $activeEnrollments->count() }}
                 </span>
             </div>
-            @if(auth()->user()->hasAnyRole(['Owner', 'Admin']))
+            @if(auth()->user()->hasAnyRole(['Owner', 'Admin']) && $student->status === 'Aktif')
                 <button type="button"
                         onclick="document.getElementById('modal-tambah-kelas').classList.remove('hidden')"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
