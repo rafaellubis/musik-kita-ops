@@ -29,14 +29,52 @@ class HolidayController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'date' => 'required|date|unique:holidays,date',
-            'name' => 'required|string|max:100',
-            'type' => 'required|in:Nasional,Cuti Bersama,Internal',
-            'notes' => 'nullable|string',
+        $data = $request->validate([
+            'date'             => 'required|date|unique:holidays,date',
+            'name'             => 'required|string|max:100',
+            'type'             => 'required|in:Nasional,Cuti Bersama,Internal',
+            'notes'            => 'nullable|string|max:500',
+            'is_active'        => 'nullable|boolean',
+            'replacement_date' => [
+                'nullable',
+                'date',
+                'unique:holidays,replacement_date',
+                // Tanggal pengganti harus dalam bulan yang sama dengan date
+                function ($attribute, $value, $fail) use ($request) {
+                    if (!$value || !$request->date) return;
+                    if (date('Y-m', strtotime($value)) !== date('Y-m', strtotime($request->date))) {
+                        $fail('Tanggal pengganti harus dalam bulan yang sama dengan tanggal libur.');
+                    }
+                    if ($value === $request->date) {
+                        $fail('Tanggal pengganti tidak boleh sama dengan tanggal libur.');
+                    }
+                },
+                // Event studio (Internal) tidak boleh punya replacement_date
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($value && $request->type === 'Internal') {
+                        $fail('Event studio (Internal) tidak bisa punya tanggal pengganti. Gunakan fitur Reschedule.');
+                    }
+                },
+            ],
+            'is_honor_paid'    => 'nullable|boolean',
+        ], [
+            'date.unique'             => 'Tanggal libur ini sudah ada di sistem.',
+            'replacement_date.unique' => 'Tanggal pengganti ini sudah dipakai oleh hari libur lain.',
         ]);
-        $validated['is_active'] = $request->has('is_active');
-        Holiday::create($validated);
+
+        Holiday::create([
+            'date'             => $data['date'],
+            'name'             => $data['name'],
+            'type'             => $data['type'],
+            'notes'            => $data['notes'] ?? null,
+            'is_active'        => $request->boolean('is_active', true),
+            'replacement_date' => $data['replacement_date'] ?? null,
+            // Event studio (Internal) selalu is_honor_paid=false; tipe lain ikut checkbox
+            'is_honor_paid'    => $data['type'] === 'Internal'
+                ? false
+                : $request->boolean('is_honor_paid', true),
+        ]);
+
         return redirect()->route('holidays.index')->with('success', 'Hari libur ditambahkan.');
     }
 
@@ -49,14 +87,52 @@ class HolidayController extends Controller
     public function update(Request $request, string $id)
     {
         $holiday = Holiday::findOrFail($id);
-        $validated = $request->validate([
-            'date' => 'required|date|unique:holidays,date,' . $id,
-            'name' => 'required|string|max:100',
-            'type' => 'required|in:Nasional,Cuti Bersama,Internal',
-            'notes' => 'nullable|string',
+        $data = $request->validate([
+            'date'             => 'required|date|unique:holidays,date,' . $id,
+            'name'             => 'required|string|max:100',
+            'type'             => 'required|in:Nasional,Cuti Bersama,Internal',
+            'notes'            => 'nullable|string|max:500',
+            'is_active'        => 'nullable|boolean',
+            'replacement_date' => [
+                'nullable',
+                'date',
+                'unique:holidays,replacement_date,' . $id,
+                // Tanggal pengganti harus dalam bulan yang sama dengan date
+                function ($attribute, $value, $fail) use ($request) {
+                    if (!$value || !$request->date) return;
+                    if (date('Y-m', strtotime($value)) !== date('Y-m', strtotime($request->date))) {
+                        $fail('Tanggal pengganti harus dalam bulan yang sama dengan tanggal libur.');
+                    }
+                    if ($value === $request->date) {
+                        $fail('Tanggal pengganti tidak boleh sama dengan tanggal libur.');
+                    }
+                },
+                // Event studio (Internal) tidak boleh punya replacement_date
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($value && $request->type === 'Internal') {
+                        $fail('Event studio (Internal) tidak bisa punya tanggal pengganti. Gunakan fitur Reschedule.');
+                    }
+                },
+            ],
+            'is_honor_paid'    => 'nullable|boolean',
+        ], [
+            'date.unique'             => 'Tanggal libur ini sudah ada di sistem.',
+            'replacement_date.unique' => 'Tanggal pengganti ini sudah dipakai oleh hari libur lain.',
         ]);
-        $validated['is_active'] = $request->has('is_active');
-        $holiday->update($validated);
+
+        $holiday->update([
+            'date'             => $data['date'],
+            'name'             => $data['name'],
+            'type'             => $data['type'],
+            'notes'            => $data['notes'] ?? null,
+            'is_active'        => $request->boolean('is_active', true),
+            'replacement_date' => $data['replacement_date'] ?? null,
+            // Event studio (Internal) selalu is_honor_paid=false; tipe lain ikut checkbox
+            'is_honor_paid'    => $data['type'] === 'Internal'
+                ? false
+                : $request->boolean('is_honor_paid', true),
+        ]);
+
         return redirect()->route('holidays.index')->with('success', 'Hari libur diperbarui.');
     }
 
