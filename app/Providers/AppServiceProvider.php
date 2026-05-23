@@ -21,23 +21,36 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // View Composer: injeksi notifikasi overdue ke semua view yang di-render melalui layouts.app.
-        // Dipasang ke wildcard '*' agar variabel tersedia di response level atas (dashboard, dll.)
-        // yang kemudian di-wrap oleh layouts.app sebagai Blade component.
-        // Tanpa ini, assertViewHas di test hanya melihat data view controller langsung,
-        // bukan data view yang di-share ke nested component.
+        // View Composer: injeksi notifikasi overdue ke semua view yang di-render.
+        // Dipasang ke wildcard '*' karena layout menggunakan <x-app-layout> (class-based
+        // Blade component), sehingga 'layouts.app' tidak pernah di-fire oleh composer biasa.
+        //
+        // Optimasi: static variable memastikan query DB hanya dijalankan SEKALI per request,
+        // meskipun closure dipanggil berkali-kali (untuk setiap partial/component/sub-view).
+        // Closure PHP mempertahankan static variable di seluruh pemanggilan dalam request yang sama.
         View::composer('*', function ($view) {
-            if (auth()->check()) {
-                // Ambil maks 10 notifikasi overdue yang belum dibaca untuk user saat ini
-                $notifs = auth()->user()
-                    ->unreadNotifications()
-                    ->where('type', MuridOverdueNotification::class)
-                    ->latest()
-                    ->take(10)
-                    ->get();
+            static $fetched = false;
+            static $notifs = null;
+            static $count = 0;
 
+            if (! $fetched) {
+                $fetched = true;
+                if (auth()->check()) {
+                    // Ambil maks 10 notifikasi overdue yang belum dibaca untuk user saat ini
+                    $notifs = auth()->user()
+                        ->unreadNotifications()
+                        ->where('type', MuridOverdueNotification::class)
+                        ->latest()
+                        ->take(10)
+                        ->get();
+                    $count = $notifs->count();
+                }
+            }
+
+            // Hanya inject ke view jika user login (notifs tidak null)
+            if ($notifs !== null) {
                 $view->with('overdueNotifs', $notifs);
-                $view->with('overdueNotifCount', $notifs->count());
+                $view->with('overdueNotifCount', $count);
             }
         });
     }
