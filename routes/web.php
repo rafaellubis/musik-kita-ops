@@ -13,6 +13,7 @@ use App\Http\Controllers\InstrumentController;
 use App\Http\Controllers\InvoiceComponentController;
 use App\Http\Controllers\InvoiceItemController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PayrollConfigController;
@@ -58,6 +59,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // ===== Notifikasi =====
+    // PENTING: route read-all HARUS sebelum {notification}/read agar tidak dibind sebagai ID
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])
+        ->name('notifications.read-all');
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])
+        ->name('notifications.read');
 
     /* ======================================================================
      | WRITE OPERASIONAL (Owner + Admin)
