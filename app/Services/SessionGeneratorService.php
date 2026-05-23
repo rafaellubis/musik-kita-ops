@@ -164,6 +164,13 @@ class SessionGeneratorService
                     $replacementQueue[] = Carbon::parse($holiday->replacement_date);
                 }
             } else {
+                // Guard FASE 2: skip jika guru atau ruang sudah punya sesi di jam yang sama
+                if ($this->hasConflictOnDate($schedule, $date)) {
+                    Log::warning("[SessionGenerator] Skip regular {$dateStr}: konflik guru/ruang untuk schedule #{$schedule->id}");
+                    $report['skipped_conflict']++;
+                    continue;
+                }
+
                 // Sesi normal
                 ClassSession::create([
                     'schedule_id'   => $schedule->id,
