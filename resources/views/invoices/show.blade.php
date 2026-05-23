@@ -104,7 +104,8 @@
             @if($invoice->isInstallment() && $siblings->isNotEmpty())
             @php
                 $paidCount   = $siblings->where('status', 'PAID')->count();
-                $totalAmount = $siblings->sum('total_amount');
+                $totalCount  = $siblings->count();
+                $totalAmount = $siblings->where('status', '!=', 'VOID')->sum('total_amount');
                 $paidAmount  = $siblings->sum('paid_amount');
             @endphp
             <div class="mt-4 pt-4 border-t border-gray-100">
@@ -112,7 +113,7 @@
                     <div>
                         <div class="text-sm font-semibold text-gray-800">Cicilan Kids Class Bundle</div>
                         <div class="text-xs text-gray-500 mt-0.5">
-                            {{ $paidCount }} dari 3 termin lunas ·
+                            {{ $paidCount }} dari {{ $totalCount }} termin lunas ·
                             Rp {{ number_format($paidAmount, 0, ',', '.') }} dari
                             Rp {{ number_format($totalAmount, 0, ',', '.') }}
                         </div>
@@ -123,7 +124,7 @@
                 <div class="flex gap-1 h-1.5 rounded-full overflow-hidden mb-4">
                     @foreach($siblings as $sib)
                         @php
-                            $isActive = $sib->installment_number === $invoice->installment_number;
+                            $isActive = $sib->id === $invoice->id;
                             if ($sib->status === 'PAID') {
                                 $segColor = 'bg-green-400';
                             } elseif ($isActive) {
@@ -144,26 +145,29 @@
                         $dotColor    = match($sib->status) {
                             'PAID'    => 'bg-green-400',
                             'PARTIAL' => 'bg-yellow-400',
+                            'VOID'    => 'bg-gray-200',
                             default   => $isActive ? 'bg-yellow-400' : 'bg-gray-300',
                         };
                         $badgeClass  = match($sib->status) {
                             'PAID'    => 'bg-green-50 text-green-700',
                             'PARTIAL' => 'bg-yellow-50 text-yellow-800',
+                            'VOID'    => 'bg-gray-100 text-gray-400 line-through',
                             default   => 'bg-gray-100 text-gray-500',
                         };
                         $badgeText   = match($sib->status) {
                             'PAID'    => 'LUNAS',
                             'PARTIAL' => 'SEBAGIAN',
+                            'VOID'    => 'VOID',
                             default   => 'BELUM BAYAR',
                         };
                     @endphp
                     <div class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm
-                        {{ $isActive ? 'border border-yellow-200 bg-yellow-50/30' : 'border border-transparent' }}">
+                        {{ $isActive ? 'border border-yellow-200 bg-yellow-50' : 'border border-transparent' }}">
                         <div class="w-2 h-2 rounded-full flex-shrink-0 {{ $dotColor }}"></div>
                         <div class="flex-1 text-gray-700">
                             Termin {{ $sib->installment_number }}/3
                             <span class="text-gray-400 text-xs ml-1">
-                                · {{ $sib->due_date->format('d M Y') }}
+                                · {{ $sib->due_date?->format('d M Y') ?? '—' }}
                                 @if($isActive) <span class="text-yellow-600 font-medium">← ini</span> @endif
                             </span>
                         </div>
