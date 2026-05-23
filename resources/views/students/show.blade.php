@@ -989,11 +989,17 @@
                 {{-- Kartu Cicilan Kids Bundle (hanya muncul jika primary enrollment = KIDS_CLASS_BUNDLE INSTALLMENT) --}}
                 @if(!empty($kidsInstallments) && $kidsInstallments->isNotEmpty())
                 @php
-                    $kPaidCount   = $kidsInstallments->where('status', 'PAID')->count();
-                    $kTotalCount  = $kidsInstallments->count();
-                    $kTotalAmount = $kidsInstallments->where('status', '!=', 'VOID')->sum('total_amount');
-                    $kPaidAmount  = $kidsInstallments->sum('paid_amount');
-                    $kAllPaid     = $kPaidCount === $kTotalCount;
+                    $kPaidCount    = $kidsInstallments->where('status', 'PAID')->count();
+                    $kTotalCount   = $kidsInstallments->count();
+                    $kNonVoidCount = $kidsInstallments->where('status', '!=', 'VOID')->count();
+                    $kTotalAmount  = $kidsInstallments->where('status', '!=', 'VOID')->sum('total_amount');
+                    $kPaidAmount   = $kidsInstallments->sum('paid_amount');
+                    // Lunas = semua termin non-VOID sudah PAID (termin VOID tidak dihitung)
+                    $kAllPaid      = $kNonVoidCount > 0 && $kPaidCount === $kNonVoidCount;
+                    // Termin berikutnya yang perlu dibayar (untuk warna gold di progress bar)
+                    $kNextNumber   = !$kAllPaid
+                        ? $kidsInstallments->where('status', '!=', 'PAID')->min('installment_number')
+                        : null;
                 @endphp
                 <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                     <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
@@ -1021,8 +1027,7 @@
                         <div class="flex gap-1 h-1.5 rounded-full overflow-hidden mb-3">
                             @foreach($kidsInstallments as $kInv)
                             @php
-                                $kIsNext = !$kAllPaid &&
-                                    $kInv->installment_number === $kidsInstallments->where('status', '!=', 'PAID')->min('installment_number');
+                                $kIsNext = $kInv->installment_number === $kNextNumber;
                                 if ($kInv->status === 'PAID') {
                                     $kSegColor = 'bg-green-400';
                                 } elseif ($kIsNext) {
