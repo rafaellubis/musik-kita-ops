@@ -43,6 +43,13 @@
             {{ session('error') }}
         </div>
         @endif
+        @if($errors->any())
+        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+            @foreach($errors->all() as $e)
+                <p>{{ $e }}</p>
+            @endforeach
+        </div>
+        @endif
 
         {{-- ===== STATS CARDS PER STATUS ===== --}}
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 mb-5">
@@ -57,10 +64,12 @@
         <div class="bg-white shadow-sm sm:rounded-lg p-5"
              x-data="{ showGenerate: false, editSession: null }">
 
+            @php $canEdit = auth()->user()?->hasAnyRole(['Owner', 'Admin']); @endphp
+
             {{-- ===== HEADER: Period + Generate Button ===== --}}
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-sm font-semibold text-gray-700">Sesi {{ $monthName }}</h3>
-                @if(auth()->user()?->hasAnyRole(['Owner', 'Admin']))
+                @if($canEdit)
                     <div class="flex items-center gap-2">
                         <a href="{{ route('absensi.index') }}"
                            class="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors btn-mk-primary"
@@ -77,7 +86,7 @@
             </div>
 
             {{-- ===== Form Generate (toggle pakai Alpine) ===== --}}
-            @if(auth()->user()?->hasAnyRole(['Owner', 'Admin']))
+            @if($canEdit)
                 <div x-show="showGenerate" x-cloak
                      class="mb-4 p-4 border border-gray-200 bg-gray-50 rounded-lg">
                     <form method="POST" action="{{ route('sessions.generate') }}"
@@ -201,7 +210,7 @@
                             <th class="px-2 py-1.5 text-left text-xs uppercase font-medium">Ruang</th>
                             <th class="px-2 py-1.5 text-center text-xs uppercase font-medium">Status</th>
                             <th class="px-2 py-1.5 text-right text-xs uppercase font-medium">Honor</th>
-                            @if(auth()->user()?->hasAnyRole(['Owner', 'Admin']))
+                            @if($canEdit)
                             <th class="px-2 py-1.5 text-center text-xs uppercase font-medium">Aksi</th>
                             @endif
                         </tr>
@@ -253,7 +262,7 @@
                                         <span class="text-gray-400">—</span>
                                     @endif
                                 </td>
-                                @if(auth()->user()?->hasAnyRole(['Owner', 'Admin']))
+                                @if($canEdit)
                                 <td class="px-2 py-1.5 text-center">
                                     <button type="button"
                                             @click="editSession = {
@@ -273,7 +282,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-2 py-6 text-center text-gray-500">
+                                <td colspan="{{ $canEdit ? 8 : 7 }}" class="px-2 py-6 text-center text-gray-500">
                                     Tidak ada sesi sesuai filter.
                                     @if($sessions->total() === 0 && !request()->has('teacher_id'))
                                         Coba klik "Generate Sesi Bulan" untuk men-generate sesi {{ $monthName }}.
@@ -290,10 +299,9 @@
             </div>
 
             {{-- ===== MODAL EDIT SESI ===== --}}
-            @if(auth()->user()?->hasAnyRole(['Owner', 'Admin']))
+            @if($canEdit)
             <div x-show="editSession !== null" x-cloak
-                 class="fixed inset-0 z-50 flex items-center justify-center"
-                 style="background: rgba(0,0,0,0.6);"
+                 class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
                  @click.self="editSession = null">
                 <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
                     <div class="flex justify-between items-center mb-4">
@@ -303,14 +311,6 @@
                         <button @click="editSession = null"
                                 class="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
                     </div>
-
-                    @if($errors->any())
-                    <div class="mb-3 p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700">
-                        @foreach($errors->all() as $e)
-                            <p>{{ $e }}</p>
-                        @endforeach
-                    </div>
-                    @endif
 
                     <form :action="editSession?.action" method="POST" class="space-y-4">
                         @csrf
