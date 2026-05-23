@@ -47,6 +47,7 @@
                         <th class="px-4 py-2 text-left text-xs font-medium uppercase">Tanggal</th>
                         <th class="px-4 py-2 text-left text-xs font-medium uppercase">Nama</th>
                         <th class="px-4 py-2 text-left text-xs font-medium uppercase">Tipe</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium uppercase">Tgl Pengganti</th>
                         <th class="px-4 py-2 text-left text-xs font-medium uppercase">Catatan</th>
                         <th class="px-4 py-2 text-center text-xs font-medium uppercase">Status</th>
                         <th class="px-4 py-2 text-right text-xs font-medium uppercase">Aksi</th>
@@ -74,6 +75,21 @@
                                 <span class="px-2 py-1 rounded text-xs {{ $typeBadge[$h->type] ?? 'bg-gray-100' }}">
                                     {{ $h->type }}
                                 </span>
+                                @if(!$h->is_honor_paid)
+                                <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-orange-100 text-orange-700">Honor Nol</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-2 text-sm">
+                                @if($h->replacement_date)
+                                    <span class="font-mono text-green-700">
+                                        {{ \Carbon\Carbon::parse($h->replacement_date)->format('d M Y') }}
+                                    </span>
+                                    <div class="text-[10px] text-gray-400">
+                                        ({{ ['Sun'=>'Min','Mon'=>'Sen','Tue'=>'Sel','Wed'=>'Rab','Thu'=>'Kam','Fri'=>'Jum','Sat'=>'Sab'][\Carbon\Carbon::parse($h->replacement_date)->format('D')] ?? '' }})
+                                    </div>
+                                @else
+                                    <span class="text-xs text-gray-400 italic">Tidak Ada Pergantian Kelas</span>
+                                @endif
                             </td>
                             <td class="px-4 py-2 text-sm text-gray-600">{{ $h->notes ?? '—' }}</td>
                             <td class="px-4 py-2 text-center">
@@ -99,7 +115,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                            <td colspan="7" class="px-4 py-8 text-center text-gray-500">
                                 Belum ada hari libur untuk tahun {{ $year }}.
                             </td>
                         </tr>
