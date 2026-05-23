@@ -303,9 +303,12 @@ class SessionGeneratorService
     {
         $teacherId = $schedule->enrollment->teacher_id;
 
+        // Deteksi overlap interval: [A_start, A_end) overlap [B_start, B_end) jika A_start < B_end AND A_end > B_start
+        // Ini menangkap partial overlap (beda jam mulai tapi durasi bersinggungan)
         $teacherBusy = ClassSession::where('teacher_id', $teacherId)
             ->whereDate('session_date', $date)
-            ->where('start_time', $schedule->start_time)
+            ->where('start_time', '<', $schedule->end_time)
+            ->where('end_time', '>', $schedule->start_time)
             ->where('schedule_id', '!=', $schedule->id)
             ->whereNotIn('status', ['CANCELLED'])
             ->exists();
@@ -317,7 +320,8 @@ class SessionGeneratorService
         if ($schedule->room_id) {
             $roomBusy = ClassSession::where('room_id', $schedule->room_id)
                 ->whereDate('session_date', $date)
-                ->where('start_time', $schedule->start_time)
+                ->where('start_time', '<', $schedule->end_time)
+                ->where('end_time', '>', $schedule->start_time)
                 ->where('schedule_id', '!=', $schedule->id)
                 ->whereNotIn('status', ['CANCELLED'])
                 ->exists();
