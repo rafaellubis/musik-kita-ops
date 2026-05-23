@@ -27,6 +27,8 @@ class KidsBundleInstallmentUiTest extends TestCase
 
     // ─── Helper: buat murid + enrollment KIDS_CLASS_BUNDLE + 3 invoice cicilan ───
 
+    // Helper: buat murid + enrollment + 3 invoice cicilan INSTALLMENT
+    // amounts: 340.000 / 3 → 113.333 + 113.333 + 113.334 (sisa 1 ke termin ke-3)
     private function buatMuridDenganCicilan(): array
     {
         $student = Student::factory()->create(['status' => 'Aktif']);
@@ -41,33 +43,65 @@ class KidsBundleInstallmentUiTest extends TestCase
         ]);
         $student->update(['primary_enrollment_id' => $enrollment->id]);
 
-        // Buat 3 invoice cicilan secara manual (mirip createKidsBundleInstallments)
         $groupId = Str::uuid()->toString();
         $invoices = [];
         $offsets  = [0, 1, 3];
         $amounts  = [113333, 113333, 113334];
         foreach ($offsets as $i => $offset) {
-            $no = $i + 1;
+            $no     = $i + 1;
             $issued = now()->addMonths($offset)->startOfMonth();
             $invoices[] = Invoice::create([
-                'invoice_number'      => "INV/2026/0{$no}/000{$no}",
-                'student_id'          => $student->id,
-                'enrollment_id'       => $enrollment->id,
-                'year'                => $issued->year,
-                'month'               => $issued->month,
-                'class_type'          => 'KIDS_CLASS_BUNDLE',
-                'payment_mode'        => 'INSTALLMENT',
-                'installment_number'  => $no,
-                'installment_group_id'=> $groupId,
-                'total_amount'        => $amounts[$i],
-                'paid_amount'         => 0,
-                'status'              => 'UNPAID',
-                'due_date'            => $issued->copy()->setDay(10)->toDateString(),
-                'issued_at'           => $issued->toDateString(),
+                'invoice_number'       => 'INV/' . $issued->format('Y') . '/' . $issued->format('m') . '/' . fake()->unique()->numerify('####'),
+                'student_id'           => $student->id,
+                'enrollment_id'        => $enrollment->id,
+                'year'                 => $issued->year,
+                'month'                => $issued->month,
+                'class_type'           => 'KIDS_CLASS_BUNDLE',
+                'payment_mode'         => 'INSTALLMENT',
+                'installment_number'   => $no,
+                'installment_group_id' => $groupId,
+                'total_amount'         => $amounts[$i],
+                'paid_amount'          => 0,
+                'status'               => 'UNPAID',
+                'due_date'             => $issued->copy()->setDay(10)->toDateString(),
+                'issued_at'            => $issued->toDateString(),
             ]);
         }
 
         return [$student, $enrollment, $invoices];
+    }
+
+    // Helper: buat murid + enrollment + 1 invoice FULL (bukan cicilan)
+    private function buatMuridDenganBundleFull(): array
+    {
+        $student = Student::factory()->create(['status' => 'Aktif']);
+        $pkg = Package::factory()->create([
+            'class_type'      => 'KIDS_CLASS_BUNDLE',
+            'price_per_month' => 340000,
+        ]);
+        $enrollment = Enrollment::factory()->for($student)->create([
+            'package_id' => $pkg->id,
+            'status'     => 'ACTIVE',
+            'is_primary' => true,
+        ]);
+        $student->update(['primary_enrollment_id' => $enrollment->id]);
+
+        $invoice = Invoice::create([
+            'invoice_number' => 'INV/' . now()->format('Y') . '/' . now()->format('m') . '/' . fake()->unique()->numerify('####'),
+            'student_id'     => $student->id,
+            'enrollment_id'  => $enrollment->id,
+            'year'           => now()->year,
+            'month'          => now()->month,
+            'class_type'     => 'KIDS_CLASS_BUNDLE',
+            'payment_mode'   => 'FULL',
+            'total_amount'   => 340000,
+            'paid_amount'    => 0,
+            'status'         => 'UNPAID',
+            'due_date'       => now()->setDay(10)->toDateString(),
+            'issued_at'      => now()->startOfMonth()->toDateString(),
+        ]);
+
+        return [$student, $enrollment, $invoice];
     }
 
     /** Invoice index: badge Termin X/3 muncul untuk invoice cicilan */
@@ -89,32 +123,7 @@ class KidsBundleInstallmentUiTest extends TestCase
     /** Invoice index: invoice KIDS_CLASS_BUNDLE FULL menampilkan badge "Kids Bundle – Lunas" */
     public function test_invoice_index_menampilkan_badge_lunas_untuk_bundle_full(): void
     {
-        $student = Student::factory()->create(['status' => 'Aktif']);
-        $pkg = Package::factory()->create([
-            'class_type'      => 'KIDS_CLASS_BUNDLE',
-            'price_per_month' => 340000,
-        ]);
-        $enrollment = Enrollment::factory()->for($student)->create([
-            'package_id' => $pkg->id,
-            'status'     => 'ACTIVE',
-            'is_primary' => true,
-        ]);
-        $student->update(['primary_enrollment_id' => $enrollment->id]);
-
-        Invoice::create([
-            'invoice_number' => 'INV/2026/05/0099',
-            'student_id'     => $student->id,
-            'enrollment_id'  => $enrollment->id,
-            'year'           => now()->year,
-            'month'          => now()->month,
-            'class_type'     => 'KIDS_CLASS_BUNDLE',
-            'payment_mode'   => 'FULL',
-            'total_amount'   => 340000,
-            'paid_amount'    => 0,
-            'status'         => 'UNPAID',
-            'due_date'       => now()->setDay(10)->toDateString(),
-            'issued_at'      => now()->startOfMonth()->toDateString(),
-        ]);
+        $this->buatMuridDenganBundleFull();
 
         $response = $this->actingAs($this->admin)
             ->get(route('invoices.index', [
@@ -123,8 +132,7 @@ class KidsBundleInstallmentUiTest extends TestCase
             ]));
 
         $response->assertOk();
-        $response->assertSee('Kids Bundle');
-        $response->assertSee('Lunas');
+        $response->assertSee('Kids Bundle – Lunas');
     }
 
     /** Invoice show: panel progress cicilan muncul untuk invoice installment */
