@@ -100,6 +100,90 @@
                 </div>
             </div>
 
+            {{-- ===== Panel Progress Cicilan Kids Bundle (hanya untuk INSTALLMENT) ===== --}}
+            @if($invoice->isInstallment() && $siblings->isNotEmpty())
+            @php
+                $paidCount   = $siblings->where('status', 'PAID')->count();
+                $totalAmount = $siblings->sum('total_amount');
+                $paidAmount  = $siblings->sum('paid_amount');
+            @endphp
+            <div class="mt-4 pt-4 border-t border-gray-100">
+                <div class="flex justify-between items-center mb-3">
+                    <div>
+                        <div class="text-sm font-semibold text-gray-800">Cicilan Kids Class Bundle</div>
+                        <div class="text-xs text-gray-500 mt-0.5">
+                            {{ $paidCount }} dari 3 termin lunas ·
+                            Rp {{ number_format($paidAmount, 0, ',', '.') }} dari
+                            Rp {{ number_format($totalAmount, 0, ',', '.') }}
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Progress bar 3 segmen --}}
+                <div class="flex gap-1 h-1.5 rounded-full overflow-hidden mb-4">
+                    @foreach($siblings as $sib)
+                        @php
+                            $isActive = $sib->installment_number === $invoice->installment_number;
+                            if ($sib->status === 'PAID') {
+                                $segColor = 'bg-green-400';
+                            } elseif ($isActive) {
+                                $segColor = 'bg-yellow-400';
+                            } else {
+                                $segColor = 'bg-gray-200';
+                            }
+                        @endphp
+                        <div class="flex-1 rounded-sm {{ $segColor }}"></div>
+                    @endforeach
+                </div>
+
+                {{-- Tabel 3 termin --}}
+                <div class="space-y-1.5">
+                    @foreach($siblings as $sib)
+                    @php
+                        $isActive    = $sib->installment_number === $invoice->installment_number;
+                        $dotColor    = match($sib->status) {
+                            'PAID'    => 'bg-green-400',
+                            'PARTIAL' => 'bg-yellow-400',
+                            default   => $isActive ? 'bg-yellow-400' : 'bg-gray-300',
+                        };
+                        $badgeClass  = match($sib->status) {
+                            'PAID'    => 'bg-green-50 text-green-700',
+                            'PARTIAL' => 'bg-yellow-50 text-yellow-800',
+                            default   => 'bg-gray-100 text-gray-500',
+                        };
+                        $badgeText   = match($sib->status) {
+                            'PAID'    => 'LUNAS',
+                            'PARTIAL' => 'SEBAGIAN',
+                            default   => 'BELUM BAYAR',
+                        };
+                    @endphp
+                    <div class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm
+                        {{ $isActive ? 'border border-yellow-200 bg-yellow-50/30' : 'border border-transparent' }}">
+                        <div class="w-2 h-2 rounded-full flex-shrink-0 {{ $dotColor }}"></div>
+                        <div class="flex-1 text-gray-700">
+                            Termin {{ $sib->installment_number }}/3
+                            <span class="text-gray-400 text-xs ml-1">
+                                · {{ $sib->due_date->format('d M Y') }}
+                                @if($isActive) <span class="text-yellow-600 font-medium">← ini</span> @endif
+                            </span>
+                        </div>
+                        <div class="text-gray-700 font-mono text-xs">
+                            Rp {{ number_format($sib->total_amount, 0, ',', '.') }}
+                        </div>
+                        @if(!$isActive)
+                            <a href="{{ route('invoices.show', $sib->id) }}"
+                               class="text-xs hover:underline ml-1">
+                                <span class="px-1.5 py-0.5 rounded {{ $badgeClass }}">{{ $badgeText }}</span>
+                            </a>
+                        @else
+                            <span class="px-1.5 py-0.5 rounded text-xs {{ $badgeClass }}">{{ $badgeText }}</span>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
             {{-- ===== Total summary ===== --}}
             <div class="mt-4 grid grid-cols-3 gap-4 text-sm border-t pt-3">
                 <div>

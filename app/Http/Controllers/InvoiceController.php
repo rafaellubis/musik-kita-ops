@@ -81,13 +81,21 @@ class InvoiceController extends Controller
             'payments.voidedBy',
         ]);
 
+        // Sibling invoices untuk panel progress cicilan Kids Bundle (BR-10.10).
+        // Hanya di-query jika invoice ini adalah bagian dari cicilan (installment_group_id ada).
+        $siblings = $invoice->installment_group_id
+            ? Invoice::where('installment_group_id', $invoice->installment_group_id)
+                ->orderBy('installment_number')
+                ->get(['id', 'installment_number', 'total_amount', 'paid_amount', 'status', 'due_date'])
+            : collect();
+
         // Katalog item manual yang aktif — untuk dropdown tambah item
         $catalogItems = \App\Models\InvoiceComponent::where('is_active', true)
             ->orderBy('sort_order')
             ->orderBy('code')
             ->get(['id', 'code', 'name', 'default_price']);
 
-        return view('invoices.show', compact('invoice', 'catalogItems'));
+        return view('invoices.show', compact('invoice', 'catalogItems', 'siblings'));
     }
 
     /**
