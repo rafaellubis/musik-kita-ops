@@ -141,7 +141,7 @@
                 <div class="space-y-1.5">
                     @foreach($siblings as $sib)
                     @php
-                        $isActive    = $sib->installment_number === $invoice->installment_number;
+                        $isActive    = $sib->id === $invoice->id;
                         $dotColor    = match($sib->status) {
                             'PAID'    => 'bg-green-400',
                             'PARTIAL' => 'bg-yellow-400',
