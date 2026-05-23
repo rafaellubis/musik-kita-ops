@@ -1,8 +1,9 @@
 # MUSIK KITA — Operations System (musik-kita-ops)
-## Briefing Document untuk Claude Code — v1.2
+## Briefing Document untuk Claude Code — v1.3
 
 > Dibuat berdasarkan: BRD-Final-Musik-KITA-v1.0.md + Revisi-BRD-SAD-v1.0-ke-v1.1.md
 > Update v1.2 (2026-05-07): sinkronisasi tech stack & schema dengan kondisi kode aktual.
+> Update v1.3 (2026-05-23): multi-kelas, diskon invoice, cuti, reschedule Fase 2, QRIS/DEBIT, slip honor unifikasi, ruangan fleksibel.
 > Tanggal: Mei 2026
 
 ---
@@ -188,13 +189,20 @@ Biaya buku			  : harga ditentukan oleh owner pengisian manual
 ### PERINGATAN -- NAMA KOLOM YANG SERING SALAH
 
 ```
-BENAR                       SALAH (jangan pakai)
-packages.code               packages.name
-packages.duration_min       packages.duration_minutes
-packages.price_per_month    packages.price (bukan kolom — alias accessor formatted_price ada)
-students.full_name          students.name
-students.student_code       students.code
+BENAR                                     SALAH (jangan pakai)
+packages.code                             packages.name
+packages.duration_min                     packages.duration_minutes
+packages.price_per_month                  packages.price
+students.full_name                        students.name
+students.student_code                     students.code
+$student->primaryEnrollment->package      $student->package (accessor lama SUDAH TIDAK ADA)
+$student->primaryEnrollment->teacher      $student->teacher (accessor lama SUDAH TIDAK ADA)
+enrollments.is_primary                    students.package_id (kolom ini SUDAH DIHAPUS)
 ```
+
+KRITIS (v1.3): Kolom `students.package_id`, `assigned_teacher_id`, `assigned_room_id`,
+`preferred_day`, `preferred_time` SUDAH DIHAPUS di migrasi multi-kelas (Mei 2026).
+Jangan gunakan kolom-kolom tersebut di kode baru — akan runtime error.
 
 CATATAN: Honor per sesi TIDAK disimpan sebagai kolom di `packages`.
 Honor dihitung dari formula PayrollConfig (mis. `package_price * 0.5 / 4`).
@@ -227,7 +235,7 @@ price_per_month, is_active, sort_order, timestamps
 ```
 Honor per sesi TIDAK disimpan kolom. Hitung via PayrollConfig.
 
-**students** (skema actual setelah implementasi M02)
+**students** (skema aktual — setelah migrasi multi-kelas, Mei 2026)
 ```
 id, student_code (M-YYYY-NNNN, unique),
 full_name, nickname, gender (L|P),
@@ -235,21 +243,29 @@ birth_date, phone, email, address, notes,
 parent_name, parent_phone, parent_email,
 parent_relationship (Ayah|Ibu|Wali),
 status (enum: Calon|Trial|Aktif|Cuti|Selesai|Mengundurkan Diri),
-package_id, assigned_teacher_id, assigned_room_id,
-preferred_day, preferred_time, trial_date, active_since,
-last_session_at, timestamps
+primary_enrollment_id (FK → enrollments, nullable),
+cuti_from (date, nullable), cuti_until (date, nullable),
+trial_date, active_since, last_session_at, timestamps
 ```
 CATATAN ENUM STATUS: pakai Title Case Indonesia (`Calon`, `Trial`, `Aktif`,
 `Cuti`, `Selesai`, `Mengundurkan Diri`) — BUKAN UPPERCASE seperti
 `class_type`. Decision ini diambil agar status langsung tampil di UI
 tanpa transform. Jangan diubah ke UPPERCASE.
 
+CATATAN KRITIS: Kolom `package_id`, `assigned_teacher_id`, `assigned_room_id`,
+`preferred_day`, `preferred_time` SUDAH DIHAPUS di migrasi multi-kelas (Mei 2026).
+Semua relasi kelas sekarang via tabel `enrollments`.
+Untuk akses paket/guru/ruang aktif murid: gunakan `$student->primaryEnrollment->package` dll.
+
 **enrollments**
 ```
 id, student_id, package_id, teacher_id,
-effective_date, end_date,
-status (enum: ACTIVE|INACTIVE|COMPLETED), timestamps
+is_primary (boolean, default false — satu enrollment utama per murid),
+effective_date, end_date, notes,
+status (enum: ACTIVE|ON_LEAVE|INACTIVE|COMPLETED), timestamps
 ```
+CATATAN: `ON_LEAVE` diset saat murid mengajukan cuti; kembali ke `ACTIVE` saat cuti berakhir.
+`is_primary` menentukan enrollment yang dipakai untuk generate invoice SPP otomatis.
 
 **schedules** (jadwal mingguan tetap)
 ```
@@ -262,7 +278,7 @@ start_time, end_time, room_id, is_active, timestamps
 id, schedule_id, enrollment_id, student_id, teacher_id,
 session_date,
 status (enum: SCHEDULED|HADIR|HADIR_TERLAMBAT|IZIN_RESCHEDULE|
-              IZIN_VIDEO|HANGUS|LIBUR|DIGANTI),
+              IZIN_VIDEO|HANGUS|LIBUR|DIGANTI|CANCELLED),
 substitute_teacher_id (nullable),
 late_minutes, notes, honor_code, honor_amount, timestamps
 ```
@@ -270,36 +286,84 @@ late_minutes, notes, honor_code, honor_amount, timestamps
 **invoices**
 ```
 id, invoice_number (INV/YYYY/MM/NNNN),
-student_id, month, year,
+student_id, enrollment_id (FK → enrollments, nullable),
+month, year,
+class_type (snapshot class_type paket saat dibuat, nullable),
+payment_mode (enum: FULL|INSTALLMENT, default FULL),
+installment_number (nullable, nilai 1|2|3 — urutan termin cicilan),
+installment_group_id (UUID string, nullable — pengikat 3 invoice cicilan),
 total_amount, paid_amount,
 status (enum: UNPAID|PARTIAL|PAID), due_date, timestamps
 ```
+CATATAN: `payment_mode=INSTALLMENT` hanya untuk `class_type=KIDS_CLASS_BUNDLE`.
+Tiga invoice cicilan diikat oleh `installment_group_id` yang sama (UUID).
 
 **invoice_items**
 ```
 id, invoice_id,
-item_code (enum: REG|SPP|KIDS_FP|CUTI|UJI|MC|DENDA),
-description, amount, timestamps
+parent_item_id (FK → invoice_items self-ref, nullable — untuk item DISKON),
+item_code (enum: REG|SPP|KIDS_FP|CUTI|UJI|MC|DENDA|DISKON),
+description, amount,
+discount_type (NOMINAL|PERCENT, nullable — hanya diisi item DISKON),
+discount_value (integer, nullable — nilai Rp atau % tergantung discount_type),
+discount_reason (string max 500, nullable — wajib diisi saat buat item DISKON),
+metadata (JSON, nullable), timestamps
 ```
+CATATAN: Item DISKON wajib punya `parent_item_id` yang menunjuk item yang didiskon.
+Diskon NOMINAL langsung dikurangi dari amount parent. Diskon PERCENT dihitung dari amount parent.
 
 **payments**
 ```
-id, invoice_id, amount,
-method (enum: CASH|TRANSFER),
+id, receipt_number (KW/YYYY/MM/NNNN),
+invoice_id, amount,
+method (enum: CASH|TRANSFER|QRIS|DEBIT),
 payment_date, proof_image,
-receipt_number (KW/YYYY/MM/NNNN),
-voided_at, voided_by, timestamps
+notes (text, nullable),
+created_by (FK → users, nullable — siapa yang catat pembayaran),
+voided_at, voided_by, voided_reason (text, nullable), timestamps
 ```
+
+**invoice_components** (katalog item tagihan — dikelola Owner via M01 Master Data)
+```
+id, code (unique), name,
+type (enum: REGULER|TRIAL|KIDS_FINAL|CUTI|UJIAN|MINI_CONCERT|DENDA),
+amount_or_formula (string — nominal Rp atau rumus, misal "package_price * 0.5 / 4"),
+description (nullable), is_active, sort_order, timestamps
+```
+CATATAN: Owner bisa tambah/edit item tagihan via master data. Admin memilih dari katalog ini
+saat tambah baris manual ke invoice.
+
+**teachers**
+```
+id, code, name, email, phone,
+bank_name (nullable), bank_account (nullable), bank_account_holder (nullable),
+joined_date, is_active, notes, timestamps
+```
+CATATAN: Field bank (`bank_name`, `bank_account`, `bank_account_holder`) ditambah Mei 2026
+untuk ditampilkan di header slip honor cetak.
+
+**rooms**
+```
+id, code, name, capacity,
+supported_instruments (JSON, nullable — array instrumen yg didukung, misal ["Piano","Gitar"]),
+is_active, timestamps
+```
+CATATAN: Kolom boolean `has_piano`, `has_drum`, `has_amplifier` SUDAH DIHAPUS (Mei 2026).
+Diganti `supported_instruments` JSON untuk fleksibilitas instrumen baru.
 
 **teacher_honor_slips**
 ```
 id, slip_number (SLIP/YYYY/MM/NNNN),
 teacher_id, month, year,
-base_honor, transport_honor (input manual),
-other_honor (input manual), other_honor_note (keterangan),
-total_honor,
-status (enum: DRAFT|CALCULATED|PAID), paid_at, timestamps
+base_honor (otomatis dari kalkulasi sesi),
+event_honor (input manual — honor event, misal Mini Concert), event_honor_note,
+transport_honor (input manual), other_honor (input manual), other_honor_note,
+total_honor (= base + event + transport + other),
+status (enum: DRAFT|CALCULATED|PAID),
+paid_at, paid_by (FK → users), created_by (FK → users), timestamps
 ```
+CATATAN: Kolom `event_honor` dan `event_honor_note` ditambah Mei 2026 saat tabel
+`event_honor_slips` dihapus — honor event digabungkan ke slip honor utama guru.
 
 **student_status_histories** (audit trail lifecycle murid)
 ```
@@ -345,6 +409,10 @@ BR-3.5  : Minggu ke-5 TIDAK dilaksanakan (maks 4 sesi/bulan)
 BR-3.6  : Murid tetap bayar penuh meski bulan hanya 3 sesi
 BR-3.9  : Pemindahan jadwal mingguan tetap BOLEH dalam bulan yang sama [REVISI v1.1]
           (sebelumnya: hanya berlaku mulai bulan berikutnya)
+BR-3.10 : Reschedule Fase 2 — sesi pengganti dibuat otomatis oleh RescheduleService
+BR-3.11 : Conflict detection saat reschedule: 1 guru tidak boleh 2 sesi bersamaan
+BR-3.12 : Conflict detection saat reschedule: 1 ruang tidak boleh 2 sesi bersamaan
+BR-3.13 : Admin input tanggal, jam, ruang pengganti via mini-modal di halaman absensi
 ```
 
 ### Absensi
@@ -367,6 +435,7 @@ BR-5.14 : Tunggakan >1 bulan tanpa konfirmasi -> auto-mundur
 BR-5.16 : Nomor invoice: INV/YYYY/MM/NNNN (reset per bulan)
 BR-5.17 : Nomor kuitansi: KW/YYYY/MM/NNNN (reset per bulan)
 BR-5.18 : Void pembayaran hanya bisa dilakukan OWNER (bukan Admin)
+BR-5.19 : Metode pembayaran yang valid: CASH, TRANSFER, QRIS, DEBIT
 ```
 
 ### Honor Guru -- 9 Skenario
@@ -405,6 +474,41 @@ BR-10.3 : Status 'Calon - Menunggu Kuota' -> tidak kena SPP
 BR-10.6 : Final project Rp 140.000/murid di akhir 6 bulan
 BR-10.7 : Lulus -> status 'Selesai' -> re-enroll privat TANPA bayar registrasi ulang
 BR-10.10: Opsi bayar: lunas di awal ATAU cicil 3 termin (bulan ke-1, 2, dan 4)
+```
+
+### Multi-Kelas (Murid Banyak Enrollment)
+```
+BR-MK.1 : Murid BOLEH punya lebih dari satu enrollment ACTIVE bersamaan
+           (contoh: Piano Regular + Gitar Hobby)
+BR-MK.2 : Setiap murid punya tepat satu primary enrollment (students.primary_enrollment_id)
+BR-MK.3 : enrollments.is_primary menandai enrollment utama per murid
+BR-MK.4 : Invoice SPP auto-generate hanya untuk primary enrollment
+           (enrollment non-primary ditagih manual jika diperlukan)
+BR-MK.5 : Murid bisa tambah kelas baru via tab 'Kelas' di halaman detail murid
+BR-MK.6 : Owner/Admin bisa ganti primary enrollment via EnrollmentController::setPrimary()
+BR-MK.7 : Hentikan enrollment non-primary via EnrollmentController::stop()
+           (status → COMPLETED, tidak mempengaruhi status murid)
+BR-MK.8 : Semua enrollment COMPLETED/INACTIVE → murid otomatis mundur
+```
+
+### Cuti Murid
+```
+BR-CUTI.1 : Saat Admin mengajukan cuti, students.cuti_from dan cuti_until diisi
+BR-CUTI.2 : Enrollment aktif berubah status → ON_LEAVE saat cuti dimulai
+BR-CUTI.3 : Sesi tidak di-generate untuk enrollment dengan status ON_LEAVE
+BR-CUTI.4 : Biaya cuti Rp 100.000 wajib dibayar saat pengajuan
+BR-CUTI.5 : Saat kembali Aktif: enrollment kembali ke ACTIVE, cuti_from/until di-clear
+BR-CUTI.6 : Perpanjang cuti maks 1x (total maksimal 2 bulan)
+```
+
+### Diskon Invoice
+```
+BR-DSK.1 : Owner atau Admin bisa tambah item DISKON ke invoice yang UNPAID/PARTIAL
+BR-DSK.2 : Item DISKON wajib punya parent_item_id (FK ke item invoice yang didiskon)
+BR-DSK.3 : discount_type: NOMINAL (Rp flat) atau PERCENT (% dari amount parent)
+BR-DSK.4 : discount_reason WAJIB diisi saat membuat item DISKON
+BR-DSK.5 : Hapus/void item DISKON hanya Owner
+BR-DSK.6 : item_code untuk diskon: 'DISKON'
 ```
 
 ---
@@ -463,6 +567,7 @@ CUTI     | Biaya Cuti              | Rp 100.000/pengajuan
 UJI      | Ujian + Mini Concert    | Rp 395.000
 MC       | Mini Concert saja       | Rp 295.000
 DENDA    | Denda keterlambatan     | Rp 5.000 x MAX(0, hari - 10)
+DISKON   | Diskon manual           | NOMINAL (Rp flat) atau PERCENT (% dari item parent)
 ```
 
 ---
@@ -489,14 +594,17 @@ DENDA    | Denda keterlambatan     | Rp 5.000 x MAX(0, hari - 10)
 - Rapel ke bulan depan jika tidak ada slot pengganti
 
 ### M04 -- Absensi
-- Input 7 status per sesi setelah sesi berlangsung
+- Input 9 status per sesi setelah sesi berlangsung (termasuk CANCELLED dan DIGANTI)
+- Reschedule Fase 2: Admin pilih tanggal/jam/ruang pengganti via mini-modal
+- RescheduleService cek konflik guru + ruang sebelum buat sesi pengganti
 - Kids Class: absensi per murid dalam grup
 - Guru pengganti: set substitute_teacher_id -> honor otomatis ke pengganti
 
 ### M05 -- Keuangan Murid
 - Generate invoice SPP otomatis tanggal 1 setiap bulan
 - Denda harian cron job mulai tanggal 11
-- Catat pembayaran cash/transfer + upload bukti foto
+- Catat pembayaran cash/transfer/QRIS/debit + upload bukti foto
+- Diskon per item: NOMINAL atau PERCENT, wajib isi alasan diskon
 - Generate kuitansi KW/YYYY/MM/NNNN
 - Cetak A4 / download PDF
 - Auto-mundur warning H-7 di dashboard untuk murid tunggakan >1 bulan
@@ -504,7 +612,8 @@ DENDA    | Denda keterlambatan     | Rp 5.000 x MAX(0, hari - 10)
 ### M06 -- Honor Guru
 - Kalkulasi honor otomatis H-2 sebelum akhir bulan
 - Generate slip SLIP/YYYY/MM/NNNN per guru
-- Komponen: honor pokok (auto) + transport (manual) + lain-lain (manual + keterangan)
+- Komponen: honor pokok (auto) + honor event (manual) + transport (manual) + lain-lain (manual + keterangan)
+- Cetak slip honor: rincian per murid + info bank guru di header
 - Owner review -> Tandai Dibayar -> slip terkunci dari edit
 
 ### M07 -- Pengeluaran & Kas
@@ -542,6 +651,10 @@ X Pakai packages.name      -> harus packages.code
 X Pakai duration_minutes   -> harus duration_min
 X Hardcode 'Kids Class'    -> pakai 'KIDS_CLASS'
 X Hardcode 'Reguler'       -> pakai 'REGULER' (kapital semua)
+X Akses students.package_id / assigned_teacher_id / assigned_room_id
+  -> Kolom ini SUDAH DIHAPUS. Gunakan $student->primaryEnrollment->package/teacher/room
+X Buat invoice tanpa enrollment_id -> selalu link ke enrollment yang relevan
+X Hardcode metode bayar CASH|TRANSFER saja -> tambahkan QRIS dan DEBIT
 
 KODE 
 - jangan gunakan tipe 'any' di Typescrip
@@ -596,6 +709,11 @@ X php artisan migrate:fresh pada database utama (mk_operasional) TANPA konfirmas
 [ ] Pesan UI/validasi dalam Bahasa Indonesia
 [ ] Ada audit log entry untuk action penting
 [ ] Role/permission check sudah ada (Spatie Permission)
+[ ] Akses relasi murid ↔ kelas via enrollment (bukan kolom students langsung)
+[ ] Gunakan $student->primaryEnrollment untuk akses paket/guru/ruang utama
+[ ] Invoice auto-generate mengikuti primary enrollment
+[ ] Diskon invoice: wajib parent_item_id + discount_reason
+[ ] Metode bayar: CASH|TRANSFER|QRIS|DEBIT (bukan hanya CASH|TRANSFER)
 ```
 
 ---
@@ -768,6 +886,7 @@ App\Http\Controllers\PaymentController
 App\Http\Controllers\HonorController
 App\Http\Controllers\EventController
 App\Http\Controllers\ImportController
+App\Http\Controllers\EnrollmentController
 App\Http\Controllers\DashboardController
 App\Http\Controllers\ReportController
 App\Http\Controllers\AuditLogController
@@ -778,6 +897,7 @@ App\Services\SessionGeneratorService
 App\Services\InvoiceGeneratorService
 App\Services\AutoMundurService
 App\Services\TrialManagementService
+App\Services\RescheduleService
 ```
 
 ### Struktur Folder
@@ -905,4 +1025,4 @@ UAT lengkap, Dokumentasi user manual
 
 *Source: BRD-Final-Musik-KITA-v1.0 + Revisi-BRD-SAD-v1.0-ke-v1.1*
 *Update file ini jika ada perubahan business rules atau schema*
-*Versi: 1.1 | Mei 2026*
+*Versi: 1.3 | Mei 2026*
