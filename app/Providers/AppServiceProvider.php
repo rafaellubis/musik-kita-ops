@@ -25,35 +25,34 @@ class AppServiceProvider extends ServiceProvider
         // Dipasang ke wildcard '*' karena layout menggunakan <x-app-layout> (class-based
         // Blade component), sehingga 'layouts.app' tidak pernah di-fire oleh composer biasa.
         //
-        // Optimasi: static variable memastikan query DB hanya dijalankan SEKALI per request,
-        // meskipun closure dipanggil berkali-kali (untuk setiap partial/component/sub-view).
-        // Closure PHP mempertahankan static variable di seluruh pemanggilan dalam request yang sama.
+        // Cache per-request via request()->attributes agar query DB hanya jalan sekali,
+        // tapi tidak memakai static variable (yang bisa "terkunci" dari request sebelumnya
+        // di proses PHP-FPM yang sama).
         View::composer('*', function ($view) {
-            static $fetched = false;
-            static $notifs = null;
-            static $count = 0;
-
-            if (! $fetched) {
-                $fetched = true;
-                if (auth()->check()) {
-                    // Ambil maks 10 notifikasi overdue yang belum dibaca untuk user saat ini
-                    $notifs = auth()->user()
-                        ->unreadNotifications()
-                        ->where('type', MuridOverdueNotification::class)
-                        ->latest()
-                        ->take(10)
-                        ->get();
-                    $count = $notifs->count();
-                }
+            if (! auth()->check()) {
+                return;
             }
 
-            // Hanya inject ke view jika sudah di-fetch DAN user login (notifs tidak null).
-            // $fetched memastikan kita sudah melewati blok auth()->check() di atas,
-            // $notifs !== null memastikan user authenticated (bukan guest).
-            if ($fetched && $notifs !== null) {
-                $view->with('overdueNotifs', $notifs);
-                $view->with('overdueNotifCount', $count);
+            $request = request();
+
+            // Jika belum di-fetch di request ini, jalankan query sekali lalu simpan
+            if (! $request->attributes->has('overdueNotifData')) {
+                $notifs = auth()->user()
+                    ->unreadNotifications()
+                    ->where('type', MuridOverdueNotification::class)
+                    ->latest()
+                    ->take(10)
+                    ->get();
+
+                $request->attributes->set('overdueNotifData', [
+                    'notifs' => $notifs,
+                    'count'  => $notifs->count(),
+                ]);
             }
+
+            $data = $request->attributes->get('overdueNotifData');
+            $view->with('overdueNotifs', $data['notifs']);
+            $view->with('overdueNotifCount', $data['count']);
         });
     }
 }

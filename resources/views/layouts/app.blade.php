@@ -63,7 +63,7 @@
             <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
 
                 {{-- Topbar --}}
-                <div class="mk-topbar shrink-0 h-14 bg-mk-sidebar border-b border-white/[0.06]
+                <div class="mk-topbar relative z-20 shrink-0 h-14 bg-mk-sidebar border-b border-white/[0.06]
                             flex items-center px-4 lg:px-6 gap-3">
 
                     {{-- Hamburger (mobile) --}}
