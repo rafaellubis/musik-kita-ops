@@ -106,7 +106,7 @@
                 $paidCount   = $siblings->where('status', 'PAID')->count();
                 $totalCount  = $siblings->count();
                 $totalAmount = $siblings->where('status', '!=', 'VOID')->sum('total_amount');
-                $paidAmount  = $siblings->sum('paid_amount');
+                $paidAmount  = $siblings->where('status', '!=', 'VOID')->sum('paid_amount');
             @endphp
             <div class="mt-4 pt-4 border-t border-gray-100">
                 <div class="flex justify-between items-center mb-3">
