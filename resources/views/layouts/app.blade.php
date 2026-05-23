@@ -247,7 +247,9 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     'Accept': 'application/json',
                 },
-            }).then(() => window.location.reload());
+            })
+            .then(() => window.location.reload())
+            .catch(() => { btn.disabled = false; }); // biarkan user coba lagi jika gagal
         }
         </script>
     </body>
