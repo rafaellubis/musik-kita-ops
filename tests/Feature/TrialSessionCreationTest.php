@@ -36,13 +36,16 @@ class TrialSessionCreationTest extends TestCase
                 'trial_date'          => $trialAt->format('Y-m-d\TH:i'),
                 'assigned_teacher_id' => $teacher->id,
             ])
-            ->assertRedirect();
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('class_sessions', [
             'student_id'    => $student->id,
             'teacher_id'    => $teacher->id,
             'enrollment_id' => null,
             'session_date'  => $trialAt->toDateString(),
+            'start_time'    => $trialAt->format('H:i:s'),
+            'end_time'      => $trialAt->copy()->addMinutes(30)->format('H:i:s'),
             'status'        => ClassSession::STATUS_SCHEDULED,
         ]);
     }
@@ -59,12 +62,13 @@ class TrialSessionCreationTest extends TestCase
                 'trial_date'          => $trialAt->format('Y-m-d\TH:i'),
                 'assigned_teacher_id' => $teacher->id,
             ])
-            ->assertRedirect();
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('class_sessions', [
             'student_id' => $student->id,
-            'start_time' => '14:30:00',
-            'end_time'   => '15:00:00',
+            'start_time' => $trialAt->format('H:i:s'),
+            'end_time'   => $trialAt->copy()->addMinutes(30)->format('H:i:s'),
         ]);
     }
 
@@ -82,7 +86,8 @@ class TrialSessionCreationTest extends TestCase
                 'assigned_teacher_id' => $teacher->id,
                 'assigned_room_id'    => $room->id,
             ])
-            ->assertRedirect();
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('class_sessions', [
             'student_id' => $student->id,
@@ -91,7 +96,7 @@ class TrialSessionCreationTest extends TestCase
     }
 
     /** Guru trial wajib diisi — request tanpa guru dikembalikan dengan error validasi */
-    public function test_startTrial_wajib_isi_guru(): void
+    public function test_mulaiTrial_wajib_isi_guru(): void
     {
         $student = Student::factory()->create(['status' => 'Calon']);
 
