@@ -83,7 +83,7 @@ class NotificationControllerTest extends TestCase
 
         $this->actingAs($this->admin)
              ->postJson(route('notifications.read', $notifMilikOwner->id))
-             ->assertForbidden();
+             ->assertNotFound();
     }
 
     /** Helper buat student dummy tanpa simpan ke DB. */
