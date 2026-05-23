@@ -65,6 +65,7 @@
                             <th class="px-4 py-2">Partisipasi</th>
                             <th class="px-4 py-2">Paket Saat Ini</th>
                             <th class="px-4 py-2 text-right">Biaya</th>
+                            <th class="px-4 py-2">Guru Pendamping</th>
                             @if($event->hasExam() && $event->isCompleted())
                                 <th class="px-4 py-2 text-center">Hasil Ujian</th>
                                 <th class="px-4 py-2 text-center">Grade</th>
@@ -100,6 +101,31 @@
                                 </td>
                                 <td class="px-4 py-2 text-right font-mono text-xs">
                                     Rp {{ number_format($p->fee_amount, 0, ',', '.') }}
+                                </td>
+                                {{-- Kolom Guru Pendamping (tampil untuk semua event; dropdown hanya untuk DRAFT) --}}
+                                <td class="px-4 py-3">
+                                    @if($event->isDraft() && (auth()->user()->hasRole('Owner') || auth()->user()->hasRole('Admin')))
+                                        <form method="POST"
+                                              action="{{ route('event-participants.update-teacher', $p) }}"
+                                              class="flex items-center gap-1">
+                                            @csrf @method('PATCH')
+                                            <select name="accompanying_teacher_id"
+                                                    onchange="this.form.submit()"
+                                                    class="text-sm border-gray-300 rounded-md py-1">
+                                                <option value="">— Tidak ada —</option>
+                                                @foreach($activeTeachers as $teacher)
+                                                    <option value="{{ $teacher->id }}"
+                                                        {{ $p->accompanying_teacher_id == $teacher->id ? 'selected' : '' }}>
+                                                        {{ $teacher->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </form>
+                                    @else
+                                        <span class="text-sm text-gray-600">
+                                            {{ $p->accompanyingTeacher?->name ?? '—' }}
+                                        </span>
+                                    @endif
                                 </td>
                                 @if($event->hasExam() && $event->isCompleted())
                                     <td class="px-4 py-2 text-center">
@@ -139,7 +165,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-6 text-center text-gray-400 text-sm">
+                                <td colspan="8" class="px-4 py-6 text-center text-gray-400 text-sm">
                                     Belum ada peserta.
                                 </td>
                             </tr>
@@ -152,6 +178,7 @@
                             <td class="px-4 py-2 text-right font-semibold font-mono text-sm">
                                 Rp {{ number_format($event->participants->sum('fee_amount'), 0, ',', '.') }}
                             </td>
+                            <td></td>
                             @if($event->hasExam() && $event->isCompleted())
                                 <td colspan="2"></td>
                             @endif

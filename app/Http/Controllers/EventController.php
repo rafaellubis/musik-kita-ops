@@ -73,7 +73,7 @@ class EventController extends Controller
 
     public function show(Event $event)
     {
-        $event->load(['participants.student', 'participants.enrollment.package']);
+        $event->load(['participants.student', 'participants.enrollment.package', 'participants.accompanyingTeacher']);
 
         // Daftar murid aktif yang belum terdaftar sebagai peserta event ini
         $registeredStudentIds = $event->participants->pluck('student_id')->toArray();
@@ -82,7 +82,12 @@ class EventController extends Controller
             ->orderBy('full_name')
             ->get(['id', 'full_name', 'student_code', 'status']);
 
-        return view('events.show', compact('event', 'availableStudents'));
+        // Untuk dropdown guru pendamping di Konser KITA
+        $activeTeachers = \App\Models\Teacher::where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('events.show', compact('event', 'availableStudents', 'activeTeachers'));
     }
 
     public function edit(Event $event)
@@ -235,6 +240,30 @@ class EventController extends Controller
         });
 
         return back()->with('success', "Peserta «{$studentName}» berhasil dihapus dari event.");
+    }
+
+    /**
+     * Update guru pendamping untuk satu peserta event.
+     * Hanya bisa diubah selama event masih DRAFT.
+     * Digunakan untuk Konser KITA — mencatat guru yang mendampingi murid saat konser.
+     */
+    public function updateParticipantTeacher(Request $request, EventParticipant $participant)
+    {
+        $this->authorize('update', $participant->event);
+
+        if ($participant->event->isCompleted()) {
+            return back()->with('error', 'Tidak bisa ubah guru pendamping — event sudah selesai.');
+        }
+
+        $request->validate([
+            'accompanying_teacher_id' => 'nullable|exists:teachers,id',
+        ]);
+
+        $participant->update([
+            'accompanying_teacher_id' => $request->input('accompanying_teacher_id') ?: null,
+        ]);
+
+        return back()->with('success', 'Guru pendamping berhasil diperbarui.');
     }
 
     // ============= HASIL UJIAN =============

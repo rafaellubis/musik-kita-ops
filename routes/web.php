@@ -263,6 +263,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('event-participants/{participant}',
             [EventController::class, 'removeParticipant']
         )->name('event-participants.destroy');
+        Route::patch('event-participants/{participant}/teacher',
+            [EventController::class, 'updateParticipantTeacher']
+        )->name('event-participants.update-teacher');
     });
 
     /* ======================================================================
