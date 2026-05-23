@@ -61,15 +61,18 @@ class StudentLifecycleService
 
     /**
      * Calon -> Trial. Jadwalkan trial 30 menit (BR-1.3).
-     * Buat ClassSession dengan enrollment_id=NULL — marker bahwa ini sesi trial.
-     * AbsensiService mendeteksi enrollment_id=NULL untuk menentukan honor code:
-     * H_TRIAL (murid hadir) atau TRIAL_NS (no-show, Rp 0) sesuai BR-1.4.
+     * Buat Enrollment status=TRIAL (is_primary=false) + ClassSession dengan enrollment_id.
+     * Enrollment TRIAL membawa package_id agar calculateHonor() bisa resolve paket.
+     *
+     * Honor ditentukan saat input absensi:
+     * - Murid HADIR  → H_TRIAL = harga × 50% / 4 (BR-1.4)
+     * - Murid HANGUS → TRIAL_NS = Rp 0 (BR-1.4 v1.1)
      *
      * @param array{
      *     trial_date: string,           // datetime-local string, mis. "2026-06-01T10:00"
+     *     package_id: int,              // wajib — paket yang diminati murid
      *     assigned_teacher_id: int,     // wajib — FK ke teachers
      *     assigned_room_id?: int|null,  // opsional
-     *     package_id?: int|null,        // opsional — hanya info minat paket
      *     notes?: string|null,
      * } $data
      */
@@ -77,11 +80,12 @@ class StudentLifecycleService
     {
         $this->ensureTransition($student, 'Trial');
 
-        // Guard di level service: teacher_id wajib karena class_sessions.teacher_id NOT NULL.
-        // Controller sudah enforce via 'required', tapi kalau service dipanggil langsung
-        // (test, seeder, dll) tanpa key ini, kita dapat error yang jelas bukan crash diam-diam.
         if (empty($data['assigned_teacher_id'])) {
             throw new \InvalidArgumentException('assigned_teacher_id wajib diisi untuk membuat sesi trial.');
+        }
+
+        if (empty($data['package_id'])) {
+            throw new \InvalidArgumentException('package_id wajib diisi untuk membuat sesi trial.');
         }
 
         return DB::transaction(function () use ($student, $data) {
@@ -92,12 +96,22 @@ class StudentLifecycleService
                 'trial_date' => $data['trial_date'],
             ]);
 
-            // Buat sesi trial. enrollment_id NULL karena murid belum punya enrollment.
-            // Durasi selalu 30 menit untuk semua tipe paket (BR-1.3).
+            // Buat enrollment TRIAL — membawa package_id agar honor bisa dihitung.
+            // is_primary=false: tidak trigger invoice SPP otomatis.
+            $enrollment = Enrollment::create([
+                'student_id'     => $student->id,
+                'package_id'     => $data['package_id'],
+                'teacher_id'     => $data['assigned_teacher_id'],
+                'effective_date' => now()->toDateString(),
+                'status'         => Enrollment::STATUS_TRIAL,
+                'is_primary'     => false,
+            ]);
+
+            // Buat sesi trial. Durasi 30 menit untuk semua tipe paket (BR-1.3).
             $trialDateTime = \Carbon\Carbon::parse($data['trial_date']);
             ClassSession::create([
                 'schedule_id'   => null,
-                'enrollment_id' => null,
+                'enrollment_id' => $enrollment->id,
                 'student_id'    => $student->id,
                 'teacher_id'    => $data['assigned_teacher_id'],
                 'room_id'       => $data['assigned_room_id'] ?? null,
@@ -114,6 +128,7 @@ class StudentLifecycleService
                 reason:   $data['notes'] ?? null,
                 metadata: [
                     'trial_date'          => $data['trial_date'],
+                    'package_id'          => $data['package_id'],
                     'assigned_teacher_id' => $data['assigned_teacher_id'],
                 ],
             );
@@ -143,6 +158,9 @@ class StudentLifecycleService
                 'status'       => 'Aktif',
                 'active_since' => now()->toDateString(),
             ]);
+
+            // Tutup enrollment TRIAL jika ada (murid berhasil convert dari trial)
+            $this->closeTrialEnrollments($student);
 
             // Bikin enrollment ACTIVE — sumber kebenaran untuk M03 (jadwal/sesi).
             $enrollment = $this->openEnrollment(
@@ -382,6 +400,9 @@ class StudentLifecycleService
             // Tutup enrollment aktif: INACTIVE + end_date = today.
             $this->closeActiveEnrollments($student, status: 'INACTIVE');
 
+            // Tutup enrollment TRIAL jika ada (murid mundur tanpa jadi aktif)
+            $this->closeTrialEnrollments($student);
+
             // Cancel semua sesi SCHEDULED yang terkait enrollment murid ini.
             // Pakai CANCELLED (bukan hapus) agar audit trail history sesi terjaga.
             // Gunakan semua enrollment (bukan hanya yang aktif) untuk menangkap
@@ -618,6 +639,20 @@ class StudentLifecycleService
         // Hapus pointer ke enrollment yang sudah tidak aktif
         // agar accessor ->primaryEnrollment tidak mengembalikan data lama.
         $student->update(['primary_enrollment_id' => null]);
+    }
+
+    /**
+     * Tutup semua enrollment TRIAL milik murid: status → COMPLETED + end_date = today.
+     * Dipanggil saat murid konversi ke ACTIVE atau mundur tanpa lanjut.
+     */
+    private function closeTrialEnrollments(Student $student): void
+    {
+        $student->enrollments()
+            ->where('status', Enrollment::STATUS_TRIAL)
+            ->update([
+                'status'   => Enrollment::STATUS_COMPLETED,
+                'end_date' => now()->toDateString(),
+            ]);
     }
 
     /**

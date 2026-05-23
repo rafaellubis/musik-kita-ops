@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\ClassSession;
+use App\Models\Enrollment;
+use App\Models\Package;
 use App\Models\Room;
 use App\Models\Student;
 use App\Models\Teacher;
@@ -24,25 +26,33 @@ class TrialSessionCreationTest extends TestCase
         $this->admin->assignRole('Admin');
     }
 
-    /** mulaiTrial harus membuat ClassSession dengan enrollment_id = NULL */
+    /** mulaiTrial harus membuat ClassSession dengan enrollment_id dari enrollment TRIAL */
     public function test_mulaiTrial_membuat_class_session(): void
     {
         $student = Student::factory()->create(['status' => 'Calon']);
         $teacher = Teacher::factory()->create();
+        $package = Package::factory()->create(['class_type' => 'REGULER', 'price_per_month' => 340000]);
         $trialAt = now()->addDay()->setTime(10, 0, 0);
 
         $this->actingAs($this->admin)
             ->post(route('students.start-trial', $student->id), [
                 'trial_date'          => $trialAt->format('Y-m-d\TH:i'),
                 'assigned_teacher_id' => $teacher->id,
+                'package_id'          => $package->id,
             ])
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
+        $enrollment = Enrollment::where('student_id', $student->id)
+            ->where('status', Enrollment::STATUS_TRIAL)
+            ->first();
+
+        $this->assertNotNull($enrollment, 'Enrollment TRIAL harus dibuat');
+
         $this->assertDatabaseHas('class_sessions', [
             'student_id'    => $student->id,
             'teacher_id'    => $teacher->id,
-            'enrollment_id' => null,
+            'enrollment_id' => $enrollment->id,
             'session_date'  => $trialAt->toDateString(),
             'start_time'    => $trialAt->format('H:i:s'),
             'end_time'      => $trialAt->copy()->addMinutes(30)->format('H:i:s'),
@@ -55,12 +65,14 @@ class TrialSessionCreationTest extends TestCase
     {
         $student = Student::factory()->create(['status' => 'Calon']);
         $teacher = Teacher::factory()->create();
+        $package = Package::factory()->create(['class_type' => 'REGULER', 'price_per_month' => 340000]);
         $trialAt = now()->addDay()->setTime(14, 30, 0);
 
         $this->actingAs($this->admin)
             ->post(route('students.start-trial', $student->id), [
                 'trial_date'          => $trialAt->format('Y-m-d\TH:i'),
                 'assigned_teacher_id' => $teacher->id,
+                'package_id'          => $package->id,
             ])
             ->assertRedirect()
             ->assertSessionHasNoErrors();
@@ -77,6 +89,7 @@ class TrialSessionCreationTest extends TestCase
     {
         $student = Student::factory()->create(['status' => 'Calon']);
         $teacher = Teacher::factory()->create();
+        $package = Package::factory()->create(['class_type' => 'REGULER', 'price_per_month' => 340000]);
         $room    = Room::factory()->create();
         $trialAt = now()->addDay()->setTime(9, 0, 0);
 
@@ -84,6 +97,7 @@ class TrialSessionCreationTest extends TestCase
             ->post(route('students.start-trial', $student->id), [
                 'trial_date'          => $trialAt->format('Y-m-d\TH:i'),
                 'assigned_teacher_id' => $teacher->id,
+                'package_id'          => $package->id,
                 'assigned_room_id'    => $room->id,
             ])
             ->assertRedirect()
@@ -99,10 +113,12 @@ class TrialSessionCreationTest extends TestCase
     public function test_mulaiTrial_wajib_isi_guru(): void
     {
         $student = Student::factory()->create(['status' => 'Calon']);
+        $package = Package::factory()->create(['class_type' => 'REGULER', 'price_per_month' => 340000]);
 
         $this->actingAs($this->admin)
             ->post(route('students.start-trial', $student->id), [
                 'trial_date' => now()->addDay()->format('Y-m-d\TH:i'),
+                'package_id' => $package->id,
                 // tidak ada assigned_teacher_id
             ])
             ->assertSessionHasErrors(['assigned_teacher_id']);
@@ -132,6 +148,7 @@ class TrialSessionCreationTest extends TestCase
     public function test_mulaiTrial_tanpa_teacher_lempar_exception(): void
     {
         $student = Student::factory()->create(['status' => 'Calon']);
+        $package = Package::factory()->create(['class_type' => 'REGULER']);
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('assigned_teacher_id wajib diisi');
@@ -141,6 +158,7 @@ class TrialSessionCreationTest extends TestCase
         );
         $lifecycle->mulaiTrial($student, [
             'trial_date' => now()->addDay()->format('Y-m-d\TH:i'),
+            'package_id' => $package->id,
             // tidak ada assigned_teacher_id
         ]);
     }

@@ -68,6 +68,9 @@ class AttendanceService
             );
         }
 
+        // Load relasi yang dibutuhkan calculateHonor() agar tidak lazy-load
+        $session->loadMissing(['enrollment.package', 'student']);
+
         // Validasi konsistensi field per status
         $this->validateStatusFields($status, $data);
 
@@ -139,8 +142,8 @@ class AttendanceService
     /**
      * Hitung honor berdasarkan status + paket di enrollment.
      *
-     * Untuk sesi tanpa enrollment (trial / ad-hoc), pakai package_id dari
-     * student langsung kalau ada — kalau tidak juga ada, honor = 0.
+     * Deteksi trial: enrollment->status === TRIAL.
+     * Backward compat: enrollment_id === null juga dianggap trial (data lama sebelum fix).
      *
      * @return array{code: string|null, amount: int}
      */
@@ -158,16 +161,16 @@ class AttendanceService
             return ['code' => null, 'amount' => 0];
         }
 
-        // Resolve paket: prioritas enrollment.package, fallback student.package
-        $package = $session->enrollment?->package
-            ?? $session->student?->package;
+        // Resolve paket dari enrollment
+        $package = $session->enrollment?->package;
 
-        // Trial detection: enrollment_id NULL = trial.
-        $isTrial = $session->enrollment_id === null;
+        // Deteksi trial: enrollment TRIAL = murid belum jadi aktif.
+        // Backward compat: enrollment_id NULL = data lama sebelum enrollment TRIAL diimplementasi.
+        $isTrial = $session->enrollment_id === null
+            || $session->enrollment?->status === \App\Models\Enrollment::STATUS_TRIAL;
 
         // Kids Class: pakai flat per murid
         if ($package && $package->isKidsClass()) {
-            // BR-1.4: no-show trial = 0
             if ($isTrial && $status === 'HANGUS') {
                 return ['code' => 'TRIAL_NS', 'amount' => 0];
             }

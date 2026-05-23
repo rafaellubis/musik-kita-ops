@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Tambah nilai TRIAL ke enum enrollments.status.
@@ -12,7 +14,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (DB::getDriverName() === 'sqlite') return;
+        if (DB::getDriverName() === 'sqlite') {
+            // SQLite: pakai ->change() via Doctrine/DBAL untuk update CHECK constraint
+            Schema::table('enrollments', function (Blueprint $table) {
+                $table->enum('status', ['ACTIVE', 'ON_LEAVE', 'INACTIVE', 'COMPLETED', 'TRIAL'])
+                      ->default('ACTIVE')->change();
+            });
+            return;
+        }
 
         DB::statement("
             ALTER TABLE enrollments
@@ -24,7 +33,13 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (DB::getDriverName() === 'sqlite') return;
+        if (DB::getDriverName() === 'sqlite') {
+            Schema::table('enrollments', function (Blueprint $table) {
+                $table->enum('status', ['ACTIVE', 'ON_LEAVE', 'INACTIVE', 'COMPLETED'])
+                      ->default('ACTIVE')->change();
+            });
+            return;
+        }
 
         // Pastikan tidak ada row TRIAL sebelum rollback
         DB::table('enrollments')->where('status', 'TRIAL')->update(['status' => 'INACTIVE']);
