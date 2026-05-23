@@ -929,7 +929,7 @@
                             @foreach($upcomingSessions as $sess)
                             @php $sCfg = $sessionStatusCfg[$sess->status] ?? $sessionStatusCfg['SCHEDULED']; @endphp
                             <tr class="border-b border-gray-100">
-                                <td class="py-2 text-gray-700">{{ $sess->session_date->format('D, d M Y') }}</td>
+                                <td class="py-2 text-gray-700">{{ \Carbon\Carbon::parse($sess->session_date)->format('D, d M Y') }}</td>
                                 <td class="py-2 font-mono text-gray-500">
                                     {{ \Carbon\Carbon::parse($sess->start_time)->format('H:i') }}–{{ \Carbon\Carbon::parse($sess->end_time)->format('H:i') }}
                                 </td>

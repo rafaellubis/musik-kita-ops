@@ -54,7 +54,7 @@ class KalenderController extends Controller
         // day_of_week: 1=Senin ... 6=Sabtu (Carbon: 1=Monday)
         $grid = [];
         foreach ($sessions as $session) {
-            $dow  = $session->session_date->dayOfWeek; // Carbon: 1=Mon...6=Sat
+            $dow  = \Carbon\Carbon::parse($session->session_date)->dayOfWeek; // Carbon: 1=Mon...6=Sat
             $time = $session->start_time;
             $grid[$dow][$time][] = $session;
         }

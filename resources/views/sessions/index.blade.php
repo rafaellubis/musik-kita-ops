@@ -207,7 +207,7 @@
                         @forelse($sessions as $s)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-2 py-1.5 whitespace-nowrap text-sm">
-                                    {{ $s->session_date->format('D, d M') }}
+                                    {{ \Carbon\Carbon::parse($s->session_date)->format('D, d M') }}
                                 </td>
                                 <td class="px-2 py-1.5 font-mono text-xs whitespace-nowrap">
                                     {{ \Carbon\Carbon::parse($s->start_time)->format('H:i') }}

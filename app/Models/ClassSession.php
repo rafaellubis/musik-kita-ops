@@ -33,7 +33,9 @@ class ClassSession extends Model
     ];
 
     protected $casts = [
-        'session_date'  => 'date:Y-m-d',  // format eksplisit agar SQLite simpan Y-m-d bukan Y-m-d H:i:s
+        // session_date tidak di-cast ke Carbon agar perbandingan string di collection
+        // (firstWhere, contains) bekerja langsung tanpa perlu ->toDateString().
+        // Kode yang butuh operasi tanggal pakai Carbon::parse($session->session_date).
         'late_minutes'  => 'integer',
         'honor_amount'  => 'integer',
     ];

@@ -1,7 +1,8 @@
 <?php
 
+use App\Models\ClassSession;
+use App\Models\Enrollment;
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -12,31 +13,44 @@ return new class extends Migration
      *
      * Kids Class (KIDS_CLASS / KIDS_CLASS_BUNDLE) dikecualikan — honor-nya
      * dihitung per jumlah murid aktif, tidak bisa di-backfill secara otomatis.
+     *
+     * Catatan: Menggunakan Eloquent agar kompatibel dengan SQLite (testing)
+     * dan MySQL (production) tanpa raw JOIN syntax yang tidak portabel.
      */
     public function up(): void
     {
-        // Set honor untuk sesi LIBUR paket reguler/hobby (bukan Kids Class)
-        DB::statement("
-            UPDATE class_sessions cs
-            INNER JOIN enrollments e ON cs.enrollment_id = e.id
-            INNER JOIN packages p ON e.package_id = p.id
-            SET cs.honor_code   = 'H_LIBUR',
-                cs.honor_amount = ROUND(p.price_per_month * 0.5 / 4)
-            WHERE cs.status     = 'LIBUR'
-            AND   cs.honor_code IS NULL
-            AND   p.class_type  NOT IN ('KIDS_CLASS', 'KIDS_CLASS_BUNDLE')
-        ");
+        // Ambil semua sesi LIBUR yang belum punya honor_code
+        $sessions = ClassSession::where('status', 'LIBUR')
+            ->whereNull('honor_code')
+            ->with('enrollment.package')
+            ->get();
+
+        foreach ($sessions as $session) {
+            $package = $session->enrollment?->package;
+            if (!$package) {
+                continue;
+            }
+
+            // Skip Kids Class — honor dihitung per jumlah murid aktif
+            if (in_array($package->class_type, ['KIDS_CLASS', 'KIDS_CLASS_BUNDLE'])) {
+                continue;
+            }
+
+            $session->update([
+                'honor_code'   => 'H_LIBUR',
+                'honor_amount' => (int) round($package->price_per_month * 0.5 / 4),
+            ]);
+        }
     }
 
     public function down(): void
     {
         // Rollback: kembalikan honor LIBUR ke NULL
-        DB::statement("
-            UPDATE class_sessions
-            SET honor_code   = NULL,
-                honor_amount = NULL
-            WHERE status     = 'LIBUR'
-            AND   honor_code = 'H_LIBUR'
-        ");
+        ClassSession::where('status', 'LIBUR')
+            ->where('honor_code', 'H_LIBUR')
+            ->update([
+                'honor_code'   => null,
+                'honor_amount' => null,
+            ]);
     }
 };

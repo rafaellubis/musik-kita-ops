@@ -93,7 +93,7 @@ class RescheduleService
             'status'                => ClassSession::STATUS_SCHEDULED,
             'honor_code'            => null,
             'honor_amount'          => null,
-            'notes'                 => "Sesi pengganti dari {$original->session_date->format('d/m/Y')}",
+            'notes'                 => "Sesi pengganti dari " . \Carbon\Carbon::parse($original->session_date)->format('d/m/Y'),
         ]);
 
         // Update notes sesi asli dengan referensi tanggal pengganti

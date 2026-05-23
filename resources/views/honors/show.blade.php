@@ -219,7 +219,7 @@
                             <tbody>
                                 @foreach($sessions as $sesi)
                                     <tr class="border-b hover:bg-gray-50">
-                                        <td class="py-1.5">{{ $sesi->session_date->format('d M') }}</td>
+                                        <td class="py-1.5">{{ \Carbon\Carbon::parse($sesi->session_date)->format('d M') }}</td>
                                         <td class="py-1.5">
                                             {{ $sesi->student->full_name ?? '?' }}
                                             @if($sesi->substitute_teacher_id == $honor->teacher_id)

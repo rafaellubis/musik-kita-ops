@@ -95,7 +95,7 @@ class AttendanceService
             // (SCHEDULED tidak count, IZIN_RESCHEDULE belum count)
             if (in_array($status, ['HADIR', 'HADIR_TERLAMBAT', 'HANGUS', 'IZIN_VIDEO', 'LIBUR', 'DIGANTI'], true)) {
                 $session->student?->update([
-                    'last_session_at' => $session->session_date->setTimeFromTimeString($session->start_time),
+                    'last_session_at' => \Carbon\Carbon::parse($session->session_date)->setTimeFromTimeString($session->start_time),
                 ]);
             }
 

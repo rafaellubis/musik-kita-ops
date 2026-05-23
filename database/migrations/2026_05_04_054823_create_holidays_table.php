@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->date('date')->unique();
             $table->string('name', 100);
-            $table->enum('type', ['Nasional', 'Cuti Bersama']);
+            $table->enum('type', ['Nasional', 'Cuti Bersama', 'Internal']);
             $table->boolean('is_active')->default(true);
             $table->text('notes')->nullable();
             $table->timestamps();
