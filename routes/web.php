@@ -158,6 +158,11 @@ Route::middleware('auth')->group(function () {
             [SessionController::class, 'update']
         )->name('sessions.update');
 
+        // M03: Hapus sesi SCHEDULED atau LIBUR
+        Route::delete('sessions/{classSession}',
+            [SessionController::class, 'destroy']
+        )->name('sessions.destroy');
+
         // ===== M04: Absensi Harian — update inline per sesi via AJAX =====
         Route::patch('/absensi/{classSession}',
             [AbsensiController::class, 'update']

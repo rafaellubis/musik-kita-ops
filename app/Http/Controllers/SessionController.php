@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\ClassSession;
 use App\Models\Room;
 use App\Models\Student;
@@ -155,5 +156,27 @@ class SessionController extends Controller
         ]);
 
         return back()->with('success', 'Sesi berhasil diperbarui.');
+    }
+
+    /**
+     * Hapus sesi. Hanya status SCHEDULED atau LIBUR yang boleh dihapus. Owner+Admin only.
+     */
+    public function destroy(ClassSession $classSession): \Illuminate\Http\RedirectResponse
+    {
+        $statusBolehHapus = [ClassSession::STATUS_SCHEDULED, ClassSession::STATUS_LIBUR];
+
+        if (!in_array($classSession->status, $statusBolehHapus)) {
+            return back()->with('error', 'Hanya sesi berstatus SCHEDULED atau LIBUR yang dapat dihapus.');
+        }
+
+        AuditLog::record(
+            action: AuditLog::ACTION_DELETE,
+            entity: $classSession,
+            entityLabel: 'Sesi ' . $classSession->session_date . ' (' . ($classSession->student->full_name ?? '-') . ')',
+        );
+
+        $classSession->delete();
+
+        return back()->with('success', 'Sesi berhasil dihapus.');
     }
 }

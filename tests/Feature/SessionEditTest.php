@@ -233,4 +233,54 @@ class SessionEditTest extends TestCase
             ])
             ->assertForbidden();
     }
+
+    // ===== HAPUS SESI =====
+
+    public function test_admin_bisa_hapus_sesi_scheduled(): void
+    {
+        $this->actingAs($this->admin)
+            ->delete(route('sessions.destroy', $this->session->id))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('class_sessions', ['id' => $this->session->id]);
+    }
+
+    public function test_admin_bisa_hapus_sesi_libur(): void
+    {
+        $this->session->update(['status' => 'LIBUR']);
+
+        $this->actingAs($this->admin)
+            ->delete(route('sessions.destroy', $this->session->id))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('class_sessions', ['id' => $this->session->id]);
+    }
+
+    public function test_hapus_sesi_status_lain_ditolak(): void
+    {
+        $statusTerkunci = ['HADIR', 'HADIR_TERLAMBAT', 'HANGUS', 'IZIN_RESCHEDULE', 'IZIN_VIDEO', 'DIGANTI', 'CANCELLED'];
+
+        foreach ($statusTerkunci as $status) {
+            $this->session->update(['status' => $status]);
+
+            $this->actingAs($this->admin)
+                ->delete(route('sessions.destroy', $this->session->id))
+                ->assertRedirect()
+                ->assertSessionHas('error');
+
+            $this->assertDatabaseHas('class_sessions', ['id' => $this->session->id]);
+        }
+    }
+
+    public function test_auditor_tidak_boleh_hapus(): void
+    {
+        $auditor = User::factory()->create();
+        $auditor->assignRole('Auditor');
+
+        $this->actingAs($auditor)
+            ->delete(route('sessions.destroy', $this->session->id))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('class_sessions', ['id' => $this->session->id]);
+    }
 }

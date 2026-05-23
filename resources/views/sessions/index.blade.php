@@ -263,7 +263,7 @@
                                     @endif
                                 </td>
                                 @if($canEdit)
-                                <td class="px-2 py-1.5 text-center">
+                                <td class="px-2 py-1.5 text-center whitespace-nowrap">
                                     @if($s->status === 'SCHEDULED')
                                     <button type="button"
                                             @click="editSession = {
@@ -278,6 +278,16 @@
                                             class="text-xs text-indigo-600 hover:underline px-1">
                                         Edit
                                     </button>
+                                    @endif
+                                    @if(in_array($s->status, ['SCHEDULED', 'LIBUR']))
+                                    <form method="POST"
+                                          action="{{ route('sessions.destroy', $s->id) }}"
+                                          class="inline"
+                                          onsubmit="return confirm('Hapus sesi {{ \Carbon\Carbon::parse($s->session_date)->format('d M Y') }} ({{ $s->status }})?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-xs text-red-600 hover:underline px-1">Hapus</button>
+                                    </form>
                                     @endif
                                 </td>
                                 @endif
