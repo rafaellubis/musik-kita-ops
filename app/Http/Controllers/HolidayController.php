@@ -70,10 +70,11 @@ class HolidayController extends Controller
             'notes'            => $data['notes'] ?? null,
             'is_active'        => $request->boolean('is_active', true),
             'replacement_date' => $data['replacement_date'] ?? null,
-            // Event studio (Internal) selalu is_honor_paid=false; tipe lain ikut checkbox
-            'is_honor_paid'    => $data['type'] === 'Internal'
-                ? false
-                : $request->boolean('is_honor_paid', true),
+            // Nasional/Cuti Bersama selalu dibayar penuh (BR-4.10)
+            // Internal: ikut checkbox (default false, tapi owner bisa override ke true)
+            'is_honor_paid'    => in_array($data['type'], ['Nasional', 'Cuti Bersama'])
+                ? true
+                : $request->boolean('is_honor_paid', false),
         ]);
 
         // Catat audit log
@@ -135,10 +136,11 @@ class HolidayController extends Controller
             'notes'            => $data['notes'] ?? null,
             'is_active'        => $request->boolean('is_active', true),
             'replacement_date' => $data['replacement_date'] ?? null,
-            // Event studio (Internal) selalu is_honor_paid=false; tipe lain ikut checkbox
-            'is_honor_paid'    => $data['type'] === 'Internal'
-                ? false
-                : $request->boolean('is_honor_paid', true),
+            // Nasional/Cuti Bersama selalu dibayar penuh (BR-4.10)
+            // Internal: ikut checkbox (default false, tapi owner bisa override ke true)
+            'is_honor_paid'    => in_array($data['type'], ['Nasional', 'Cuti Bersama'])
+                ? true
+                : $request->boolean('is_honor_paid', false),
         ]);
 
         // Catat audit log

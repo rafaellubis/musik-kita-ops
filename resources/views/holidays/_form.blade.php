@@ -132,7 +132,7 @@
         </div>
 
         {{-- Aktif + Honor --}}
-        <div class="flex items-center gap-6">
+        <div class="flex items-center gap-6 flex-wrap">
             <label class="inline-flex items-center">
                 <input type="checkbox" name="is_active" value="1"
                     {{ old('is_active', $holiday->is_active ?? true) ? 'checked' : '' }}
@@ -140,15 +140,19 @@
                 <span class="ml-2 text-sm">Aktif</span>
             </label>
 
-            <label class="inline-flex items-center"
-                   :class="isInternal ? 'opacity-40' : ''">
+            {{-- Internal: checkbox tampil & bisa diubah owner --}}
+            <label class="inline-flex items-center" x-show="isInternal">
                 <input type="checkbox" name="is_honor_paid" value="1"
-                    :disabled="isInternal"
-                    {{ old('is_honor_paid', $holiday->is_honor_paid ?? true) ? 'checked' : '' }}
+                    {{ old('is_honor_paid', $holiday->is_honor_paid ?? false) ? 'checked' : '' }}
                     class="rounded border-gray-300">
                 <span class="ml-2 text-sm">Guru mendapat honor saat libur ini</span>
-                <span x-show="isInternal" class="ml-1 text-xs text-amber-600">(otomatis tidak untuk Internal)</span>
             </label>
+
+            {{-- Nasional / Cuti Bersama: honor selalu dibayar, tidak perlu checkbox --}}
+            <span class="text-xs text-green-700 inline-flex items-center gap-1"
+                  x-show="!isInternal && type !== ''">
+                ✓ Honor guru selalu dibayar penuh (libur nasional)
+            </span>
         </div>
     </div>
 </div>
