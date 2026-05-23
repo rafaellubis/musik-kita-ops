@@ -107,10 +107,9 @@ FASE 3: Proses replacement sessions (DI LUAR counter 4-sesi)
     // Guard 1: idempotency
     jika session sudah ada (schedule_id, replacementDate) → skip
 
-    // Guard 2: enrollment boundary + batas H-2 akhir bulan
+    // Guard 2: enrollment boundary
     jika replacementDate < enrollment.effective_date → skip + log
     jika replacementDate >= enrollment.end_date → skip + log
-    jika replacementDate > (akhirBulan - 2 hari) → skip + log
 
     // Guard 3: replacement_date bukan hari libur lain
     jika replacementDate ada di holidayMap → skip + log warning
