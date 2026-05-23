@@ -15,6 +15,13 @@ class Enrollment extends Model
 {
     use HasFactory;
 
+    // Status constants
+    public const STATUS_ACTIVE    = 'ACTIVE';
+    public const STATUS_ON_LEAVE  = 'ON_LEAVE';
+    public const STATUS_INACTIVE  = 'INACTIVE';
+    public const STATUS_COMPLETED = 'COMPLETED';
+    public const STATUS_TRIAL     = 'TRIAL';
+
     protected $fillable = [
         'student_id', 'package_id', 'teacher_id',
         'effective_date', 'end_date', 'status', 'notes',
@@ -57,6 +64,11 @@ class Enrollment extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'ACTIVE');
+        return $query->where('status', self::STATUS_ACTIVE);
+    }
+
+    public function scopeTrial($query)
+    {
+        return $query->where('status', self::STATUS_TRIAL);
     }
 }
