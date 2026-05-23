@@ -281,7 +281,23 @@
 
             {{-- Skip Trial --}}
             <div x-show="openForm === 'skip'" x-cloak
-                 x-data="{ kidsBundle: false }"
+                 x-data="{
+                     kidsBundle: false,
+                     teachers: [],
+                     loadingTeachers: false,
+                     filterTeachers(pkgEl) {
+                         const opt = pkgEl.options[pkgEl.selectedIndex];
+                         this.kidsBundle = (opt?.dataset?.classType === 'KIDS_CLASS_BUNDLE');
+                         const instrId = opt?.dataset?.instrumentId || '';
+                         if (!instrId) { this.teachers = []; return; }
+                         this.loadingTeachers = true;
+                         this.teachers = [];
+                         fetch('/api/teachers-by-instrument/' + instrId)
+                             .then(r => r.json())
+                             .then(data => { this.teachers = data; this.loadingTeachers = false; })
+                             .catch(() => { this.teachers = []; this.loadingTeachers = false; });
+                     }
+                 }"
                  class="mt-4 rounded-xl p-4"
                  style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2)">
                 <form method="POST" action="{{ route('students.skip-trial', $student->id) }}">
@@ -308,7 +324,7 @@
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
                             <select name="package_id" required class="block w-full rounded-lg text-sm px-3 py-2"
-                                    @change="kidsBundle = ($event.target.selectedOptions[0]?.dataset?.classType === 'KIDS_CLASS_BUNDLE'); window.lifecycleFilterTeacher($event.target, 'teacher-skip')">
+                                    @change="filterTeachers($event.target)">
                                 <option value="" data-instrument-id="" data-class-type="">— Pilih —</option>
                                 @foreach($packages as $pkg)
                                 <option value="{{ $pkg->id }}"
@@ -321,9 +337,13 @@
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Guru Utama <span class="text-red-400">*</span></label>
-                            <select name="assigned_teacher_id" required id="teacher-skip"
-                                    class="block w-full rounded-lg text-sm px-3 py-2">
-                                <option value="">— Pilih paket dulu —</option>
+                            <select name="assigned_teacher_id" required
+                                    class="block w-full rounded-lg text-sm px-3 py-2"
+                                    :disabled="loadingTeachers">
+                                <option value="" x-text="loadingTeachers ? 'Memuat guru...' : (teachers.length ? '— Pilih Guru —' : '— Pilih paket dulu —')"></option>
+                                <template x-for="t in teachers" :key="t.id">
+                                    <option :value="t.id" x-text="'[' + t.code + '] ' + t.name"></option>
+                                </template>
                             </select>
                         </div>
                         <div>
@@ -359,7 +379,23 @@
 
             {{-- Konversi Aktif --}}
             <div x-show="openForm === 'convert'" x-cloak
-                 x-data="{ kidsBundle: false }"
+                 x-data="{
+                     kidsBundle: false,
+                     teachers: [],
+                     loadingTeachers: false,
+                     filterTeachers(pkgEl) {
+                         const opt = pkgEl.options[pkgEl.selectedIndex];
+                         this.kidsBundle = (opt?.dataset?.classType === 'KIDS_CLASS_BUNDLE');
+                         const instrId = opt?.dataset?.instrumentId || '';
+                         if (!instrId) { this.teachers = []; return; }
+                         this.loadingTeachers = true;
+                         this.teachers = [];
+                         fetch('/api/teachers-by-instrument/' + instrId)
+                             .then(r => r.json())
+                             .then(data => { this.teachers = data; this.loadingTeachers = false; })
+                             .catch(() => { this.teachers = []; this.loadingTeachers = false; });
+                     }
+                 }"
                  class="mt-4 rounded-xl p-4"
                  style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2)">
                 <form method="POST" action="{{ route('students.convert-active', $student->id) }}">
@@ -369,9 +405,9 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
-                            <select name="package_id" required id="package-convert"
+                            <select name="package_id" required
                                     class="block w-full rounded-lg text-sm px-3 py-2"
-                                    @change="kidsBundle = ($event.target.selectedOptions[0]?.dataset?.classType === 'KIDS_CLASS_BUNDLE'); window.lifecycleFilterTeacher($event.target, 'teacher-convert')">
+                                    @change="filterTeachers($event.target)">
                                 <option value="" data-instrument-id="" data-class-type="">— Pilih —</option>
                                 @foreach($packages as $pkg)
                                 <option value="{{ $pkg->id }}"
@@ -385,9 +421,13 @@
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Guru Utama <span class="text-red-400">*</span></label>
-                            <select name="assigned_teacher_id" required id="teacher-convert"
-                                    class="block w-full rounded-lg text-sm px-3 py-2">
-                                <option value="">— Pilih paket dulu —</option>
+                            <select name="assigned_teacher_id" required
+                                    class="block w-full rounded-lg text-sm px-3 py-2"
+                                    :disabled="loadingTeachers">
+                                <option value="" x-text="loadingTeachers ? 'Memuat guru...' : (teachers.length ? '— Pilih Guru —' : '— Pilih paket dulu —')"></option>
+                                <template x-for="t in teachers" :key="t.id">
+                                    <option :value="t.id" x-text="'[' + t.code + '] ' + t.name"></option>
+                                </template>
                             </select>
                         </div>
                         <div>
@@ -484,7 +524,23 @@
 
             {{-- Re-aktivasi --}}
             <div x-show="openForm === 'reactivate'" x-cloak
-                 x-data="{ kidsBundle: false }"
+                 x-data="{
+                     kidsBundle: false,
+                     teachers: [],
+                     loadingTeachers: false,
+                     filterTeachers(pkgEl) {
+                         const opt = pkgEl.options[pkgEl.selectedIndex];
+                         this.kidsBundle = (opt?.dataset?.classType === 'KIDS_CLASS_BUNDLE');
+                         const instrId = opt?.dataset?.instrumentId || '';
+                         if (!instrId) { this.teachers = []; return; }
+                         this.loadingTeachers = true;
+                         this.teachers = [];
+                         fetch('/api/teachers-by-instrument/' + instrId)
+                             .then(r => r.json())
+                             .then(data => { this.teachers = data; this.loadingTeachers = false; })
+                             .catch(() => { this.teachers = []; this.loadingTeachers = false; });
+                     }
+                 }"
                  class="mt-4 rounded-xl p-4"
                  style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2)">
                 <form method="POST" action="{{ route('students.reactivate', $student->id) }}">
@@ -495,9 +551,9 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
-                            <select name="package_id" required id="package-reactivate"
+                            <select name="package_id" required
                                     class="block w-full rounded-lg text-sm px-3 py-2"
-                                    @change="kidsBundle = ($event.target.selectedOptions[0]?.dataset?.classType === 'KIDS_CLASS_BUNDLE'); window.lifecycleFilterTeacher($event.target, 'teacher-reactivate')">
+                                    @change="filterTeachers($event.target)">
                                 <option value="" data-instrument-id="" data-class-type="">— Pilih —</option>
                                 @foreach($packages as $pkg)
                                 <option value="{{ $pkg->id }}"
@@ -510,9 +566,13 @@
                         </div>
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Guru Utama <span class="text-red-400">*</span></label>
-                            <select name="assigned_teacher_id" required id="teacher-reactivate"
-                                    class="block w-full rounded-lg text-sm px-3 py-2">
-                                <option value="">— Pilih paket dulu —</option>
+                            <select name="assigned_teacher_id" required
+                                    class="block w-full rounded-lg text-sm px-3 py-2"
+                                    :disabled="loadingTeachers">
+                                <option value="" x-text="loadingTeachers ? 'Memuat guru...' : (teachers.length ? '— Pilih Guru —' : '— Pilih paket dulu —')"></option>
+                                <template x-for="t in teachers" :key="t.id">
+                                    <option :value="t.id" x-text="'[' + t.code + '] ' + t.name"></option>
+                                </template>
                             </select>
                         </div>
                         <div>
@@ -1244,61 +1304,4 @@
 
     </div>
 
-<script>
-/**
- * Filter dropdown guru berdasarkan instrumen dari paket yang dipilih.
- * Dipakai di form lifecycle: skip-trial, konversi-aktif, re-aktivasi.
- *
- * @param {HTMLSelectElement} packageEl  - <select name="package_id"> yang berubah
- * @param {string}            teacherId  - id dari <select> guru yang akan diisi
- * @param {string|null}       preselect  - teacher id yang harus dipre-select (opsional)
- */
-function lifecycleFilterTeacher(packageEl, teacherId, preselect = null) {
-    const teacherEl   = document.getElementById(teacherId);
-    const selectedOpt = packageEl.options[packageEl.selectedIndex];
-    const instrumentId = selectedOpt?.dataset?.instrumentId || '';
-
-    if (!instrumentId) {
-        teacherEl.innerHTML = '<option value="">— Pilih paket dulu —</option>';
-        return;
-    }
-
-    teacherEl.innerHTML = '<option value="">Memuat guru...</option>';
-    teacherEl.disabled  = true;
-
-    fetch(`/api/teachers-by-instrument/${instrumentId}`)
-        .then(r => r.json())
-        .then(teachers => {
-            teacherEl.disabled = false;
-            if (!teachers.length) {
-                teacherEl.innerHTML = '<option value="">Tidak ada guru untuk instrumen ini</option>';
-                return;
-            }
-            teacherEl.innerHTML = '<option value="">— Pilih Guru —</option>';
-            teachers.forEach(t => {
-                const opt    = document.createElement('option');
-                opt.value    = t.id;
-                opt.textContent = `[${t.code}] ${t.name}`;
-                if (preselect && String(t.id) === String(preselect)) opt.selected = true;
-                teacherEl.appendChild(opt);
-            });
-        })
-        .catch(() => {
-            teacherEl.disabled  = false;
-            teacherEl.innerHTML = '<option value="">Gagal memuat — coba refresh</option>';
-        });
-}
-
-// Auto-load guru di form Konversi Aktif jika murid sudah punya paket terpilih.
-document.addEventListener('DOMContentLoaded', () => {
-    const pkgConvert = document.getElementById('package-convert');
-    if (pkgConvert && pkgConvert.value) {
-        lifecycleFilterTeacher(
-            pkgConvert,
-            'teacher-convert',
-            '{{ $student->assignedTeacher?->id ?? '' }}'
-        );
-    }
-});
-</script>
 </x-app-layout>
