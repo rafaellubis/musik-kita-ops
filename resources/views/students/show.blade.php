@@ -915,7 +915,16 @@
                 @endif
 
                 {{-- Sesi Mendatang --}}
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+                     x-data="{ editSession: null }">
+                    @php $canEdit = auth()->user()?->hasAnyRole(['Owner', 'Admin']); @endphp
+                    @if($errors->any())
+                    <div class="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+                        @foreach($errors->all() as $e)
+                            <p>{{ $e }}</p>
+                        @endforeach
+                    </div>
+                    @endif
                     <div class="flex justify-between items-center mb-3">
                         <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#D4A853">Sesi Mendatang</div>
                         <a href="{{ route('sessions.index', ['student_id' => $student->id]) }}"
@@ -935,6 +944,9 @@
                                 <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Ruang</th>
                                 <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Guru</th>
                                 <th class="pb-2 text-center text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Status</th>
+                                @if($canEdit)
+                                <th class="pb-2 text-center text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Aksi</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -960,10 +972,107 @@
                                         {{ $sess->status }}
                                     </span>
                                 </td>
+                                @if($canEdit)
+                                <td class="py-2 text-center">
+                                    <button type="button"
+                                            @click="editSession = {
+                                                id: {{ $sess->id }},
+                                                action: '{{ route('sessions.update', $sess->id) }}',
+                                                sessionDate: '{{ \Carbon\Carbon::parse($sess->session_date)->format('D, d M Y') }}',
+                                                startTime: '{{ \Carbon\Carbon::parse($sess->start_time)->format('H:i') }}',
+                                                endTime: '{{ \Carbon\Carbon::parse($sess->end_time)->format('H:i') }}',
+                                                teacherId: {{ $sess->teacher_id ?? 'null' }},
+                                                roomId: {{ $sess->room_id ?? 'null' }}
+                                            }"
+                                            class="text-[10px] text-indigo-600 hover:underline">
+                                        Edit
+                                    </button>
+                                </td>
+                                @endif
                             </tr>
                             @endforeach
                         </tbody>
                     </table>
+                    @endif
+
+                    {{-- Modal edit sesi dari halaman detail murid --}}
+                    @if($canEdit)
+                    <div x-show="editSession !== null" x-cloak
+                         class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+                         @click.self="editSession = null">
+                        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-sm font-semibold text-gray-800">
+                                    Edit Sesi — <span x-text="editSession?.sessionDate" class="font-mono"></span>
+                                </h3>
+                                <button @click="editSession = null"
+                                        class="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+                            </div>
+
+                            <form :action="editSession?.action" method="POST" class="space-y-4">
+                                @csrf
+                                @method('PATCH')
+
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Jam Mulai</label>
+                                        <input type="time" name="start_time"
+                                               :value="editSession?.startTime"
+                                               required
+                                               class="block w-full border-gray-300 rounded-lg text-sm px-3 py-2">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Jam Selesai</label>
+                                        <input type="time" name="end_time"
+                                               :value="editSession?.endTime"
+                                               required
+                                               class="block w-full border-gray-300 rounded-lg text-sm px-3 py-2">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Guru</label>
+                                    <select name="teacher_id" required
+                                            class="block w-full border-gray-300 rounded-lg text-sm px-3 py-2">
+                                        <option value="">— Pilih Guru —</option>
+                                        @foreach($teachers as $t)
+                                        <option value="{{ $t->id }}"
+                                                :selected="editSession?.teacherId == {{ $t->id }}">
+                                            {{ $t->name }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">
+                                        Ruang <span class="text-gray-400">(opsional)</span>
+                                    </label>
+                                    <select name="room_id"
+                                            class="block w-full border-gray-300 rounded-lg text-sm px-3 py-2">
+                                        <option value="">— Tidak Ditentukan —</option>
+                                        @foreach($rooms as $r)
+                                        <option value="{{ $r->id }}"
+                                                :selected="editSession?.roomId == {{ $r->id }}">
+                                            {{ $r->code }} — {{ $r->name }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="flex justify-end gap-2 pt-2">
+                                    <button type="button" @click="editSession = null"
+                                            class="px-4 py-2 text-xs bg-gray-100 rounded-lg hover:bg-gray-200">
+                                        Batal
+                                    </button>
+                                    <button type="submit"
+                                            class="px-4 py-2 text-xs font-bold rounded-lg btn-mk-primary">
+                                        Simpan Perubahan
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                     @endif
                 </div>
             </div>
