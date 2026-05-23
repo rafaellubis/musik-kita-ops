@@ -263,10 +263,13 @@ Untuk akses paket/guru/ruang aktif murid: gunakan `$student->primaryEnrollment->
 id, student_id, package_id, teacher_id,
 is_primary (boolean, default false — satu enrollment utama per murid),
 effective_date, end_date, notes,
-status (enum: ACTIVE|ON_LEAVE|INACTIVE|COMPLETED), timestamps
+status (enum: ACTIVE|ON_LEAVE|INACTIVE|COMPLETED|TRIAL), timestamps
 ```
 CATATAN: `ON_LEAVE` diset saat murid mengajukan cuti; kembali ke `ACTIVE` saat cuti berakhir.
 `is_primary` menentukan enrollment yang dipakai untuk generate invoice SPP otomatis.
+CATATAN: `TRIAL` diset saat mulaiTrial() — enrollment sementara yang membawa package_id
+agar honor guru bisa dihitung. is_primary=false (tidak trigger invoice SPP).
+Enrollment TRIAL → COMPLETED saat murid konversiAktif() atau mundurkan().
 
 **schedules** (jadwal mingguan tetap)
 ```
