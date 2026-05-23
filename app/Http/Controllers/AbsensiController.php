@@ -6,6 +6,7 @@ use App\Http\Requests\UpdateAbsensiRequest;
 use App\Models\ClassSession;
 use App\Models\Room;
 use App\Models\Teacher;
+use App\Services\AttendanceService;
 use App\Services\RescheduleService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -25,7 +26,10 @@ use Illuminate\View\View;
  */
 class AbsensiController extends Controller
 {
-    public function __construct(private RescheduleService $rescheduleService) {}
+    public function __construct(
+        private RescheduleService $rescheduleService,
+        private AttendanceService $attendanceService,
+    ) {}
 
     /**
      * Tampilkan halaman absensi harian.
@@ -73,15 +77,13 @@ class AbsensiController extends Controller
 
         try {
             DB::transaction(function () use ($request, $classSession) {
-                $classSession->update([
+                // AttendanceService menghitung honor_code + honor_amount berdasarkan status & paket
+                $this->attendanceService->recordAttendance($classSession, [
                     'status'                => $request->status,
-                    'late_minutes'          => $request->status === ClassSession::STATUS_HADIR_TERLAMBAT
-                                                ? $request->late_minutes : null,
-                    'substitute_teacher_id' => $request->status === ClassSession::STATUS_DIGANTI
-                                                ? $request->substitute_teacher_id : null,
-                    // Notes untuk IZIN_RESCHEDULE di-set otomatis oleh service
-                    'notes'                 => $request->status !== ClassSession::STATUS_IZIN_RESCHEDULE
-                                                ? $request->notes : null,
+                    'late_minutes'          => $request->late_minutes,
+                    'substitute_teacher_id' => $request->substitute_teacher_id,
+                    'notes'                 => $request->notes,
+                    '__session'             => $classSession,
                 ]);
 
                 if ($request->status === ClassSession::STATUS_IZIN_RESCHEDULE) {
