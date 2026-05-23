@@ -121,11 +121,6 @@ Route::middleware('auth')->group(function () {
             [StudentController::class, 'reactivate']
         )->name('students.reactivate');
 
-        // API internal — filter guru by instrumen (dipanggil AJAX dari form Murid)
-        Route::get('/api/teachers-by-instrument/{instrumentId}',
-            [StudentController::class, 'teachersByInstrument']
-        )->name('api.teachers-by-instrument');
-
         // ===== M03: Schedule mingguan tetap =====
         // Schedule selalu attach ke enrollment ACTIVE murid.
         Route::post('students/{student}/schedules',
@@ -316,6 +311,12 @@ Route::middleware('auth')->group(function () {
 
         // Murid: Auditor boleh lihat detail murid
         Route::resource('students', StudentController::class)->only(['index', 'show']);
+
+        // API internal — filter guru by instrumen (AJAX dari form lifecycle murid)
+        // READ-ONLY: tidak ada write, aman diakses semua role termasuk Auditor
+        Route::get('/api/teachers-by-instrument/{instrumentId}',
+            [StudentController::class, 'teachersByInstrument']
+        )->name('api.teachers-by-instrument');
 
         // ===== M03: List sesi (read-only, Auditor juga boleh) =====
         Route::get('sessions',

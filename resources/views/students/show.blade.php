@@ -308,7 +308,7 @@
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
                             <select name="package_id" required class="block w-full rounded-lg text-sm px-3 py-2"
-                                    @change="kidsBundle = ($event.target.selectedOptions[0]?.dataset?.classType === 'KIDS_CLASS_BUNDLE'); lifecycleFilterTeacher($event.target, 'teacher-skip')">
+                                    @change="kidsBundle = ($event.target.selectedOptions[0]?.dataset?.classType === 'KIDS_CLASS_BUNDLE'); window.lifecycleFilterTeacher($event.target, 'teacher-skip')">
                                 <option value="" data-instrument-id="" data-class-type="">— Pilih —</option>
                                 @foreach($packages as $pkg)
                                 <option value="{{ $pkg->id }}"
@@ -371,7 +371,7 @@
                             <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
                             <select name="package_id" required id="package-convert"
                                     class="block w-full rounded-lg text-sm px-3 py-2"
-                                    @change="kidsBundle = ($event.target.selectedOptions[0]?.dataset?.classType === 'KIDS_CLASS_BUNDLE'); lifecycleFilterTeacher($event.target, 'teacher-convert')">
+                                    @change="kidsBundle = ($event.target.selectedOptions[0]?.dataset?.classType === 'KIDS_CLASS_BUNDLE'); window.lifecycleFilterTeacher($event.target, 'teacher-convert')">
                                 <option value="" data-instrument-id="" data-class-type="">— Pilih —</option>
                                 @foreach($packages as $pkg)
                                 <option value="{{ $pkg->id }}"
@@ -497,7 +497,7 @@
                             <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
                             <select name="package_id" required id="package-reactivate"
                                     class="block w-full rounded-lg text-sm px-3 py-2"
-                                    @change="kidsBundle = ($event.target.selectedOptions[0]?.dataset?.classType === 'KIDS_CLASS_BUNDLE'); lifecycleFilterTeacher($event.target, 'teacher-reactivate')">
+                                    @change="kidsBundle = ($event.target.selectedOptions[0]?.dataset?.classType === 'KIDS_CLASS_BUNDLE'); window.lifecycleFilterTeacher($event.target, 'teacher-reactivate')">
                                 <option value="" data-instrument-id="" data-class-type="">— Pilih —</option>
                                 @foreach($packages as $pkg)
                                 <option value="{{ $pkg->id }}"
