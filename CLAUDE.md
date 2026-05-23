@@ -1,9 +1,10 @@
 # MUSIK KITA — Operations System (musik-kita-ops)
-## Briefing Document untuk Claude Code — v1.3
+## Briefing Document untuk Claude Code — v1.4
 
 > Dibuat berdasarkan: BRD-Final-Musik-KITA-v1.0.md + Revisi-BRD-SAD-v1.0-ke-v1.1.md
 > Update v1.2 (2026-05-07): sinkronisasi tech stack & schema dengan kondisi kode aktual.
 > Update v1.3 (2026-05-23): multi-kelas, diskon invoice, cuti, reschedule Fase 2, QRIS/DEBIT, slip honor unifikasi, ruangan fleksibel.
+> Update v1.4 (2026-05-23): jadwal otomatis dengan kalender akademik — replacement_date pada holidays, honor LIBUR logic, H_IZIN honor code, guru pendamping event.
 > Tanggal: Mei 2026
 
 ---
@@ -276,12 +277,18 @@ start_time, end_time, room_id, is_active, timestamps
 **sessions** (sesi konkret per tanggal)
 ```
 id, schedule_id, enrollment_id, student_id, teacher_id,
-session_date,
+session_date (DATE — raw string, TIDAK ada cast di model),
 status (enum: SCHEDULED|HADIR|HADIR_TERLAMBAT|IZIN_RESCHEDULE|
               IZIN_VIDEO|HANGUS|LIBUR|DIGANTI|CANCELLED),
 substitute_teacher_id (nullable),
 late_minutes, notes, honor_code, honor_amount, timestamps
 ```
+CATATAN (v1.4): `session_date` TIDAK punya cast 'date' di ClassSession model.
+Gunakan `Carbon::parse($session->session_date)` untuk operasi tanggal.
+Jangan akses `$session->session_date->format(...)` langsung — akan error.
+`honor_code` adalah VARCHAR (bukan enum) — nilai: H_REG|H_TRIAL|TRIAL_NS|H_VIDEO|
+H_LIBUR|H_HANGUS|H_PENG|H_KIDS|H_UJIAN|H_IZIN atau NULL.
+Generator set `honor_code` + `honor_amount` langsung saat buat sesi LIBUR.
 
 **invoices**
 ```
@@ -381,6 +388,32 @@ entity_type, entity_id,
 old_values (JSON), new_values (JSON), timestamps
 ```
 
+**holidays** (hari libur untuk session generator)
+```
+id, date (date, unique),
+name, type (enum: Nasional|Cuti Bersama|Internal),
+replacement_date (date, nullable, unique — tanggal sesi pengganti, harus bulan yang sama),
+is_honor_paid (boolean, default true — false untuk Internal/Konser KITA),
+is_active, notes, timestamps
+```
+CATATAN (v1.4): Kolom `replacement_date` dan `is_honor_paid` ditambah Mei 2026.
+- `replacement_date`: jika diisi, generator membuat sesi pengganti di tanggal ini (umumnya minggu ke-5).
+  Unique constraint — dua holiday tidak boleh punya tanggal pengganti yang sama.
+  Field ini SELALU NULL untuk tipe Internal (validasi di controller).
+- `is_honor_paid=false`: honor guru Rp 0 untuk sesi LIBUR ini (Konser KITA, event studio).
+  Otomatis di-set false saat tipe Internal.
+
+**event_participants** (peserta event M08)
+```
+id, event_id, student_id, enrollment_id,
+accompanying_teacher_id (FK → teachers, nullable — guru pendamping di Konser KITA),
+participation_type, fee_amount, invoice_id, invoice_item_id,
+exam_result, grade_before, grade_after, exam_notes, timestamps
+```
+CATATAN (v1.4): Kolom `accompanying_teacher_id` ditambah Mei 2026 untuk tracking
+guru yang mendampingi murid di Konser KITA. NULL = tidak ada pendamping / guru tidak bisa hadir.
+nullOnDelete: jika guru dihapus dari sistem, kolom ini otomatis jadi NULL.
+
 ---
 
 ## 📋 BUSINESS RULES KRITIS (v1.1)
@@ -404,8 +437,10 @@ BR-1.9  : Kids Class mulai jika minimal 3 anak
 ```
 BR-3.2  : Generate sesi otomatis berdasarkan jadwal mingguan
 BR-3.3  : Min 3 sesi, max 4 sesi per murid per bulan
-BR-3.4  : Sesi libur nasional TIDAK diganti
-BR-3.5  : Minggu ke-5 TIDAK dilaksanakan (maks 4 sesi/bulan)
+BR-3.4  : Sesi libur nasional TANPA replacement_date → TIDAK diganti (sesi LIBUR saja)
+          Sesi libur nasional DGN replacement_date → sesi LIBUR + sesi pengganti di tanggal tsb
+BR-3.5  : Minggu ke-5 TIDAK dilaksanakan secara reguler (maks 4 sesi/bulan counter)
+          KECUALI: minggu ke-5 BOLEH dipakai sebagai replacement session (di luar counter 4)
 BR-3.6  : Murid tetap bayar penuh meski bulan hanya 3 sesi
 BR-3.9  : Pemindahan jadwal mingguan tetap BOLEH dalam bulan yang sama [REVISI v1.1]
           (sebelumnya: hanya berlaku mulai bulan berikutnya)
@@ -413,6 +448,12 @@ BR-3.10 : Reschedule Fase 2 — sesi pengganti dibuat otomatis oleh RescheduleSe
 BR-3.11 : Conflict detection saat reschedule: 1 guru tidak boleh 2 sesi bersamaan
 BR-3.12 : Conflict detection saat reschedule: 1 ruang tidak boleh 2 sesi bersamaan
 BR-3.13 : Admin input tanggal, jam, ruang pengganti via mini-modal di halaman absensi
+BR-3.14 : Holiday tipe 'Internal' (Konser KITA, event studio) → honor guru Rp 0 [v1.4]
+          Field is_honor_paid=false di tabel holidays
+BR-3.15 : replacement_date wajib dalam bulan yang sama dengan tanggal libur [v1.4]
+          replacement_date TIDAK boleh diisi untuk tipe Internal
+BR-3.16 : Conflict detection untuk replacement sessions: cek ClassSession konkret di tanggal
+          tsb (bukan jadwal mingguan) — skip jika guru/ruang sudah terpakai di jam yang sama
 ```
 
 ### Absensi
@@ -438,7 +479,7 @@ BR-5.18 : Void pembayaran hanya bisa dilakukan OWNER (bukan Admin)
 BR-5.19 : Metode pembayaran yang valid: CASH, TRANSFER, QRIS, DEBIT
 ```
 
-### Honor Guru -- 9 Skenario
+### Honor Guru -- 10 Skenario
 ```
 Formula dasar: harga_paket x 50% / 4
 
@@ -447,7 +488,7 @@ H_REG     | Sesi terlaksana (hadir/telat)   | harga x 50% / 4
 H_TRIAL   | Sesi trial (murid HADIR)        | Sama H_REG sesuai paket calon
 TRIAL_NS  | Trial murid NO-SHOW [v1.1]      | Rp 0 (honor NOL)
 H_VIDEO   | Izin video pengganti            | Sama H_REG
-H_LIBUR   | Sesi libur nasional             | Sama H_REG (full pay)
+H_LIBUR   | Sesi libur nasional TANPA replacement_date | Sama H_REG (full pay, BR-4.10)
 H_HANGUS  | Murid no-show / hangus          | Sama H_REG (full pay)
 H_PENG    | Diajar guru pengganti           | H_REG -> ke guru pengganti
 H_KIDS    | Sesi Kids Class                 | murid_terdaftar x Rp 42.500
@@ -593,6 +634,9 @@ DISKON   | Diskon manual           | NOMINAL (Rp flat) atau PERCENT (% dari item
 - Cek konflik jadwal: 1 guru tidak boleh 2 sesi bersamaan, 1 ruang tidak boleh 2 sesi bersamaan
 - Reschedule: validasi >=5 jam + izin pertama bulan tsb
 - Rapel ke bulan depan jika tidak ada slot pengganti
+- Kalender akademik: Owner isi replacement_date per hari libur → generator buat sesi pengganti [v1.4]
+- Holiday tipe Internal (Konser KITA): honor guru Rp 0, TIDAK bisa punya replacement_date [v1.4]
+- Holiday form: Alpine.js auto-suggest minggu ke-5 sebagai tanggal pengganti [v1.4]
 
 ### M04 -- Absensi
 - Input 9 status per sesi setelah sesi berlangsung (termasuk CANCELLED dan DIGANTI)
@@ -628,6 +672,8 @@ DISKON   | Diskon manual           | NOMINAL (Rp flat) atau PERCENT (% dari item
 - Input hasil ujian -> grade naik otomatis jika Lulus
 - Honor pengawas Rp 250.000 flat/ujian
 - Slip gaji event: honor + transport (manual) + lain-lain (manual + keterangan)
+- Guru pendamping per peserta Konser KITA: Owner/Admin assign via dropdown di halaman detail event [v1.4]
+  Hanya bisa diubah selama event masih DRAFT; NULL = guru tidak mendampingi
 
 ### M09 -- Laporan & Notifikasi
 - Dashboard P&L real-time (revenue, expense, aging receivable)
