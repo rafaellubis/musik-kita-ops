@@ -61,15 +61,28 @@ class StudentLifecycleService
 
     /**
      * Calon -> Trial. Jadwalkan trial 30 menit (BR-1.3).
+     * Buat ClassSession dengan enrollment_id=NULL — marker bahwa ini sesi trial.
+     * AbsensiService mendeteksi enrollment_id=NULL untuk menentukan honor code:
+     * H_TRIAL (murid hadir) atau TRIAL_NS (no-show, Rp 0) sesuai BR-1.4.
      *
      * @param array{
-     *     trial_date: string,
+     *     trial_date: string,           // datetime-local string, mis. "2026-06-01T10:00"
+     *     assigned_teacher_id: int,     // wajib — FK ke teachers
+     *     assigned_room_id?: int|null,  // opsional
+     *     package_id?: int|null,        // opsional — hanya info minat paket
      *     notes?: string|null,
      * } $data
      */
     public function mulaiTrial(Student $student, array $data): Student
     {
         $this->ensureTransition($student, 'Trial');
+
+        // Guard di level service: teacher_id wajib karena class_sessions.teacher_id NOT NULL.
+        // Controller sudah enforce via 'required', tapi kalau service dipanggil langsung
+        // (test, seeder, dll) tanpa key ini, kita dapat error yang jelas bukan crash diam-diam.
+        if (empty($data['assigned_teacher_id'])) {
+            throw new \InvalidArgumentException('assigned_teacher_id wajib diisi untuk membuat sesi trial.');
+        }
 
         return DB::transaction(function () use ($student, $data) {
             $from = $student->status;
@@ -79,13 +92,29 @@ class StudentLifecycleService
                 'trial_date' => $data['trial_date'],
             ]);
 
+            // Buat sesi trial. enrollment_id NULL karena murid belum punya enrollment.
+            // Durasi selalu 30 menit untuk semua tipe paket (BR-1.3).
+            $trialDateTime = \Carbon\Carbon::parse($data['trial_date']);
+            ClassSession::create([
+                'schedule_id'   => null,
+                'enrollment_id' => null,
+                'student_id'    => $student->id,
+                'teacher_id'    => $data['assigned_teacher_id'],
+                'room_id'       => $data['assigned_room_id'] ?? null,
+                'session_date'  => $trialDateTime->toDateString(),
+                'start_time'    => $trialDateTime->format('H:i:s'),
+                'end_time'      => $trialDateTime->copy()->addMinutes(30)->format('H:i:s'),
+                'status'        => ClassSession::STATUS_SCHEDULED,
+            ]);
+
             $this->recordHistory(
                 student:  $student,
                 from:     $from,
                 to:       'Trial',
                 reason:   $data['notes'] ?? null,
                 metadata: [
-                    'trial_date' => $data['trial_date'],
+                    'trial_date'          => $data['trial_date'],
+                    'assigned_teacher_id' => $data['assigned_teacher_id'],
                 ],
             );
 

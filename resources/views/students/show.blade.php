@@ -246,8 +246,8 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Guru Trial</label>
-                            <select name="assigned_teacher_id" class="block w-full rounded-lg text-sm px-3 py-2">
+                            <label class="block text-xs text-gray-500 mb-1">Guru Trial <span class="text-red-400">*</span></label>
+                            <select name="assigned_teacher_id" required class="block w-full rounded-lg text-sm px-3 py-2">
                                 <option value="">— Pilih —</option>
                                 @foreach($teachers as $t)
                                 <option value="{{ $t->id }}" {{ $student->assignedTeacher?->id == $t->id ? 'selected' : '' }}>

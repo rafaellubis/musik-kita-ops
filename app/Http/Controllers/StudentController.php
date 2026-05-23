@@ -315,12 +315,13 @@ class StudentController extends Controller
         $data = $request->validate([
             'trial_date'          => 'required|date|after:now',
             'package_id'          => 'nullable|exists:packages,id',
-            'assigned_teacher_id' => 'nullable|exists:teachers,id',
+            'assigned_teacher_id' => 'required|exists:teachers,id',
             'assigned_room_id'    => 'nullable|exists:rooms,id',
             'notes'               => 'nullable|string|max:500',
         ], [
-            'trial_date.required' => 'Tanggal trial wajib diisi.',
-            'trial_date.after'    => 'Jadwal trial harus setelah sekarang.',
+            'trial_date.required'          => 'Tanggal trial wajib diisi.',
+            'trial_date.after'             => 'Jadwal trial harus setelah sekarang.',
+            'assigned_teacher_id.required' => 'Guru trial wajib dipilih.',
         ]);
 
         return $this->runLifecycle(
