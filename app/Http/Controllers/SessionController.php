@@ -105,6 +105,11 @@ class SessionController extends Controller
         \App\Http\Requests\UpdateSessionRequest $request,
         ClassSession $classSession
     ): \Illuminate\Http\RedirectResponse {
+        // Hanya sesi SCHEDULED yang boleh diedit — honor sudah terhitung jika status lain
+        if ($classSession->status !== ClassSession::STATUS_SCHEDULED) {
+            return back()->with('error', 'Sesi yang sudah diinput absensi tidak dapat diedit.');
+        }
+
         $data      = $request->validated();
         $startTime = $data['start_time'] . ':00';
         $endTime   = $data['end_time'] . ':00';

@@ -264,6 +264,7 @@
                                 </td>
                                 @if($canEdit)
                                 <td class="px-2 py-1.5 text-center">
+                                    @if($s->status === 'SCHEDULED')
                                     <button type="button"
                                             @click="editSession = {
                                                 id: {{ $s->id }},
@@ -277,6 +278,7 @@
                                             class="text-xs text-indigo-600 hover:underline px-1">
                                         Edit
                                     </button>
+                                    @endif
                                 </td>
                                 @endif
                             </tr>

@@ -193,24 +193,30 @@ class SessionEditTest extends TestCase
             ->assertSessionHasNoErrors();
     }
 
-    public function test_edit_sesi_status_hadir_diizinkan(): void
+    /** Sesi yang sudah absen (non-SCHEDULED) tidak boleh diedit — honor sudah terhitung */
+    public function test_sesi_non_scheduled_tidak_bisa_diedit(): void
     {
-        $this->session->update(['status' => 'HADIR']);
+        $statusLocked = ['HADIR', 'HADIR_TERLAMBAT', 'HANGUS', 'IZIN_RESCHEDULE', 'IZIN_VIDEO', 'LIBUR', 'DIGANTI', 'CANCELLED'];
 
-        $this->actingAs($this->admin)
-            ->patch(route('sessions.update', $this->session->id), [
-                'start_time' => '09:00',
-                'end_time'   => '09:30',
-                'teacher_id' => $this->teacher->id,
-                'room_id'    => $this->room->id,
-            ])
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
+        foreach ($statusLocked as $status) {
+            $this->session->update(['status' => $status, 'start_time' => '10:00:00']);
 
-        $this->assertDatabaseHas('class_sessions', [
-            'id'         => $this->session->id,
-            'start_time' => '09:00:00',
-        ]);
+            $this->actingAs($this->admin)
+                ->patch(route('sessions.update', $this->session->id), [
+                    'start_time' => '11:00',
+                    'end_time'   => '11:30',
+                    'teacher_id' => $this->teacher->id,
+                    'room_id'    => $this->room->id,
+                ])
+                ->assertRedirect()
+                ->assertSessionHas('error');
+
+            // Data tidak berubah
+            $this->assertDatabaseHas('class_sessions', [
+                'id'         => $this->session->id,
+                'start_time' => '10:00:00',
+            ]);
+        }
     }
 
     public function test_auditor_tidak_boleh_edit(): void
