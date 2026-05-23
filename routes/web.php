@@ -60,13 +60,6 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // ===== Notifikasi =====
-    // PENTING: route read-all HARUS sebelum {notification}/read agar tidak dibind sebagai ID
-    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])
-        ->name('notifications.read-all');
-    Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])
-        ->name('notifications.read');
-
     /* ======================================================================
      | WRITE OPERASIONAL (Owner + Admin)
      | Master data yang aman diubah Admin sehari-hari.
@@ -74,6 +67,13 @@ Route::middleware('auth')->group(function () {
      | tertangkap wildcard /students/{student} di read group.
      |====================================================================== */
     Route::middleware('role:Owner|Admin')->group(function () {
+
+        // ===== Notifikasi =====
+        // PENTING: route read-all HARUS sebelum {notification}/read agar tidak dibind sebagai ID
+        Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])
+            ->name('notifications.read-all');
+        Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])
+            ->name('notifications.read');
 
         // Instrument
         Route::resource('instruments', InstrumentController::class)
