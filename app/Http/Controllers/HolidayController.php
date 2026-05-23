@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Holiday;
 use Illuminate\Http\Request;
 
@@ -62,7 +63,7 @@ class HolidayController extends Controller
             'replacement_date.unique' => 'Tanggal pengganti ini sudah dipakai oleh hari libur lain.',
         ]);
 
-        Holiday::create([
+        $holiday = Holiday::create([
             'date'             => $data['date'],
             'name'             => $data['name'],
             'type'             => $data['type'],
@@ -74,6 +75,13 @@ class HolidayController extends Controller
                 ? false
                 : $request->boolean('is_honor_paid', true),
         ]);
+
+        // Catat audit log
+        AuditLog::record(
+            action: AuditLog::ACTION_CREATE,
+            entity: $holiday,
+            entityLabel: $holiday->name . ' (' . $holiday->date . ')',
+        );
 
         return redirect()->route('holidays.index')->with('success', 'Hari libur ditambahkan.');
     }
@@ -88,7 +96,7 @@ class HolidayController extends Controller
     {
         $holiday = Holiday::findOrFail($id);
         $data = $request->validate([
-            'date'             => 'required|date|unique:holidays,date,' . $id,
+            'date'             => 'required|date|unique:holidays,date,' . $holiday->id,
             'name'             => 'required|string|max:100',
             'type'             => 'required|in:Nasional,Cuti Bersama,Internal',
             'notes'            => 'nullable|string|max:500',
@@ -96,7 +104,7 @@ class HolidayController extends Controller
             'replacement_date' => [
                 'nullable',
                 'date',
-                'unique:holidays,replacement_date,' . $id,
+                'unique:holidays,replacement_date,' . $holiday->id,
                 // Tanggal pengganti harus dalam bulan yang sama dengan date
                 function ($attribute, $value, $fail) use ($request) {
                     if (!$value || !$request->date) return;
@@ -132,6 +140,13 @@ class HolidayController extends Controller
                 ? false
                 : $request->boolean('is_honor_paid', true),
         ]);
+
+        // Catat audit log
+        AuditLog::record(
+            action: AuditLog::ACTION_UPDATE,
+            entity: $holiday,
+            entityLabel: $holiday->name . ' (' . $holiday->date . ')',
+        );
 
         return redirect()->route('holidays.index')->with('success', 'Hari libur diperbarui.');
     }
