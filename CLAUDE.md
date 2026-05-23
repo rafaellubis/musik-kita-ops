@@ -452,6 +452,7 @@ H_HANGUS  | Murid no-show / hangus          | Sama H_REG (full pay)
 H_PENG    | Diajar guru pengganti           | H_REG -> ke guru pengganti
 H_KIDS    | Sesi Kids Class                 | murid_terdaftar x Rp 42.500
 H_UJIAN   | Pengawas ujian grade            | Rp 250.000 flat/ujian
+H_IZIN    | IZIN_RESCHEDULE sesi original (guru tidak datang)| Rp 0 — honor dibayar via sesi pengganti
 (none)    | Murid sedang cuti               | Rp 0 (sesi tidak ter-generate)
 
 Cut-off honor: H-2 sebelum akhir bulan [REVISI v1.1]
