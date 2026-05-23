@@ -63,4 +63,13 @@ class ViewComposerTest extends TestCase
         $response->assertOk();
         $response->assertViewHas('overdueNotifCount', 0);
     }
+
+    public function test_guest_tidak_menerima_overdueNotifs(): void
+    {
+        // Guest (tidak login) tidak boleh error dan tidak menerima variabel notifikasi
+        $response = $this->get(route('dashboard'));
+
+        // Guest diredirect ke login, bukan error 500
+        $response->assertRedirect(route('login'));
+    }
 }

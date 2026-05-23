@@ -47,8 +47,10 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
-            // Hanya inject ke view jika user login (notifs tidak null)
-            if ($notifs !== null) {
+            // Hanya inject ke view jika sudah di-fetch DAN user login (notifs tidak null).
+            // $fetched memastikan kita sudah melewati blok auth()->check() di atas,
+            // $notifs !== null memastikan user authenticated (bukan guest).
+            if ($fetched && $notifs !== null) {
                 $view->with('overdueNotifs', $notifs);
                 $view->with('overdueNotifCount', $count);
             }
