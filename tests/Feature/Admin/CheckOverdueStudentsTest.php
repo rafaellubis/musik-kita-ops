@@ -122,13 +122,12 @@ class CheckOverdueStudentsTest extends TestCase
             'status'     => 'UNPAID',
         ]);
 
-        // Run pertama: notif tersimpan ke DB
+        // Run pertama: harus kirim 1 notif ke admin
         $this->artisan('students:check-overdue')->assertSuccessful();
+        $this->assertEquals(1, $this->admin->notifications()->count());
 
-        // Run kedua: idempotency guard harus mencegah notif duplikat
+        // Run kedua: idempotency guard harus mencegah duplikat
         $this->artisan('students:check-overdue')->assertSuccessful();
-
-        // Admin hanya punya 1 notif (bukan 2)
         $this->assertEquals(1, $this->admin->notifications()->count());
     }
 

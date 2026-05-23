@@ -23,12 +23,19 @@ class CheckOverdueStudents extends Command
     {
         $today = now();
 
-        // Query murid Aktif yang punya invoice UNPAID/PARTIAL dari bulan sebelumnya
+        // Hitung label bulan sebelumnya di luar loop (nilainya konstan per run)
+        $bulanLabel = Carbon::create(
+            $today->month > 1 ? $today->year : $today->year - 1,
+            $today->month > 1 ? $today->month - 1 : 12,
+            1
+        )->translatedFormat('F Y');
+
+        // Query murid Aktif yang punya invoice UNPAID/PARTIAL dari bulan sebelumnya.
+        // Eager-load invoices overdue agar tidak N+1 saat hitung totalOverdue di loop.
         $overdueStudents = Student::where('status', 'Aktif')
             ->whereHas('invoices', function ($q) use ($today) {
                 $q->whereIn('status', ['UNPAID', 'PARTIAL'])
                   ->where(function ($q) use ($today) {
-                      // Invoice dari tahun sebelumnya, ATAU dari bulan sebelumnya di tahun ini
                       $q->where('year', '<', $today->year)
                         ->orWhere(function ($q) use ($today) {
                             $q->where('year', $today->year)
@@ -36,6 +43,17 @@ class CheckOverdueStudents extends Command
                         });
                   });
             })
+            ->with(['invoices' => function ($q) use ($today) {
+                // Eager-load hanya invoice yang overdue (tidak perlu semua invoice murid)
+                $q->whereIn('status', ['UNPAID', 'PARTIAL'])
+                  ->where(function ($q) use ($today) {
+                      $q->where('year', '<', $today->year)
+                        ->orWhere(function ($q) use ($today) {
+                            $q->where('year', $today->year)
+                              ->where('month', '<', $today->month);
+                        });
+                  });
+            }])
             ->get();
 
         if ($overdueStudents->isEmpty()) {
@@ -70,25 +88,10 @@ class CheckOverdueStudents extends Command
 
         $jumlah = 0;
         foreach ($muridBaru as $student) {
-            // Hitung total tunggakan dari semua invoice overdue murid ini
-            $totalOverdue = $student->invoices()
-                ->whereIn('status', ['UNPAID', 'PARTIAL'])
-                ->where(function ($q) use ($today) {
-                    $q->where('year', '<', $today->year)
-                      ->orWhere(function ($q) use ($today) {
-                          $q->where('year', $today->year)
-                            ->where('month', '<', $today->month);
-                      });
-                })
-                ->get()
-                ->sum(fn ($inv) => $inv->total_amount - $inv->paid_amount);
-
-            // Label bulan sebelumnya dalam Bahasa Indonesia
-            $bulanLabel = Carbon::create(
-                $today->month > 1 ? $today->year : $today->year - 1,
-                $today->month > 1 ? $today->month - 1 : 12,
-                1
-            )->translatedFormat('F Y');
+            // Hitung total tunggakan dari invoices yang sudah di-eager-load (no N+1)
+            $totalOverdue = $student->invoices->sum(
+                fn ($inv) => $inv->total_amount - $inv->paid_amount
+            );
 
             foreach ($penerima as $user) {
                 $user->notify(new MuridOverdueNotification($student, (int) $totalOverdue, $bulanLabel));
