@@ -151,6 +151,24 @@ class StudentController extends Controller
             ->orderByDesc('is_primary')
             ->get();
 
+        // M05: Data cicilan Kids Bundle (BR-10.10) — null jika bukan KIDS_CLASS_BUNDLE INSTALLMENT.
+        // Ditampilkan sebagai kartu progress di tab tagihan.
+        $kidsInstallments = null;
+        $primaryEnrollment = $student->primaryEnrollment;
+        if ($primaryEnrollment && $primaryEnrollment->package?->class_type === 'KIDS_CLASS_BUNDLE') {
+            $latestGroup = \App\Models\Invoice::where('student_id', $student->id)
+                ->where('payment_mode', 'INSTALLMENT')
+                ->whereNotNull('installment_group_id')
+                ->latest('id')
+                ->value('installment_group_id');
+
+            if ($latestGroup) {
+                $kidsInstallments = \App\Models\Invoice::where('installment_group_id', $latestGroup)
+                    ->orderBy('installment_number')
+                    ->get(['id', 'installment_number', 'total_amount', 'paid_amount', 'status', 'due_date']);
+            }
+        }
+
         // M-Kelas: Riwayat kelas — enrollment yang sudah tidak aktif
         $historyEnrollments = $student->enrollments()
             ->whereIn('status', ['INACTIVE', 'COMPLETED'])
@@ -180,6 +198,7 @@ class StudentController extends Controller
             'recentInvoices', 'outstandingBalance', 'unpaidCount',
             'activeEnrollments', 'historyEnrollments',
             'allPackages', 'allTeachers', 'allRooms',
+            'kidsInstallments',
         ));
     }
 

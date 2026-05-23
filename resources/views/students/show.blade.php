@@ -986,6 +986,98 @@
                     </div>
                 </div>
 
+                {{-- Kartu Cicilan Kids Bundle (hanya muncul jika primary enrollment = KIDS_CLASS_BUNDLE INSTALLMENT) --}}
+                @if(!empty($kidsInstallments) && $kidsInstallments->isNotEmpty())
+                @php
+                    $kPaidCount   = $kidsInstallments->where('status', 'PAID')->count();
+                    $kTotalCount  = $kidsInstallments->count();
+                    $kTotalAmount = $kidsInstallments->where('status', '!=', 'VOID')->sum('total_amount');
+                    $kPaidAmount  = $kidsInstallments->sum('paid_amount');
+                    $kAllPaid     = $kPaidCount === $kTotalCount;
+                @endphp
+                <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
+                        <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#D4A853">
+                            Cicilan Kids Class Bundle
+                        </div>
+                        @if($kAllPaid)
+                            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-700">
+                                Lunas ✓
+                            </span>
+                        @else
+                            <span class="text-[10px] text-gray-400">
+                                {{ $kPaidCount }}/{{ $kTotalCount }} termin lunas
+                            </span>
+                        @endif
+                    </div>
+                    <div class="px-5 py-3">
+                        {{-- Subtitle nominal --}}
+                        <div class="text-xs text-gray-500 mb-2">
+                            Rp {{ number_format($kPaidAmount, 0, ',', '.') }} dibayar
+                            dari Rp {{ number_format($kTotalAmount, 0, ',', '.') }}
+                        </div>
+
+                        {{-- Progress bar --}}
+                        <div class="flex gap-1 h-1.5 rounded-full overflow-hidden mb-3">
+                            @foreach($kidsInstallments as $kInv)
+                            @php
+                                $kIsNext = !$kAllPaid &&
+                                    $kInv->installment_number === $kidsInstallments->where('status', '!=', 'PAID')->min('installment_number');
+                                if ($kInv->status === 'PAID') {
+                                    $kSegColor = 'bg-green-400';
+                                } elseif ($kIsNext) {
+                                    $kSegColor = 'bg-yellow-400';
+                                } else {
+                                    $kSegColor = 'bg-gray-200';
+                                }
+                            @endphp
+                            <div class="flex-1 rounded-sm {{ $kSegColor }}"></div>
+                            @endforeach
+                        </div>
+
+                        {{-- Tabel 3 termin (semua baris klikable) --}}
+                        <div class="space-y-1">
+                            @foreach($kidsInstallments as $kInv)
+                            @php
+                                $kDotColor = match($kInv->status) {
+                                    'PAID'    => 'bg-green-400',
+                                    'PARTIAL' => 'bg-yellow-400',
+                                    'VOID'    => 'bg-gray-200',
+                                    default   => 'bg-gray-300',
+                                };
+                                $kBadgeClass = match($kInv->status) {
+                                    'PAID'    => 'bg-green-50 text-green-700',
+                                    'PARTIAL' => 'bg-yellow-50 text-yellow-800',
+                                    'VOID'    => 'bg-gray-100 text-gray-400 line-through',
+                                    default   => 'bg-gray-100 text-gray-500',
+                                };
+                                $kBadgeText = match($kInv->status) {
+                                    'PAID'    => 'LUNAS',
+                                    'PARTIAL' => 'SEBAGIAN',
+                                    'VOID'    => 'VOID',
+                                    default   => 'BELUM BAYAR',
+                                };
+                            @endphp
+                            <a href="{{ route('invoices.show', $kInv->id) }}"
+                               class="flex items-center gap-3 px-2 py-1.5 rounded-lg text-xs hover:bg-gray-50 transition-colors">
+                                <div class="w-2 h-2 rounded-full flex-shrink-0 {{ $kDotColor }}"></div>
+                                <div class="flex-1 text-gray-700">
+                                    Termin {{ $kInv->installment_number }}/3
+                                    <span class="text-gray-400 ml-1">· {{ $kInv->due_date?->format('d M Y') ?? '—' }}</span>
+                                </div>
+                                <div class="font-mono text-gray-600">
+                                    Rp {{ number_format($kInv->total_amount, 0, ',', '.') }}
+                                </div>
+                                <span class="px-1.5 py-0.5 rounded {{ $kBadgeClass }} text-[10px] font-semibold">
+                                    {{ $kBadgeText }}
+                                </span>
+                            </a>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                @endif
+
                 {{-- Invoice terbaru --}}
                 <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                     <div class="px-5 py-3.5 border-b border-gray-100">
