@@ -22,6 +22,7 @@ class ClearStudentData extends Command
      * Urutan mengikuti dependency FK (dari paling dalam ke luar).
      */
     private array $tables = [
+        'notifications'            => 'Notifikasi',
         'event_participants'       => 'Peserta Event',
         'events'                   => 'Event (Mini Concert / Ujian)',
         'teacher_honor_slips'      => 'Slip Honor Guru',
