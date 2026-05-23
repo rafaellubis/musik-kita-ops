@@ -281,23 +281,7 @@
 
             {{-- Skip Trial --}}
             <div x-show="openForm === 'skip'" x-cloak
-                 x-data="{
-                     kidsBundle: false,
-                     teachers: [],
-                     loadingTeachers: false,
-                     filterTeachers(pkgEl) {
-                         const opt = pkgEl.options[pkgEl.selectedIndex];
-                         this.kidsBundle = (opt?.dataset?.classType === 'KIDS_CLASS_BUNDLE');
-                         const instrId = opt?.dataset?.instrumentId || '';
-                         if (!instrId) { this.teachers = []; return; }
-                         this.loadingTeachers = true;
-                         this.teachers = [];
-                         fetch('/api/teachers-by-instrument/' + instrId)
-                             .then(r => r.json())
-                             .then(data => { this.teachers = data; this.loadingTeachers = false; })
-                             .catch(() => { this.teachers = []; this.loadingTeachers = false; });
-                     }
-                 }"
+                 x-data="lifecycleTeacherFilter()"
                  class="mt-4 rounded-xl p-4"
                  style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2)">
                 <form method="POST" action="{{ route('students.skip-trial', $student->id) }}">
@@ -324,7 +308,7 @@
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
                             <select name="package_id" required class="block w-full rounded-lg text-sm px-3 py-2"
-                                    @change="filterTeachers($event.target)">
+                                    @change="filterTeachers($event.target.selectedOptions[0]?.dataset?.instrumentId || '', $event.target.selectedOptions[0]?.dataset?.classType || '')">
                                 <option value="" data-instrument-id="" data-class-type="">— Pilih —</option>
                                 @foreach($packages as $pkg)
                                 <option value="{{ $pkg->id }}"
@@ -379,23 +363,7 @@
 
             {{-- Konversi Aktif --}}
             <div x-show="openForm === 'convert'" x-cloak
-                 x-data="{
-                     kidsBundle: false,
-                     teachers: [],
-                     loadingTeachers: false,
-                     filterTeachers(pkgEl) {
-                         const opt = pkgEl.options[pkgEl.selectedIndex];
-                         this.kidsBundle = (opt?.dataset?.classType === 'KIDS_CLASS_BUNDLE');
-                         const instrId = opt?.dataset?.instrumentId || '';
-                         if (!instrId) { this.teachers = []; return; }
-                         this.loadingTeachers = true;
-                         this.teachers = [];
-                         fetch('/api/teachers-by-instrument/' + instrId)
-                             .then(r => r.json())
-                             .then(data => { this.teachers = data; this.loadingTeachers = false; })
-                             .catch(() => { this.teachers = []; this.loadingTeachers = false; });
-                     }
-                 }"
+                 x-data="lifecycleTeacherFilter()"
                  class="mt-4 rounded-xl p-4"
                  style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2)">
                 <form method="POST" action="{{ route('students.convert-active', $student->id) }}">
@@ -407,7 +375,7 @@
                             <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
                             <select name="package_id" required
                                     class="block w-full rounded-lg text-sm px-3 py-2"
-                                    @change="filterTeachers($event.target)">
+                                    @change="filterTeachers($event.target.selectedOptions[0]?.dataset?.instrumentId || '', $event.target.selectedOptions[0]?.dataset?.classType || '')">
                                 <option value="" data-instrument-id="" data-class-type="">— Pilih —</option>
                                 @foreach($packages as $pkg)
                                 <option value="{{ $pkg->id }}"
@@ -524,23 +492,7 @@
 
             {{-- Re-aktivasi --}}
             <div x-show="openForm === 'reactivate'" x-cloak
-                 x-data="{
-                     kidsBundle: false,
-                     teachers: [],
-                     loadingTeachers: false,
-                     filterTeachers(pkgEl) {
-                         const opt = pkgEl.options[pkgEl.selectedIndex];
-                         this.kidsBundle = (opt?.dataset?.classType === 'KIDS_CLASS_BUNDLE');
-                         const instrId = opt?.dataset?.instrumentId || '';
-                         if (!instrId) { this.teachers = []; return; }
-                         this.loadingTeachers = true;
-                         this.teachers = [];
-                         fetch('/api/teachers-by-instrument/' + instrId)
-                             .then(r => r.json())
-                             .then(data => { this.teachers = data; this.loadingTeachers = false; })
-                             .catch(() => { this.teachers = []; this.loadingTeachers = false; });
-                     }
-                 }"
+                 x-data="lifecycleTeacherFilter()"
                  class="mt-4 rounded-xl p-4"
                  style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2)">
                 <form method="POST" action="{{ route('students.reactivate', $student->id) }}">
@@ -553,7 +505,7 @@
                             <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
                             <select name="package_id" required
                                     class="block w-full rounded-lg text-sm px-3 py-2"
-                                    @change="filterTeachers($event.target)">
+                                    @change="filterTeachers($event.target.selectedOptions[0]?.dataset?.instrumentId || '', $event.target.selectedOptions[0]?.dataset?.classType || '')">
                                 <option value="" data-instrument-id="" data-class-type="">— Pilih —</option>
                                 @foreach($packages as $pkg)
                                 <option value="{{ $pkg->id }}"
@@ -1304,4 +1256,28 @@
 
     </div>
 
+<script>
+/**
+ * Komponen Alpine.data untuk form lifecycle yang membutuhkan filter guru.
+ * Didaftarkan via Alpine.data() agar this-binding ke proxy reaktif bekerja benar.
+ * Dipakai di 3 form: Skip Trial, Konversi Aktif, Re-aktivasi.
+ */
+document.addEventListener('alpine:init', () => {
+    Alpine.data('lifecycleTeacherFilter', () => ({
+        kidsBundle: false,
+        teachers: [],
+        loadingTeachers: false,
+        filterTeachers(instrId, classType) {
+            this.kidsBundle = (classType === 'KIDS_CLASS_BUNDLE');
+            if (!instrId) { this.teachers = []; return; }
+            this.loadingTeachers = true;
+            this.teachers = [];
+            fetch('{{ route('api.teachers-by-instrument', '') }}/' + instrId)
+                .then(r => r.json())
+                .then(data => { this.teachers = data; this.loadingTeachers = false; })
+                .catch(() => { this.teachers = []; this.loadingTeachers = false; });
+        }
+    }));
+});
+</script>
 </x-app-layout>
