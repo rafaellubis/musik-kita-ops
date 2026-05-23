@@ -549,6 +549,11 @@ html[data-theme="light"] body { background-color: #F2E9DC; }
 .light-content input[type="checkbox"],
 .light-content input[type="radio"]        { background-color: #FFFFFF !important; }
 
+.light-content input[type="checkbox"]:checked {
+    background-color: #3B82F6 !important;
+    border-color:     #3B82F6 !important;
+}
+
 /* === SHADOW === */
 .light-content .shadow-sm                 { box-shadow: 0 1px 4px rgba(101,65,27,0.12); }
 .light-content .shadow                    { box-shadow: 0 2px 10px rgba(101,65,27,0.16); }
