@@ -113,6 +113,20 @@ class StudentImportService
             // Trim whitespace semua nilai string
             $data = array_map(fn ($v) => is_string($v) ? trim($v) : $v, $data);
 
+            // Normalisasi nama → Title Case sebelum validasi
+            foreach (['full_name', 'nickname', 'parent_name'] as $nameField) {
+                if (!empty($data[$nameField])) {
+                    $data[$nameField] = ucwords(strtolower($data[$nameField]));
+                }
+            }
+
+            // Normalisasi nomor HP → awalan +62 sebelum validasi
+            foreach (['phone', 'parent_phone'] as $phoneField) {
+                if (!empty($data[$phoneField])) {
+                    $data[$phoneField] = $this->normalizePhone($data[$phoneField]);
+                }
+            }
+
             $result = $this->validateRow(
                 $rowNum,
                 $data,
@@ -384,6 +398,23 @@ class StudentImportService
     }
 
     // ============= PRIVATE HELPERS =============
+
+    /**
+     * Normalisasi nomor HP ke format +62 (08xxx → +628xxx, 8xxx → +628xxx).
+     */
+    private function normalizePhone(string $phone): string
+    {
+        // Hapus spasi, tanda kurung, strip — pertahankan + saja
+        $clean = preg_replace('/[^0-9+]/', '', trim($phone));
+
+        if (empty($clean)) return $phone;
+
+        if (str_starts_with($clean, '+62')) return $clean;
+        if (str_starts_with($clean, '62'))  return '+' . $clean;
+        if (str_starts_with($clean, '0'))   return '+62' . substr($clean, 1);
+
+        return '+62' . $clean; // "8xxxx" tanpa awalan
+    }
 
     /**
      * Konversi nama hari Indonesia ke integer Carbon (Minggu=0, Senin=1, ..., Sabtu=6).

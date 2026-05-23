@@ -12,6 +12,41 @@ class UpdateStudentRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $merge = [];
+
+        // Nama → Title Case (Capitalize Each Word) agar konsisten di DB
+        foreach (['full_name', 'nickname', 'parent_name'] as $field) {
+            if ($this->filled($field)) {
+                $merge[$field] = ucwords(strtolower(trim($this->input($field))));
+            }
+        }
+
+        // Nomor HP → awalan +62 (08xxx → +628xxx, 8xxx → +628xxx)
+        foreach (['phone', 'parent_phone'] as $field) {
+            if ($this->filled($field)) {
+                $merge[$field] = $this->normalizePhone($this->input($field));
+            }
+        }
+
+        $this->merge($merge);
+    }
+
+    private function normalizePhone(string $phone): string
+    {
+        // Hapus spasi, tanda kurung, strip — pertahankan + saja
+        $clean = preg_replace('/[^0-9+]/', '', trim($phone));
+
+        if (empty($clean)) return $phone;
+
+        if (str_starts_with($clean, '+62')) return $clean;
+        if (str_starts_with($clean, '62'))  return '+' . $clean;
+        if (str_starts_with($clean, '0'))   return '+62' . substr($clean, 1);
+
+        return '+62' . $clean; // "8xxxx" tanpa awalan
+    }
+
     public function rules(): array
     {
         return [
