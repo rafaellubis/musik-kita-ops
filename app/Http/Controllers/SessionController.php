@@ -110,6 +110,7 @@ class SessionController extends Controller
         $endTime   = $data['end_time'] . ':00';
 
         // Deteksi konflik guru (abaikan CANCELLED dan sesi itu sendiri)
+        // session_date tidak punya cast 'date' di model — raw string, aman untuk where() langsung
         $teacherConflict = ClassSession::where('session_date', $classSession->session_date)
             ->where('teacher_id', $data['teacher_id'])
             ->where('status', '!=', 'CANCELLED')
