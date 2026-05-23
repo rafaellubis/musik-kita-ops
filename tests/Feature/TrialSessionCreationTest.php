@@ -111,6 +111,23 @@ class TrialSessionCreationTest extends TestCase
         $this->assertDatabaseCount('class_sessions', 0);
     }
 
+    /** package_id wajib diisi — request tanpa package_id dikembalikan dengan error validasi */
+    public function test_startTrial_wajib_isi_package_id(): void
+    {
+        $student = Student::factory()->create(['status' => 'Calon']);
+        $teacher = Teacher::factory()->create();
+
+        $this->actingAs($this->admin)
+            ->post(route('students.start-trial', $student->id), [
+                'trial_date'          => now()->addDay()->format('Y-m-d\TH:i'),
+                'assigned_teacher_id' => $teacher->id,
+                // tidak ada package_id
+            ])
+            ->assertSessionHasErrors(['package_id']);
+
+        $this->assertDatabaseCount('class_sessions', 0);
+    }
+
     /** Service-level guard: mulaiTrial() tanpa assigned_teacher_id lempar InvalidArgumentException */
     public function test_mulaiTrial_tanpa_teacher_lempar_exception(): void
     {

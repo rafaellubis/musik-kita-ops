@@ -314,13 +314,14 @@ class StudentController extends Controller
         $student = Student::findOrFail($id);
         $data = $request->validate([
             'trial_date'          => 'required|date|after:now',
-            'package_id'          => 'nullable|exists:packages,id',
+            'package_id'          => 'required|exists:packages,id',
             'assigned_teacher_id' => 'required|exists:teachers,id',
             'assigned_room_id'    => 'nullable|exists:rooms,id',
             'notes'               => 'nullable|string|max:500',
         ], [
             'trial_date.required'          => 'Tanggal trial wajib diisi.',
             'trial_date.after'             => 'Jadwal trial harus setelah sekarang.',
+            'package_id.required'          => 'Paket yang diminati wajib dipilih.',
             'assigned_teacher_id.required' => 'Guru trial wajib dipilih.',
         ]);
 

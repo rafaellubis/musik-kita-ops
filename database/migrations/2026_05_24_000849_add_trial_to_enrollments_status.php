@@ -12,6 +12,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() === 'sqlite') return;
+
         DB::statement("
             ALTER TABLE enrollments
             MODIFY COLUMN status
@@ -22,6 +24,8 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() === 'sqlite') return;
+
         // Pastikan tidak ada row TRIAL sebelum rollback
         DB::table('enrollments')->where('status', 'TRIAL')->update(['status' => 'INACTIVE']);
 
