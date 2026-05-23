@@ -77,7 +77,7 @@ class EventParticipant extends Model
         return $this->belongsTo(InvoiceItem::class);
     }
 
-    public function accompaniyingTeacher(): BelongsTo
+    public function accompanyingTeacher(): BelongsTo
     {
         return $this->belongsTo(Teacher::class, 'accompanying_teacher_id');
     }
