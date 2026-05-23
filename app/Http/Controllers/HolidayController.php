@@ -153,7 +153,16 @@ class HolidayController extends Controller
 
     public function destroy(string $id)
     {
-        Holiday::findOrFail($id)->delete();
+        $holiday = Holiday::findOrFail($id);
+
+        // Catat audit log sebelum delete
+        AuditLog::record(
+            action: AuditLog::ACTION_DELETE,
+            entity: $holiday,
+            entityLabel: $holiday->name . ' (' . $holiday->date . ')',
+        );
+
+        $holiday->delete();
         return redirect()->route('holidays.index')->with('success', 'Hari libur dihapus.');
     }
 }

@@ -249,8 +249,6 @@ class EventController extends Controller
      */
     public function updateParticipantTeacher(Request $request, EventParticipant $participant)
     {
-        $this->authorize('update', $participant->event);
-
         if ($participant->event->isCompleted()) {
             return back()->with('error', 'Tidak bisa ubah guru pendamping — event sudah selesai.');
         }
