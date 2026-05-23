@@ -96,4 +96,58 @@ class SessionController extends Controller
             'month' => $data['month'],
         ])->with('success', $msg);
     }
+
+    /**
+     * Update jam, guru, atau ruang satu sesi. Owner+Admin only.
+     * Conflict detection: guru dan ruang tidak boleh double-booked di jam yang sama.
+     */
+    public function update(
+        \App\Http\Requests\UpdateSessionRequest $request,
+        ClassSession $classSession
+    ): \Illuminate\Http\RedirectResponse {
+        $data      = $request->validated();
+        $startTime = $data['start_time'] . ':00';
+        $endTime   = $data['end_time'] . ':00';
+
+        // Deteksi konflik guru (abaikan CANCELLED dan sesi itu sendiri)
+        $teacherConflict = ClassSession::where('session_date', $classSession->session_date)
+            ->where('teacher_id', $data['teacher_id'])
+            ->where('status', '!=', 'CANCELLED')
+            ->where('id', '!=', $classSession->id)
+            ->where('start_time', '<', $endTime)
+            ->where('end_time', '>', $startTime)
+            ->exists();
+
+        if ($teacherConflict) {
+            return back()
+                ->withErrors(['teacher_id' => 'Guru sudah punya sesi lain di jam yang sama.'])
+                ->withInput();
+        }
+
+        // Deteksi konflik ruang (hanya jika ruang dipilih)
+        if (!empty($data['room_id'])) {
+            $roomConflict = ClassSession::where('session_date', $classSession->session_date)
+                ->where('room_id', $data['room_id'])
+                ->where('status', '!=', 'CANCELLED')
+                ->where('id', '!=', $classSession->id)
+                ->where('start_time', '<', $endTime)
+                ->where('end_time', '>', $startTime)
+                ->exists();
+
+            if ($roomConflict) {
+                return back()
+                    ->withErrors(['room_id' => 'Ruang sudah dipakai sesi lain di jam yang sama.'])
+                    ->withInput();
+            }
+        }
+
+        $classSession->update([
+            'start_time' => $startTime,
+            'end_time'   => $endTime,
+            'teacher_id' => $data['teacher_id'],
+            'room_id'    => $data['room_id'] ?? null,
+        ]);
+
+        return back()->with('success', 'Sesi berhasil diperbarui.');
+    }
 }

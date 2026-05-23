@@ -153,6 +153,11 @@ Route::middleware('auth')->group(function () {
             [SessionController::class, 'generate']
         )->name('sessions.generate');
 
+        // M03: Edit jam, guru, ruang satu sesi (conflict detection)
+        Route::patch('sessions/{classSession}',
+            [SessionController::class, 'update']
+        )->name('sessions.update');
+
         // ===== M04: Absensi Harian — update inline per sesi via AJAX =====
         Route::patch('/absensi/{classSession}',
             [AbsensiController::class, 'update']
