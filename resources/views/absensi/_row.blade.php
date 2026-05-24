@@ -26,6 +26,11 @@
         showModal: null,
         loading: false,
         errorMsg: '',
+        splitMode: false,
+        part2Date: '',
+        part2Time: '',
+        part2RoomId: '',
+        part2Error: '',
         async save(newStatus, extra = {}) {
             this.loading  = true;
             this.errorMsg = '';
@@ -58,6 +63,65 @@
                 replacement_date:    this.rescheduleDate,
                 replacement_time:    this.rescheduleTime,
                 replacement_room_id: this.rescheduleRoomId || null,
+            });
+        },
+        saveSplitPart1() {
+            if (!this.rescheduleDate || !this.rescheduleTime) return;
+            this.errorMsg = '';
+            fetch('/absensi/{{ $session->id }}/split/1', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    replacement_date:    this.rescheduleDate,
+                    replacement_time:    this.rescheduleTime,
+                    replacement_room_id: this.rescheduleRoomId || null,
+                }),
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    this.showModal = null;
+                    this.splitMode = false;
+                    window.location.reload();
+                } else {
+                    this.errorMsg = data.message;
+                }
+            })
+            .catch(() => {
+                this.errorMsg = 'Terjadi kesalahan. Coba lagi.';
+            });
+        },
+        saveSplitPart2() {
+            if (!this.part2Date || !this.part2Time) return;
+            this.part2Error = '';
+            fetch('/absensi/{{ $session->id }}/split/2', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    replacement_date:    this.part2Date,
+                    replacement_time:    this.part2Time,
+                    replacement_room_id: this.part2RoomId || null,
+                }),
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    this.showModal = null;
+                    window.location.reload();
+                } else {
+                    this.part2Error = data.message;
+                }
+            })
+            .catch(() => {
+                this.part2Error = 'Terjadi kesalahan. Coba lagi.';
             });
         }
     }"
@@ -106,6 +170,14 @@
             </span>
 
         @else
+            {{-- Tombol "Tambah Bagian 2": tampil hanya jika ini adalah sesi Split Part 1 dan Part 2 belum ada --}}
+            @if($session->split_part === 1 && !isset($part2ExistsForOriginIds[$session->origin_session_id]))
+                <button type="button"
+                    @click="showModal = 'part2'"
+                    class="inline-flex items-center gap-1 rounded px-2 py-1 text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors mb-1">
+                    + Tambah Bagian 2
+                </button>
+            @endif
             {{-- Badge setelah status diinput --}}
             <div x-show="status !== 'SCHEDULED'" class="flex items-center justify-end gap-2">
                 <span class="rounded px-3 py-1 text-xs border"
@@ -260,13 +332,79 @@
                         @endforeach
                     </select>
 
+                    {{-- Toggle: Bagi menjadi 2 bagian --}}
+                    <div class="flex items-center gap-2 mb-3">
+                        <button type="button"
+                            @click="splitMode = !splitMode"
+                            :class="splitMode ? 'bg-amber-600' : 'bg-gray-400'"
+                            class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none">
+                            <span :class="splitMode ? 'translate-x-5' : 'translate-x-1'"
+                                  class="inline-block h-3 w-3 transform rounded-full bg-white transition-transform"></span>
+                        </button>
+                        <span class="text-xs text-gray-600">Bagi menjadi 2 bagian</span>
+                        <span x-show="splitMode" class="text-xs text-amber-600">(15 menit + 15 menit)</span>
+                    </div>
+
                     <div class="flex gap-2">
-                        <button @click="saveReschedule()"
+                        <button type="button"
+                            @click="splitMode ? saveSplitPart1() : saveReschedule()"
                             :disabled="!rescheduleDate || !rescheduleTime"
                             class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded btn-mk-primary">
-                            Buat Sesi Pengganti
+                            <span x-text="splitMode ? 'Jadwalkan Bagian 1' : 'Buat Sesi Pengganti'"></span>
                         </button>
-                        <button @click="showModal = null; errorMsg = ''"
+                        <button @click="showModal = null; errorMsg = ''; splitMode = false"
+                            class="border border-gray-200 text-gray-500 hover:bg-gray-50 text-xs py-2 px-3 rounded">
+                            Batal
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Modal: Jadwalkan Bagian 2 (muncul dari tombol "Tambah Bagian 2" pada baris Split Part 1) --}}
+            <div x-show="showModal === 'part2'"
+                 x-transition
+                 class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
+                 style="display: none;"
+                 @click.self="showModal = null; part2Error = ''">
+                <div class="bg-white border border-gray-200 rounded-lg shadow-xl w-80 p-5" @click.stop>
+                    <p class="text-gray-700 text-sm font-medium mb-1">Jadwalkan Bagian 2</p>
+                    <p class="text-gray-400 text-xs mb-4 truncate">
+                        {{ $session->student->full_name }} · {{ $session->teacher->name }}
+                        @php $lbl = $session->getSessionLabel(); @endphp
+                        @if($lbl !== '—')
+                            &mdash; {{ $lbl }}
+                        @endif
+                    </p>
+
+                    {{-- Pesan error dari server --}}
+                    <p x-show="part2Error" x-text="part2Error"
+                        class="bg-red-50 border border-red-200 text-red-600 text-xs rounded px-3 py-2 mb-3">
+                    </p>
+
+                    <label class="block text-gray-500 text-xs mb-1">Tanggal</label>
+                    <input type="date" x-model="part2Date"
+                        class="w-full border border-gray-300 text-gray-700 rounded px-3 py-1.5 text-sm mb-3">
+
+                    <label class="block text-gray-500 text-xs mb-1">Jam Mulai</label>
+                    <input type="time" x-model="part2Time"
+                        class="w-full border border-gray-300 text-gray-700 rounded px-3 py-1.5 text-sm mb-3">
+
+                    <label class="block text-gray-500 text-xs mb-1">Ruangan <span class="text-gray-400">(opsional)</span></label>
+                    <select x-model="part2RoomId"
+                        class="w-full border border-gray-300 text-gray-700 rounded px-3 py-1.5 text-sm mb-4">
+                        <option value="">— Tanpa ruangan —</option>
+                        @foreach($rooms as $room)
+                            <option value="{{ $room->id }}">{{ $room->code }} — {{ $room->name }}</option>
+                        @endforeach
+                    </select>
+
+                    <div class="flex gap-2">
+                        <button type="button" @click="saveSplitPart2()"
+                            :disabled="!part2Date || !part2Time"
+                            class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded bg-purple-600 text-white hover:bg-purple-700">
+                            Jadwalkan Bagian 2
+                        </button>
+                        <button type="button" @click="showModal = null; part2Error = ''"
                             class="border border-gray-200 text-gray-500 hover:bg-gray-50 text-xs py-2 px-3 rounded">
                             Batal
                         </button>
