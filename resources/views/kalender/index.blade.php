@@ -140,7 +140,7 @@
                             @foreach($days as $dow => $date)
                                 <th class="py-2 px-2 text-center text-xs font-semibold
                                     {{ $date->isToday() ? 'text-indigo-600 bg-indigo-50' : 'text-gray-600' }}">
-                                    <div>{{ $date->translatedFormat('D') }}</div>
+                                    <div>{{ $date->locale('id')->translatedFormat('D') }}</div>
                                     <div class="font-normal text-gray-400">{{ $date->format('d/m') }}</div>
                                 </th>
                             @endforeach
