@@ -188,6 +188,7 @@
                         'bg-yellow-100 text-yellow-700 border-yellow-200': status === 'IZIN_RESCHEDULE',
                         'bg-blue-100 text-blue-700 border-blue-200':       status === 'IZIN_VIDEO',
                         'bg-purple-100 text-purple-700 border-purple-200': status === 'DIGANTI',
+                        'bg-gray-100 text-gray-400 border-gray-200':       status === 'CANCELLED',
                     }"
                     x-text="
                         status === 'HADIR'            ? '✓ HADIR' :
@@ -195,10 +196,18 @@
                         status === 'HANGUS'            ? '✕ HANGUS' :
                         status === 'IZIN_RESCHEDULE'   ? '📅 ' + (replacementLabel || 'IZIN') :
                         status === 'IZIN_VIDEO'        ? '📹 VIDEO' :
-                        status === 'DIGANTI'           ? '↔ ' + substituteLabel : status
+                        status === 'DIGANTI'           ? '↔ ' + substituteLabel :
+                        status === 'CANCELLED'         ? '✕ BATAL' : status
                     ">
                 </span>
-                <button @click="status = 'SCHEDULED'; errorMsg = ''"
+                {{-- HADIR/HADIR_TERLAMBAT: hanya bisa di-batalkan, tidak bisa diubah ke status lain --}}
+                <button x-show="status === 'HADIR' || status === 'HADIR_TERLAMBAT'"
+                    @click="save('CANCELLED')"
+                    :disabled="loading"
+                    class="text-red-500 hover:text-red-700 text-xs underline">batalkan</button>
+                {{-- Status lain (termasuk CANCELLED): bisa di-ubah ulang ke SCHEDULED --}}
+                <button x-show="status !== 'HADIR' && status !== 'HADIR_TERLAMBAT'"
+                    @click="status = 'SCHEDULED'; errorMsg = ''"
                     class="text-gray-400 hover:text-gray-600 text-xs underline">ubah</button>
             </div>
 
