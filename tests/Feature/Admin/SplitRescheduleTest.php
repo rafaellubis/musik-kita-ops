@@ -319,7 +319,8 @@ class SplitRescheduleTest extends TestCase
         $original = $this->makeOriginalSession(['status' => 'SCHEDULED']);
         $admin    = $this->adminUser();
 
-        // Buat sesi blocking di tanggal + jam yang sama dengan guru yang sama
+        // Buat sesi blocking di tanggal + jam yang SAMA dengan guru yang sama
+        // start_time cocok persis dengan replacement_time agar konflik deterministik
         ClassSession::factory()->create([
             'teacher_id'   => $original->teacher_id,
             'session_date' => '2026-06-10',
@@ -334,10 +335,49 @@ class SplitRescheduleTest extends TestCase
                 'replacement_time' => '14:00',
             ]);
 
-        // 200 jika tidak konflik (factory pakai jam berbeda), 422 jika konflik terdeteksi
-        $this->assertTrue(
-            in_array($response->status(), [200, 422]),
-            'Expected 200 (no conflict) or 422 (conflict detected)'
-        );
+        // Konflik guru harus terdeteksi → HTTP 422
+        $response->assertStatus(422)
+            ->assertJsonFragment(['success' => false]);
+    }
+
+    /** @test */
+    public function konflik_ruang_return_422(): void
+    {
+        $room     = \App\Models\Room::factory()->create();
+        $original = $this->makeOriginalSession(['status' => 'IZIN_RESCHEDULE']);
+        $admin    = $this->adminUser();
+
+        // Buat Part 1 terlebih dahulu agar request Part 2 valid
+        ClassSession::factory()->create([
+            'origin_session_id' => $original->id,
+            'split_part'        => 1,
+            'teacher_id'        => $original->teacher_id,
+            'student_id'        => $original->student_id,
+            'enrollment_id'     => $original->enrollment_id,
+            'session_date'      => '2026-06-05',
+            'honor_code'        => 'H_SPLIT',
+            'honor_amount'      => 21250,
+        ]);
+
+        // Buat sesi blocking yang memakai ruangan yang sama di jam yang sama
+        // end_time harus lebih dari start_time sesi baru agar overlap terdeteksi
+        ClassSession::factory()->create([
+            'room_id'      => $room->id,
+            'session_date' => '2026-06-12',
+            'start_time'   => '15:00:00',
+            'end_time'     => '15:15:00',
+            'status'       => 'SCHEDULED',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->postJson(route('absensi.split', [$original->id, 2]), [
+                'replacement_date'    => '2026-06-12',
+                'replacement_time'    => '15:00',
+                'replacement_room_id' => $room->id,
+            ]);
+
+        // Konflik ruang harus terdeteksi → HTTP 422
+        $response->assertStatus(422)
+            ->assertJsonFragment(['success' => false]);
     }
 }
