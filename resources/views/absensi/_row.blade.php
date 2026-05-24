@@ -68,7 +68,7 @@
         saveSplitPart1() {
             if (!this.rescheduleDate || !this.rescheduleTime) return;
             this.errorMsg = '';
-            fetch('/absensi/{{ $session->id }}/split/1', {
+            fetch('{{ route('absensi.split', ['classSession' => $session->id, 'part' => 1]) }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -98,7 +98,7 @@
         saveSplitPart2() {
             if (!this.part2Date || !this.part2Time) return;
             this.part2Error = '';
-            fetch('/absensi/{{ $session->origin_session_id }}/split/2', {
+            fetch('{{ $session->origin_session_id ? route('absensi.split', ['classSession' => $session->origin_session_id, 'part' => 2]) : '' }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
