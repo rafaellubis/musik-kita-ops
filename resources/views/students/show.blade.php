@@ -941,6 +941,7 @@
                             <tr class="border-b border-gray-100">
                                 <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Tanggal</th>
                                 <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Jam</th>
+                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Label</th>
                                 <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Ruang</th>
                                 <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Guru</th>
                                 <th class="pb-2 text-center text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Status</th>
@@ -956,6 +957,18 @@
                                 <td class="py-2 text-gray-700">{{ \Carbon\Carbon::parse($sess->session_date)->format('D, d M Y') }}</td>
                                 <td class="py-2 font-mono text-gray-500">
                                     {{ \Carbon\Carbon::parse($sess->start_time)->format('H:i') }}–{{ \Carbon\Carbon::parse($sess->end_time)->format('H:i') }}
+                                </td>
+                                <td class="py-2">
+                                    @php $label = $sess->getSessionLabel(); @endphp
+                                    @if($label !== '—')
+                                        <span class="text-[10px] font-medium
+                                            {{ $sess->origin_session_id ? 'text-blue-500' : '' }}"
+                                            @if(!$sess->origin_session_id) style="color:#D4A853" @endif>
+                                            {{ $label }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400">—</span>
+                                    @endif
                                 </td>
                                 <td class="py-2 text-gray-500">{{ $sess->room?->code ?? '—' }}</td>
                                 <td class="py-2 text-gray-700">

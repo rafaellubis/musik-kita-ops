@@ -217,6 +217,7 @@
                             <th class="px-2 py-1.5 text-left text-xs uppercase font-medium">Tanggal</th>
                             <th class="px-2 py-1.5 text-left text-xs uppercase font-medium">Jam</th>
                             <th class="px-2 py-1.5 text-left text-xs uppercase font-medium">Murid</th>
+                            <th class="px-2 py-1.5 text-left text-xs uppercase font-medium">Label Sesi</th>
                             <th class="px-2 py-1.5 text-left text-xs uppercase font-medium">Guru</th>
                             <th class="px-2 py-1.5 text-left text-xs uppercase font-medium">Ruang</th>
                             <th class="px-2 py-1.5 text-center text-xs uppercase font-medium">Status</th>
@@ -245,6 +246,17 @@
                                     <span class="text-xs text-gray-500 font-mono ml-1">
                                         {{ $s->student->student_code ?? '' }}
                                     </span>
+                                </td>
+                                <td class="px-2 py-1.5">
+                                    @php $label = $s->getSessionLabel(); @endphp
+                                    @if($label !== '—')
+                                        <span class="px-1.5 py-0.5 rounded text-[11px] font-medium
+                                            {{ $s->origin_session_id ? 'bg-blue-50 text-blue-600' : 'bg-yellow-50 text-yellow-700' }}">
+                                            {{ $label }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400 text-xs">—</span>
+                                    @endif
                                 </td>
                                 <td class="px-2 py-1.5 text-sm">
                                     @if($s->substituteTeacher)

@@ -83,6 +83,12 @@
         class="text-gray-500"
         @endif>
         {{ $session->student->full_name }}
+        @php $label = $session->getSessionLabel(); @endphp
+        @if($label !== '—')
+            <div class="text-[11px] mt-0.5 {{ $session->origin_session_id ? 'text-blue-500' : 'text-yellow-600' }}">
+                {{ $label }}
+            </div>
+        @endif
     </td>
 
     {{-- Guru --}}
