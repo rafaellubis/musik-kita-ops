@@ -22,8 +22,19 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('class_sessions', function (Blueprint $table) {
-            $table->dropForeign(['origin_session_id']);
+        // Check if FK exists before dropping
+        $fkExists = \DB::selectOne("
+            SELECT CONSTRAINT_NAME
+            FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+            WHERE TABLE_NAME = 'class_sessions'
+              AND COLUMN_NAME = 'origin_session_id'
+              AND REFERENCED_TABLE_NAME IS NOT NULL
+        ") !== null;
+
+        Schema::table('class_sessions', function (Blueprint $table) use ($fkExists) {
+            if ($fkExists) {
+                $table->dropForeign(['origin_session_id']);
+            }
             $table->dropColumn(['session_sequence', 'origin_session_id']);
         });
     }
