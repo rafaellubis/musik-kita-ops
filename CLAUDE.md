@@ -497,6 +497,7 @@ H_PENG    | Diajar guru pengganti           | H_REG -> ke guru pengganti
 H_KIDS    | Sesi Kids Class                 | murid_terdaftar x Rp 42.500
 H_UJIAN   | Pengawas ujian grade            | Rp 250.000 flat/ujian
 H_IZIN    | IZIN_RESCHEDULE sesi original (guru tidak datang)| Rp 0 — honor dibayar via sesi pengganti
+H_SPLIT   | Sesi split reschedule (bagian 1 atau 2)         | package.price_per_month × 0.5 / 4 / 2
 (none)    | Murid sedang cuti               | Rp 0 (sesi tidak ter-generate)
 
 Cut-off honor: H-2 sebelum akhir bulan [REVISI v1.1]
