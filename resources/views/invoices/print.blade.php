@@ -172,15 +172,27 @@
 
         /* FOOTER */
         .footer {
-            padding: 7px 28px;
+            padding: 8px 28px 10px;
             border-top: 1px solid #F0E0C0;
             background: #FBF5EC;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             font-size: 7pt;
             color: #9B5E00;
             margin-top: 16px;
+        }
+        .footer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .footer-notes {
+            border-top: 1px dashed #E8C87A;
+            padding-top: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 6.5pt;
+            color: #B08040;
         }
 
         /* TOOLBAR */
@@ -339,8 +351,14 @@
     </div>
 
     <div class="footer">
-        <span>Pembayaran: <strong>CASH</strong> di studio / <strong>TRANSFER</strong> (hubungi admin)</span>
-        <span>Dicetak {{ now()->format('d M Y H:i') }}</span>
+        <div class="footer-row">
+            <span>Pembayaran: <strong>CASH</strong> di studio / <strong>TRANSFER</strong> (hubungi admin)</span>
+            <span>Dicetak {{ now()->format('d M Y H:i') }}</span>
+        </div>
+        <div class="footer-notes">
+            <span>&#9432; Invoice ini adalah invoice resmi yang dikirim secara elektronik, tidak membutuhkan stempel atau tanda tangan.</span>
+            <span>&#9432; Invoice yang sudah terbit tidak bisa diubah atau didiskon.</span>
+        </div>
     </div>
 
 </div>
