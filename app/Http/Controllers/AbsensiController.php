@@ -220,6 +220,14 @@ class AbsensiController extends Controller
             throw new \InvalidArgumentException('Nilai part tidak valid.');
         }
 
+        // Guard: sesi yang mau di-split tidak boleh sudah merupakan bagian split (split_part = 1 atau 2).
+        // Nested split tidak diizinkan — hanya sesi original yang bisa dibagi.
+        if ($classSession->split_part !== null) {
+            throw new \InvalidArgumentException(
+                'Sesi ini adalah bagian dari split yang sudah ada dan tidak bisa dibagi lagi.'
+            );
+        }
+
         // Guard: sesi ini tidak boleh sudah punya pengganti reguler (bukan split)
         // Jika ada, harus gunakan alur reschedule biasa, bukan split.
         $regularReplacementExists = ClassSession::where('origin_session_id', $classSession->id)

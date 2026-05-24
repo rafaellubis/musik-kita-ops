@@ -407,4 +407,28 @@ class SplitRescheduleTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonFragment(['success' => false]);
     }
+
+    /** @test */
+    public function gagal_split_sesi_yang_sudah_merupakan_bagian_split(): void
+    {
+        // Part 1 dari split sebelumnya — tidak boleh di-split lagi
+        $original = $this->makeOriginalSession(['status' => ClassSession::STATUS_IZIN_RESCHEDULE]);
+        $part1 = ClassSession::factory()->create([
+            'origin_session_id' => $original->id,
+            'split_part'        => 1,
+            'status'            => ClassSession::STATUS_SCHEDULED,
+            'teacher_id'        => $original->teacher_id,
+            'student_id'        => $original->student_id,
+            'enrollment_id'     => $original->enrollment_id,
+        ]);
+
+        $response = $this->actingAs($this->adminUser())
+            ->postJson(route('absensi.split', [$part1->id, 1]), [
+                'replacement_date' => '2026-07-01',
+                'replacement_time' => '10:00',
+            ]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('bagian dari split', $response->json('message'));
+    }
 }

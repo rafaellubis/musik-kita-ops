@@ -332,7 +332,8 @@
                         @endforeach
                     </select>
 
-                    {{-- Toggle: Bagi menjadi 2 bagian --}}
+                    {{-- Toggle: Bagi menjadi 2 bagian — hanya untuk sesi original (bukan hasil split) --}}
+                    @if($session->split_part === null)
                     <div class="flex items-center gap-2 mb-3">
                         <button type="button"
                             @click="splitMode = !splitMode"
@@ -344,10 +345,11 @@
                         <span class="text-xs text-gray-600">Bagi menjadi 2 bagian</span>
                         <span x-show="splitMode" class="text-xs text-amber-600">(15 menit + 15 menit)</span>
                     </div>
+                    @endif
 
                     <div class="flex gap-2">
                         <button type="button"
-                            @click="splitMode ? saveSplitPart1() : saveReschedule()"
+                            @click="{{ $session->split_part === null ? 'splitMode ? saveSplitPart1() : saveReschedule()' : 'saveReschedule()' }}"
                             :disabled="!rescheduleDate || !rescheduleTime"
                             class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded btn-mk-primary">
                             <span x-text="splitMode ? 'Jadwalkan Bagian 1' : 'Buat Sesi Pengganti'"></span>
