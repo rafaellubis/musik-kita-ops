@@ -147,22 +147,21 @@
         class="text-gray-500"
         @endif>
         {{ $session->student->full_name }}
-        @php $label = $session->getSessionLabel(); @endphp
-        @if($label !== '—')
-            <div class="text-[11px] mt-0.5 {{ $session->origin_session_id ? 'text-blue-500' : 'text-yellow-600' }}">
-                {{ $label }}
+        @php
+            $label       = $session->getSessionLabel();
+            $instrumen   = $session->enrollment?->package?->instrument?->name;
+            $durasiMenit = $session->enrollment?->package?->duration_min;
+            $parts       = array_filter([
+                $label !== '—' ? $label : null,
+                $instrumen,
+                $durasiMenit ? $durasiMenit . ' mnt' : null,
+            ]);
+        @endphp
+        @if(count($parts))
+            <div class="text-[11px] mt-0.5 {{ $session->origin_session_id ? 'text-blue-500' : 'text-gray-400' }}">
+                {{ implode(' · ', $parts) }}
             </div>
         @endif
-    </td>
-
-    {{-- Durasi --}}
-    <td class="px-3 py-2.5 text-xs text-gray-500 text-center">
-        {{ $session->enrollment?->package?->duration_min ? $session->enrollment->package->duration_min . ' mnt' : '—' }}
-    </td>
-
-    {{-- Instrumen --}}
-    <td class="px-3 py-2.5 text-xs text-gray-500 text-center">
-        {{ $session->enrollment?->package?->instrument?->name ?? '—' }}
     </td>
 
     {{-- Guru --}}

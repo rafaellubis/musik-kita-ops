@@ -70,13 +70,24 @@ class AbsensiController extends Controller
             })
             ->flip(); // Dijadikan lookup set: isset($part2ExistsForOriginIds[$id])
 
+        // Sesi asli yang sudah punya replacement reguler — tombol "ubah" disembunyikan
+        // agar admin tidak bisa membuat replacement kedua lewat UI.
+        $sessionIdsWithReplacement = ClassSession::whereIn(
+                'origin_session_id',
+                $sessions->pluck('id')
+            )
+            ->whereNull('split_part')
+            ->pluck('origin_session_id')
+            ->flip(); // lookup set: isset($sessionIdsWithReplacement[$id])
+
         return view('absensi.index', [
-            'sessions'                => $sessions,
-            'teachers'                => $teachers,
-            'rooms'                   => $rooms,
-            'tanggal'                 => $tanggal,
-            'tanggalObj'              => Carbon::parse($tanggal),
-            'part2ExistsForOriginIds' => $part2ExistsForOriginIds,
+            'sessions'                  => $sessions,
+            'teachers'                  => $teachers,
+            'rooms'                     => $rooms,
+            'tanggal'                   => $tanggal,
+            'tanggalObj'                => Carbon::parse($tanggal),
+            'part2ExistsForOriginIds'   => $part2ExistsForOriginIds,
+            'sessionIdsWithReplacement' => $sessionIdsWithReplacement,
         ]);
     }
 
@@ -132,6 +143,18 @@ class AbsensiController extends Controller
                 ]);
 
                 if ($request->status === ClassSession::STATUS_IZIN_RESCHEDULE) {
+                    // Guard: sesi asli tidak boleh punya lebih dari satu pengganti reguler.
+                    // UI sudah menyembunyikan tombol "ubah" untuk kasus ini, guard ini
+                    // sebagai perlindungan tambahan jika ada request langsung ke API.
+                    $hasReplacement = ClassSession::where('origin_session_id', $classSession->id)
+                        ->whereNull('split_part')
+                        ->exists();
+                    if ($hasReplacement) {
+                        throw new \InvalidArgumentException(
+                            'Sesi ini sudah memiliki sesi pengganti dan tidak bisa di-reschedule ulang.'
+                        );
+                    }
+
                     $this->rescheduleService->createReplacement(
                         $classSession,
                         $request->replacement_date,
