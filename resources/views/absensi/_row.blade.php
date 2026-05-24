@@ -156,17 +156,17 @@
     </td>
 
     {{-- Durasi --}}
-    <td class="px-3 py-2.5 text-xs text-gray-500">
+    <td class="px-3 py-2.5 text-xs text-gray-500 text-center">
         {{ $session->enrollment?->package?->duration_min ? $session->enrollment->package->duration_min . ' mnt' : '—' }}
     </td>
 
     {{-- Instrumen --}}
-    <td class="px-3 py-2.5 text-xs text-gray-500">
+    <td class="px-3 py-2.5 text-xs text-gray-500 text-center">
         {{ $session->enrollment?->package?->instrument?->name ?? '—' }}
     </td>
 
     {{-- Guru --}}
-    <td class="px-3 py-2.5 text-xs text-gray-500">{{ $session->teacher->name }}</td>
+    <td class="px-3 py-2.5 text-xs text-gray-500 text-center">{{ $session->teacher->name }}</td>
 
     {{-- Ruang --}}
     <td class="px-3 py-2.5 text-xs text-gray-500">{{ $session->room?->code ?? '—' }}</td>
@@ -215,10 +215,13 @@
                     @click="save('CANCELLED')"
                     :disabled="loading"
                     class="text-red-500 hover:text-red-700 text-xs underline">batalkan</button>
-                {{-- Status lain (termasuk CANCELLED): bisa di-ubah ulang ke SCHEDULED --}}
+                {{-- Status lain (termasuk CANCELLED): bisa di-ubah ulang ke SCHEDULED.
+                     Disembunyikan jika sesi sudah punya replacement — tidak boleh reschedule ulang. --}}
+                @if(!isset($sessionIdsWithReplacement[$session->id]))
                 <button x-show="status !== 'HADIR' && status !== 'HADIR_TERLAMBAT'"
                     @click="status = 'SCHEDULED'; errorMsg = ''"
                     class="text-gray-400 hover:text-gray-600 text-xs underline">ubah</button>
+                @endif
             </div>
 
             {{-- Tombol aksi (status belum diinput) --}}
