@@ -90,4 +90,48 @@ class SessionLabelTest extends TestCase
 
         $this->assertSame('Sesi ke-4 Bulan Mei 2026', $session->getSessionLabel());
     }
+
+    /** Sesi reschedule mewarisi session_sequence dan origin_session_id dari sesi asli */
+    public function test_replacement_dari_reschedule_mewarisi_sequence(): void
+    {
+        $teacher = Teacher::factory()->create(['is_active' => true]);
+        $student = Student::factory()->create(['status' => 'Aktif']);
+        $package = Package::factory()->create([
+            'class_type'      => 'REGULER',
+            'duration_min'    => 30,
+            'price_per_month' => 340000,
+            'is_active'       => true,
+        ]);
+        $enrollment = Enrollment::factory()->create([
+            'student_id' => $student->id,
+            'package_id' => $package->id,
+            'teacher_id' => $teacher->id,
+            'status'     => 'ACTIVE',
+        ]);
+
+        // Sesi asli sudah IZIN_RESCHEDULE dengan sequence=3
+        $original = ClassSession::create([
+            'enrollment_id'    => $enrollment->id,
+            'student_id'       => $student->id,
+            'teacher_id'       => $teacher->id,
+            'session_date'     => '2026-05-18',
+            'start_time'       => '14:00:00',
+            'end_time'         => '14:30:00',
+            'status'           => ClassSession::STATUS_IZIN_RESCHEDULE,
+            'session_sequence' => 3,
+        ]);
+
+        $service     = app(\App\Services\RescheduleService::class);
+        $replacement = $service->createReplacement($original, '2026-06-10', '14:00', null);
+
+        $this->assertSame(3, $replacement->session_sequence);
+        $this->assertSame($original->id, $replacement->origin_session_id);
+
+        // Label harus menunjuk ke sesi asal
+        $replacement->load('originSession');
+        $this->assertSame(
+            'Reschedule dari Sesi ke-3 Bulan Mei 2026',
+            $replacement->getSessionLabel()
+        );
+    }
 }
