@@ -164,8 +164,10 @@ class AbsensiController extends Controller
         ClassSession $classSession,
         int $part
     ): JsonResponse {
+        $newSession = null;
+
         try {
-            DB::transaction(function () use ($request, $classSession, $part) {
+            DB::transaction(function () use ($request, $classSession, $part, &$newSession) {
                 // Guard: validasi status dan keberadaan Part sebelum memproses
                 $this->validateSplitGuards($classSession, $part);
 
@@ -180,7 +182,7 @@ class AbsensiController extends Controller
                     $classSession->refresh();
                 }
 
-                $this->rescheduleService->createSplitPart(
+                $newSession = $this->rescheduleService->createSplitPart(
                     $classSession,
                     $request->replacement_date,
                     $request->replacement_time,
@@ -196,9 +198,12 @@ class AbsensiController extends Controller
         }
 
         return response()->json([
-            'success' => true,
-            'part'    => $part,
-            'message' => "Bagian {$part} berhasil dijadwalkan.",
+            'success'       => true,
+            'part'          => $part,
+            'message'       => "Bagian {$part} berhasil dijadwalkan.",
+            'session_id'    => $newSession->id,
+            'session_date'  => $newSession->session_date,
+            'session_label' => $newSession->getSessionLabel(),
         ]);
     }
 
@@ -210,6 +215,22 @@ class AbsensiController extends Controller
      */
     private function validateSplitGuards(ClassSession $classSession, int $part): void
     {
+        // Guard: nilai part harus 1 atau 2
+        if (!in_array($part, [1, 2], true)) {
+            throw new \InvalidArgumentException('Nilai part tidak valid.');
+        }
+
+        // Guard: sesi ini tidak boleh sudah punya pengganti reguler (bukan split)
+        // Jika ada, harus gunakan alur reschedule biasa, bukan split.
+        $regularReplacementExists = ClassSession::where('origin_session_id', $classSession->id)
+            ->whereNull('split_part')
+            ->exists();
+        if ($regularReplacementExists) {
+            throw new \InvalidArgumentException(
+                'Sesi ini sudah memiliki sesi pengganti reguler. Gunakan alur reschedule biasa.'
+            );
+        }
+
         $status = $classSession->status;
 
         if ($part === 1) {

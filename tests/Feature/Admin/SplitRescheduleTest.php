@@ -169,7 +169,8 @@ class SplitRescheduleTest extends TestCase
             ]);
 
         $response->assertOk()
-            ->assertJsonFragment(['success' => true, 'part' => 1]);
+            ->assertJsonFragment(['success' => true, 'part' => 1])
+            ->assertJsonStructure(['session_id', 'session_date', 'session_label']);
 
         // Sesi asli harus berubah jadi IZIN_RESCHEDULE
         $original->refresh();
@@ -210,7 +211,8 @@ class SplitRescheduleTest extends TestCase
             ]);
 
         $response->assertOk()
-            ->assertJsonFragment(['success' => true, 'part' => 2]);
+            ->assertJsonFragment(['success' => true, 'part' => 2])
+            ->assertJsonStructure(['session_id', 'session_date', 'session_label']);
 
         // Part 2 harus terbuat dengan honor_code H_SPLIT
         $part2 = ClassSession::where('origin_session_id', $original->id)
@@ -336,6 +338,31 @@ class SplitRescheduleTest extends TestCase
             ]);
 
         // Konflik guru harus terdeteksi → HTTP 422
+        $response->assertStatus(422)
+            ->assertJsonFragment(['success' => false]);
+    }
+
+    /** @test */
+    public function gagal_jika_sudah_ada_pengganti_reguler(): void
+    {
+        $original = $this->makeOriginalSession(['status' => 'IZIN_RESCHEDULE']);
+        $admin    = $this->adminUser();
+
+        // Buat sesi pengganti reguler (bukan split — split_part null)
+        ClassSession::factory()->create([
+            'origin_session_id' => $original->id,
+            'split_part'        => null,
+            'teacher_id'        => $original->teacher_id,
+            'student_id'        => $original->student_id,
+            'enrollment_id'     => $original->enrollment_id,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->postJson(route('absensi.split', [$original->id, 1]), [
+                'replacement_date' => '2026-06-10',
+                'replacement_time' => '14:00',
+            ]);
+
         $response->assertStatus(422)
             ->assertJsonFragment(['success' => false]);
     }
