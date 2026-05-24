@@ -93,4 +93,61 @@ class SplitRescheduleTest extends TestCase
             $part2->getSessionLabel()
         );
     }
+
+    /** @test */
+    public function createSplitPart_membuat_sesi_dengan_durasi_setengah(): void
+    {
+        $original = $this->makeOriginalSession();
+        // Paksa original ke IZIN_RESCHEDULE (bypass AttendanceService)
+        $original->update(['status' => ClassSession::STATUS_IZIN_RESCHEDULE]);
+
+        $service = app(\App\Services\RescheduleService::class);
+        $part1   = $service->createSplitPart($original, '2026-06-05', '14:00', null, 1);
+
+        $this->assertEquals(1, $part1->split_part);
+        $this->assertEquals($original->id, $part1->origin_session_id);
+        $this->assertEquals('14:00:00', $part1->start_time);
+        $this->assertEquals('14:15:00', $part1->end_time); // 30 / 2 = 15 menit
+        $this->assertEquals('H_SPLIT', $part1->honor_code);
+        $this->assertEquals(ClassSession::STATUS_SCHEDULED, $part1->status);
+    }
+
+    /** @test */
+    public function createSplitPart_honor_setengah_dari_normal(): void
+    {
+        $original = $this->makeOriginalSession(); // package price_per_month = 340000
+        $original->update(['status' => ClassSession::STATUS_IZIN_RESCHEDULE]);
+
+        $service = app(\App\Services\RescheduleService::class);
+        $part1   = $service->createSplitPart($original, '2026-06-05', '14:00', null, 1);
+        $part2   = $service->createSplitPart($original, '2026-06-12', '14:00', null, 2);
+
+        // Honor normal = 340000 * 0.5 / 4 = 42500
+        // Honor split  = 42500 / 2 = 21250
+        $this->assertEquals(21250, $part1->honor_amount);
+        $this->assertEquals(21250, $part2->honor_amount);
+        $this->assertEquals(42500, $part1->honor_amount + $part2->honor_amount);
+    }
+
+    /** @test */
+    public function createSplitPart_konflik_guru_throw_exception(): void
+    {
+        $original = $this->makeOriginalSession();
+        $original->update(['status' => ClassSession::STATUS_IZIN_RESCHEDULE]);
+
+        // Sesi lain dengan guru yang sama, waktu overlap
+        ClassSession::factory()->create([
+            'teacher_id'   => $original->teacher_id,
+            'session_date' => '2026-06-05',
+            'start_time'   => '14:00:00',
+            'end_time'     => '14:15:00',
+            'status'       => ClassSession::STATUS_SCHEDULED,
+        ]);
+
+        $service = app(\App\Services\RescheduleService::class);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/Guru/');
+        $service->createSplitPart($original, '2026-06-05', '14:00', null, 1);
+    }
 }
