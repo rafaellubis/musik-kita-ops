@@ -108,6 +108,19 @@ class AbsensiController extends Controller
             ], 403);
         }
 
+        // Guard: sesi yang sudah HADIR/HADIR_TERLAMBAT hanya bisa di-CANCELLED.
+        // Koreksi status lain tidak diizinkan — batalkan dulu, baru input ulang.
+        $statusSudahHadir = in_array($classSession->status, [
+            ClassSession::STATUS_HADIR,
+            ClassSession::STATUS_HADIR_TERLAMBAT,
+        ], true);
+        if ($statusSudahHadir && $request->status !== ClassSession::STATUS_CANCELLED) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sesi yang sudah HADIR hanya bisa dibatalkan (CANCELLED). Batalkan dulu untuk mengganti status.',
+            ], 422);
+        }
+
         // Guard: sesi split (bagian 1 atau 2) tidak bisa di-reschedule ulang.
         // Murid hanya boleh izin pada sesi original — split adalah sesi pengganti.
         if ($classSession->split_part !== null

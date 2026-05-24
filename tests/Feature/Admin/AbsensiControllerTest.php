@@ -164,15 +164,44 @@ class AbsensiControllerTest extends TestCase
         $this->assertDatabaseHas('class_sessions', ['id' => $session->id, 'status' => 'LIBUR']);
     }
 
-    public function test_edit_ulang_status_yang_sudah_diinput(): void
+    public function test_status_hadir_tidak_bisa_diubah_ke_status_lain(): void
     {
+        // Sesi yang sudah HADIR tidak boleh diubah ke status lain (misal HANGUS).
+        // Harus di-CANCELLED dulu, baru bisa diinput ulang.
         $session = $this->createTestSession(['status' => 'HADIR']);
 
         $response = $this->actingAs($this->admin)
             ->patchJson(route('absensi.update', $session), ['status' => 'HANGUS']);
 
-        $response->assertOk()->assertJson(['success' => true, 'status' => 'HANGUS']);
-        $this->assertDatabaseHas('class_sessions', ['id' => $session->id, 'status' => 'HANGUS']);
+        $response->assertStatus(422)->assertJson(['success' => false]);
+        $this->assertDatabaseHas('class_sessions', ['id' => $session->id, 'status' => 'HADIR']);
+    }
+
+    public function test_status_hadir_bisa_di_cancelled(): void
+    {
+        $session = $this->createTestSession(['status' => 'HADIR', 'honor_amount' => 42500]);
+
+        $response = $this->actingAs($this->admin)
+            ->patchJson(route('absensi.update', $session), ['status' => 'CANCELLED']);
+
+        $response->assertOk()->assertJson(['success' => true, 'status' => 'CANCELLED']);
+        $this->assertDatabaseHas('class_sessions', [
+            'id'           => $session->id,
+            'status'       => 'CANCELLED',
+            'honor_amount' => 0,
+            'honor_code'   => null,
+        ]);
+    }
+
+    public function test_status_hadir_terlambat_tidak_bisa_diubah_ke_status_lain(): void
+    {
+        $session = $this->createTestSession(['status' => 'HADIR_TERLAMBAT', 'late_minutes' => 10]);
+
+        $response = $this->actingAs($this->admin)
+            ->patchJson(route('absensi.update', $session), ['status' => 'IZIN_VIDEO']);
+
+        $response->assertStatus(422)->assertJson(['success' => false]);
+        $this->assertDatabaseHas('class_sessions', ['id' => $session->id, 'status' => 'HADIR_TERLAMBAT']);
     }
 
     public function test_status_tidak_valid_ditolak(): void

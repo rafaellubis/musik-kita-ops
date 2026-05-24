@@ -37,6 +37,7 @@ class UpdateAbsensiRequest extends FormRequest
                     ClassSession::STATUS_IZIN_RESCHEDULE,
                     ClassSession::STATUS_IZIN_VIDEO,
                     ClassSession::STATUS_DIGANTI,
+                    ClassSession::STATUS_CANCELLED,
                 ]),
             ],
             // Menit terlambat — wajib jika status HADIR_TERLAMBAT

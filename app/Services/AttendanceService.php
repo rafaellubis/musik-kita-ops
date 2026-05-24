@@ -45,6 +45,7 @@ class AttendanceService
         'HANGUS',
         'LIBUR',
         'DIGANTI',
+        'CANCELLED',
     ];
 
     /**
@@ -158,6 +159,11 @@ class AttendanceService
 
         // SCHEDULED: belum ada absensi, jangan kalkulasi.
         if ($status === 'SCHEDULED') {
+            return ['code' => null, 'amount' => 0];
+        }
+
+        // CANCELLED: sesi dibatalkan setelah sempat HADIR — honor hangus (tidak dibayar).
+        if ($status === 'CANCELLED') {
             return ['code' => null, 'amount' => 0];
         }
 
