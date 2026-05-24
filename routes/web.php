@@ -168,6 +168,13 @@ Route::middleware('auth')->group(function () {
             [AbsensiController::class, 'update']
         )->name('absensi.update');
 
+        // ===== M04: Split Reschedule — buat Part 1 dan Part 2 sesi pengganti =====
+        // POST /absensi/{classSession}/split/1 atau /split/2
+        // part parameter hanya terima nilai 1 atau 2 via where() constraint
+        Route::post('/absensi/{classSession}/split/{part}',
+            [AbsensiController::class, 'storeSplitPart']
+        )->name('absensi.split')->where('part', '[12]');
+
         // ===== M05: Catat Pembayaran =====
         // Void payment di-protect role:Owner di group sensitif di bawah.
         Route::post('invoices/{invoice}/payments',
