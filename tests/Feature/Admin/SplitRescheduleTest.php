@@ -409,6 +409,37 @@ class SplitRescheduleTest extends TestCase
     }
 
     /** @test */
+    public function absensi_hadir_pada_sesi_split_tetap_h_split_bukan_h_reg(): void
+    {
+        // Saat admin input HADIR pada sesi split Part 1,
+        // AttendanceService harus mempertahankan H_SPLIT (bukan override ke H_REG).
+        $original = $this->makeOriginalSession(['status' => ClassSession::STATUS_IZIN_RESCHEDULE]);
+        $part1    = ClassSession::factory()->create([
+            'origin_session_id' => $original->id,
+            'split_part'        => 1,
+            'status'            => ClassSession::STATUS_SCHEDULED,
+            'teacher_id'        => $original->teacher_id,
+            'student_id'        => $original->student_id,
+            'enrollment_id'     => $original->enrollment_id,
+            'honor_code'        => 'H_SPLIT',
+            'honor_amount'      => 21250,
+        ]);
+
+        $admin    = $this->adminUser();
+        $response = $this->actingAs($admin)
+            ->patch(route('absensi.update', $part1->id), [
+                'status' => 'HADIR',
+            ]);
+
+        $response->assertOk()
+            ->assertJsonFragment(['success' => true]);
+
+        $part1->refresh();
+        $this->assertEquals('H_SPLIT', $part1->honor_code);
+        $this->assertEquals(21250, $part1->honor_amount);
+    }
+
+    /** @test */
     public function gagal_split_sesi_yang_sudah_merupakan_bagian_split(): void
     {
         // Part 1 dari split sebelumnya — tidak boleh di-split lagi

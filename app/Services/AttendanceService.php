@@ -161,6 +161,16 @@ class AttendanceService
             return ['code' => null, 'amount' => 0];
         }
 
+        // Split reschedule (H_SPLIT): honor = setengah honor normal per sesi.
+        // Dicek sebelum kalkulasi reguler agar tidak di-override.
+        if ($session->split_part !== null) {
+            $package = $session->enrollment?->package;
+            $amount  = $package
+                ? (int) round($package->price_per_month * 0.5 / 4 / 2)
+                : 0;
+            return ['code' => 'H_SPLIT', 'amount' => $amount];
+        }
+
         // Resolve paket dari enrollment
         $package = $session->enrollment?->package;
 
