@@ -41,7 +41,7 @@ class AbsensiController extends Controller
             ? Carbon::parse($request->date)->toDateString()
             : today()->toDateString();
 
-        $sessions = ClassSession::with(['student', 'teacher', 'substituteTeacher', 'room'])
+        $sessions = ClassSession::with(['student', 'teacher', 'substituteTeacher', 'room', 'originSession'])
             ->whereDate('session_date', $tanggal)
             ->orderBy('start_time')
             ->get();

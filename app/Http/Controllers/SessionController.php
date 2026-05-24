@@ -28,7 +28,7 @@ class SessionController extends Controller
         $month = (int) $request->get('month', now()->month);
 
         $query = ClassSession::query()
-            ->with(['student', 'teacher', 'substituteTeacher', 'room'])
+            ->with(['student', 'teacher', 'substituteTeacher', 'room', 'originSession'])
             ->inMonth($year, $month);
 
         if ($request->filled('teacher_id')) {
