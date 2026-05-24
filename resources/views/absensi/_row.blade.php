@@ -147,7 +147,16 @@
         class="text-gray-500"
         @endif>
         {{ $session->student->full_name }}
-        @php $label = $session->getSessionLabel(); @endphp
+        @php
+            $label       = $session->getSessionLabel();
+            $instrumen   = $session->enrollment?->package?->instrument?->name;
+            $durasiMenit = $session->enrollment?->package?->duration_min;
+        @endphp
+        @if($instrumen || $durasiMenit)
+            <div class="text-[11px] mt-0.5 text-gray-400">
+                {{ $instrumen }}{{ $instrumen && $durasiMenit ? ' · ' : '' }}{{ $durasiMenit ? $durasiMenit . ' mnt' : '' }}
+            </div>
+        @endif
         @if($label !== '—')
             <div class="text-[11px] mt-0.5 {{ $session->origin_session_id ? 'text-blue-500' : 'text-yellow-600' }}">
                 {{ $label }}
@@ -224,14 +233,12 @@
                     class="border border-red-300 text-red-600 hover:bg-red-50 rounded px-3 py-1.5 text-xs">
                     HANGUS
                 </button>
-                {{-- IZIN → buka mini-modal. Disembunyikan jika sesi sudah punya pengganti
-                     (mencegah replacement ganda — guard server-side juga ada di controller) --}}
-                @if(!isset($sessionIdsWithReplacement[$session->id]))
+                {{-- IZIN → buka mini-modal. Jika sudah ada pengganti, pengganti lama di-cancel
+                     oleh RescheduleService sebelum yang baru dibuat. --}}
                 <button @click="showModal = 'reschedule'"
                     class="border border-yellow-300 text-yellow-700 hover:bg-yellow-50 rounded px-3 py-1.5 text-xs">
                     IZIN
                 </button>
-                @endif
                 <button @click="save('IZIN_VIDEO')"
                     class="border border-blue-300 text-blue-600 hover:bg-blue-50 rounded px-3 py-1.5 text-xs">
                     VIDEO

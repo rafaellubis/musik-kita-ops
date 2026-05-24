@@ -44,7 +44,7 @@ class AbsensiController extends Controller
 
         $sessions = ClassSession::with([
                 'student', 'teacher', 'substituteTeacher', 'room',
-                'originSession', 'enrollment.package',
+                'originSession', 'enrollment.package.instrument',
             ])
             ->whereDate('session_date', $tanggal)
             ->orderBy('start_time')
@@ -70,24 +70,13 @@ class AbsensiController extends Controller
             })
             ->flip(); // Dijadikan lookup set: isset($part2ExistsForOriginIds[$id])
 
-        // ID sesi yang sudah punya sesi pengganti reguler (non-split) — dipakai view
-        // untuk menyembunyikan tombol IZIN agar admin tidak bisa buat replacement kedua.
-        $sessionIdsWithReplacement = ClassSession::whereIn(
-                'origin_session_id',
-                $sessions->pluck('id')
-            )
-            ->whereNull('split_part')
-            ->pluck('origin_session_id')
-            ->flip(); // lookup set: isset($sessionIdsWithReplacement[$id])
-
         return view('absensi.index', [
-            'sessions'                   => $sessions,
-            'teachers'                   => $teachers,
-            'rooms'                      => $rooms,
-            'tanggal'                    => $tanggal,
-            'tanggalObj'                 => Carbon::parse($tanggal),
-            'part2ExistsForOriginIds'    => $part2ExistsForOriginIds,
-            'sessionIdsWithReplacement'  => $sessionIdsWithReplacement,
+            'sessions'                => $sessions,
+            'teachers'                => $teachers,
+            'rooms'                   => $rooms,
+            'tanggal'                 => $tanggal,
+            'tanggalObj'              => Carbon::parse($tanggal),
+            'part2ExistsForOriginIds' => $part2ExistsForOriginIds,
         ]);
     }
 
@@ -143,16 +132,6 @@ class AbsensiController extends Controller
                 ]);
 
                 if ($request->status === ClassSession::STATUS_IZIN_RESCHEDULE) {
-                    // Guard: sesi asli tidak boleh punya lebih dari satu sesi pengganti reguler
-                    $hasReplacement = ClassSession::where('origin_session_id', $classSession->id)
-                        ->whereNull('split_part')
-                        ->exists();
-                    if ($hasReplacement) {
-                        throw new \InvalidArgumentException(
-                            'Sesi ini sudah memiliki sesi pengganti. Jadwal ulang sesi pengganti yang ada jika perlu diubah.'
-                        );
-                    }
-
                     $this->rescheduleService->createReplacement(
                         $classSession,
                         $request->replacement_date,
