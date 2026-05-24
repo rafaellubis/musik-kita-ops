@@ -215,11 +215,14 @@
                     class="border border-red-300 text-red-600 hover:bg-red-50 rounded px-3 py-1.5 text-xs">
                     HANGUS
                 </button>
-                {{-- IZIN → buka mini-modal (bukan langsung save) --}}
+                {{-- IZIN → buka mini-modal. Disembunyikan jika sesi sudah punya pengganti
+                     (mencegah replacement ganda — guard server-side juga ada di controller) --}}
+                @if(!isset($sessionIdsWithReplacement[$session->id]))
                 <button @click="showModal = 'reschedule'"
                     class="border border-yellow-300 text-yellow-700 hover:bg-yellow-50 rounded px-3 py-1.5 text-xs">
                     IZIN
                 </button>
+                @endif
                 <button @click="save('IZIN_VIDEO')"
                     class="border border-blue-300 text-blue-600 hover:bg-blue-50 rounded px-3 py-1.5 text-xs">
                     VIDEO

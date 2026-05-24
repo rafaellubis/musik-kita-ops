@@ -234,4 +234,65 @@ class RescheduleTest extends TestCase
         $this->assertStringContainsString('2026-06-10', $session->notes);
         $this->assertStringContainsString('11:00', $session->notes);
     }
+
+    /** @test */
+    public function gagal_reschedule_sesi_yang_sudah_punya_pengganti(): void
+    {
+        // Skenario: sesi asli sudah di-reschedule ke tgl 30, admin klik "ubah" lalu coba
+        // reschedule lagi ke tgl 31 — harus ditolak (tidak boleh ada 2 replacement)
+        $original = $this->makeSession();
+
+        // Replacement pertama sudah ada
+        ClassSession::factory()->create([
+            'origin_session_id' => $original->id,
+            'split_part'        => null,
+            'session_date'      => '2026-06-30',
+            'status'            => ClassSession::STATUS_SCHEDULED,
+            'enrollment_id'     => $original->enrollment_id,
+            'student_id'        => $original->student_id,
+            'teacher_id'        => $original->teacher_id,
+        ]);
+
+        $response = $this->actingAs($this->adminUser())->patchJson(
+            route('absensi.update', $original),
+            [
+                'status'           => 'IZIN_RESCHEDULE',
+                'replacement_date' => '2026-07-31',
+                'replacement_time' => '10:00',
+            ]
+        );
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('pengganti', strtolower($response->json('message')));
+        $this->assertDatabaseMissing('class_sessions', ['session_date' => '2026-07-31']);
+    }
+
+    /** @test */
+    public function sesi_pengganti_boleh_di_reschedule_lagi(): void
+    {
+        // Chain A → B → C diizinkan (replacement bisa di-reschedule)
+        $original    = $this->makeSession(['status' => ClassSession::STATUS_IZIN_RESCHEDULE]);
+        $replacement = $this->makeSession([
+            'origin_session_id' => $original->id,
+            'split_part'        => null,
+            'session_date'      => '2026-06-30',
+            'status'            => ClassSession::STATUS_IZIN_RESCHEDULE,
+        ]);
+
+        $response = $this->actingAs($this->adminUser())->patchJson(
+            route('absensi.update', $replacement),
+            [
+                'status'           => 'IZIN_RESCHEDULE',
+                'replacement_date' => '2026-07-15',
+                'replacement_time' => '10:00',
+            ]
+        );
+
+        $response->assertOk()->assertJson(['success' => true]);
+        $this->assertDatabaseHas('class_sessions', [
+            'session_date'      => '2026-07-15',
+            'origin_session_id' => $replacement->id,
+            'status'            => 'SCHEDULED',
+        ]);
+    }
 }
