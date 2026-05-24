@@ -160,8 +160,13 @@
             $subInfo = count($subParts) ? '~ ' . implode(' . ', $subParts) : '';
         @endphp
         @if($label !== '—' || $subInfo)
-            <div class="text-[11px] mt-0.5 {{ $session->origin_session_id ? 'text-blue-500' : 'text-gray-400' }}">
-                {{ trim(($label !== '—' ? $label . ' ' : '') . $subInfo) }}
+            <div class="text-[11px] mt-0.5">
+                @if($label !== '—')
+                    <span class="{{ $session->origin_session_id ? 'text-blue-500' : 'text-gray-400' }}">{{ $label }}</span>
+                @endif
+                @if($subInfo)
+                    <span class="text-blue-400">{{ $subInfo }}</span>
+                @endif
             </div>
         @endif
     </td>
