@@ -58,13 +58,13 @@
                     <table class="min-w-full text-sm divide-y divide-gray-200" id="tabel-absensi">
                         <thead class="bg-gray-50 rounded-t-lg">
                             <tr class="text-gray-500 font-medium text-xs uppercase tracking-wider">
-                                <th class="px-4 py-3 text-left w-16 rounded-tl-lg">Jam</th>
+                                <th class="px-3 py-3 text-left w-14 rounded-tl-lg">Jam</th>
                                 <th class="px-3 py-3 text-left">Murid</th>
-                                <th class="px-3 py-3 text-left w-14">Durasi</th>
+                                <th class="px-3 py-3 text-left w-16">Durasi</th>
                                 <th class="px-3 py-3 text-left w-24">Instrumen</th>
-                                <th class="px-3 py-3 text-left w-28">Guru</th>
-                                <th class="px-3 py-3 text-left w-16">Ruang</th>
-                                <th class="px-4 py-3 text-right rounded-tr-lg">Aksi</th>
+                                <th class="px-3 py-3 text-left w-24">Guru</th>
+                                <th class="px-3 py-3 text-left w-14">Ruang</th>
+                                <th class="px-3 py-3 text-right rounded-tr-lg">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">

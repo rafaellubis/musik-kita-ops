@@ -129,7 +129,7 @@
     @endif
 >
     {{-- Jam --}}
-    <td class="px-4 py-2.5 font-bold text-sm"
+    <td class="px-3 py-2.5 font-bold text-sm"
         @if(! $isLibur)
         :style="status === 'SCHEDULED' ? 'color:#D4A853;font-weight:700' : ''"
         :class="status !== 'SCHEDULED' ? 'text-gray-500' : ''"
@@ -172,7 +172,7 @@
     <td class="px-3 py-2.5 text-xs text-gray-500">{{ $session->room?->code ?? '—' }}</td>
 
     {{-- Aksi --}}
-    <td class="px-4 py-2.5 text-right">
+    <td class="px-3 py-2.5 text-right">
 
         @if($isLibur)
             <span class="bg-gray-100 text-gray-500 border border-gray-200 rounded px-3 py-1 text-xs">
