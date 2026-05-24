@@ -112,8 +112,9 @@ class SessionGeneratorService
             $cursor->addDay();
         }
 
-        $replacementQueue = []; // Carbon[] — tanggal pengganti
-        $scheduledCount   = 0;  // hitung sesi efektif (SCHEDULED, bukan LIBUR)
+        $replacementQueue = []; // [['date'=>Carbon,'reserved_slot'=>int,'libur_session_id'=>int]]
+        $scheduledCount   = 0;
+        $slotCounter      = 0;  // nomor slot mingguan (1–4, sesuai urutan occurrence)
 
         // FASE 2: Proses minggu ke-1 sampai ke-4 saja (BR-3.5)
         $weekDates = $allDates->take(self::MAX_SESSIONS_PER_MONTH);
@@ -127,9 +128,12 @@ class SessionGeneratorService
                 continue;
             }
 
+            // Slot ke-N untuk murid ini di bulan ini — increment sebelum idempotency check
+            // agar run kedua tetap menghitung slot yang sama (sequence sudah tersimpan di run pertama)
+            $slotCounter++;
             $dateStr = $date->toDateString();
 
-            // Idempotency: skip jika sesi sudah ada
+            // Idempotency: skip jika sesi sudah ada (sequence sudah ter-set saat pertama kali dibuat)
             if (ClassSession::where('schedule_id', $schedule->id)
                 ->whereDate('session_date', $dateStr)->exists()) {
                 $report['skipped_exists']++;
@@ -153,27 +157,36 @@ class SessionGeneratorService
 
                 [$honorCode, $honorAmount] = $this->resolveLiburHonor($holiday, $enrollment);
 
-                ClassSession::create([
-                    'schedule_id'   => $schedule->id,
-                    'enrollment_id' => $enrollment->id,
-                    'student_id'    => $enrollment->student_id,
-                    'teacher_id'    => $enrollment->teacher_id,
-                    'session_date'  => $dateStr,
-                    'start_time'    => $schedule->start_time,
-                    'end_time'      => $schedule->end_time,
-                    'room_id'       => $schedule->room_id,
-                    'status'        => 'LIBUR',
-                    'honor_code'    => $honorCode,
-                    'honor_amount'  => $honorAmount,
-                    'notes'         => 'Auto-set LIBUR: ' . $holiday->name,
+                // LIBUR dengan replacement → sequence null (slot diserahkan ke sesi pengganti)
+                // LIBUR tanpa replacement → sequence = slotCounter (honor dibayar penuh, BR-4.10)
+                $liburSequence = $holiday->replacement_date ? null : $slotCounter;
+
+                $liburSession = ClassSession::create([
+                    'schedule_id'      => $schedule->id,
+                    'enrollment_id'    => $enrollment->id,
+                    'student_id'       => $enrollment->student_id,
+                    'teacher_id'       => $enrollment->teacher_id,
+                    'session_date'     => $dateStr,
+                    'start_time'       => $schedule->start_time,
+                    'end_time'         => $schedule->end_time,
+                    'room_id'          => $schedule->room_id,
+                    'status'           => 'LIBUR',
+                    'honor_code'       => $honorCode,
+                    'honor_amount'     => $honorAmount,
+                    'notes'            => 'Auto-set LIBUR: ' . $holiday->name,
+                    'session_sequence' => $liburSequence,
                 ]);
 
                 $report['created']++;
                 $report['skipped_libur']++;
 
-                // Jika ada tanggal pengganti, antri untuk FASE 3
+                // Jika ada tanggal pengganti, antri dengan reserved_slot dan libur_session_id
                 if ($holiday->replacement_date) {
-                    $replacementQueue[] = Carbon::parse($holiday->replacement_date);
+                    $replacementQueue[] = [
+                        'date'             => Carbon::parse($holiday->replacement_date),
+                        'reserved_slot'    => $slotCounter,
+                        'libur_session_id' => $liburSession->id,
+                    ];
                 }
             } else {
                 // Guard FASE 2: skip jika guru atau ruang sudah punya sesi di jam yang sama
@@ -188,15 +201,16 @@ class SessionGeneratorService
 
                 // Sesi normal
                 ClassSession::create([
-                    'schedule_id'   => $schedule->id,
-                    'enrollment_id' => $enrollment->id,
-                    'student_id'    => $enrollment->student_id,
-                    'teacher_id'    => $enrollment->teacher_id,
-                    'session_date'  => $dateStr,
-                    'start_time'    => $schedule->start_time,
-                    'end_time'      => $schedule->end_time,
-                    'room_id'       => $schedule->room_id,
-                    'status'        => 'SCHEDULED',
+                    'schedule_id'      => $schedule->id,
+                    'enrollment_id'    => $enrollment->id,
+                    'student_id'       => $enrollment->student_id,
+                    'teacher_id'       => $enrollment->teacher_id,
+                    'session_date'     => $dateStr,
+                    'start_time'       => $schedule->start_time,
+                    'end_time'         => $schedule->end_time,
+                    'room_id'          => $schedule->room_id,
+                    'status'           => 'SCHEDULED',
+                    'session_sequence' => $slotCounter,
                 ]);
 
                 $report['created']++;
@@ -206,8 +220,9 @@ class SessionGeneratorService
 
         // FASE 3: Buat replacement sessions
         // Replacement dibuat DI LUAR counter 4-sesi — tidak memblok week 5
-        foreach ($replacementQueue as $repDate) {
-            $repStr = $repDate->toDateString();
+        foreach ($replacementQueue as $repItem) {
+            $repDate = $repItem['date'];
+            $repStr  = $repDate->toDateString();
 
             // Guard 1: idempotency
             if (ClassSession::where('schedule_id', $schedule->id)
@@ -243,18 +258,20 @@ class SessionGeneratorService
             }
 
             ClassSession::create([
-                'schedule_id'   => $schedule->id,
-                'enrollment_id' => $enrollment->id,
-                'student_id'    => $enrollment->student_id,
-                'teacher_id'    => $enrollment->teacher_id,
-                'session_date'  => $repStr,
-                'start_time'    => $schedule->start_time,
-                'end_time'      => $schedule->end_time,
-                'room_id'       => $schedule->room_id,
-                'status'        => 'SCHEDULED',
-                'honor_code'    => 'H_REG',
-                'honor_amount'  => $this->calculateBaseHonor($enrollment),
-                'notes'         => 'Sesi pengganti dari tanggal libur',
+                'schedule_id'      => $schedule->id,
+                'enrollment_id'    => $enrollment->id,
+                'student_id'       => $enrollment->student_id,
+                'teacher_id'       => $enrollment->teacher_id,
+                'session_date'     => $repStr,
+                'start_time'       => $schedule->start_time,
+                'end_time'         => $schedule->end_time,
+                'room_id'          => $schedule->room_id,
+                'status'           => 'SCHEDULED',
+                'honor_code'       => 'H_REG',
+                'honor_amount'     => $this->calculateBaseHonor($enrollment),
+                'notes'            => 'Sesi pengganti dari tanggal libur',
+                'session_sequence' => $repItem['reserved_slot'],    // mewarisi slot LIBUR
+                'origin_session_id'=> $repItem['libur_session_id'], // referensi ke sesi LIBUR
             ]);
 
             $report['created']++;
