@@ -74,7 +74,7 @@ class SessionGeneratorService
             ->active()
             ->whereHas('enrollment', fn ($q) => $q->active())
             ->whereHas('enrollment.student', fn ($q) => $q->where('status', 'Aktif'))
-            ->with(['enrollment', 'enrollment.package'])
+            ->with(['enrollment', 'enrollment.package', 'enrollment.student', 'enrollment.teacher'])
             ->get();
 
         foreach ($schedules as $schedule) {
@@ -142,7 +142,9 @@ class SessionGeneratorService
                 // Guard: skip jika guru sudah punya sesi LIBUR lain di jam yang sama
                 // (mencegah double-count honor saat dua schedule punya guru+jam sama)
                 if ($this->hasConflictOnDate($schedule, $date)) {
-                    Log::warning("[SessionGenerator] Skip LIBUR {$dateStr}: konflik guru/ruang untuk schedule #{$schedule->id}");
+                    $studentName = $enrollment->student->full_name ?? "student #{$enrollment->student_id}";
+                    $teacherName = $enrollment->teacher->name   ?? "guru #{$enrollment->teacher_id}";
+                    Log::warning("[SessionGenerator] Skip LIBUR {$dateStr}: konflik guru/ruang — murid: {$studentName}, guru: {$teacherName}, schedule #{$schedule->id}");
                     $report['skipped_conflict']++;
                     continue;
                 }
@@ -174,7 +176,9 @@ class SessionGeneratorService
             } else {
                 // Guard FASE 2: skip jika guru atau ruang sudah punya sesi di jam yang sama
                 if ($this->hasConflictOnDate($schedule, $date)) {
-                    Log::warning("[SessionGenerator] Skip regular {$dateStr}: konflik guru/ruang untuk schedule #{$schedule->id}");
+                    $studentName = $enrollment->student->full_name ?? "student #{$enrollment->student_id}";
+                    $teacherName = $enrollment->teacher->name   ?? "guru #{$enrollment->teacher_id}";
+                    Log::warning("[SessionGenerator] Skip regular {$dateStr}: konflik guru/ruang — murid: {$studentName}, guru: {$teacherName}, schedule #{$schedule->id}");
                     $report['skipped_conflict']++;
                     continue;
                 }
