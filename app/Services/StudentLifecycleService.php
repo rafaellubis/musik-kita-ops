@@ -699,29 +699,28 @@ class StudentLifecycleService
                 return $cicilans[0];
             }
 
-            // FULL: satu invoice dengan total penuh (REG + SPP digabung atau terpisah).
+            // FULL: REG + SPP digabung dalam 1 invoice — konsisten dengan pola Reguler/Hobby.
+            $items = [];
+
             if ($includeReg) {
-                $this->invoiceService->createOneOff(
-                    student: $student,
-                    items: [[
-                        'code'        => 'REG',
-                        'description' => 'Biaya Pendaftaran',
-                        'amount'      => InvoiceService::FEE_REG,
-                    ]],
-                    description: 'Biaya Pendaftaran',
-                    classType: $package->class_type,
-                );
+                $items[] = [
+                    'code'        => 'REG',
+                    'description' => 'Biaya Pendaftaran',
+                    'amount'      => InvoiceService::FEE_REG,
+                ];
             }
+
+            $items[] = [
+                'code'        => 'SPP',
+                'description' => "SPP Kids Class Bundle " . now()->format('F Y') . " (Lunas)",
+                'amount'      => $package->price_per_month,
+                'metadata'    => ['package_id' => $package->id],
+            ];
 
             return $this->invoiceService->createOneOff(
                 student: $student,
-                items: [[
-                    'code'        => 'SPP',
-                    'description' => "SPP Kids Class Bundle " . now()->format('F Y') . " (Lunas)",
-                    'amount'      => $package->price_per_month,
-                    'metadata'    => ['package_id' => $package->id],
-                ]],
-                description: 'Kids Class Bundle – Pembayaran Lunas',
+                items: $items,
+                description: $includeReg ? 'Aktivasi Kids Bundle (REG + SPP Lunas)' : 'SPP Kids Class Bundle – Lunas',
                 classType: $package->class_type,
                 paymentMode: 'FULL',
             );

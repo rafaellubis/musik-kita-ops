@@ -352,7 +352,7 @@
                             </div>
                         </div>
                         {{-- Hidden default FULL untuk non-bundle --}}
-                        <input x-show="!kidsBundle" type="hidden" name="payment_mode" value="FULL">
+                        <template x-if="!kidsBundle"><input type="hidden" name="payment_mode" value="FULL"></template>
                     </div>
                     <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
                             style="background:rgba(52,211,153,0.2);color:#34D399">
@@ -425,7 +425,7 @@
                                 </label>
                             </div>
                         </div>
-                        <input x-show="!kidsBundle" type="hidden" name="payment_mode" value="FULL">
+                        <template x-if="!kidsBundle"><input type="hidden" name="payment_mode" value="FULL"></template>
                     </div>
                     <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
                             style="background:rgba(52,211,153,0.2);color:#34D399">
@@ -552,7 +552,7 @@
                                 </label>
                             </div>
                         </div>
-                        <input x-show="!kidsBundle" type="hidden" name="payment_mode" value="FULL">
+                        <template x-if="!kidsBundle"><input type="hidden" name="payment_mode" value="FULL"></template>
                     </div>
                     <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
                             style="background:rgba(52,211,153,0.2);color:#34D399">

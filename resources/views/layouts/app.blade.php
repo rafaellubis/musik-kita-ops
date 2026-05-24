@@ -16,7 +16,7 @@
         {{-- Set data-theme di <html> sebelum Alpine load agar tidak ada flash background salah --}}
         <script>
             (function () {
-                var t = localStorage.getItem('mk-theme') || 'dark';
+                var t = localStorage.getItem('mk-theme') || 'light';
                 document.documentElement.setAttribute('data-theme', t);
             }());
         </script>
@@ -27,7 +27,7 @@
         <div class="flex h-screen overflow-hidden"
              x-data="{
                  sidebarOpen: false,
-                 theme: localStorage.getItem('mk-theme') || 'dark',
+                 theme: localStorage.getItem('mk-theme') || 'light',
                  toggleTheme() {
                      this.theme = this.theme === 'dark' ? 'light' : 'dark';
                      localStorage.setItem('mk-theme', this.theme);
