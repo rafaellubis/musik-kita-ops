@@ -142,12 +142,12 @@ class SessionGeneratorService
 
                 // Guard: skip jika guru sudah punya sesi LIBUR lain di jam yang sama
                 // (mencegah double-count honor saat dua schedule punya guru+jam sama)
-                if ($this->hasConflictOnDate($schedule, $date)) {
-                    $studentName = $enrollment->student->full_name ?? "student #{$enrollment->student_id}";
-                    $teacherName = $enrollment->teacher->name   ?? "guru #{$enrollment->teacher_id}";
-                    Log::warning("[SessionGenerator] Skip LIBUR {$dateStr}: konflik guru/ruang — murid: {$studentName}, guru: {$teacherName}, schedule #{$schedule->id}");
+                $liburConflict = $this->findConflictOnDate($schedule, $date);
+                if ($liburConflict) {
+                    $detail = $this->buildConflictDetail($enrollment, $dateStr, $liburConflict, 'LIBUR');
+                    Log::warning("[SessionGenerator] Skip {$detail}");
                     $report['skipped_conflict']++;
-                    $report['skipped_conflict_details'][] = "{$studentName} ({$teacherName}) — LIBUR {$dateStr}";
+                    $report['skipped_conflict_details'][] = $detail;
                     continue;
                 }
 
@@ -177,11 +177,11 @@ class SessionGeneratorService
                 }
             } else {
                 // Guard FASE 2: skip jika guru atau ruang sudah punya sesi di jam yang sama
-                if ($this->hasConflictOnDate($schedule, $date)) {
-                    $studentName = $enrollment->student->full_name ?? "student #{$enrollment->student_id}";
-                    $teacherName = $enrollment->teacher->name   ?? "guru #{$enrollment->teacher_id}";
-                    Log::warning("[SessionGenerator] Skip regular {$dateStr}: konflik guru/ruang — murid: {$studentName}, guru: {$teacherName}, schedule #{$schedule->id}");
-                    $report['skipped_conflict_details'][] = "{$studentName} ({$teacherName}) — {$dateStr}";
+                $regularConflict = $this->findConflictOnDate($schedule, $date);
+                if ($regularConflict) {
+                    $detail = $this->buildConflictDetail($enrollment, $dateStr, $regularConflict);
+                    Log::warning("[SessionGenerator] Skip {$detail}");
+                    $report['skipped_conflict_details'][] = $detail;
                     $report['skipped_conflict']++;
                     continue;
                 }
@@ -233,9 +233,12 @@ class SessionGeneratorService
             }
 
             // Guard 4: conflict detection guru dan ruang
-            if ($this->hasConflictOnDate($schedule, $repDate)) {
-                Log::warning("[SessionGenerator] Skip replacement {$repStr}: konflik jadwal guru/ruang untuk schedule #{$schedule->id}");
+            $repConflict = $this->findConflictOnDate($schedule, $repDate);
+            if ($repConflict) {
+                $detail = $this->buildConflictDetail($enrollment, $repStr, $repConflict, 'Pengganti');
+                Log::warning("[SessionGenerator] Skip {$detail}");
                 $report['skipped_conflict']++;
+                $report['skipped_conflict_details'][] = $detail;
                 continue;
             }
 
@@ -311,42 +314,72 @@ class SessionGeneratorService
     }
 
     /**
-     * Cek konflik guru atau ruang pada tanggal spesifik.
-     * Berbeda dari ScheduleConflictDetector — ini cek ClassSession konkret di tanggal tertentu.
+     * Cari sesi yang konflik dengan schedule ini pada tanggal tertentu.
+     * Return ClassSession pertama yang bentrok (dengan relasi student eager-loaded),
+     * atau null jika tidak ada konflik.
+     *
+     * Cek guru dulu, lalu ruang. Berbeda dari ScheduleConflictDetector —
+     * ini cek ClassSession konkret, bukan jadwal mingguan.
      */
-    private function hasConflictOnDate(Schedule $schedule, Carbon $date): bool
+    private function findConflictOnDate(Schedule $schedule, Carbon $date): ?ClassSession
     {
         $teacherId = $schedule->enrollment->teacher_id;
 
-        // Deteksi overlap interval: [A_start, A_end) overlap [B_start, B_end) jika A_start < B_end AND A_end > B_start
-        // Ini menangkap partial overlap (beda jam mulai tapi durasi bersinggungan)
-        $teacherBusy = ClassSession::where('teacher_id', $teacherId)
+        // Overlap interval: A_start < B_end AND A_end > B_start
+        $teacherConflict = ClassSession::with('student')
+            ->where('teacher_id', $teacherId)
             ->whereDate('session_date', $date)
             ->where('start_time', '<', $schedule->end_time)
             ->where('end_time', '>', $schedule->start_time)
             ->where('schedule_id', '!=', $schedule->id)
             ->whereNotIn('status', ['CANCELLED'])
-            ->exists();
+            ->first();
 
-        if ($teacherBusy) {
-            return true;
+        if ($teacherConflict) {
+            return $teacherConflict;
         }
 
         if ($schedule->room_id) {
-            $roomBusy = ClassSession::where('room_id', $schedule->room_id)
+            $roomConflict = ClassSession::with('student')
+                ->where('room_id', $schedule->room_id)
                 ->whereDate('session_date', $date)
                 ->where('start_time', '<', $schedule->end_time)
                 ->where('end_time', '>', $schedule->start_time)
                 ->where('schedule_id', '!=', $schedule->id)
                 ->whereNotIn('status', ['CANCELLED'])
-                ->exists();
+                ->first();
 
-            if ($roomBusy) {
-                return true;
+            if ($roomConflict) {
+                return $roomConflict;
             }
         }
 
-        return false;
+        return null;
+    }
+
+    /**
+     * Bangun string detail konflik untuk ditampilkan di UI dan log.
+     * Contoh: "Budi Santoso (THOMAS, 15:00–15:30) — bentrok dengan: Rina Wijaya [SCHEDULED]"
+     */
+    private function buildConflictDetail(
+        Enrollment $enrollment,
+        string $dateStr,
+        ClassSession $conflicting,
+        string $prefix = ''
+    ): string {
+        $studentName    = $enrollment->student->full_name  ?? "student #{$enrollment->student_id}";
+        $teacherName    = $enrollment->teacher->name       ?? "guru #{$enrollment->teacher_id}";
+        $startTime      = substr($enrollment->schedules->first()?->start_time ?? '', 0, 5);
+        $endTime        = substr($enrollment->schedules->first()?->end_time   ?? '', 0, 5);
+        $withStudent    = $conflicting->student->full_name ?? "student #{$conflicting->student_id}";
+        $conflictStart  = substr($conflicting->start_time, 0, 5);
+        $conflictEnd    = substr($conflicting->end_time,   0, 5);
+
+        $jam = $startTime && $endTime ? " {$startTime}–{$endTime}" : '';
+        $label = $prefix ? "{$prefix} " : '';
+
+        return "{$label}{$dateStr} | {$studentName} (guru: {$teacherName}{$jam}) — " .
+               "bentrok dengan: {$withStudent} [{$conflictStart}–{$conflictEnd}, {$conflicting->status}]";
     }
 
     /**
