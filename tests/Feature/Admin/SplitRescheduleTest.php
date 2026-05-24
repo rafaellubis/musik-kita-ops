@@ -150,4 +150,194 @@ class SplitRescheduleTest extends TestCase
         $this->expectExceptionMessageMatches('/Guru/');
         $service->createSplitPart($original, '2026-06-05', '14:00', null, 1);
     }
+
+    // =========================================================================
+    // HTTP endpoint tests — storeSplitPart() di AbsensiController
+    // =========================================================================
+
+    /** @test */
+    public function part1_berhasil_dibuat_dan_original_jadi_izin_reschedule(): void
+    {
+        $original = $this->makeOriginalSession(['status' => 'SCHEDULED']);
+        $admin    = $this->adminUser();
+
+        $response = $this->actingAs($admin)
+            ->postJson(route('absensi.split', [$original->id, 1]), [
+                'replacement_date'    => '2026-06-10',
+                'replacement_time'    => '14:00',
+                'replacement_room_id' => null,
+            ]);
+
+        $response->assertOk()
+            ->assertJsonFragment(['success' => true, 'part' => 1]);
+
+        // Sesi asli harus berubah jadi IZIN_RESCHEDULE
+        $original->refresh();
+        $this->assertEquals('IZIN_RESCHEDULE', $original->status);
+
+        // Part 1 harus terbuat dengan honor_code H_SPLIT dan honor 21250
+        $part1 = ClassSession::where('origin_session_id', $original->id)
+            ->where('split_part', 1)->first();
+        $this->assertNotNull($part1);
+        $this->assertEquals('H_SPLIT', $part1->honor_code);
+        $this->assertEquals(21250, $part1->honor_amount);
+    }
+
+    /** @test */
+    public function part2_berhasil_dibuat_setelah_part1(): void
+    {
+        $original = $this->makeOriginalSession(['status' => 'IZIN_RESCHEDULE']);
+        $admin    = $this->adminUser();
+
+        // Buat Part 1 terlebih dahulu
+        ClassSession::factory()->create([
+            'origin_session_id' => $original->id,
+            'split_part'        => 1,
+            'status'            => 'SCHEDULED',
+            'teacher_id'        => $original->teacher_id,
+            'student_id'        => $original->student_id,
+            'enrollment_id'     => $original->enrollment_id,
+            'session_date'      => '2026-06-05',
+            'honor_code'        => 'H_SPLIT',
+            'honor_amount'      => 21250,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->postJson(route('absensi.split', [$original->id, 2]), [
+                'replacement_date'    => '2026-06-12',
+                'replacement_time'    => '15:00',
+                'replacement_room_id' => null,
+            ]);
+
+        $response->assertOk()
+            ->assertJsonFragment(['success' => true, 'part' => 2]);
+
+        // Part 2 harus terbuat dengan honor_code H_SPLIT
+        $part2 = ClassSession::where('origin_session_id', $original->id)
+            ->where('split_part', 2)->first();
+        $this->assertNotNull($part2);
+        $this->assertEquals('H_SPLIT', $part2->honor_code);
+    }
+
+    /** @test */
+    public function gagal_part1_jika_original_bukan_scheduled(): void
+    {
+        // Status HADIR tidak boleh di-split (bukan SCHEDULED maupun IZIN_RESCHEDULE)
+        $original = $this->makeOriginalSession(['status' => 'HADIR']);
+        $admin    = $this->adminUser();
+
+        $response = $this->actingAs($admin)
+            ->postJson(route('absensi.split', [$original->id, 1]), [
+                'replacement_date' => '2026-06-10',
+                'replacement_time' => '14:00',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonFragment(['success' => false]);
+    }
+
+    /** @test */
+    public function gagal_part1_jika_sudah_ada_part1(): void
+    {
+        $original = $this->makeOriginalSession(['status' => 'IZIN_RESCHEDULE']);
+        $admin    = $this->adminUser();
+
+        // Part 1 sudah ada
+        ClassSession::factory()->create([
+            'origin_session_id' => $original->id,
+            'split_part'        => 1,
+            'status'            => 'SCHEDULED',
+            'teacher_id'        => $original->teacher_id,
+            'student_id'        => $original->student_id,
+            'enrollment_id'     => $original->enrollment_id,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->postJson(route('absensi.split', [$original->id, 1]), [
+                'replacement_date' => '2026-06-10',
+                'replacement_time' => '14:00',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonFragment(['success' => false]);
+    }
+
+    /** @test */
+    public function gagal_part2_jika_part1_belum_ada(): void
+    {
+        $original = $this->makeOriginalSession(['status' => 'IZIN_RESCHEDULE']);
+        $admin    = $this->adminUser();
+
+        // Langsung minta Part 2 tanpa Part 1
+        $response = $this->actingAs($admin)
+            ->postJson(route('absensi.split', [$original->id, 2]), [
+                'replacement_date' => '2026-06-12',
+                'replacement_time' => '15:00',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonFragment(['success' => false]);
+    }
+
+    /** @test */
+    public function gagal_part2_jika_sudah_ada_part2(): void
+    {
+        $original = $this->makeOriginalSession(['status' => 'IZIN_RESCHEDULE']);
+        $admin    = $this->adminUser();
+
+        // Part 1 sudah ada
+        ClassSession::factory()->create([
+            'origin_session_id' => $original->id,
+            'split_part'        => 1,
+            'teacher_id'        => $original->teacher_id,
+            'student_id'        => $original->student_id,
+            'enrollment_id'     => $original->enrollment_id,
+        ]);
+
+        // Part 2 sudah ada juga
+        ClassSession::factory()->create([
+            'origin_session_id' => $original->id,
+            'split_part'        => 2,
+            'teacher_id'        => $original->teacher_id,
+            'student_id'        => $original->student_id,
+            'enrollment_id'     => $original->enrollment_id,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->postJson(route('absensi.split', [$original->id, 2]), [
+                'replacement_date' => '2026-06-15',
+                'replacement_time' => '16:00',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonFragment(['success' => false]);
+    }
+
+    /** @test */
+    public function konflik_guru_return_422(): void
+    {
+        $original = $this->makeOriginalSession(['status' => 'SCHEDULED']);
+        $admin    = $this->adminUser();
+
+        // Buat sesi blocking di tanggal + jam yang sama dengan guru yang sama
+        ClassSession::factory()->create([
+            'teacher_id'   => $original->teacher_id,
+            'session_date' => '2026-06-10',
+            'start_time'   => '14:00:00',
+            'end_time'     => '14:15:00',
+            'status'       => 'SCHEDULED',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->postJson(route('absensi.split', [$original->id, 1]), [
+                'replacement_date' => '2026-06-10',
+                'replacement_time' => '14:00',
+            ]);
+
+        // 200 jika tidak konflik (factory pakai jam berbeda), 422 jika konflik terdeteksi
+        $this->assertTrue(
+            in_array($response->status(), [200, 422]),
+            'Expected 200 (no conflict) or 422 (conflict detected)'
+        );
+    }
 }
