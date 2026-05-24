@@ -440,6 +440,36 @@ class SplitRescheduleTest extends TestCase
     }
 
     /** @test */
+    public function sesi_split_tidak_bisa_di_reschedule(): void
+    {
+        // Sesi split (Part 1 atau 2) tidak boleh bisa di-set IZIN_RESCHEDULE.
+        $original = $this->makeOriginalSession(['status' => ClassSession::STATUS_IZIN_RESCHEDULE]);
+        $part1    = ClassSession::factory()->create([
+            'origin_session_id' => $original->id,
+            'split_part'        => 1,
+            'status'            => ClassSession::STATUS_SCHEDULED,
+            'teacher_id'        => $original->teacher_id,
+            'student_id'        => $original->student_id,
+            'enrollment_id'     => $original->enrollment_id,
+        ]);
+
+        $admin    = $this->adminUser();
+        $response = $this->actingAs($admin)
+            ->patch(route('absensi.update', $part1->id), [
+                'status'           => 'IZIN_RESCHEDULE',
+                'replacement_date' => '2026-07-01',
+                'replacement_time' => '10:00',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonFragment(['success' => false]);
+
+        // Status sesi split tidak berubah
+        $part1->refresh();
+        $this->assertEquals(ClassSession::STATUS_SCHEDULED, $part1->status);
+    }
+
+    /** @test */
     public function gagal_split_sesi_yang_sudah_merupakan_bagian_split(): void
     {
         // Part 1 dari split sebelumnya — tidak boleh di-split lagi
