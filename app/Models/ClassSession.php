@@ -32,7 +32,7 @@ class ClassSession extends Model
         'room_id', 'status',
         'late_minutes', 'notes',
         'honor_code', 'honor_amount',
-        'session_sequence', 'origin_session_id',
+        'session_sequence', 'origin_session_id', 'split_part',
     ];
 
     protected $casts = [
@@ -42,6 +42,7 @@ class ClassSession extends Model
         'late_minutes'     => 'integer',
         'honor_amount'     => 'integer',
         'session_sequence' => 'integer',
+        'split_part'      => 'integer',
     ];
 
     /**
@@ -123,7 +124,16 @@ class ClassSession extends Model
      */
     public function getSessionLabel(): string
     {
-        // Sesi pengganti / reschedule — ada origin
+        // Sesi split (bagian 1 atau 2) — label lebih spesifik dari reschedule biasa.
+        // Dicek SEBELUM blok origin biasa agar split tidak salah masuk ke label reschedule.
+        if ($this->split_part && $this->origin_session_id && $this->originSession) {
+            $bulan = Carbon::parse($this->originSession->session_date)
+                           ->locale('id')->translatedFormat('F Y');
+            $seq   = $this->session_sequence;
+            return "Bagian {$this->split_part}/2 — Reschedule dari Sesi ke-{$seq} Bulan {$bulan}";
+        }
+
+        // Sesi pengganti / reschedule biasa — ada origin
         if ($this->origin_session_id && $this->originSession) {
             // Bulan dari tanggal ORIGIN (kapan sesi aslinya harusnya berlangsung).
             // Sequence dari sesi INI sendiri: sudah mewarisi slot dari origin,
