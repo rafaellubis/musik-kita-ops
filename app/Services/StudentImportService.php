@@ -531,11 +531,33 @@ class StudentImportService
         $startTime = Carbon::createFromFormat('H:i', $data['preferred_time']);
         $endTime   = $startTime->copy()->addMinutes($package->duration_min);
 
+        $dayOfWeek = $this->parseDayOfWeek($data['preferred_day']);
+        $startStr  = $startTime->format('H:i:s');
+        $endStr    = $endTime->format('H:i:s');
+
+        // Cek konflik guru — blocking (bukan warning) agar DB tidak punya dua schedule bentrok.
+        // Kasus umum: import Excel berisi dua murid dengan guru/hari/jam yang sama.
+        $clash = $this->conflictDetector->findTeacherConflicts(
+            teacherId: (int) $data['assigned_teacher_id'],
+            dayOfWeek: $dayOfWeek,
+            startTime: $startStr,
+            endTime:   $endStr,
+        );
+
+        if ($clash->isNotEmpty()) {
+            \Illuminate\Support\Facades\Log::warning(
+                "[Import] Schedule tidak dibuat untuk murid #{$student->id} ({$student->full_name}): " .
+                "guru #{$data['assigned_teacher_id']} sudah punya jadwal di {$data['preferred_day']} {$startStr}–{$endStr}. " .
+                "Admin perlu atur ulang jadwal murid ini secara manual."
+            );
+            return;
+        }
+
         Schedule::create([
             'enrollment_id' => $enrollment->id,
-            'day_of_week'   => $this->parseDayOfWeek($data['preferred_day']),
-            'start_time'    => $startTime->format('H:i:s'),
-            'end_time'      => $endTime->format('H:i:s'),
+            'day_of_week'   => $dayOfWeek,
+            'start_time'    => $startStr,
+            'end_time'      => $endStr,
             'room_id'       => $data['room_id'] ?? null,
             'is_active'     => true,
         ]);
