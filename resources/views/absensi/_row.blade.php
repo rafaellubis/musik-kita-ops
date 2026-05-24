@@ -140,7 +140,7 @@
     </td>
 
     {{-- Murid --}}
-    <td class="px-3 py-2.5 text-sm"
+    <td class="px-3 py-2.5 text-sm min-w-0 max-w-0"
         @if(! $isLibur)
         :class="status === 'SCHEDULED' ? 'text-gray-800 font-medium' : 'text-gray-500'"
         @else
@@ -165,7 +165,7 @@
                     <span class="{{ $session->origin_session_id ? 'text-blue-500' : 'text-gray-400' }}">{{ $label }}</span>
                 @endif
                 @if($subInfo)
-                    <span class="text-blue-400">{{ $subInfo }}</span>
+                    <span class="text-blue-500">{{ $subInfo }}</span>
                 @endif
             </div>
         @endif

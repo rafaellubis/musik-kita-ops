@@ -55,14 +55,14 @@
                 </div>
             @else
                 <div class="bg-white shadow-sm rounded-lg">
-                    <table class="min-w-full text-sm divide-y divide-gray-200" id="tabel-absensi">
+                    <table class="w-full table-fixed text-sm divide-y divide-gray-200" id="tabel-absensi">
                         <thead class="bg-gray-50 rounded-t-lg">
                             <tr class="text-gray-500 font-medium text-xs uppercase tracking-wider">
-                                <th class="px-3 py-3 text-left w-14 rounded-tl-lg">Jam</th>
-                                <th class="px-3 py-3 text-left">Murid</th>
-                                <th class="px-3 py-3 text-center w-20">Guru</th>
-                                <th class="px-3 py-3 text-left w-14">Ruang</th>
-                                <th class="px-3 py-3 text-right rounded-tr-lg">Aksi</th>
+                                <th class="px-3 py-3 text-left w-[8%] rounded-tl-lg">Jam</th>
+                                <th class="px-3 py-3 text-left w-[35%]">Murid</th>
+                                <th class="px-3 py-3 text-center w-[14%]">Guru</th>
+                                <th class="px-3 py-3 text-left w-[8%]">Ruang</th>
+                                <th class="px-3 py-3 text-right w-[35%] rounded-tr-lg">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
