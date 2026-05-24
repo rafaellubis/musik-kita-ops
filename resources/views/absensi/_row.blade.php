@@ -152,14 +152,16 @@
             $instrumen   = $session->enrollment?->package?->instrument?->name;
             $durasiMenit = $session->enrollment?->package?->duration_min;
         @endphp
-        @if($label !== '—')
-            <div class="text-[11px] mt-0.5 {{ $session->origin_session_id ? 'text-blue-500' : 'text-yellow-600' }}">
-                {{ $label }}
-            </div>
-        @endif
-        @if($instrumen || $durasiMenit)
-            <div class="text-[11px] mt-0.5 text-gray-400">
-                ~ {{ implode(' · ', array_filter([$instrumen, $durasiMenit ? $durasiMenit . ' mnt' : null])) }}
+        @php
+            $subParts = array_filter([
+                $instrumen,
+                $durasiMenit ? $durasiMenit . ' menit' : null,
+            ]);
+            $subInfo = count($subParts) ? '~ ' . implode(' . ', $subParts) : '';
+        @endphp
+        @if($label !== '—' || $subInfo)
+            <div class="text-[11px] mt-0.5 {{ $session->origin_session_id ? 'text-blue-500' : 'text-gray-400' }}">
+                {{ trim(($label !== '—' ? $label . ' ' : '') . $subInfo) }}
             </div>
         @endif
     </td>
