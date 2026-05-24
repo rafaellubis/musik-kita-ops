@@ -139,6 +139,14 @@ class SessionGeneratorService
                 // Tanggal ini adalah hari libur
                 $holiday = $holidayMap[$dateStr];
 
+                // Guard: skip jika guru sudah punya sesi LIBUR lain di jam yang sama
+                // (mencegah double-count honor saat dua schedule punya guru+jam sama)
+                if ($this->hasConflictOnDate($schedule, $date)) {
+                    Log::warning("[SessionGenerator] Skip LIBUR {$dateStr}: konflik guru/ruang untuk schedule #{$schedule->id}");
+                    $report['skipped_conflict']++;
+                    continue;
+                }
+
                 [$honorCode, $honorAmount] = $this->resolveLiburHonor($holiday, $enrollment);
 
                 ClassSession::create([

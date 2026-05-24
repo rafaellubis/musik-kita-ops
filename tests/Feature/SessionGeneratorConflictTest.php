@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\ClassSession;
 use App\Models\Enrollment;
+use App\Models\Holiday;
 use App\Models\Package;
 use App\Models\Room;
 use App\Models\Schedule;
@@ -217,6 +218,72 @@ class SessionGeneratorConflictTest extends TestCase
 
         $this->assertGreaterThan(0, $report['skipped_conflict'],
             'Generator harus mendeteksi dan skip konflik');
+    }
+
+    /**
+     * Saat ada holiday dan dua schedule punya guru+hari+jam sama,
+     * generator hanya boleh buat SATU sesi LIBUR — bukan dua.
+     * Honor guru tidak boleh double-count di hari libur.
+     */
+    public function test_libur_tidak_dibuat_duplikat_saat_guru_sama(): void
+    {
+        $teacher  = Teacher::factory()->create(['is_active' => true]);
+        $room1    = Room::factory()->create(['capacity' => 1, 'is_active' => true]);
+        $room2    = Room::factory()->create(['capacity' => 1, 'is_active' => true]);
+        $package  = Package::factory()->create(['duration_min' => 30, 'class_type' => 'REGULER', 'is_active' => true, 'price_per_month' => 340000]);
+
+        $targetMonth = Carbon::now()->addMonth()->startOfMonth();
+        $senin       = $targetMonth->copy()->next('Monday');
+
+        // Buat holiday tepat di hari Senin pertama bulan target
+        Holiday::create([
+            'date'           => $senin->toDateString(),
+            'name'           => 'Hari Libur Test',
+            'type'           => 'Nasional',
+            'is_active'      => true,
+            'is_honor_paid'  => true,
+            'replacement_date' => null,
+        ]);
+
+        // Dua murid, guru sama, hari sama (Senin), jam sama
+        $student1    = Student::factory()->create(['status' => 'Aktif']);
+        $enrollment1 = Enrollment::factory()->create([
+            'student_id' => $student1->id, 'teacher_id' => $teacher->id,
+            'package_id' => $package->id, 'status' => 'ACTIVE',
+        ]);
+        Schedule::factory()->create([
+            'enrollment_id' => $enrollment1->id, 'day_of_week' => 1,
+            'start_time' => '15:00:00', 'end_time' => '15:30:00',
+            'room_id' => $room1->id, 'is_active' => true,
+        ]);
+
+        $student2    = Student::factory()->create(['status' => 'Aktif']);
+        $enrollment2 = Enrollment::factory()->create([
+            'student_id' => $student2->id, 'teacher_id' => $teacher->id,
+            'package_id' => $package->id, 'status' => 'ACTIVE',
+        ]);
+        Schedule::factory()->create([
+            'enrollment_id' => $enrollment2->id, 'day_of_week' => 1,
+            'start_time' => '15:00:00', 'end_time' => '15:30:00',
+            'room_id' => $room2->id, 'is_active' => true,
+        ]);
+
+        $report = app(SessionGeneratorService::class)->generateForMonth(
+            $targetMonth->year,
+            $targetMonth->month
+        );
+
+        $liburPadaSenin = ClassSession::where('teacher_id', $teacher->id)
+            ->whereDate('session_date', $senin)
+            ->where('status', 'LIBUR')
+            ->count();
+
+        $this->assertEquals(1, $liburPadaSenin,
+            "Hanya satu sesi LIBUR yang boleh dibuat untuk guru+tanggal yang sama. " .
+            "Actual: {$liburPadaSenin}");
+
+        $this->assertGreaterThan(0, $report['skipped_conflict'],
+            'Generator harus mendeteksi konflik dan skip sesi LIBUR kedua');
     }
 
     /**
