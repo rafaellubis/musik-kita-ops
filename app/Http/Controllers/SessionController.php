@@ -92,10 +92,16 @@ class SessionController extends Controller
                "({$report['skipped_libur']} LIBUR), " .
                "{$report['skipped_exists']} sudah ada (skip).";
 
-        return redirect()->route('sessions.index', [
+        $redirect = redirect()->route('sessions.index', [
             'year' => $data['year'],
             'month' => $data['month'],
         ])->with('success', $msg);
+
+        if (!empty($report['skipped_conflict_details'])) {
+            $redirect = $redirect->with('conflict_warnings', $report['skipped_conflict_details']);
+        }
+
+        return $redirect;
     }
 
     /**

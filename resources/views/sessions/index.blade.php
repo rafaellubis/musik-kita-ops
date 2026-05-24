@@ -43,6 +43,17 @@
             {{ session('error') }}
         </div>
         @endif
+        @if(session('conflict_warnings'))
+        <div class="mb-5 p-3 rounded-lg text-sm"
+             style="background:rgba(251,191,36,0.1);color:#FBBF24;border:1px solid rgba(251,191,36,0.2)">
+            <div class="font-semibold mb-1">⚠ {{ count(session('conflict_warnings')) }} sesi terskip karena konflik jadwal — atur ulang jadwal murid berikut secara manual:</div>
+            <ul class="mt-1 space-y-0.5 list-disc list-inside">
+                @foreach(session('conflict_warnings') as $w)
+                <li>{{ $w }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
         @if($errors->any())
         <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
             @foreach($errors->all() as $e)

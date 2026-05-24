@@ -54,13 +54,14 @@ class SessionGeneratorService
         $end   = $start->copy()->endOfMonth();
 
         $report = [
-            'created'              => 0,
-            'replacements_created' => 0,
-            'skipped_exists'       => 0,
-            'skipped_libur'        => 0,
-            'skipped_conflict'     => 0,
-            'schedules_processed'  => 0,
-            'month'                => $start->format('F Y'),
+            'created'                  => 0,
+            'replacements_created'     => 0,
+            'skipped_exists'           => 0,
+            'skipped_libur'            => 0,
+            'skipped_conflict'         => 0,
+            'skipped_conflict_details' => [], // ["Budi Santoso (THOMAS) — Senin 2026-06-02"]
+            'schedules_processed'      => 0,
+            'month'                    => $start->format('F Y'),
         ];
 
         // Pre-load holidays bulan ini sebagai [Y-m-d => Holiday]
@@ -146,6 +147,7 @@ class SessionGeneratorService
                     $teacherName = $enrollment->teacher->name   ?? "guru #{$enrollment->teacher_id}";
                     Log::warning("[SessionGenerator] Skip LIBUR {$dateStr}: konflik guru/ruang — murid: {$studentName}, guru: {$teacherName}, schedule #{$schedule->id}");
                     $report['skipped_conflict']++;
+                    $report['skipped_conflict_details'][] = "{$studentName} ({$teacherName}) — LIBUR {$dateStr}";
                     continue;
                 }
 
@@ -179,6 +181,7 @@ class SessionGeneratorService
                     $studentName = $enrollment->student->full_name ?? "student #{$enrollment->student_id}";
                     $teacherName = $enrollment->teacher->name   ?? "guru #{$enrollment->teacher_id}";
                     Log::warning("[SessionGenerator] Skip regular {$dateStr}: konflik guru/ruang — murid: {$studentName}, guru: {$teacherName}, schedule #{$schedule->id}");
+                    $report['skipped_conflict_details'][] = "{$studentName} ({$teacherName}) — {$dateStr}";
                     $report['skipped_conflict']++;
                     continue;
                 }
