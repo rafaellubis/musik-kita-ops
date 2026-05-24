@@ -98,7 +98,7 @@
         saveSplitPart2() {
             if (!this.part2Date || !this.part2Time) return;
             this.part2Error = '';
-            fetch('/absensi/{{ $session->id }}/split/2', {
+            fetch('/absensi/{{ $session->origin_session_id }}/split/2', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
