@@ -71,6 +71,24 @@ class KidsBundleInstallmentUiTest extends TestCase
         return [$student, $enrollment, $invoices];
     }
 
+    // Helper: buat murid + enrollment KIDS_CLASS_BUNDLE TANPA invoice (untuk test generate-bundle)
+    private function buatMuridBundleTanpaCicilan(): array
+    {
+        $student = Student::factory()->create(['status' => 'Aktif']);
+        $pkg = Package::factory()->create([
+            'class_type'      => 'KIDS_CLASS_BUNDLE',
+            'price_per_month' => 340000,
+        ]);
+        $enrollment = Enrollment::factory()->for($student)->create([
+            'package_id' => $pkg->id,
+            'status'     => 'ACTIVE',
+            'is_primary' => true,
+        ]);
+        $student->update(['primary_enrollment_id' => $enrollment->id]);
+
+        return [$student, $enrollment];
+    }
+
     // Helper: buat murid + enrollment + 1 invoice FULL (bukan cicilan)
     private function buatMuridDenganBundleFull(): array
     {
@@ -171,17 +189,7 @@ class KidsBundleInstallmentUiTest extends TestCase
     /** generate-bundle: tombol muncul di student show jika belum ada invoice cicilan */
     public function test_student_show_menampilkan_tombol_generate_bundle_jika_belum_ada_cicilan(): void
     {
-        $student = Student::factory()->create(['status' => 'Aktif']);
-        $pkg = Package::factory()->create([
-            'class_type'      => 'KIDS_CLASS_BUNDLE',
-            'price_per_month' => 340000,
-        ]);
-        $enrollment = Enrollment::factory()->for($student)->create([
-            'package_id' => $pkg->id,
-            'status'     => 'ACTIVE',
-            'is_primary' => true,
-        ]);
-        $student->update(['primary_enrollment_id' => $enrollment->id]);
+        [$student] = $this->buatMuridBundleTanpaCicilan();
 
         $response = $this->actingAs($this->admin)
             ->get(route('students.show', $student));
@@ -193,17 +201,7 @@ class KidsBundleInstallmentUiTest extends TestCase
     /** generate-bundle: happy path — 3 invoice termin terbuat */
     public function test_generate_bundle_sukses_buat_3_invoice_cicilan(): void
     {
-        $student = Student::factory()->create(['status' => 'Aktif']);
-        $pkg = Package::factory()->create([
-            'class_type'      => 'KIDS_CLASS_BUNDLE',
-            'price_per_month' => 340000,
-        ]);
-        $enrollment = Enrollment::factory()->for($student)->create([
-            'package_id' => $pkg->id,
-            'status'     => 'ACTIVE',
-            'is_primary' => true,
-        ]);
-        $student->update(['primary_enrollment_id' => $enrollment->id]);
+        [$student] = $this->buatMuridBundleTanpaCicilan();
 
         $response = $this->actingAs($this->admin)
             ->post(route('invoices.generate-bundle', $student), [
@@ -213,7 +211,7 @@ class KidsBundleInstallmentUiTest extends TestCase
         $response->assertRedirect(route('students.show', $student));
         $response->assertSessionHas('success');
 
-        $invoices = \App\Models\Invoice::where('student_id', $student->id)
+        $invoices = Invoice::where('student_id', $student->id)
             ->where('payment_mode', 'INSTALLMENT')
             ->orderBy('installment_number')
             ->get();
@@ -246,29 +244,19 @@ class KidsBundleInstallmentUiTest extends TestCase
 
         $response->assertStatus(422);
         // Jumlah invoice tidak bertambah dari 3
-        $this->assertCount(3, \App\Models\Invoice::where('student_id', $student->id)
+        $this->assertCount(3, Invoice::where('student_id', $student->id)
             ->where('payment_mode', 'INSTALLMENT')->get());
     }
 
     /** generate-bundle: validasi — tanggal wajib diisi */
     public function test_generate_bundle_validasi_tanggal_wajib(): void
     {
-        $student = Student::factory()->create(['status' => 'Aktif']);
-        $pkg = Package::factory()->create([
-            'class_type'      => 'KIDS_CLASS_BUNDLE',
-            'price_per_month' => 340000,
-        ]);
-        $enrollment = Enrollment::factory()->for($student)->create([
-            'package_id' => $pkg->id,
-            'status'     => 'ACTIVE',
-            'is_primary' => true,
-        ]);
-        $student->update(['primary_enrollment_id' => $enrollment->id]);
+        [$student] = $this->buatMuridBundleTanpaCicilan();
 
         $response = $this->actingAs($this->admin)
             ->post(route('invoices.generate-bundle', $student), []);
 
         $response->assertSessionHasErrors('program_start_date');
-        $this->assertCount(0, \App\Models\Invoice::where('student_id', $student->id)->get());
+        $this->assertCount(0, Invoice::where('student_id', $student->id)->get());
     }
 }
