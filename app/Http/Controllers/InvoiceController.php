@@ -157,16 +157,18 @@ class InvoiceController extends Controller
             'Kelas utama murid bukan Kids Class Bundle.'
         );
 
-        $alreadyExists = Invoice::where('student_id', $student->id)
+        $alreadyExists = Invoice::where('enrollment_id', $enrollment->id)
             ->where('payment_mode', Invoice::MODE_INSTALLMENT)
             ->exists();
         abort_if($alreadyExists, 422, 'Invoice cicilan sudah pernah dibuat untuk murid ini.');
 
         $data = $request->validate([
-            'program_start_date' => ['required', 'date_format:Y-m-d'],
+            'program_start_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:2024-01-01', 'before_or_equal:2030-12-31'],
         ], [
-            'program_start_date.required'    => 'Tanggal mulai program wajib diisi.',
-            'program_start_date.date_format' => 'Format tanggal harus YYYY-MM-DD (contoh: 2026-03-01).',
+            'program_start_date.required'         => 'Tanggal mulai program wajib diisi.',
+            'program_start_date.date_format'      => 'Format tanggal harus YYYY-MM-DD (contoh: 2026-03-01).',
+            'program_start_date.after_or_equal'   => 'Tanggal mulai program tidak boleh sebelum 2024.',
+            'program_start_date.before_or_equal'  => 'Tanggal mulai program tidak boleh setelah 2030.',
         ]);
 
         $service->createKidsBundleInstallments(
