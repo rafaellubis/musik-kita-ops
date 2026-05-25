@@ -157,40 +157,47 @@ class InvoiceService
 
         // Offset bulan per termin: bulan ke-1, ke-2, ke-4 (index 0-based: 0, 1, 3).
         $offsets = [0, 1, 3];
-        $invoices = [];
 
-        foreach ($offsets as $i => $offset) {
-            $terminNo = $i + 1;
-            $amount   = [$termin1, $termin2, $termin3][$i];
+        // Outer transaction: jika salah satu termin gagal dibuat, seluruh batch dibatalkan.
+        // Tanpa ini, termin 1 bisa ter-commit sementara termin 2/3 gagal — meninggalkan
+        // data parsial yang memblokir re-run generator (Bug 2 fix).
+        return DB::transaction(function () use ($student, $enrollment, $startDate, $package, $termin1, $termin2, $termin3, $groupId, $offsets) {
+            $invoices = [];
 
-            $issuedAt = $startDate->copy()->addMonths($offset)->startOfMonth();
-            $dueDate  = $issuedAt->copy()->setDay(self::DUE_DAY)->endOfDay();
+            foreach ($offsets as $i => $offset) {
+                $terminNo = $i + 1;
+                $amount   = [$termin1, $termin2, $termin3][$i];
 
-            // Jika due date sudah lewat hari ini (mis. aktivasi setelah tgl 10),
-            // geser ke akhir bulan agar murid tidak langsung berstatus overdue.
-            if ($dueDate->lt(now()->startOfDay())) {
-                $dueDate = $issuedAt->copy()->endOfMonth();
+                $issuedAt = $startDate->copy()->addMonths($offset)->startOfMonth();
+                $dueDate  = $issuedAt->copy()->setDay(self::DUE_DAY)->endOfDay();
+
+                // Jika due date sudah lewat hari ini (mis. aktivasi setelah tgl 10),
+                // geser ke akhir bulan agar murid tidak langsung berstatus overdue.
+                if ($dueDate->lt(now()->startOfDay())) {
+                    $dueDate = $issuedAt->copy()->endOfMonth();
+                }
+
+                $invoices[] = $this->createOneOff(
+                    student: $student,
+                    items: [[
+                        'code'        => 'SPP',
+                        'description' => "SPP Kids Class Bundle – Termin {$terminNo}/3",
+                        'amount'      => $amount,
+                        'metadata'    => ['package_id' => $package->id, 'installment_number' => $terminNo],
+                    ]],
+                    description: "Kids Class Bundle – Termin {$terminNo}/3",
+                    dueDate: $dueDate,
+                    issuedAt: $issuedAt,
+                    classType: 'KIDS_CLASS_BUNDLE',
+                    paymentMode: Invoice::MODE_INSTALLMENT,
+                    installmentNumber: $terminNo,
+                    installmentGroupId: $groupId,
+                    enrollmentId: $enrollment->id, // Bug 1 fix: terikat ke enrollment agar idempotency guard bekerja
+                );
             }
 
-            $invoices[] = $this->createOneOff(
-                student: $student,
-                items: [[
-                    'code'        => 'SPP',
-                    'description' => "SPP Kids Class Bundle – Termin {$terminNo}/3",
-                    'amount'      => $amount,
-                    'metadata'    => ['package_id' => $package->id, 'installment_number' => $terminNo],
-                ]],
-                description: "Kids Class Bundle – Termin {$terminNo}/3",
-                dueDate: $dueDate,
-                issuedAt: $issuedAt,
-                classType: 'KIDS_CLASS_BUNDLE',
-                paymentMode: Invoice::MODE_INSTALLMENT,
-                installmentNumber: $terminNo,
-                installmentGroupId: $groupId,
-            );
-        }
-
-        return $invoices;
+            return $invoices;
+        });
     }
 
     /**

@@ -201,7 +201,7 @@ class KidsBundleInstallmentUiTest extends TestCase
     /** generate-bundle: happy path — 3 invoice termin terbuat */
     public function test_generate_bundle_sukses_buat_3_invoice_cicilan(): void
     {
-        [$student] = $this->buatMuridBundleTanpaCicilan();
+        [$student, $enrollment] = $this->buatMuridBundleTanpaCicilan();
 
         $response = $this->actingAs($this->admin)
             ->post(route('invoices.generate-bundle', $student), [
@@ -230,6 +230,10 @@ class KidsBundleInstallmentUiTest extends TestCase
             $this->assertEquals('KIDS_CLASS_BUNDLE', $inv->class_type);
             $this->assertEquals('INSTALLMENT', $inv->payment_mode);
         }
+        // Semua invoice harus terikat ke enrollment (Bug 1 regression guard)
+        $this->assertEquals($enrollment->id, $invoices[0]->enrollment_id);
+        $this->assertEquals($enrollment->id, $invoices[1]->enrollment_id);
+        $this->assertEquals($enrollment->id, $invoices[2]->enrollment_id);
     }
 
     /** generate-bundle: ditolak jika invoice cicilan sudah ada */

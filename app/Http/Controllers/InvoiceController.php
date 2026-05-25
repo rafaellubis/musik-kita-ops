@@ -179,7 +179,8 @@ class InvoiceController extends Controller
 
         AuditLog::record(
             action:      AuditLog::ACTION_CREATE,
-            entityLabel: "Generate cicilan bundle murid #{$student->id} ({$student->full_name})",
+            entity:      $student,
+            entityLabel: "Generate cicilan bundle – {$student->full_name}",
             newValues:   ['program_start_date' => $data['program_start_date']],
         );
 
