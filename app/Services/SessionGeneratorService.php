@@ -306,6 +306,11 @@ class SessionGeneratorService
         }
 
         // Libur nasional/cuti bersama tanpa pengganti → honor penuh (BR-4.10)
+        // Kids Class: flat Rp 42.500 per murid (konsisten dengan AttendanceService::H_KIDS)
+        if ($enrollment->package?->isKidsClass()) {
+            return ['H_KIDS', 42500];
+        }
+
         return ['H_LIBUR', $this->calculateBaseHonor($enrollment)];
     }
 
