@@ -1147,10 +1147,11 @@
                     </div>
 
                     {{-- Modal: input tanggal mulai program --}}
-                    <template x-if="showBundleModal">
-                        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-                             @click.self="showBundleModal = false">
-                            <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
+                    <div x-show="showBundleModal" x-cloak
+                         class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+                         @click.self="showBundleModal = false"
+                         @keydown.escape.window="showBundleModal = false">
+                        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
                                 <h3 class="text-base font-semibold text-gray-800 mb-1">Generate Cicilan Bundle</h3>
                                 <p class="text-xs text-gray-500 mb-4">
                                     Sistem akan membuat 3 invoice: Termin 1 (bulan mulai), Termin 2 (+1 bulan), Termin 3 (+3 bulan).
@@ -1180,7 +1181,6 @@
                                 </form>
                             </div>
                         </div>
-                    </template>
                 </div>
                 @endif
 
