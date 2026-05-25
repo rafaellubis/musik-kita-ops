@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Package;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateStudentRequest extends FormRequest
 {
@@ -52,7 +53,10 @@ class UpdateStudentRequest extends FormRequest
         return [
             // ============= IDENTITAS =============
             'full_name'           => 'required|string|max:100',
-            'nickname'            => 'nullable|string|max:30',
+            'nickname' => [
+                'nullable', 'string', 'max:30',
+                Rule::unique('students', 'nickname')->ignore($this->route('student')),
+            ],
             'gender'              => 'required|in:L,P',
             'birth_date'          => 'nullable|date|before_or_equal:today',
 
@@ -85,6 +89,7 @@ class UpdateStudentRequest extends FormRequest
             'phone.regex'                  => 'Nomor HP hanya boleh angka, +, -, spasi, dan kurung.',
             'parent_email.email'           => 'Format email orang tua tidak valid.',
             'parent_phone.regex'           => 'Nomor HP orang tua hanya boleh angka.',
+            'nickname.unique'              => 'Nama panggilan sudah dipakai murid lain.',
         ];
     }
 

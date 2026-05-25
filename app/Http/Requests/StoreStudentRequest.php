@@ -51,7 +51,7 @@ class StoreStudentRequest extends FormRequest
         return [
             // ============= IDENTITAS =============
             'full_name'           => 'required|string|max:100',
-            'nickname'            => 'nullable|string|max:30',
+            'nickname'            => 'nullable|string|max:30|unique:students,nickname',
             'gender'              => 'required|in:L,P',
             'birth_date'          => 'nullable|date|before_or_equal:today',
 
@@ -77,6 +77,7 @@ class StoreStudentRequest extends FormRequest
         return [
             'full_name.required'           => 'Nama lengkap wajib diisi.',
             'full_name.max'                => 'Nama lengkap maksimal 100 karakter.',
+            'nickname.unique'              => 'Nama panggilan sudah dipakai murid lain.',
             'gender.required'              => 'Jenis kelamin wajib dipilih.',
             'gender.in'                    => 'Jenis kelamin harus L atau P.',
             'birth_date.before_or_equal'   => 'Tanggal lahir tidak boleh di masa depan.',
