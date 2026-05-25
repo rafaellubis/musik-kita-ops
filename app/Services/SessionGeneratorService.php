@@ -340,6 +340,13 @@ class SessionGeneratorService
      */
     private function findConflictOnDate(Schedule $schedule, Carbon $date): ?ClassSession
     {
+        // Kids Class adalah kelas grup — satu guru dan satu ruang dipakai beberapa murid
+        // sekaligus. Tidak ada "konflik" untuk sesi Kids Class.
+        $classType = $schedule->enrollment->package?->class_type;
+        if (in_array($classType, ['KIDS_CLASS', 'KIDS_CLASS_BUNDLE'])) {
+            return null;
+        }
+
         $teacherId = $schedule->enrollment->teacher_id;
 
         // Overlap interval: A_start < B_end AND A_end > B_start
