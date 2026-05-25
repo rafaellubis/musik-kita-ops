@@ -372,6 +372,9 @@ class StudentImportService
         $data['_duration_min']       = !empty($row['package_code'])
                                        ? ($packageDurationMap[$row['package_code']] ?? null)
                                        : null;
+        $data['_class_type']         = !empty($row['package_code'])
+                                       ? ($packageClassTypeMap[$row['package_code']] ?? null)
+                                       : null;
         $data['_has_warning']        = $roomWarning !== null;
         $data['_warning_message']    = $roomWarning;
         unset($data['package_code'], $data['teacher_code'], $data['kode_ruangan']);
@@ -389,14 +392,19 @@ class StudentImportService
                 ->addMinutes((int) $data['_duration_min'])
                 ->format('H:i');
 
-            $teacherClash = $this->conflictDetector->findTeacherConflicts(
-                teacherId: (int) $data['assigned_teacher_id'],
-                dayOfWeek: $dayOfWeek,
-                startTime: $startTime,
-                endTime:   $endTime,
-            );
-            if ($teacherClash->isNotEmpty()) {
-                $conflictWarning = "Guru sudah punya jadwal di {$row['preferred_day']} {$startTime}.";
+            // Kids Class adalah kelas grup — satu guru boleh mengajar beberapa murid
+            // di jam yang sama. Skip teacher conflict check untuk tipe ini.
+            $isKidsClass = in_array($data['_class_type'], ['KIDS_CLASS', 'KIDS_CLASS_BUNDLE']);
+            if (!$isKidsClass) {
+                $teacherClash = $this->conflictDetector->findTeacherConflicts(
+                    teacherId: (int) $data['assigned_teacher_id'],
+                    dayOfWeek: $dayOfWeek,
+                    startTime: $startTime,
+                    endTime:   $endTime,
+                );
+                if ($teacherClash->isNotEmpty()) {
+                    $conflictWarning = "Guru sudah punya jadwal di {$row['preferred_day']} {$startTime}.";
+                }
             }
 
             if ($conflictWarning === null && !empty($data['room_id'])) {
@@ -535,22 +543,28 @@ class StudentImportService
         $startStr  = $startTime->format('H:i:s');
         $endStr    = $endTime->format('H:i:s');
 
-        // Cek konflik guru — blocking (bukan warning) agar DB tidak punya dua schedule bentrok.
-        // Kasus umum: import Excel berisi dua murid dengan guru/hari/jam yang sama.
-        $clash = $this->conflictDetector->findTeacherConflicts(
-            teacherId: (int) $data['assigned_teacher_id'],
-            dayOfWeek: $dayOfWeek,
-            startTime: $startStr,
-            endTime:   $endStr,
-        );
+        // Kids Class (KIDS_CLASS / KIDS_CLASS_BUNDLE) adalah kelas grup — satu guru boleh
+        // mengajar beberapa murid di jam yang sama. Kapasitas ruang (isRoomFull) yang jadi
+        // batasan, bukan konflik guru. Skip teacher conflict check untuk tipe ini.
+        $isKidsClass = in_array($package->class_type, ['KIDS_CLASS', 'KIDS_CLASS_BUNDLE']);
 
-        if ($clash->isNotEmpty()) {
-            \Illuminate\Support\Facades\Log::warning(
-                "[Import] Schedule tidak dibuat untuk murid #{$student->id} ({$student->full_name}): " .
-                "guru #{$data['assigned_teacher_id']} sudah punya jadwal di {$data['preferred_day']} {$startStr}–{$endStr}. " .
-                "Admin perlu atur ulang jadwal murid ini secara manual."
+        if (!$isKidsClass) {
+            // Cek konflik guru — blocking agar DB tidak punya dua schedule privat bentrok.
+            $clash = $this->conflictDetector->findTeacherConflicts(
+                teacherId: (int) $data['assigned_teacher_id'],
+                dayOfWeek: $dayOfWeek,
+                startTime: $startStr,
+                endTime:   $endStr,
             );
-            return;
+
+            if ($clash->isNotEmpty()) {
+                \Illuminate\Support\Facades\Log::warning(
+                    "[Import] Schedule tidak dibuat untuk murid #{$student->id} ({$student->full_name}): " .
+                    "guru #{$data['assigned_teacher_id']} sudah punya jadwal di {$data['preferred_day']} {$startStr}–{$endStr}. " .
+                    "Admin perlu atur ulang jadwal murid ini secara manual."
+                );
+                return;
+            }
         }
 
         Schedule::create([
