@@ -1132,6 +1132,58 @@
                     </div>
                 </div>
 
+                {{-- Tombol generate cicilan: muncul jika KIDS_CLASS_BUNDLE belum punya invoice cicilan --}}
+                @if($student->primaryEnrollment?->package?->class_type === 'KIDS_CLASS_BUNDLE' && (empty($kidsInstallments) || $kidsInstallments->isEmpty()))
+                <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden" x-data="{ showBundleModal: false }">
+                    <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
+                        <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#D4A853">Cicilan Kids Class Bundle</div>
+                    </div>
+                    <div class="px-5 py-6 text-center">
+                        <p class="text-sm text-gray-500 mb-3">Belum ada invoice cicilan untuk murid ini.</p>
+                        <button @click="showBundleModal = true"
+                                class="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
+                            Generate Cicilan Bundle
+                        </button>
+                    </div>
+
+                    {{-- Modal: input tanggal mulai program --}}
+                    <template x-if="showBundleModal">
+                        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+                             @click.self="showBundleModal = false">
+                            <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
+                                <h3 class="text-base font-semibold text-gray-800 mb-1">Generate Cicilan Bundle</h3>
+                                <p class="text-xs text-gray-500 mb-4">
+                                    Sistem akan membuat 3 invoice: Termin 1 (bulan mulai), Termin 2 (+1 bulan), Termin 3 (+3 bulan).
+                                </p>
+                                <form method="POST" action="{{ route('invoices.generate-bundle', $student) }}">
+                                    @csrf
+                                    <div class="mb-5">
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">
+                                            Tanggal Mulai Program (bulan ke-1)
+                                        </label>
+                                        <input type="date" name="program_start_date" required
+                                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                        <p class="text-xs text-gray-400 mt-1">
+                                            Contoh: jika program mulai Maret 2026, isi 2026-03-01
+                                        </p>
+                                    </div>
+                                    <div class="flex gap-2 justify-end">
+                                        <button type="button" @click="showBundleModal = false"
+                                                class="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors">
+                                            Batal
+                                        </button>
+                                        <button type="submit"
+                                                class="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
+                                            Generate
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                @endif
+
                 {{-- Kartu Cicilan Kids Bundle (hanya muncul jika primary enrollment = KIDS_CLASS_BUNDLE INSTALLMENT) --}}
                 @if(!empty($kidsInstallments) && $kidsInstallments->isNotEmpty())
                 @php
