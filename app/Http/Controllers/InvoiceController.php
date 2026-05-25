@@ -7,6 +7,7 @@ use App\Models\Invoice;
 use App\Models\Student;
 use App\Services\InvoiceService;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -139,6 +140,50 @@ class InvoiceController extends Controller
             'Apply denda %s: %d invoice unpaid diproses, %d item denda dibuat/update.',
             $monthName, $report['processed'], $report['updated'],
         ));
+    }
+
+    /**
+     * Generate 3 invoice cicilan untuk murid KIDS_CLASS_BUNDLE yang diimport.
+     * Hanya bisa dipanggil sekali — ditolak jika invoice cicilan sudah ada.
+     */
+    public function generateBundle(Request $request, Student $student, InvoiceService $service): RedirectResponse
+    {
+        abort_if($student->status !== 'Aktif', 422, 'Murid harus berstatus Aktif.');
+
+        $enrollment = $student->primaryEnrollment;
+        abort_if(
+            !$enrollment || $enrollment->package?->class_type !== 'KIDS_CLASS_BUNDLE',
+            422,
+            'Kelas utama murid bukan Kids Class Bundle.'
+        );
+
+        $alreadyExists = Invoice::where('student_id', $student->id)
+            ->where('payment_mode', Invoice::MODE_INSTALLMENT)
+            ->exists();
+        abort_if($alreadyExists, 422, 'Invoice cicilan sudah pernah dibuat untuk murid ini.');
+
+        $data = $request->validate([
+            'program_start_date' => ['required', 'date_format:Y-m-d'],
+        ], [
+            'program_start_date.required'    => 'Tanggal mulai program wajib diisi.',
+            'program_start_date.date_format' => 'Format tanggal harus YYYY-MM-DD (contoh: 2026-03-01).',
+        ]);
+
+        $service->createKidsBundleInstallments(
+            student:    $student,
+            enrollment: $enrollment,
+            startDate:  Carbon::parse($data['program_start_date']),
+        );
+
+        AuditLog::record(
+            action:      AuditLog::ACTION_CREATE,
+            entityLabel: "Generate cicilan bundle murid #{$student->id} ({$student->full_name})",
+            newValues:   ['program_start_date' => $data['program_start_date']],
+        );
+
+        return redirect()
+            ->route('students.show', $student)
+            ->with('success', '3 invoice cicilan Kids Bundle berhasil dibuat.');
     }
 
     /**

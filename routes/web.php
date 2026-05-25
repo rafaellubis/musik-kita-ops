@@ -188,6 +188,9 @@ Route::middleware('auth')->group(function () {
         Route::post('invoices/apply-fines',
             [InvoiceController::class, 'applyFines']
         )->name('invoices.apply-fines');
+        Route::post('students/{student}/generate-bundle',
+            [InvoiceController::class, 'generateBundle']
+        )->name('invoices.generate-bundle');
 
     });
 
