@@ -30,6 +30,7 @@ class DashboardController extends Controller
         $month   = (int) now()->month;
         $today   = now()->startOfDay();
         $isOwner = auth()->user()->hasRole('Owner');
+        $isAdmin = auth()->user()->hasRole('Admin');
 
         // ===== STATISTIK MURID (semua role) =====
         $muridStats = Student::selectRaw('status, COUNT(*) as total')
@@ -142,6 +143,18 @@ class DashboardController extends Controller
             ->orderBy('month', 'desc')
             ->get();
 
+        // ===== ABSENSI HARI INI (Admin only) =====
+        $absensiHariIni = collect();
+        if ($isAdmin) {
+            $absensiHariIni = ClassSession::with(['student', 'teacher', 'schedule.room'])
+                ->leftJoin('schedules', 'class_sessions.schedule_id', '=', 'schedules.id')
+                ->where('class_sessions.session_date', now()->toDateString())
+                ->where('class_sessions.status', 'SCHEDULED')
+                ->orderBy('schedules.start_time')
+                ->select('class_sessions.*')
+                ->get();
+        }
+
         // Bar chart: absensi mingguan bulan ini (semua role)
         $attendanceChart = [];
         $monthStart = Carbon::create($year, $month, 1)->startOfMonth();
@@ -163,7 +176,7 @@ class DashboardController extends Controller
         $monthName = Carbon::create($year, $month, 1)->translatedFormat('F Y');
 
         return view('dashboard', compact(
-            'year', 'month', 'monthName', 'isOwner',
+            'year', 'month', 'monthName', 'isOwner', 'isAdmin',
             'revenueBulan', 'revenueCash', 'revenueTransfer',
             'pengeluaranBulan', 'pengeluaranCash',
             'labaBulan',
@@ -173,6 +186,7 @@ class DashboardController extends Controller
             'invoiceTerlama',
             'honorBelumBayar',
             'revenueChart', 'instrumenChart', 'attendanceChart',
+            'absensiHariIni',
         ));
     }
 }
