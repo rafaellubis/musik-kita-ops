@@ -341,11 +341,12 @@
     <script>
     document.addEventListener('DOMContentLoaded', function () {
 
-        // Warna chart untuk dark mode
-        const chartLabelColor   = '#8B92A8';
-        const chartGridColor    = 'rgba(255,255,255,0.07)';
-        const chartTooltipTheme = 'dark';
-        const chartTooltipBg    = '#1E2235';
+        // Warna chart: theme-aware (dark vs light)
+        const isDark = (localStorage.getItem('mk-theme') || 'dark') === 'dark';
+        const chartLabelColor  = isDark ? '#8B92A8' : '#9A7050';
+        const chartGridColor   = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(101,65,27,0.08)';
+        const chartTooltipTheme = isDark ? 'dark' : 'light';
+        const chartTooltipBg    = isDark ? '#1E2235' : '#FBF5EC';
 
         // ---- Area Chart: P&L 6 Bulan (Owner only) ----
         @if($isOwner)
