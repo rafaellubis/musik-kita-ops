@@ -307,7 +307,9 @@
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50">
                             <th class="px-4 py-2.5 text-left text-gray-500 font-semibold uppercase tracking-wide text-[10px]">Murid</th>
+                            @if(!$isAdmin)
                             <th class="px-4 py-2.5 text-right text-gray-500 font-semibold uppercase tracking-wide text-[10px]">Sisa</th>
+                            @endif
                             <th class="px-4 py-2.5 text-center text-gray-500 font-semibold uppercase tracking-wide text-[10px]">Jatuh Tempo</th>
                         </tr>
                     </thead>
@@ -320,9 +322,11 @@
                                 </a>
                                 <div class="text-gray-400 font-mono text-[10px]">{{ $inv->invoice_number }}</div>
                             </td>
+                            @if(!$isAdmin)
                             <td class="px-4 py-2.5 text-right font-mono font-semibold" style="color:#F87171">
                                 Rp {{ number_format($inv->total_amount - $inv->paid_amount, 0, ',', '.') }}
                             </td>
+                            @endif
                             <td class="px-4 py-2.5 text-center">
                                 @if($inv->due_date)
                                     @php $late = max(0, (int) now()->startOfDay()->diffInDays($inv->due_date, false) * -1) @endphp
