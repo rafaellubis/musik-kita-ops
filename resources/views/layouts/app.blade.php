@@ -164,10 +164,9 @@
                         </div>
                         @endif
 
-                        {{-- Avatar inisial --}}
-                        <div class="w-7 h-7 rounded-full bg-mk-accentDim flex items-center
-                                    justify-center text-xs font-bold text-mk-accent shrink-0">
-                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        {{-- Jam digital --}}
+                        <div id="topbar-clock"
+                             class="text-xs text-white/55 tabular-nums shrink-0 min-w-[42px] text-center">
                         </div>
 
                         {{-- Tombol keluar --}}
@@ -238,6 +237,20 @@
             .then(() => window.location.reload())
             .catch(() => { btn.disabled = false; });
         }
+
+        // Jam digital topbar — update setiap detik
+        (function() {
+            const el = document.getElementById('topbar-clock');
+            function tick() {
+                const now = new Date();
+                const hh  = String(now.getHours()).padStart(2, '0');
+                const mm  = String(now.getMinutes()).padStart(2, '0');
+                const ss  = String(now.getSeconds()).padStart(2, '0');
+                el.textContent = `${hh}:${mm}:${ss}`;
+            }
+            tick();
+            setInterval(tick, 1000);
+        })();
         </script>
     </body>
 </html>
