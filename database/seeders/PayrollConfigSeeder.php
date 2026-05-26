@@ -24,6 +24,8 @@ class PayrollConfigSeeder extends Seeder
              'Honor per murid TERDAFTAR di grup. 4 murid x 42.500 = 170.000/sesi.'],
             ['H_UJIAN', 'Sesi Ujian Kenaikan Grade', 'FIXED', '250000',
              'Honor flat per sesi ujian.'],
+            ['H_PENDAMPING', 'Honor Guru Pendamping Konser KITA', 'FIXED', '250000',
+             'Honor flat per event untuk guru yang mendampingi murid di Konser KITA. Bisa berbeda dengan H_UJIAN.'],
             ['H_CUTI', 'Sesi Saat Murid Cuti', 'FIXED', '0',
              'Periode cuti: sesi tidak ter-generate, honor nol.'],
             ['PAYROLL_CALC_DAY', 'Hari Kalkulasi Honor', 'CONSTANT', 'H-2_AKHIR_BULAN',
