@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Invoice;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -66,6 +67,7 @@ class DashboardRoleViewTest extends TestCase
 
     public function test_admin_tidak_melihat_kolom_sisa(): void
     {
+        Invoice::factory()->create(); // supaya tabel render, bisa test dengan benar
         $response = $this->actingAs($this->userWithRole('Admin'))
             ->get(route('dashboard'));
         $response->assertDontSee('Sisa');
@@ -120,6 +122,7 @@ class DashboardRoleViewTest extends TestCase
 
     public function test_auditor_masih_melihat_kolom_sisa(): void
     {
+        Invoice::factory()->create(); // supaya tabel render
         $response = $this->actingAs($this->userWithRole('Auditor'))
             ->get(route('dashboard'));
         $response->assertSee('Sisa');
