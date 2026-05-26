@@ -12,52 +12,52 @@
         <label class="block text-sm font-medium">Kode <span class="text-red-500">*</span></label>
         <input type="text" name="code" required maxlength="10"
                value="{{ old('code', $teacher->code ?? '') }}"
-               class="mt-1 block w-full border-gray-300 rounded-md font-mono uppercase"
+               class="mt-1 block w-full border-mk-border rounded-md font-mono uppercase"
                placeholder="T19">
     </div>
     <div>
         <label class="block text-sm font-medium">Nama <span class="text-red-500">*</span></label>
         <input type="text" name="name" required maxlength="100"
                value="{{ old('name', $teacher->name ?? '') }}"
-               class="mt-1 block w-full border-gray-300 rounded-md">
+               class="mt-1 block w-full border-mk-border rounded-md">
     </div>
     <div>
         <label class="block text-sm font-medium">Email</label>
         <input type="email" name="email" maxlength="100"
                value="{{ old('email', $teacher->email ?? '') }}"
-               class="mt-1 block w-full border-gray-300 rounded-md">
+               class="mt-1 block w-full border-mk-border rounded-md">
     </div>
     <div>
         <label class="block text-sm font-medium">Phone</label>
         <input type="text" name="phone" maxlength="20"
                value="{{ old('phone', $teacher->phone ?? '') }}"
-               class="mt-1 block w-full border-gray-300 rounded-md">
+               class="mt-1 block w-full border-mk-border rounded-md">
     </div>
     <div>
         <label class="block text-sm font-medium">Bank</label>
         <input type="text" name="bank_name" maxlength="50"
                value="{{ old('bank_name', $teacher->bank_name ?? '') }}"
-               class="mt-1 block w-full border-gray-300 rounded-md"
+               class="mt-1 block w-full border-mk-border rounded-md"
                placeholder="BCA / Mandiri">
     </div>
     <div>
         <label class="block text-sm font-medium">No. Rekening</label>
         <input type="text" name="bank_account" maxlength="30"
                value="{{ old('bank_account', $teacher->bank_account ?? '') }}"
-               class="mt-1 block w-full border-gray-300 rounded-md">
+               class="mt-1 block w-full border-mk-border rounded-md">
     </div>
     <div>
         <label class="block text-sm font-medium">Nama Pemilik Rekening</label>
         <input type="text" name="bank_account_holder" maxlength="100"
                value="{{ old('bank_account_holder', $teacher->bank_account_holder ?? '') }}"
-               class="mt-1 block w-full border-gray-300 rounded-md"
+               class="mt-1 block w-full border-mk-border rounded-md"
                placeholder="Nama sesuai buku tabungan">
     </div>
     <div>
         <label class="block text-sm font-medium">Tgl Bergabung</label>
         <input type="date" name="joined_date"
                value="{{ old('joined_date', $teacher?->joined_date?->format('Y-m-d') ?? '') }}"
-               class="mt-1 block w-full border-gray-300 rounded-md">
+               class="mt-1 block w-full border-mk-border rounded-md">
     </div>
     <div class="flex items-end">
         <label class="inline-flex items-center">
@@ -95,5 +95,5 @@
  
 <div class="mt-4">
     <label class="block text-sm font-medium">Catatan</label>
-    <textarea name="notes" rows="2" class="mt-1 block w-full border-gray-300 rounded-md">{{ old('notes', $teacher->notes ?? '') }}</textarea>
+    <textarea name="notes" rows="2" class="mt-1 block w-full border-mk-border rounded-md">{{ old('notes', $teacher->notes ?? '') }}</textarea>
 </div>

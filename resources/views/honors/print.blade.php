@@ -212,7 +212,7 @@
             @endif
             <tr>
                 <td>Honor Transport</td>
-                <td style="color:#888;">Input manual</td>
+                <td style="color:#888;"></td>
                 <td class="text-right font-mono">
                     {{ number_format($honor->transport_honor, 0, ',', '.') }}
                 </td>

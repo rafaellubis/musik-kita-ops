@@ -7,12 +7,12 @@
             </div>
             <div class="flex items-center gap-3">
                 <form method="GET" action="{{ route('reports.finance') }}" class="flex items-center gap-2 no-print">
-                    <select name="year" class="border-gray-300 rounded text-sm py-1">
+                    <select name="year" class="border-mk-border rounded text-sm py-1">
                         @foreach(range(now()->year, now()->year - 2) as $y)
                             <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
                         @endforeach
                     </select>
-                    <select name="month" class="border-gray-300 rounded text-sm py-1">
+                    <select name="month" class="border-mk-border rounded text-sm py-1">
                         @foreach(range(1, 12) as $m)
                             <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
                                 {{ Carbon\Carbon::create(null, $m, 1)->format('M') }}
@@ -20,7 +20,7 @@
                         @endforeach
                     </select>
                     <button type="submit"
-                            class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">Tampil</button>
+                            class="px-3 py-1 bg-mk-surface hover:bg-mk-surfaceHover rounded text-sm">Tampil</button>
                 </form>
                 <button onclick="window.print()"
                         class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm no-print">
@@ -56,25 +56,25 @@
         </div>
 
         {{-- ===== RINGKASAN P&L ===== --}}
-        <div class="bg-white shadow-sm rounded-lg overflow-hidden">
-            <div class="px-4 py-3 bg-gray-50 border-b">
-                <h3 class="font-semibold text-sm text-gray-700">Ringkasan P&L — {{ $monthName }}</h3>
+        <div class="bg-mk-card shadow-sm rounded-lg overflow-hidden">
+            <div class="px-4 py-3 bg-mk-surface border-b">
+                <h3 class="font-semibold text-sm text-mk-muted">Ringkasan P&L — {{ $monthName }}</h3>
             </div>
             <div class="p-4 space-y-2">
                 <div class="flex justify-between text-sm">
-                    <span class="text-gray-600">Total Pendapatan (diterima)</span>
+                    <span class="text-mk-muted">Total Pendapatan (diterima)</span>
                     <span class="font-medium text-green-700">
                         Rp {{ number_format($totalRevenue, 0, ',', '.') }}
                     </span>
                 </div>
                 <div class="flex justify-between text-sm">
-                    <span class="text-gray-600">Total Honor Guru (dibayar)</span>
+                    <span class="text-mk-muted">Total Honor Guru (dibayar)</span>
                     <span class="font-medium text-red-600">
                         (Rp {{ number_format($honorPaid, 0, ',', '.') }})
                     </span>
                 </div>
                 <div class="flex justify-between text-sm">
-                    <span class="text-gray-600">Total Pengeluaran</span>
+                    <span class="text-mk-muted">Total Pengeluaran</span>
                     <span class="font-medium text-red-600">
                         (Rp {{ number_format($totalPengeluaran, 0, ',', '.') }})
                     </span>
@@ -89,30 +89,30 @@
         </div>
 
         {{-- ===== RINCIAN PENDAPATAN ===== --}}
-        <div class="bg-white shadow-sm rounded-lg overflow-hidden">
-            <div class="px-4 py-3 bg-gray-50 border-b flex justify-between">
-                <h3 class="font-semibold text-sm text-gray-700">Pendapatan per Jenis</h3>
+        <div class="bg-mk-card shadow-sm rounded-lg overflow-hidden">
+            <div class="px-4 py-3 bg-mk-surface border-b flex justify-between">
+                <h3 class="font-semibold text-sm text-mk-muted">Pendapatan per Jenis</h3>
                 <span class="text-sm font-semibold text-green-700">
                     Rp {{ number_format($totalRevenue, 0, ',', '.') }}
                 </span>
             </div>
             <div class="p-4 space-y-1 text-sm">
                 <div class="flex justify-between">
-                    <span class="text-gray-600">Cash</span>
+                    <span class="text-mk-muted">Cash</span>
                     <span class="font-mono">Rp {{ number_format($revenueCash, 0, ',', '.') }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-600">Transfer</span>
+                    <span class="text-mk-muted">Transfer</span>
                     <span class="font-mono">Rp {{ number_format($revenueTransfer, 0, ',', '.') }}</span>
                 </div>
 
                 @if($revenueByType->count() > 0)
                 <div class="border-t mt-3 pt-3">
-                    <div class="text-xs text-gray-500 mb-2">Rincian per Item Tagihan:</div>
+                    <div class="text-xs text-mk-dim mb-2">Rincian per Item Tagihan:</div>
                     @foreach($revenueByType as $rt)
-                    <div class="flex justify-between text-xs text-gray-600 py-0.5">
+                    <div class="flex justify-between text-xs text-mk-muted py-0.5">
                         <span>{{ $rt->item_code }}
-                            <span class="text-gray-400">({{ $rt->invoice_count }} invoice)</span>
+                            <span class="text-mk-dim">({{ $rt->invoice_count }} invoice)</span>
                         </span>
                         <span class="font-mono">Rp {{ number_format($rt->total, 0, ',', '.') }}</span>
                     </div>
@@ -124,9 +124,9 @@
 
         {{-- ===== HONOR GURU ===== --}}
         @if($honorSlips->count() > 0)
-        <div class="bg-white shadow-sm rounded-lg overflow-hidden">
-            <div class="px-4 py-3 bg-gray-50 border-b flex justify-between">
-                <h3 class="font-semibold text-sm text-gray-700">Honor Guru</h3>
+        <div class="bg-mk-card shadow-sm rounded-lg overflow-hidden">
+            <div class="px-4 py-3 bg-mk-surface border-b flex justify-between">
+                <h3 class="font-semibold text-sm text-mk-muted">Honor Guru</h3>
                 <span class="text-sm font-semibold">
                     Total: Rp {{ number_format($totalHonor, 0, ',', '.') }}
                     @if($honorPaid < $totalHonor)
@@ -138,7 +138,7 @@
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead class="border-b text-xs text-gray-500 uppercase">
+                    <thead class="border-b text-xs text-mk-dim uppercase">
                         <tr>
                             <th class="px-4 py-2 text-left">Guru</th>
                             <th class="px-4 py-2 text-right">Honor Pokok</th>
@@ -170,7 +170,7 @@
                         </tr>
                         @endforeach
                     </tbody>
-                    <tfoot class="bg-gray-50">
+                    <tfoot class="bg-mk-surface">
                         <tr>
                             <td colspan="3" class="px-4 py-2 text-sm font-medium">Total Honor</td>
                             <td class="px-4 py-2 text-right font-bold font-mono text-sm">
@@ -185,9 +185,9 @@
         @endif
 
         {{-- ===== PENGELUARAN PER KATEGORI ===== --}}
-        <div class="bg-white shadow-sm rounded-lg overflow-hidden">
-            <div class="px-4 py-3 bg-gray-50 border-b flex justify-between">
-                <h3 class="font-semibold text-sm text-gray-700">Pengeluaran per Kategori</h3>
+        <div class="bg-mk-card shadow-sm rounded-lg overflow-hidden">
+            <div class="px-4 py-3 bg-mk-surface border-b flex justify-between">
+                <h3 class="font-semibold text-sm text-mk-muted">Pengeluaran per Kategori</h3>
                 <span class="text-sm font-semibold text-red-600">
                     Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}
                 </span>
@@ -195,7 +195,7 @@
             @if($expenseByCategory->count() > 0)
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead class="border-b text-xs text-gray-500 uppercase">
+                    <thead class="border-b text-xs text-mk-dim uppercase">
                         <tr>
                             <th class="px-4 py-2 text-left">Kategori</th>
                             <th class="px-4 py-2 text-center">Transaksi</th>
@@ -208,13 +208,13 @@
                         <tr class="border-b">
                             <td class="px-4 py-2">
                                 <span class="font-medium">{{ $cat->cat_name }}</span>
-                                <span class="text-xs text-gray-400 ml-1">{{ $cat->cat_code }}</span>
+                                <span class="text-xs text-mk-dim ml-1">{{ $cat->cat_code }}</span>
                             </td>
-                            <td class="px-4 py-2 text-center text-gray-500">{{ $cat->cnt }}</td>
+                            <td class="px-4 py-2 text-center text-mk-dim">{{ $cat->cnt }}</td>
                             <td class="px-4 py-2 text-right font-mono text-xs">
                                 Rp {{ number_format($cat->total, 0, ',', '.') }}
                             </td>
-                            <td class="px-4 py-2 text-right text-gray-500 text-xs">
+                            <td class="px-4 py-2 text-right text-mk-dim text-xs">
                                 {{ $totalPengeluaran > 0 ? number_format($cat->total / $totalPengeluaran * 100, 1) : 0 }}%
                             </td>
                         </tr>
@@ -223,11 +223,11 @@
                 </table>
             </div>
             @else
-            <div class="px-4 py-6 text-center text-gray-400 text-sm">Tidak ada pengeluaran bulan ini.</div>
+            <div class="px-4 py-6 text-center text-mk-dim text-sm">Tidak ada pengeluaran bulan ini.</div>
             @endif
         </div>
 
-        <div class="text-xs text-gray-400 text-center">
+        <div class="text-xs text-mk-dim text-center">
             Dicetak: {{ now()->format('d M Y H:i') }} · Studio Musik KITA
         </div>
 

@@ -13,14 +13,14 @@
     </x-slot>
 
     <div class="py-6 px-4 lg:px-8">
-        <div class="bg-white shadow-sm sm:rounded-lg p-6 max-w-2xl">
+        <div class="bg-mk-card shadow-sm sm:rounded-lg p-6 max-w-2xl">
             <form action="{{ route('holidays.update', $holiday->id) }}" method="POST">
                 @csrf
                 @method('PUT')
                 @include('holidays._form', ['holiday' => $holiday])
                 <div class="flex justify-end gap-2 mt-6">
                     <a href="{{ route('holidays.index') }}"
-                       class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm">Batal</a>
+                       class="px-4 py-2 bg-mk-surface hover:bg-mk-surfaceHover rounded text-sm">Batal</a>
                     <button type="submit"
                             class="px-4 py-2 rounded text-sm font-bold transition-colors btn-mk-primary"
                             >Simpan Perubahan</button>

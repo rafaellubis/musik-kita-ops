@@ -2,14 +2,14 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <div>
-                <div class="text-xs text-gray-500 mb-0.5">
+                <div class="text-xs text-mk-dim mb-0.5">
                     <a href="{{ route('students.index') }}" class="hover:underline">Daftar Murid</a>
                     <span class="mx-1">→</span>
                     {{ $student->full_name }}
                 </div>
-                <h2 class="font-semibold text-xl text-gray-800">Detail Murid</h2>
+                <h2 class="font-semibold text-xl text-mk-text">Detail Murid</h2>
             </div>
-            <a href="{{ route('students.index') }}" class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+            <a href="{{ route('students.index') }}" class="text-sm text-mk-dim hover:text-mk-muted transition-colors">
                 ← Kembali
             </a>
         </div>
@@ -82,7 +82,7 @@
         @endif
 
         {{-- ===== HEADER CARD ===== --}}
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 fade-in-up" style="animation-delay:0ms">
+        <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-6 fade-in-up" style="animation-delay:0ms">
             <div class="flex justify-between items-start gap-4">
 
                 {{-- Avatar + Info --}}
@@ -92,9 +92,9 @@
                         {{ $student->gender === 'P' ? '👩' : '👦' }}
                     </div>
                     <div>
-                        <div class="font-mono text-xs text-gray-500 mb-0.5">{{ $student->student_code }}</div>
-                        <div class="text-2xl font-bold text-gray-800 leading-tight">{{ $student->full_name }}</div>
-                        <div class="text-sm text-gray-500 mt-0.5">
+                        <div class="font-mono text-xs text-mk-dim mb-0.5">{{ $student->student_code }}</div>
+                        <div class="text-2xl font-bold text-mk-text leading-tight">{{ $student->full_name }}</div>
+                        <div class="text-sm text-mk-dim mt-0.5">
                             @if($student->nickname)"{{ $student->nickname }}" · @endif
                             {{ $student->gender == 'L' ? 'Laki-laki' : 'Perempuan' }}
                             @if($student->age) · {{ $student->age }} tahun @endif
@@ -118,18 +118,18 @@
                 {{-- Edit button --}}
                 <a href="{{ route('students.edit', $student->id) }}"
                    class="px-4 py-2 rounded-lg text-sm font-semibold shrink-0 transition-colors"
-                   style="background:rgba(212,168,83,0.15);color:#D4A853;border:1px solid rgba(212,168,83,0.3)">
+                   style="background:rgba(93,184,144,0.15);color:#5DB890;border:1px solid rgba(93,184,144,0.3)">
                     Edit Data
                 </a>
             </div>
         </div>
 
         {{-- ===== LIFECYCLE PANEL ===== --}}
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 fade-in-up"
+        <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5 fade-in-up"
              style="animation-delay:80ms"
              x-data="{ openForm: null }">
 
-            <div class="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-3">Aksi Lifecycle</div>
+            <div class="text-xs text-mk-dim uppercase tracking-widest font-semibold mb-3">Aksi Lifecycle</div>
 
             {{-- Tombol aksi per status --}}
             <div class="flex flex-wrap gap-2">
@@ -214,7 +214,7 @@
                 @endif
 
                 @if(in_array($student->status, ['Mengundurkan Diri', 'Selesai']))
-                <span class="text-xs text-gray-400 self-center">Status terminal — gunakan Re-aktivasi di atas.</span>
+                <span class="text-xs text-mk-dim self-center">Status terminal — gunakan Re-aktivasi di atas.</span>
                 @endif
             </div>
 
@@ -229,13 +229,13 @@
                     <div class="text-sm font-semibold mb-3" style="color:#A78BFA">Jadwalkan Trial (30 menit)</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Tanggal & Jam <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-mk-dim mb-1">Tanggal & Jam <span class="text-red-400">*</span></label>
                             <input type="datetime-local" name="trial_date" required
                                    min="{{ now()->addHour()->format('Y-m-d\TH:i') }}"
                                    class="block w-full rounded-lg text-sm px-3 py-2">
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Paket Diminati</label>
+                            <label class="block text-xs text-mk-dim mb-1">Paket Diminati</label>
                             <select name="package_id" class="block w-full rounded-lg text-sm px-3 py-2">
                                 <option value="">— Pilih —</option>
                                 @foreach($packages as $pkg)
@@ -246,7 +246,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Guru Trial <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-mk-dim mb-1">Guru Trial <span class="text-red-400">*</span></label>
                             <select name="assigned_teacher_id" required class="block w-full rounded-lg text-sm px-3 py-2">
                                 <option value="">— Pilih —</option>
                                 @foreach($teachers as $t)
@@ -257,7 +257,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Ruangan</label>
+                            <label class="block text-xs text-mk-dim mb-1">Ruangan</label>
                             <select name="assigned_room_id" class="block w-full rounded-lg text-sm px-3 py-2">
                                 <option value="">— Pilih —</option>
                                 @foreach($rooms as $r)
@@ -268,7 +268,7 @@
                             </select>
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-xs text-gray-500 mb-1">Catatan</label>
+                            <label class="block text-xs text-mk-dim mb-1">Catatan</label>
                             <textarea name="notes" rows="2" maxlength="500" class="block w-full rounded-lg text-sm px-3 py-2"></textarea>
                         </div>
                     </div>
@@ -287,10 +287,10 @@
                 <form method="POST" action="{{ route('students.skip-trial', $student->id) }}">
                     @csrf
                     <div class="text-sm font-semibold mb-1" style="color:#34D399">Skip Trial → Langsung Aktif</div>
-                    <div class="text-xs text-gray-500 mb-3">Tagihan REG + SPP otomatis di-flag setelah konfirmasi.</div>
+                    <div class="text-xs text-mk-dim mb-3">Tagihan REG + SPP otomatis di-flag setelah konfirmasi.</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div class="md:col-span-2">
-                            <label class="block text-xs text-gray-500 mb-1">Kode Alasan <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-mk-dim mb-1">Kode Alasan <span class="text-red-400">*</span></label>
                             <select name="reason_code" required class="block w-full rounded-lg text-sm px-3 py-2">
                                 <option value="">— Pilih —</option>
                                 <option value="walk_in">Walk-in (datang langsung confident)</option>
@@ -300,13 +300,13 @@
                             </select>
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-xs text-gray-500 mb-1">Penjelasan Detail <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-mk-dim mb-1">Penjelasan Detail <span class="text-red-400">*</span></label>
                             <textarea name="reason" required rows="2" maxlength="500"
                                       class="block w-full rounded-lg text-sm px-3 py-2"
                                       placeholder="Konteks tambahan untuk audit trail."></textarea>
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-mk-dim mb-1">Paket <span class="text-red-400">*</span></label>
                             <select name="package_id" required class="block w-full rounded-lg text-sm px-3 py-2"
                                     @change="filterTeachers($event.target.selectedOptions[0]?.dataset?.instrumentId || '', $event.target.selectedOptions[0]?.dataset?.classType || '')">
                                 <option value="" data-instrument-id="" data-class-type="">— Pilih —</option>
@@ -320,7 +320,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Guru Utama <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-mk-dim mb-1">Guru Utama <span class="text-red-400">*</span></label>
                             <select name="assigned_teacher_id" required
                                     class="block w-full rounded-lg text-sm px-3 py-2"
                                     :disabled="loadingTeachers">
@@ -331,7 +331,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Ruangan</label>
+                            <label class="block text-xs text-mk-dim mb-1">Ruangan</label>
                             <select name="assigned_room_id" class="block w-full rounded-lg text-sm px-3 py-2">
                                 <option value="">— Pilih —</option>
                                 @foreach($rooms as $r)
@@ -343,10 +343,10 @@
                         <div x-show="kidsBundle" class="md:col-span-2 p-3 rounded-lg border border-blue-200 bg-blue-50">
                             <div class="text-xs font-semibold text-blue-700 mb-2">Metode Pembayaran Kids Class Bundle</div>
                             <div class="flex gap-6">
-                                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                <label class="flex items-center gap-2 text-sm text-mk-muted cursor-pointer">
                                     <input type="radio" name="payment_mode" value="FULL" checked> Lunas sekali bayar
                                 </label>
-                                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                <label class="flex items-center gap-2 text-sm text-mk-muted cursor-pointer">
                                     <input type="radio" name="payment_mode" value="INSTALLMENT"> Cicilan 3 Termin (bulan ke-1, 2, 4)
                                 </label>
                             </div>
@@ -369,10 +369,10 @@
                 <form method="POST" action="{{ route('students.convert-active', $student->id) }}">
                     @csrf
                     <div class="text-sm font-semibold mb-1" style="color:#34D399">Konversi Trial → Aktif</div>
-                    <div class="text-xs text-gray-500 mb-3">Tagihan REG (Rp 250.000) + SPP bulan pertama akan di-flag.</div>
+                    <div class="text-xs text-mk-dim mb-3">Tagihan REG (Rp 250.000) + SPP bulan pertama akan di-flag.</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-mk-dim mb-1">Paket <span class="text-red-400">*</span></label>
                             <select name="package_id" required
                                     class="block w-full rounded-lg text-sm px-3 py-2"
                                     @change="filterTeachers($event.target.selectedOptions[0]?.dataset?.instrumentId || '', $event.target.selectedOptions[0]?.dataset?.classType || '')">
@@ -388,7 +388,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Guru Utama <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-mk-dim mb-1">Guru Utama <span class="text-red-400">*</span></label>
                             <select name="assigned_teacher_id" required
                                     class="block w-full rounded-lg text-sm px-3 py-2"
                                     :disabled="loadingTeachers">
@@ -399,7 +399,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Ruangan</label>
+                            <label class="block text-xs text-mk-dim mb-1">Ruangan</label>
                             <select name="assigned_room_id" class="block w-full rounded-lg text-sm px-3 py-2">
                                 <option value="">— Pilih —</option>
                                 @foreach($rooms as $r)
@@ -410,17 +410,17 @@
                             </select>
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-xs text-gray-500 mb-1">Catatan</label>
+                            <label class="block text-xs text-mk-dim mb-1">Catatan</label>
                             <textarea name="notes" rows="2" maxlength="500" class="block w-full rounded-lg text-sm px-3 py-2"></textarea>
                         </div>
                         {{-- Metode pembayaran: hanya muncul untuk KIDS_CLASS_BUNDLE --}}
                         <div x-show="kidsBundle" class="md:col-span-2 p-3 rounded-lg border border-blue-200 bg-blue-50">
                             <div class="text-xs font-semibold text-blue-700 mb-2">Metode Pembayaran Kids Class Bundle</div>
                             <div class="flex gap-6">
-                                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                <label class="flex items-center gap-2 text-sm text-mk-muted cursor-pointer">
                                     <input type="radio" name="payment_mode" value="FULL" checked> Lunas sekali bayar
                                 </label>
-                                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                <label class="flex items-center gap-2 text-sm text-mk-muted cursor-pointer">
                                     <input type="radio" name="payment_mode" value="INSTALLMENT"> Cicilan 3 Termin (bulan ke-1, 2, 4)
                                 </label>
                             </div>
@@ -443,22 +443,22 @@
                     <div class="text-sm font-semibold mb-1" style="color:#FBBF24">
                         {{ $student->status === 'Cuti' ? 'Perpanjang Cuti' : 'Ajukan Cuti' }}
                     </div>
-                    <div class="text-xs text-gray-500 mb-3">Biaya Rp 100.000/pengajuan. Maks 1 bulan + perpanjang 1x.</div>
+                    <div class="text-xs text-mk-dim mb-3">Biaya Rp 100.000/pengajuan. Maks 1 bulan + perpanjang 1x.</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {{-- cuti_from hanya tampil saat ajukan baru (status Aktif); perpanjang tidak perlu --}}
                         @if($student->status !== 'Cuti')
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Mulai Cuti <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-mk-dim mb-1">Mulai Cuti <span class="text-red-400">*</span></label>
                             <input type="date" name="cuti_from" required min="{{ now()->toDateString() }}"
                                    class="block w-full rounded-lg text-sm px-3 py-2">
                         </div>
                         @endif
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Sampai <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-mk-dim mb-1">Sampai <span class="text-red-400">*</span></label>
                             <input type="date" name="cuti_until" required class="block w-full rounded-lg text-sm px-3 py-2">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-xs text-gray-500 mb-1">Alasan <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-mk-dim mb-1">Alasan <span class="text-red-400">*</span></label>
                             <textarea name="reason" required rows="2" maxlength="500"
                                       class="block w-full rounded-lg text-sm px-3 py-2"
                                       placeholder="Mis: UAS sekolah, perjalanan keluarga, dll."></textarea>
@@ -478,7 +478,7 @@
                 <form method="POST" action="{{ route('students.complete', $student->id) }}">
                     @csrf
                     <div class="text-sm font-semibold mb-1" style="color:#60A5FA">Tandai Selesai (Lulus Kids Class)</div>
-                    <div class="text-xs text-gray-500 mb-3">Murid dapat re-enroll privat tanpa bayar registrasi ulang (BR-10.7).</div>
+                    <div class="text-xs text-mk-dim mb-3">Murid dapat re-enroll privat tanpa bayar registrasi ulang (BR-10.7).</div>
                     <textarea name="notes" rows="2" maxlength="500"
                               class="block w-full rounded-lg text-sm px-3 py-2"
                               placeholder="Catatan kelulusan (opsional)"></textarea>
@@ -502,7 +502,7 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Paket <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-mk-dim mb-1">Paket <span class="text-red-400">*</span></label>
                             <select name="package_id" required
                                     class="block w-full rounded-lg text-sm px-3 py-2"
                                     @change="filterTeachers($event.target.selectedOptions[0]?.dataset?.instrumentId || '', $event.target.selectedOptions[0]?.dataset?.classType || '')">
@@ -517,7 +517,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Guru Utama <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-mk-dim mb-1">Guru Utama <span class="text-red-400">*</span></label>
                             <select name="assigned_teacher_id" required
                                     class="block w-full rounded-lg text-sm px-3 py-2"
                                     :disabled="loadingTeachers">
@@ -528,7 +528,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">Ruangan</label>
+                            <label class="block text-xs text-mk-dim mb-1">Ruangan</label>
                             <select name="assigned_room_id" class="block w-full rounded-lg text-sm px-3 py-2">
                                 <option value="">— Pilih —</option>
                                 @foreach($rooms as $r)
@@ -537,17 +537,17 @@
                             </select>
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-xs text-gray-500 mb-1">Catatan</label>
+                            <label class="block text-xs text-mk-dim mb-1">Catatan</label>
                             <textarea name="notes" rows="2" maxlength="500" class="block w-full rounded-lg text-sm px-3 py-2"></textarea>
                         </div>
                         {{-- Metode pembayaran: hanya muncul untuk KIDS_CLASS_BUNDLE --}}
                         <div x-show="kidsBundle" class="md:col-span-2 p-3 rounded-lg border border-blue-200 bg-blue-50">
                             <div class="text-xs font-semibold text-blue-700 mb-2">Metode Pembayaran Kids Class Bundle</div>
                             <div class="flex gap-6">
-                                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                <label class="flex items-center gap-2 text-sm text-mk-muted cursor-pointer">
                                     <input type="radio" name="payment_mode" value="FULL" checked> Lunas sekali bayar
                                 </label>
-                                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                <label class="flex items-center gap-2 text-sm text-mk-muted cursor-pointer">
                                     <input type="radio" name="payment_mode" value="INSTALLMENT"> Cicilan 3 Termin (bulan ke-1, 2, 4)
                                 </label>
                             </div>
@@ -569,8 +569,8 @@
                       onsubmit="return confirm('Tandai murid Mengundurkan Diri? Bisa di-rollback via Re-aktivasi.')">
                     @csrf
                     <div class="text-sm font-semibold mb-1" style="color:#F87171">Tandai Murid Mundur</div>
-                    <div class="text-xs text-gray-500 mb-3">Murid bisa diaktifkan kembali via Re-aktivasi (wajib bayar registrasi Rp 250.000).</div>
-                    <label class="block text-xs text-gray-500 mb-1">Alasan <span class="text-red-400">*</span></label>
+                    <div class="text-xs text-mk-dim mb-3">Murid bisa diaktifkan kembali via Re-aktivasi (wajib bayar registrasi Rp 250.000).</div>
+                    <label class="block text-xs text-mk-dim mb-1">Alasan <span class="text-red-400">*</span></label>
                     <textarea name="reason" required rows="2" maxlength="500"
                               class="block w-full rounded-lg text-sm px-3 py-2"
                               placeholder="Mis: pindah kota, tunggakan >1 bulan, tidak melanjutkan setelah trial"></textarea>
@@ -586,7 +586,7 @@
         <div x-data="{ activeTab: 'info', openSchedule: null }" class="space-y-0">
 
             {{-- Tab pills --}}
-            <div class="flex gap-1 p-1 bg-white rounded-xl border border-gray-100 shadow-sm mb-5 fade-in-up"
+            <div class="flex gap-1 p-1 bg-mk-card rounded-xl border border-mk-borderLight shadow-sm mb-5 fade-in-up"
                  style="animation-delay:160ms">
                 @foreach([
                     ['info',    '📋 Informasi'],
@@ -597,7 +597,7 @@
                 ] as [$tab, $label])
                 <button @click="activeTab = '{{ $tab }}'"
                         :style="activeTab === '{{ $tab }}'
-                            ? 'background:rgba(212,168,83,0.15);color:#D4A853'
+                            ? 'background:rgba(93,184,144,0.15);color:#5DB890'
                             : 'background:transparent;color:#6B7494'"
                         class="flex-1 py-2 px-1 rounded-lg text-xs font-medium transition-all duration-150 text-center">
                     {{ $label }}
@@ -614,9 +614,9 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
                     {{-- Identitas & Kontak --}}
-                    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                    <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5">
                         <div class="text-[10px] uppercase tracking-widest font-semibold mb-4"
-                             style="color:#D4A853">Identitas & Kontak</div>
+                             style="color:#5DB890">Identitas & Kontak</div>
                         <div class="space-y-3">
                             @foreach([
                                 ['Jenis Kelamin', $student->gender == 'L' ? 'Laki-laki' : 'Perempuan'],
@@ -626,17 +626,17 @@
                                 ['Alamat',  $student->address ?? '—'],
                             ] as [$label, $value])
                             <div class="flex gap-3">
-                                <div class="text-xs text-gray-500 w-28 shrink-0 pt-0.5">{{ $label }}</div>
-                                <div class="text-sm text-gray-800 flex-1">{{ $value }}</div>
+                                <div class="text-xs text-mk-dim w-28 shrink-0 pt-0.5">{{ $label }}</div>
+                                <div class="text-sm text-mk-text flex-1">{{ $value }}</div>
                             </div>
                             @endforeach
                         </div>
                     </div>
 
                     {{-- Orang Tua / Wali --}}
-                    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                    <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5">
                         <div class="text-[10px] uppercase tracking-widest font-semibold mb-4"
-                             style="color:#D4A853">Orang Tua / Wali</div>
+                             style="color:#5DB890">Orang Tua / Wali</div>
                         <div class="space-y-3">
                             @foreach([
                                 ['Nama',        $student->parent_name ?? '—'],
@@ -645,30 +645,30 @@
                                 ['Email',       $student->parent_email ?? '—'],
                             ] as [$label, $value])
                             <div class="flex gap-3">
-                                <div class="text-xs text-gray-500 w-28 shrink-0 pt-0.5">{{ $label }}</div>
-                                <div class="text-sm text-gray-800 flex-1">{{ $value }}</div>
+                                <div class="text-xs text-mk-dim w-28 shrink-0 pt-0.5">{{ $label }}</div>
+                                <div class="text-sm text-mk-text flex-1">{{ $value }}</div>
                             </div>
                             @endforeach
                         </div>
                     </div>
 
                     {{-- Status Belajar --}}
-                    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                    <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5">
                         <div class="text-[10px] uppercase tracking-widest font-semibold mb-4"
-                             style="color:#D4A853">Status Belajar</div>
+                             style="color:#5DB890">Status Belajar</div>
                         <div class="space-y-3">
                             <div class="flex gap-3">
-                                <div class="text-xs text-gray-500 w-28 shrink-0 pt-0.5">Paket</div>
-                                <div class="text-sm text-gray-800 flex-1">
+                                <div class="text-xs text-mk-dim w-28 shrink-0 pt-0.5">Paket</div>
+                                <div class="text-sm text-mk-text flex-1">
                                     @if($student->package)
                                     <span class="font-mono">{{ $student->package->code }}</span>
-                                    <div class="text-xs text-gray-500 mt-0.5">
+                                    <div class="text-xs text-mk-dim mt-0.5">
                                         {{ $student->package->class_type }}
                                         @if($student->package->grade) · {{ $student->package->grade }} @endif
                                         · {{ $student->package->duration_min }} menit
                                         · {{ $student->package->formatted_price }}/bln
                                     </div>
-                                    @else <span class="text-gray-400">—</span>@endif
+                                    @else <span class="text-mk-dim">—</span>@endif
                                 </div>
                             </div>
                             @php
@@ -687,35 +687,35 @@
                                 ['Trial',       $student->trial_date?->format('d M Y, H:i') ?? '—'],
                             ] as [$label, $value])
                             <div class="flex gap-3">
-                                <div class="text-xs text-gray-500 w-28 shrink-0 pt-0.5">{{ $label }}</div>
-                                <div class="text-sm text-gray-800 flex-1">{{ $value }}</div>
+                                <div class="text-xs text-mk-dim w-28 shrink-0 pt-0.5">{{ $label }}</div>
+                                <div class="text-sm text-mk-text flex-1">{{ $value }}</div>
                             </div>
                             @endforeach
                         </div>
                     </div>
 
                     {{-- Tracking --}}
-                    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                    <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5">
                         <div class="text-[10px] uppercase tracking-widest font-semibold mb-4"
-                             style="color:#D4A853">Tracking</div>
+                             style="color:#5DB890">Tracking</div>
                         <div class="space-y-3">
                             <div class="flex gap-3">
-                                <div class="text-xs text-gray-500 w-28 shrink-0 pt-0.5">Sesi Terakhir</div>
-                                <div class="text-sm text-gray-800 flex-1">
+                                <div class="text-xs text-mk-dim w-28 shrink-0 pt-0.5">Sesi Terakhir</div>
+                                <div class="text-sm text-mk-text flex-1">
                                     {{ $student->last_session_at?->format('d M Y, H:i') ?? '—' }}
                                     @if($student->last_session_at)
-                                    <span class="text-xs text-gray-400 ml-1">({{ $student->last_session_at->diffForHumans() }})</span>
+                                    <span class="text-xs text-mk-dim ml-1">({{ $student->last_session_at->diffForHumans() }})</span>
                                     @endif
                                 </div>
                             </div>
                             <div class="flex gap-3">
-                                <div class="text-xs text-gray-500 w-28 shrink-0 pt-0.5">Terdaftar</div>
-                                <div class="text-sm text-gray-800">{{ $student->created_at->format('d M Y') }}</div>
+                                <div class="text-xs text-mk-dim w-28 shrink-0 pt-0.5">Terdaftar</div>
+                                <div class="text-sm text-mk-text">{{ $student->created_at->format('d M Y') }}</div>
                             </div>
                             @if($student->notes)
                             <div class="flex gap-3">
-                                <div class="text-xs text-gray-500 w-28 shrink-0 pt-0.5">Catatan</div>
-                                <div class="text-sm text-gray-800 whitespace-pre-line flex-1">{{ $student->notes }}</div>
+                                <div class="text-xs text-mk-dim w-28 shrink-0 pt-0.5">Catatan</div>
+                                <div class="text-sm text-mk-text whitespace-pre-line flex-1">{{ $student->notes }}</div>
                             </div>
                             @endif
                         </div>
@@ -739,21 +739,21 @@
                  class="space-y-5">
 
                 {{-- Enrollment aktif --}}
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-                    <div class="text-[10px] uppercase tracking-widest font-semibold mb-3" style="color:#D4A853">Enrollment Aktif</div>
+                <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5">
+                    <div class="text-[10px] uppercase tracking-widest font-semibold mb-3" style="color:#5DB890">Enrollment Aktif</div>
                     @if($activeEnrollment)
                     <div class="rounded-lg p-3 text-sm"
                          style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2)">
-                        <span class="text-gray-500">Paket:</span>
-                        <span class="font-mono font-semibold text-gray-800 ml-1">{{ $activeEnrollment->package->code ?? '?' }}</span>
-                        <span class="text-gray-500 ml-2">·</span>
-                        <span class="text-gray-700 ml-2">{{ $activeEnrollment->package->instrument->name ?? '?' }}</span>
-                        <span class="text-gray-500 ml-2">· Guru:</span>
-                        <span class="font-semibold text-gray-800 ml-1">{{ $activeEnrollment->teacher->name ?? '?' }}</span>
-                        <span class="text-xs text-gray-400 ml-2">(sejak {{ $activeEnrollment->effective_date?->format('d M Y') }})</span>
+                        <span class="text-mk-dim">Paket:</span>
+                        <span class="font-mono font-semibold text-mk-text ml-1">{{ $activeEnrollment->package->code ?? '?' }}</span>
+                        <span class="text-mk-dim ml-2">·</span>
+                        <span class="text-mk-muted ml-2">{{ $activeEnrollment->package->instrument->name ?? '?' }}</span>
+                        <span class="text-mk-dim ml-2">· Guru:</span>
+                        <span class="font-semibold text-mk-text ml-1">{{ $activeEnrollment->teacher->name ?? '?' }}</span>
+                        <span class="text-xs text-mk-dim ml-2">(sejak {{ $activeEnrollment->effective_date?->format('d M Y') }})</span>
                     </div>
                     @else
-                    <div class="rounded-lg p-3 text-sm text-gray-500"
+                    <div class="rounded-lg p-3 text-sm text-mk-dim"
                          style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07)">
                         Belum ada enrollment aktif. Ubah status murid ke Aktif lewat panel Lifecycle di atas.
                     </div>
@@ -762,13 +762,13 @@
 
                 {{-- Jadwal Mingguan --}}
                 @if($activeEnrollment)
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5">
                     <div class="flex justify-between items-center mb-3">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#D4A853">Jadwal Mingguan Tetap</div>
+                        <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#5DB890">Jadwal Mingguan Tetap</div>
                         <button type="button"
                                 @click="openSchedule = openSchedule === 'create' ? null : 'create'"
                                 class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                                style="background:rgba(212,168,83,0.15);color:#D4A853">
+                                style="background:rgba(93,184,144,0.15);color:#5DB890">
                             + Tambah Jadwal
                         </button>
                     </div>
@@ -802,12 +802,12 @@
                              }
                          }"
                          class="mb-4 rounded-xl p-4"
-                         style="background:rgba(212,168,83,0.06);border:1px solid rgba(212,168,83,0.2)">
+                         style="background:rgba(93,184,144,0.06);border:1px solid rgba(93,184,144,0.2)">
                         <form method="POST" action="{{ route('schedules.store', $student->id) }}">
                             @csrf
                             <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
                                 <div>
-                                    <label class="block text-xs text-gray-500 mb-1">Hari <span class="text-red-400">*</span></label>
+                                    <label class="block text-xs text-mk-dim mb-1">Hari <span class="text-red-400">*</span></label>
                                     <select name="day_of_week" x-model="selectedDay" required class="block w-full rounded-lg text-sm px-2 py-1.5">
                                         <option value="">—</option>
                                         @foreach(\App\Models\Schedule::DAY_NAMES as $val => $label)
@@ -816,15 +816,15 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-xs text-gray-500 mb-1">Mulai <span class="text-red-400">*</span></label>
+                                    <label class="block text-xs text-mk-dim mb-1">Mulai <span class="text-red-400">*</span></label>
                                     <input type="time" name="start_time" x-model="startTime" required class="block w-full rounded-lg text-sm px-2 py-1.5">
                                 </div>
                                 <div>
-                                    <label class="block text-xs text-gray-500 mb-1">Selesai <span class="text-red-400">*</span></label>
+                                    <label class="block text-xs text-mk-dim mb-1">Selesai <span class="text-red-400">*</span></label>
                                     <input type="time" name="end_time" x-model="endTime" required class="block w-full rounded-lg text-sm px-2 py-1.5">
                                 </div>
                                 <div class="col-span-2">
-                                    <label class="block text-xs text-gray-500 mb-1">Ruangan</label>
+                                    <label class="block text-xs text-mk-dim mb-1">Ruangan</label>
                                     <select name="room_id" class="block w-full rounded-lg text-sm px-2 py-1.5">
                                         <option value="">— Pilih —</option>
                                         <template x-for="r in availableRooms" :key="r.id">
@@ -838,7 +838,7 @@
                                        style="color:#F87171">
                                         Tidak ada ruangan tersedia untuk slot &amp; instrumen ini.
                                     </p>
-                                    <p class="text-xs mt-1 text-gray-400"
+                                    <p class="text-xs mt-1 text-mk-dim"
                                        x-show="instrument && availableRooms.length > 0"
                                        x-text="`Menampilkan ruangan yang support ${instrument}`">
                                     </p>
@@ -848,39 +848,39 @@
                                     </p>
                                 </div>
                                 <div class="col-span-2 md:col-span-5">
-                                    <label class="block text-xs text-gray-500 mb-1">Catatan</label>
+                                    <label class="block text-xs text-mk-dim mb-1">Catatan</label>
                                     <input type="text" name="notes" maxlength="500" class="block w-full rounded-lg text-sm px-2 py-1.5">
                                 </div>
                             </div>
                             <button type="submit" class="mt-2 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                                    style="background:rgba(212,168,83,0.2);color:#D4A853">
+                                    style="background:rgba(93,184,144,0.2);color:#5DB890">
                                 Simpan Jadwal
                             </button>
                         </form>
                     </div>
 
                     @if($activeEnrollment->schedules->isEmpty())
-                    <p class="text-sm text-gray-400">Belum ada jadwal. Klik "+ Tambah Jadwal" di atas.</p>
+                    <p class="text-sm text-mk-dim">Belum ada jadwal. Klik "+ Tambah Jadwal" di atas.</p>
                     @else
                     <table class="w-full text-xs">
                         <thead>
-                            <tr class="border-b border-gray-100">
-                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Hari</th>
-                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Jam</th>
-                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Ruang</th>
-                                <th class="pb-2 text-center text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Status</th>
-                                <th class="pb-2 text-right text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Aksi</th>
+                            <tr class="border-b border-mk-borderLight">
+                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Hari</th>
+                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Jam</th>
+                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Ruang</th>
+                                <th class="pb-2 text-center text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Status</th>
+                                <th class="pb-2 text-right text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($activeEnrollment->schedules as $sch)
-                            <tr class="border-b border-gray-100 {{ $sch->is_active ? '' : 'opacity-50' }}">
-                                <td class="py-2 text-gray-700">{{ $sch->day_name }}</td>
-                                <td class="py-2 font-mono text-gray-700">
+                            <tr class="border-b border-mk-borderLight {{ $sch->is_active ? '' : 'opacity-50' }}">
+                                <td class="py-2 text-mk-muted">{{ $sch->day_name }}</td>
+                                <td class="py-2 font-mono text-mk-muted">
                                     {{ \Carbon\Carbon::parse($sch->start_time)->format('H:i') }} -
                                     {{ \Carbon\Carbon::parse($sch->end_time)->format('H:i') }}
                                 </td>
-                                <td class="py-2 text-gray-500">{{ $sch->room ? '[' . $sch->room->code . '] ' . $sch->room->name : '—' }}</td>
+                                <td class="py-2 text-mk-dim">{{ $sch->room ? '[' . $sch->room->code . '] ' . $sch->room->name : '—' }}</td>
                                 <td class="py-2 text-center">
                                     @if($sch->is_active)
                                     <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold"
@@ -907,7 +907,7 @@
                             @endforeach
                         </tbody>
                     </table>
-                    <p class="text-xs text-gray-400 mt-2">
+                    <p class="text-xs text-mk-dim mt-2">
                         Nonaktifkan menghentikan generator sesi baru. Hapus hanya bisa jika belum ada sesi ter-generate.
                     </p>
                     @endif
@@ -915,7 +915,7 @@
                 @endif
 
                 {{-- Sesi Mendatang --}}
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+                <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5"
                      x-data="{ editSession: null }">
                     @php $canEdit = auth()->user()?->hasAnyRole(['Owner', 'Admin']); @endphp
                     @if($errors->any())
@@ -926,36 +926,36 @@
                     </div>
                     @endif
                     <div class="flex justify-between items-center mb-3">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#D4A853">Sesi Mendatang</div>
+                        <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#5DB890">Sesi Mendatang</div>
                         <a href="{{ route('sessions.index', ['student_id' => $student->id]) }}"
                            class="text-xs text-indigo-600 hover:underline">Lihat semua sesi →</a>
                     </div>
                     @if($upcomingSessions->isEmpty())
-                    <p class="text-sm text-gray-400">
+                    <p class="text-sm text-mk-dim">
                         Belum ada sesi yang dijadwalkan. Generate via
                         <code class="text-xs px-1 rounded" style="background:rgba(255,255,255,0.06)">php artisan sessions:generate-month</code>
                     </p>
                     @else
                     <table class="w-full text-xs">
                         <thead>
-                            <tr class="border-b border-gray-100">
-                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Tanggal</th>
-                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Jam</th>
-                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Label</th>
-                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Ruang</th>
-                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Guru</th>
-                                <th class="pb-2 text-center text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Status</th>
+                            <tr class="border-b border-mk-borderLight">
+                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Tanggal</th>
+                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Jam</th>
+                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Label</th>
+                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Ruang</th>
+                                <th class="pb-2 text-left text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Guru</th>
+                                <th class="pb-2 text-center text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Status</th>
                                 @if($canEdit)
-                                <th class="pb-2 text-center text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Aksi</th>
+                                <th class="pb-2 text-center text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Aksi</th>
                                 @endif
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($upcomingSessions as $sess)
                             @php $sCfg = $sessionStatusCfg[$sess->status] ?? $sessionStatusCfg['SCHEDULED']; @endphp
-                            <tr class="border-b border-gray-100">
-                                <td class="py-2 text-gray-700">{{ \Carbon\Carbon::parse($sess->session_date)->format('D, d M Y') }}</td>
-                                <td class="py-2 font-mono text-gray-500">
+                            <tr class="border-b border-mk-borderLight">
+                                <td class="py-2 text-mk-muted">{{ \Carbon\Carbon::parse($sess->session_date)->format('D, d M Y') }}</td>
+                                <td class="py-2 font-mono text-mk-dim">
                                     {{ \Carbon\Carbon::parse($sess->start_time)->format('H:i') }}–{{ \Carbon\Carbon::parse($sess->end_time)->format('H:i') }}
                                 </td>
                                 <td class="py-2">
@@ -963,18 +963,18 @@
                                     @if($label !== '—')
                                         <span class="text-[10px] font-medium
                                             {{ $sess->origin_session_id ? 'text-blue-500' : '' }}"
-                                            @if(!$sess->origin_session_id) style="color:#D4A853" @endif>
+                                            @if(!$sess->origin_session_id) style="color:#5DB890" @endif>
                                             {{ $label }}
                                         </span>
                                     @else
-                                        <span class="text-gray-400">—</span>
+                                        <span class="text-mk-dim">—</span>
                                     @endif
                                 </td>
-                                <td class="py-2 text-gray-500">{{ $sess->room?->code ?? '—' }}</td>
-                                <td class="py-2 text-gray-700">
+                                <td class="py-2 text-mk-dim">{{ $sess->room?->code ?? '—' }}</td>
+                                <td class="py-2 text-mk-muted">
                                     @if($sess->substituteTeacher)
                                     {{ $sess->substituteTeacher->name }}
-                                    <span class="text-gray-400">(pengganti)</span>
+                                    <span class="text-mk-dim">(pengganti)</span>
                                     @else
                                     {{ $student->assignedTeacher?->name ?? '—' }}
                                     @endif
@@ -1025,13 +1025,13 @@
                     <div x-show="editSession !== null" x-cloak
                          class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
                          @click.self="editSession = null">
-                        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+                        <div class="bg-mk-card rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
                             <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-sm font-semibold text-gray-800">
+                                <h3 class="text-sm font-semibold text-mk-text">
                                     Edit Sesi — <span x-text="editSession?.sessionDate" class="font-mono"></span>
                                 </h3>
                                 <button @click="editSession = null"
-                                        class="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+                                        class="text-mk-dim hover:text-mk-muted text-lg leading-none">&times;</button>
                             </div>
 
                             <form :action="editSession?.action" method="POST" class="space-y-4">
@@ -1040,25 +1040,25 @@
 
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label class="block text-xs font-medium text-gray-700 mb-1">Jam Mulai</label>
+                                        <label class="block text-xs font-medium text-mk-muted mb-1">Jam Mulai</label>
                                         <input type="time" name="start_time"
                                                :value="editSession?.startTime"
                                                required
-                                               class="block w-full border-gray-300 rounded-lg text-sm px-3 py-2">
+                                               class="block w-full border-mk-border rounded-lg text-sm px-3 py-2">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-medium text-gray-700 mb-1">Jam Selesai</label>
+                                        <label class="block text-xs font-medium text-mk-muted mb-1">Jam Selesai</label>
                                         <input type="time" name="end_time"
                                                :value="editSession?.endTime"
                                                required
-                                               class="block w-full border-gray-300 rounded-lg text-sm px-3 py-2">
+                                               class="block w-full border-mk-border rounded-lg text-sm px-3 py-2">
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Guru</label>
+                                    <label class="block text-xs font-medium text-mk-muted mb-1">Guru</label>
                                     <select name="teacher_id" required
-                                            class="block w-full border-gray-300 rounded-lg text-sm px-3 py-2">
+                                            class="block w-full border-mk-border rounded-lg text-sm px-3 py-2">
                                         <option value="">— Pilih Guru —</option>
                                         @foreach($teachers as $t)
                                         <option value="{{ $t->id }}"
@@ -1070,11 +1070,11 @@
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">
-                                        Ruang <span class="text-gray-400">(opsional)</span>
+                                    <label class="block text-xs font-medium text-mk-muted mb-1">
+                                        Ruang <span class="text-mk-dim">(opsional)</span>
                                     </label>
                                     <select name="room_id"
-                                            class="block w-full border-gray-300 rounded-lg text-sm px-3 py-2">
+                                            class="block w-full border-mk-border rounded-lg text-sm px-3 py-2">
                                         <option value="">— Tidak Ditentukan —</option>
                                         @foreach($rooms as $r)
                                         <option value="{{ $r->id }}"
@@ -1087,7 +1087,7 @@
 
                                 <div class="flex justify-end gap-2 pt-2">
                                     <button type="button" @click="editSession = null"
-                                            class="px-4 py-2 text-xs bg-gray-100 rounded-lg hover:bg-gray-200">
+                                            class="px-4 py-2 text-xs bg-mk-surface rounded-lg hover:bg-mk-surfaceHover">
                                         Batal
                                     </button>
                                     <button type="submit"
@@ -1111,20 +1111,20 @@
 
                 {{-- Ringkasan saldo --}}
                 <div class="grid grid-cols-3 gap-4">
-                    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-                        <div class="text-[10px] uppercase tracking-wide text-gray-500 mb-1">Saldo Outstanding</div>
+                    <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-4">
+                        <div class="text-[10px] uppercase tracking-wide text-mk-dim mb-1">Saldo Outstanding</div>
                         <div class="text-xl font-bold leading-none {{ $outstandingBalance > 0 ? '' : '' }}"
                              style="color:{{ $outstandingBalance > 0 ? '#F87171' : '#34D399' }}">
                             Rp {{ number_format($outstandingBalance, 0, ',', '.') }}
                         </div>
-                        <div class="text-xs text-gray-400 mt-1">{{ $unpaidCount }} tagihan belum lunas</div>
+                        <div class="text-xs text-mk-dim mt-1">{{ $unpaidCount }} tagihan belum lunas</div>
                     </div>
-                    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-                        <div class="text-[10px] uppercase tracking-wide text-gray-500 mb-1">Total Invoice</div>
-                        <div class="text-xl font-bold text-gray-800 leading-none">{{ $student->invoices->count() }}</div>
-                        <div class="text-xs text-gray-400 mt-1">sepanjang waktu</div>
+                    <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-4">
+                        <div class="text-[10px] uppercase tracking-wide text-mk-dim mb-1">Total Invoice</div>
+                        <div class="text-xl font-bold text-mk-text leading-none">{{ $student->invoices->count() }}</div>
+                        <div class="text-xs text-mk-dim mt-1">sepanjang waktu</div>
                     </div>
-                    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-center">
+                    <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-4 flex items-center justify-center">
                         <a href="{{ route('invoices.index', ['student_id' => $student->id]) }}"
                            class="text-xs text-indigo-600 hover:underline text-center">
                             Lihat semua tagihan →
@@ -1134,12 +1134,12 @@
 
                 {{-- Tombol generate cicilan: muncul jika KIDS_CLASS_BUNDLE belum punya invoice cicilan --}}
                 @if($student->primaryEnrollment?->package?->class_type === 'KIDS_CLASS_BUNDLE' && (empty($kidsInstallments) || $kidsInstallments->isEmpty()))
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden" x-data="{ showBundleModal: false }">
-                    <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#D4A853">Cicilan Kids Class Bundle</div>
+                <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm overflow-hidden" x-data="{ showBundleModal: false }">
+                    <div class="px-5 py-3.5 border-b border-mk-borderLight flex items-center justify-between">
+                        <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#5DB890">Cicilan Kids Class Bundle</div>
                     </div>
                     <div class="px-5 py-6 text-center">
-                        <p class="text-sm text-gray-500 mb-3">Belum ada invoice cicilan untuk murid ini.</p>
+                        <p class="text-sm text-mk-dim mb-3">Belum ada invoice cicilan untuk murid ini.</p>
                         <button @click="showBundleModal = true"
                                 class="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
                             Generate Cicilan Bundle
@@ -1151,26 +1151,26 @@
                          class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
                          @click.self="showBundleModal = false"
                          @keydown.escape.window="showBundleModal = false">
-                        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
-                                <h3 class="text-base font-semibold text-gray-800 mb-1">Generate Cicilan Bundle</h3>
-                                <p class="text-xs text-gray-500 mb-4">
+                        <div class="bg-mk-card rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
+                                <h3 class="text-base font-semibold text-mk-text mb-1">Generate Cicilan Bundle</h3>
+                                <p class="text-xs text-mk-dim mb-4">
                                     Sistem akan membuat 3 invoice: Termin 1 (bulan mulai), Termin 2 (+1 bulan), Termin 3 (+3 bulan).
                                 </p>
                                 <form method="POST" action="{{ route('invoices.generate-bundle', $student) }}">
                                     @csrf
                                     <div class="mb-5">
-                                        <label class="block text-xs font-medium text-gray-700 mb-1">
+                                        <label class="block text-xs font-medium text-mk-muted mb-1">
                                             Tanggal Mulai Program (bulan ke-1)
                                         </label>
                                         <input type="date" name="program_start_date" required
-                                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                                        <p class="text-xs text-gray-400 mt-1">
+                                               class="w-full border border-mk-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                        <p class="text-xs text-mk-dim mt-1">
                                             Contoh: jika program mulai Maret 2026, isi 2026-03-01
                                         </p>
                                     </div>
                                     <div class="flex gap-2 justify-end">
                                         <button type="button" @click="showBundleModal = false"
-                                                class="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors">
+                                                class="px-4 py-2 rounded-lg text-sm text-mk-muted hover:bg-mk-surfaceHover transition-colors">
                                             Batal
                                         </button>
                                         <button type="submit"
@@ -1199,9 +1199,9 @@
                         ? $kidsInstallments->where('status', '!=', 'PAID')->min('installment_number')
                         : null;
                 @endphp
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                    <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#D4A853">
+                <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm overflow-hidden">
+                    <div class="px-5 py-3.5 border-b border-mk-borderLight flex items-center justify-between">
+                        <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#5DB890">
                             Cicilan Kids Class Bundle
                         </div>
                         @if($kAllPaid)
@@ -1209,14 +1209,14 @@
                                 Lunas ✓
                             </span>
                         @else
-                            <span class="text-[10px] text-gray-400">
+                            <span class="text-[10px] text-mk-dim">
                                 {{ $kPaidCount }}/{{ $kTotalCount }} termin lunas
                             </span>
                         @endif
                     </div>
                     <div class="px-5 py-3">
                         {{-- Subtitle nominal --}}
-                        <div class="text-xs text-gray-500 mb-2">
+                        <div class="text-xs text-mk-dim mb-2">
                             Rp {{ number_format($kPaidAmount, 0, ',', '.') }} dibayar
                             dari Rp {{ number_format($kTotalAmount, 0, ',', '.') }}
                         </div>
@@ -1262,13 +1262,13 @@
                                 };
                             @endphp
                             <a href="{{ route('invoices.show', $kInv->id) }}"
-                               class="flex items-center gap-3 px-2 py-1.5 rounded-lg text-xs hover:bg-gray-50 transition-colors">
+                               class="flex items-center gap-3 px-2 py-1.5 rounded-lg text-xs hover:bg-mk-surface transition-colors">
                                 <div class="w-2 h-2 rounded-full flex-shrink-0 {{ $kDotColor }}"></div>
-                                <div class="flex-1 text-gray-700">
+                                <div class="flex-1 text-mk-muted">
                                     Termin {{ $kInv->installment_number }}/3
-                                    <span class="text-gray-400 ml-1">· {{ $kInv->due_date?->format('d M Y') ?? '—' }}</span>
+                                    <span class="text-mk-dim ml-1">· {{ $kInv->due_date?->format('d M Y') ?? '—' }}</span>
                                 </div>
-                                <div class="font-mono text-gray-600">
+                                <div class="font-mono text-mk-muted">
                                     Rp {{ number_format($kInv->total_amount, 0, ',', '.') }}
                                 </div>
                                 <span class="px-1.5 py-0.5 rounded {{ $kBadgeClass }} text-[10px] font-semibold">
@@ -1282,36 +1282,36 @@
                 @endif
 
                 {{-- Invoice terbaru --}}
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                    <div class="px-5 py-3.5 border-b border-gray-100">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#D4A853">5 Tagihan Terbaru</div>
+                <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm overflow-hidden">
+                    <div class="px-5 py-3.5 border-b border-mk-borderLight">
+                        <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#5DB890">5 Tagihan Terbaru</div>
                     </div>
                     @if($recentInvoices->isEmpty())
-                    <div class="px-5 py-8 text-center text-sm text-gray-400">Belum ada tagihan.</div>
+                    <div class="px-5 py-8 text-center text-sm text-mk-dim">Belum ada tagihan.</div>
                     @else
                     <table class="w-full text-xs">
                         <thead>
-                            <tr class="border-b border-gray-100 bg-gray-50">
-                                <th class="px-4 py-2.5 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">No. Invoice</th>
-                                <th class="px-4 py-2.5 text-left text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Items</th>
-                                <th class="px-4 py-2.5 text-right text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Total</th>
-                                <th class="px-4 py-2.5 text-right text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Saldo</th>
-                                <th class="px-4 py-2.5 text-center text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Status</th>
-                                <th class="px-4 py-2.5 text-center text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Aksi</th>
+                            <tr class="border-b border-mk-borderLight bg-mk-surface">
+                                <th class="px-4 py-2.5 text-left text-[10px] uppercase tracking-wide text-mk-dim font-semibold">No. Invoice</th>
+                                <th class="px-4 py-2.5 text-left text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Items</th>
+                                <th class="px-4 py-2.5 text-right text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Total</th>
+                                <th class="px-4 py-2.5 text-right text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Saldo</th>
+                                <th class="px-4 py-2.5 text-center text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Status</th>
+                                <th class="px-4 py-2.5 text-center text-[10px] uppercase tracking-wide text-mk-dim font-semibold">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($recentInvoices as $inv)
                             @php $iCfg = $invStatusCfg[$inv->status] ?? ['bg'=>'rgba(139,146,168,0.12)','color'=>'#8B92A8']; @endphp
-                            <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                <td class="px-4 py-2.5 font-mono" style="color:#D4A853">{{ $inv->invoice_number }}</td>
+                            <tr class="border-b border-mk-borderLight hover:bg-mk-surface transition-colors">
+                                <td class="px-4 py-2.5 font-mono" style="color:#5DB890">{{ $inv->invoice_number }}</td>
                                 <td class="px-4 py-2.5">
                                     @foreach($inv->items as $item)
                                     <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold mr-1"
                                           style="background:rgba(255,255,255,0.06);color:#8B92A8">{{ $item->item_code }}</span>
                                     @endforeach
                                 </td>
-                                <td class="px-4 py-2.5 text-right text-gray-700 font-mono">
+                                <td class="px-4 py-2.5 text-right text-mk-muted font-mono">
                                     Rp {{ number_format($inv->total_amount, 0, ',', '.') }}
                                 </td>
                                 <td class="px-4 py-2.5 text-right font-mono font-semibold"
@@ -1327,7 +1327,7 @@
                                 <td class="px-4 py-2.5 text-center">
                                     <a href="{{ route('invoices.show', $inv->id) }}"
                                        class="px-2.5 py-1 rounded-lg text-[10px] font-semibold"
-                                       style="background:rgba(212,168,83,0.15);color:#D4A853">
+                                       style="background:rgba(93,184,144,0.15);color:#5DB890">
                                         Detail
                                     </a>
                                 </td>
@@ -1345,13 +1345,13 @@
                  x-transition:enter-start="opacity-0 translate-y-2"
                  x-transition:enter-end="opacity-100 translate-y-0">
 
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-                    <div class="text-[10px] uppercase tracking-widest font-semibold mb-5" style="color:#D4A853">
+                <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5">
+                    <div class="text-[10px] uppercase tracking-widest font-semibold mb-5" style="color:#5DB890">
                         Riwayat Perubahan Status
                     </div>
 
                     @if($student->histories->isEmpty())
-                    <p class="text-sm text-gray-400">Belum ada perubahan status tercatat.</p>
+                    <p class="text-sm text-mk-dim">Belum ada perubahan status tercatat.</p>
                     @else
                     <div class="relative pl-6">
                         {{-- Garis vertikal timeline --}}
@@ -1376,7 +1376,7 @@
                                               style="background:{{ ($statusCfg[$h->from_status] ?? $statusCfg['Calon'])['bg'] }};color:{{ ($statusCfg[$h->from_status] ?? $statusCfg['Calon'])['color'] }}">
                                             {{ $h->from_status }}
                                         </span>
-                                        <span class="text-gray-400 text-sm">→</span>
+                                        <span class="text-mk-dim text-sm">→</span>
                                         @endif
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold"
                                               style="background:{{ $hCfg['bg'] }};color:{{ $hCfg['color'] }}">
@@ -1391,38 +1391,38 @@
                                         @endif
                                     </div>
                                     <div class="text-right shrink-0">
-                                        <div class="text-xs text-gray-400">{{ $h->created_at->format('d M Y, H:i') }}</div>
-                                        <div class="text-xs text-gray-500 mt-0.5">
+                                        <div class="text-xs text-mk-dim">{{ $h->created_at->format('d M Y, H:i') }}</div>
+                                        <div class="text-xs text-mk-dim mt-0.5">
                                             {{ $h->changedBy ? 'oleh ' . $h->changedBy->name : 'sistem' }}
                                         </div>
                                     </div>
                                 </div>
 
                                 @if($h->reason)
-                                <p class="mt-2 text-sm text-gray-600 whitespace-pre-line">{{ $h->reason }}</p>
+                                <p class="mt-2 text-sm text-mk-muted whitespace-pre-line">{{ $h->reason }}</p>
                                 @endif
 
                                 @if($h->metadata)
                                 <div class="mt-2 space-y-0.5">
                                     @if(!empty($h->metadata['reason_code']))
-                                    <div class="text-xs text-gray-400">
+                                    <div class="text-xs text-mk-dim">
                                         Kode: <code class="px-1 rounded" style="background:rgba(255,255,255,0.06)">{{ $h->metadata['reason_code'] }}</code>
                                     </div>
                                     @endif
                                     @if(!empty($h->metadata['cuti_from']))
-                                    <div class="text-xs text-gray-400">
+                                    <div class="text-xs text-mk-dim">
                                         Cuti: {{ \Carbon\Carbon::parse($h->metadata['cuti_from'])->format('d M Y') }}
                                         s/d {{ \Carbon\Carbon::parse($h->metadata['cuti_until'])->format('d M Y') }}
                                         @if(!empty($h->metadata['is_extension'])) (perpanjangan)@endif
                                     </div>
                                     @endif
                                     @if(!empty($h->metadata['trial_date']))
-                                    <div class="text-xs text-gray-400">
+                                    <div class="text-xs text-mk-dim">
                                         Trial: {{ \Carbon\Carbon::parse($h->metadata['trial_date'])->format('d M Y, H:i') }}
                                     </div>
                                     @endif
                                     @if(!empty($h->metadata['pending_invoices']))
-                                    <div class="text-xs text-gray-400">
+                                    <div class="text-xs text-mk-dim">
                                         Tagihan: @foreach($h->metadata['pending_invoices'] as $code)
                                         <code class="px-1 rounded ml-0.5" style="background:rgba(255,255,255,0.06)">{{ $code }}</code>
                                         @endforeach

@@ -30,10 +30,10 @@
         </div>
         @endif
 
-        <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
+        <div class="bg-mk-card shadow-sm sm:rounded-lg overflow-hidden">
             <table class="w-full text-sm">
-                <thead class="bg-gray-50">
-                    <tr class="border-b text-xs text-gray-500 uppercase text-left">
+                <thead class="bg-mk-surface">
+                    <tr class="border-b text-xs text-mk-dim uppercase text-left">
                         <th class="px-4 py-3">Nomor</th>
                         <th class="px-4 py-3">Nama Event</th>
                         <th class="px-4 py-3">Tipe</th>
@@ -45,16 +45,16 @@
                 </thead>
                 <tbody>
                     @forelse($events as $event)
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="px-4 py-3 font-mono text-xs text-gray-500">{{ $event->event_number }}</td>
+                        <tr class="border-b hover:bg-mk-surface">
+                            <td class="px-4 py-3 font-mono text-xs text-mk-dim">{{ $event->event_number }}</td>
                             <td class="px-4 py-3 font-medium">
                                 <a href="{{ route('events.show', $event) }}" class="text-blue-600 hover:underline">
                                     {{ $event->name }}
                                 </a>
                             </td>
-                            <td class="px-4 py-3 text-gray-600 text-xs">{{ $event->type_label }}</td>
-                            <td class="px-4 py-3 text-gray-600">{{ $event->event_date->format('d M Y') }}</td>
-                            <td class="px-4 py-3 text-center text-gray-600">{{ $event->participants_count }}</td>
+                            <td class="px-4 py-3 text-mk-muted text-xs">{{ $event->type_label }}</td>
+                            <td class="px-4 py-3 text-mk-muted">{{ $event->event_date->format('d M Y') }}</td>
+                            <td class="px-4 py-3 text-center text-mk-muted">{{ $event->participants_count }}</td>
                             <td class="px-4 py-3 text-center">
                                 @if($event->status === 'DRAFT')
                                     <span class="px-2 py-0.5 rounded text-xs bg-yellow-100 text-yellow-700">Draft</span>
@@ -66,13 +66,13 @@
                                 <a href="{{ route('events.show', $event) }}" class="text-xs text-blue-600 hover:underline">Detail</a>
                                 @if(auth()->user()->hasRole('Owner') && $event->isDraft())
                                     ·
-                                    <a href="{{ route('events.edit', $event) }}" class="text-xs text-gray-600 hover:underline">Edit</a>
+                                    <a href="{{ route('events.edit', $event) }}" class="text-xs text-mk-muted hover:underline">Edit</a>
                                 @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                            <td colspan="7" class="px-4 py-8 text-center text-mk-dim">
                                 Belum ada event. Klik "+ Buat Event" untuk mulai.
                             </td>
                         </tr>

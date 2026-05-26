@@ -17,16 +17,20 @@ export default {
             },
             colors: {
                 mk: {
-                    bg:        '#1A0E06',
-                    sidebar:   '#1C1410',
-                    card:      '#241608',
-                    cardHover: '#2E1C0E',
-                    border:    'rgba(212,168,83,0.08)',
-                    accent:    '#D4A853',
-                    accentDim: 'rgba(212,168,83,0.15)',
-                    text:      '#EDE0CC',
-                    muted:     '#8A6848',
-                    dim:       '#6B4A2A',
+                    bg:          '#F5F9F7',              // canvas utama (light, sedikit mint)
+                    sidebar:     '#4A1F0A',              // mahoni gelap — sidebar + primary button
+                    card:        '#FFFFFF',              // surface card / bg putih
+                    cardHover:   '#EAF5EF',              // hover mint terang
+                    surface:     'rgba(93,184,144,0.06)',// table header / section bg
+                    surfaceHover:'rgba(93,184,144,0.10)',// row hover bg
+                    border:      'rgba(93,184,144,0.22)',// mint border standar
+                    borderLight: 'rgba(93,184,144,0.12)',// border lebih halus
+                    liburStatus: 'rgba(206, 131, 250, 0.3)',              // status libur (biru)
+                    accent:      '#5DB890',              // mint accent
+                    accentDim:   'rgba(93,184,144,0.15)',// mint redup
+                    text:        '#3A2015',              // teks utama konten
+                    muted:       '#7A3818',              // teks sekunder
+                    dim:         '#C47A45',              // teks redup (tanggal, hint)
                 },
             },
         },

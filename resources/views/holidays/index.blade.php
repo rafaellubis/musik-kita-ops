@@ -29,7 +29,7 @@
             <form method="GET" class="inline-flex items-center gap-2">
                 <label class="text-xs text-mk-muted font-medium">Tahun:</label>
                 <select name="year" onchange="this.form.submit()"
-                        class="border-gray-300 rounded-md text-sm">
+                        class="border-mk-border rounded-md text-sm">
                     @foreach($availableYears as $y)
                         <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
                     @endforeach
@@ -40,9 +40,9 @@
             </form>
         </div>
 
-        <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+        <div class="bg-mk-card shadow-sm sm:rounded-lg overflow-hidden">
+            <table class="min-w-full divide-y divide-mk-border">
+                <thead class="bg-mk-surface">
                     <tr>
                         <th class="px-4 py-2 text-left text-xs font-medium uppercase">Tanggal</th>
                         <th class="px-4 py-2 text-left text-xs font-medium uppercase">Nama</th>
@@ -53,7 +53,7 @@
                         <th class="px-4 py-2 text-right text-xs font-medium uppercase">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
+                <tbody class="divide-y divide-mk-border">
                     @php
                         $typeBadge = [
                             'Nasional'      => 'bg-red-100 text-red-800',
@@ -63,16 +63,16 @@
                         $dayName = ['Sun'=>'Min','Mon'=>'Sen','Tue'=>'Sel','Wed'=>'Rab','Thu'=>'Kam','Fri'=>'Jum','Sat'=>'Sab'];
                     @endphp
                     @forelse($holidays as $h)
-                        <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-mk-surface">
                             <td class="px-4 py-2 text-sm">
                                 <span class="font-mono">{{ $h->date->format('d M Y') }}</span>
-                                <span class="ml-2 text-xs text-gray-500">
+                                <span class="ml-2 text-xs text-mk-dim">
                                     ({{ $dayName[$h->date->format('D')] ?? $h->date->format('D') }})
                                 </span>
                             </td>
                             <td class="px-4 py-2 text-sm">{{ $h->name }}</td>
                             <td class="px-4 py-2">
-                                <span class="px-2 py-1 rounded text-xs {{ $typeBadge[$h->type] ?? 'bg-gray-100' }}">
+                                <span class="px-2 py-1 rounded text-xs {{ $typeBadge[$h->type] ?? 'bg-mk-surface' }}">
                                     {{ $h->type }}
                                 </span>
                                 @if(!$h->is_honor_paid)
@@ -84,19 +84,19 @@
                                     <span class="font-mono text-green-700">
                                         {{ \Carbon\Carbon::parse($h->replacement_date)->format('d M Y') }}
                                     </span>
-                                    <div class="text-[10px] text-gray-400">
+                                    <div class="text-[10px] text-mk-dim">
                                         ({{ ['Sun'=>'Min','Mon'=>'Sen','Tue'=>'Sel','Wed'=>'Rab','Thu'=>'Kam','Fri'=>'Jum','Sat'=>'Sab'][\Carbon\Carbon::parse($h->replacement_date)->format('D')] ?? '' }})
                                     </div>
                                 @else
-                                    <span class="text-xs text-gray-400 italic">Tidak Ada Pergantian Kelas</span>
+                                    <span class="text-xs text-mk-dim italic">Tidak Ada Pergantian Kelas</span>
                                 @endif
                             </td>
-                            <td class="px-4 py-2 text-sm text-gray-600">{{ $h->notes ?? '—' }}</td>
+                            <td class="px-4 py-2 text-sm text-mk-muted">{{ $h->notes ?? '—' }}</td>
                             <td class="px-4 py-2 text-center">
                                 @if($h->is_active)
                                     <span class="px-2 py-1 rounded text-xs bg-green-100 text-green-800">Aktif</span>
                                 @else
-                                    <span class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-600">Off</span>
+                                    <span class="px-2 py-1 rounded text-xs bg-mk-surface text-mk-muted">Off</span>
                                 @endif
                             </td>
                             <td class="px-4 py-2 text-right whitespace-nowrap">
@@ -115,7 +115,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                            <td colspan="7" class="px-4 py-8 text-center text-mk-dim">
                                 Belum ada hari libur untuk tahun {{ $year }}.
                             </td>
                         </tr>

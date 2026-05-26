@@ -2,8 +2,8 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <div>
-                <h2 class="font-semibold text-xl text-gray-800">Daftar Murid</h2>
-                <div class="text-xs text-gray-500 mt-0.5">{{ $students->total() }} murid ditampilkan</div>
+                <h2 class="font-semibold text-xl text-mk-text">Daftar Murid</h2>
+                <div class="text-xs text-mk-dim mt-0.5">{{ $students->total() }} murid ditampilkan</div>
             </div>
             @hasanyrole('Owner|Admin')
             <a href="{{ route('students.create') }}"
@@ -91,7 +91,7 @@
                 </select>
                 <button type="submit"
                         class="mk-filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-                        style="background:rgba(212,168,83,0.15);color:#D4A853">
+                        style="background:rgba(93,184,144,0.15);color:#5DB890">
                     Filter
                 </button>
                 <a href="{{ route('students.index') }}"
@@ -103,42 +103,42 @@
         </form>
 
         {{-- ===== TABEL MURID ===== --}}
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden fade-in-up" style="animation-delay:140ms">
+        <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm overflow-hidden fade-in-up" style="animation-delay:140ms">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
-                        <tr class="border-b border-gray-100 bg-gray-50">
-                            <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-gray-500">Kode</th>
-                            <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-gray-500">Murid</th>
-                            <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-gray-500">L/P</th>
-                            <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-gray-500">Umur</th>
-                            <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-gray-500">Paket</th>
-                            <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-gray-500">Guru</th>
-                            <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-gray-500">Jadwal</th>
-                            <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-gray-500">Status</th>
-                            <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-gray-500">Aksi</th>
+                        <tr class="border-b border-mk-borderLight bg-mk-surface">
+                            <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-mk-dim">Kode</th>
+                            <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-mk-dim">Murid</th>
+                            <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-mk-dim">L/P</th>
+                            <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-mk-dim">Umur</th>
+                            <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-mk-dim">Paket</th>
+                            <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-mk-dim">Guru</th>
+                            <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-mk-dim">Jadwal</th>
+                            <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-mk-dim">Status</th>
+                            <th class="px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-mk-dim">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($students as $s)
                         @php $cfg = $statusCfg[$s->status] ?? $statusCfg['Calon']; @endphp
-                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
+                        <tr class="border-b border-mk-borderLight hover:bg-mk-surface transition-colors cursor-pointer"
                             onclick="window.location='{{ route('students.show', $s->id) }}'">
-                            <td class="px-4 py-3 font-mono text-xs font-semibold" style="color:#D4A853">
+                            <td class="px-4 py-3 font-mono text-xs font-semibold" style="color:#5DB890">
                                 {{ $s->student_code }}
                             </td>
                             <td class="px-4 py-3">
-                                <div class="text-sm font-semibold text-gray-800">{{ $s->full_name }}</div>
+                                <div class="text-sm font-semibold text-mk-text">{{ $s->full_name }}</div>
                                 @if($s->nickname)
-                                <div class="text-xs text-gray-500">"{{ $s->nickname }}"</div>
+                                <div class="text-xs text-mk-dim">"{{ $s->nickname }}"</div>
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-center text-sm text-gray-500">{{ $s->gender }}</td>
-                            <td class="px-4 py-3 text-center text-sm text-gray-700">{{ $s->age ?? '—' }}</td>
-                            <td class="px-4 py-3 text-xs text-gray-500 max-w-[130px] truncate">
+                            <td class="px-4 py-3 text-center text-sm text-mk-dim">{{ $s->gender }}</td>
+                            <td class="px-4 py-3 text-center text-sm text-mk-muted">{{ $s->age ?? '—' }}</td>
+                            <td class="px-4 py-3 text-xs text-mk-dim max-w-[130px] truncate">
                                 {{ $s->package?->code ?? '—' }}
                             </td>
-                            <td class="px-4 py-3 text-sm text-gray-700">
+                            <td class="px-4 py-3 text-sm text-mk-muted">
                                 {{ $s->assignedTeacher?->name ?? '—' }}
                             </td>
                             <td class="px-4 py-3 text-center">
@@ -147,10 +147,10 @@
                                     $hariMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
                                 @endphp
                                 @if($sch)
-                                <div class="text-xs text-gray-700">{{ $hariMap[$sch->day_of_week] ?? '—' }}</div>
-                                <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($sch->start_time)->format('H:i') }}</div>
+                                <div class="text-xs text-mk-muted">{{ $hariMap[$sch->day_of_week] ?? '—' }}</div>
+                                <div class="text-xs text-mk-dim">{{ \Carbon\Carbon::parse($sch->start_time)->format('H:i') }}</div>
                                 @else
-                                <span class="text-xs text-gray-400">—</span>
+                                <span class="text-xs text-mk-dim">—</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-center">
@@ -164,14 +164,14 @@
                             <td class="px-4 py-3 text-center" onclick="event.stopPropagation()">
                                 <a href="{{ route('students.show', $s->id) }}"
                                    class="inline-block px-3 py-1 rounded-lg text-xs font-semibold transition-colors"
-                                   style="background:rgba(212,168,83,0.15);color:#D4A853">
+                                   style="background:rgba(93,184,144,0.15);color:#5DB890">
                                     Detail →
                                 </a>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="9" class="px-4 py-12 text-center text-sm text-gray-400">
+                            <td colspan="9" class="px-4 py-12 text-center text-sm text-mk-dim">
                                 Tidak ada murid yang sesuai filter.
                             </td>
                         </tr>
@@ -181,7 +181,7 @@
             </div>
 
             {{-- Pagination --}}
-            <div class="px-4 py-3 border-t border-gray-100">
+            <div class="px-4 py-3 border-t border-mk-borderLight">
                 {{ $students->withQueryString()->links() }}
             </div>
         </div>

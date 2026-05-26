@@ -30,15 +30,15 @@
         </div>
         @endif
 
-        <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
+        <div class="bg-mk-card shadow-sm sm:rounded-lg overflow-hidden">
             @if($components->isEmpty())
-                <div class="p-8 text-center text-gray-500">
+                <div class="p-8 text-center text-mk-dim">
                     Belum ada item. Klik "+ Tambah Item" untuk mulai.
                 </div>
             @else
                 <table class="w-full text-sm">
-                    <thead class="bg-gray-50">
-                        <tr class="border-b text-left text-xs text-gray-500 uppercase">
+                    <thead class="bg-mk-surface">
+                        <tr class="border-b text-left text-xs text-mk-dim uppercase">
                             <th class="px-4 py-3">Urut</th>
                             <th class="px-4 py-3">Kode</th>
                             <th class="px-4 py-3">Nama Tampilan</th>
@@ -50,23 +50,23 @@
                             @endrole
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody class="divide-y divide-mk-border">
                         @foreach($components as $c)
-                            <tr class="hover:bg-gray-50 {{ $c->is_active ? '' : 'opacity-50' }}">
-                                <td class="px-4 py-2 text-gray-400 text-xs">{{ $c->sort_order }}</td>
+                            <tr class="hover:bg-mk-surface {{ $c->is_active ? '' : 'opacity-50' }}">
+                                <td class="px-4 py-2 text-mk-dim text-xs">{{ $c->sort_order }}</td>
                                 <td class="px-4 py-2 font-mono font-bold">{{ $c->code }}</td>
                                 <td class="px-4 py-2">{{ $c->name }}</td>
                                 <td class="px-4 py-2 text-right font-medium text-orange-700">
                                     {{ $c->formatted_price }}
                                 </td>
-                                <td class="px-4 py-2 text-xs text-gray-500 max-w-xs">
+                                <td class="px-4 py-2 text-xs text-mk-dim max-w-xs">
                                     {{ $c->description ?? '—' }}
                                 </td>
                                 <td class="px-4 py-2 text-center">
                                     @if($c->is_active)
                                         <span class="px-2 py-1 rounded text-xs bg-green-100 text-green-800">Aktif</span>
                                     @else
-                                        <span class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-500">Nonaktif</span>
+                                        <span class="px-2 py-1 rounded text-xs bg-mk-surface text-mk-dim">Nonaktif</span>
                                     @endif
                                 </td>
                                 @role('Owner')

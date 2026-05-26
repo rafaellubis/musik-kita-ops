@@ -15,14 +15,14 @@
     </x-slot>
 
     <div class="py-6 px-4 lg:px-8">
-        <div class="bg-white shadow-sm sm:rounded-lg p-6 max-w-2xl">
+        <div class="bg-mk-card shadow-sm sm:rounded-lg p-6 max-w-2xl">
 
-            <div class="mb-5 p-3 bg-gray-50 rounded text-sm text-gray-600">
+            <div class="mb-5 p-3 bg-mk-surface rounded text-sm text-mk-muted">
                 <div class="font-medium">{{ $honor->slip_number }} · {{ $monthName }}</div>
                 <div class="mt-1">
                     Honor pokok (otomatis): <strong>Rp {{ number_format($honor->base_honor, 0, ',', '.') }}</strong>
                 </div>
-                <div class="text-xs text-gray-400 mt-1">
+                <div class="text-xs text-mk-dim mt-1">
                     Honor pokok tidak bisa diubah di sini — berasal dari data absensi.
                     Untuk mengubahnya, perbaiki data absensi lalu jalankan ulang kalkulasi.
                 </div>
@@ -34,80 +34,80 @@
 
                 {{-- Honor Event (isi 0 jika bulan ini tidak ada event) --}}
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">
+                    <label class="block text-sm font-medium text-mk-muted">
                         Honor Event (Rp)
-                        <span class="text-gray-400 font-normal text-xs ml-1">— isi 0 jika tidak ada event bulan ini</span>
+                        <span class="text-mk-dim font-normal text-xs ml-1">— isi 0 jika tidak ada event bulan ini</span>
                     </label>
                     <input type="number"
                            name="event_honor"
                            value="{{ old('event_honor', $honor->event_honor) }}"
                            min="0" max="99999999" required
-                           class="mt-1 block w-full border-gray-300 rounded @error('event_honor') border-red-500 @enderror">
+                           class="mt-1 block w-full border-mk-border rounded @error('event_honor') border-red-500 @enderror">
                     @error('event_honor')
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">
+                    <label class="block text-sm font-medium text-mk-muted">
                         Keterangan Event
                         <span class="text-red-500">*</span>
-                        <span class="text-gray-400 font-normal text-xs ml-1">— wajib diisi jika ada honor event</span>
+                        <span class="text-mk-dim font-normal text-xs ml-1">— wajib diisi jika ada honor event</span>
                     </label>
                     <input type="text"
                            name="event_honor_note"
                            value="{{ old('event_honor_note', $honor->event_honor_note) }}"
                            maxlength="255"
                            placeholder="Contoh: Mini Concert Mei 2026, Ujian Grade Semester 1"
-                           class="mt-1 block w-full border-gray-300 rounded @error('event_honor_note') border-red-500 @enderror">
+                           class="mt-1 block w-full border-mk-border rounded @error('event_honor_note') border-red-500 @enderror">
                     @error('event_honor_note')
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">
+                    <label class="block text-sm font-medium text-mk-muted">
                         Honor Transport (Rp)
-                        <span class="text-gray-400 font-normal text-xs ml-1">— input manual, isi 0 jika tidak ada</span>
+                        <span class="text-mk-dim font-normal text-xs ml-1">— input manual, isi 0 jika tidak ada</span>
                     </label>
                     <input type="number"
                            name="transport_honor"
                            value="{{ old('transport_honor', $honor->transport_honor) }}"
                            min="0" max="99999999" required
-                           class="mt-1 block w-full border-gray-300 rounded @error('transport_honor') border-red-500 @enderror">
+                           class="mt-1 block w-full border-mk-border rounded @error('transport_honor') border-red-500 @enderror">
                     @error('transport_honor')
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">
+                    <label class="block text-sm font-medium text-mk-muted">
                         Honor Lain-lain (Rp)
-                        <span class="text-gray-400 font-normal text-xs ml-1">— input manual, isi 0 jika tidak ada</span>
+                        <span class="text-mk-dim font-normal text-xs ml-1">— input manual, isi 0 jika tidak ada</span>
                     </label>
                     <input type="number"
                            name="other_honor"
                            id="other_honor"
                            value="{{ old('other_honor', $honor->other_honor) }}"
                            min="0" max="99999999" required
-                           class="mt-1 block w-full border-gray-300 rounded @error('other_honor') border-red-500 @enderror">
+                           class="mt-1 block w-full border-mk-border rounded @error('other_honor') border-red-500 @enderror">
                     @error('other_honor')
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div class="mb-5" id="note_wrapper">
-                    <label class="block text-sm font-medium text-gray-700">
+                    <label class="block text-sm font-medium text-mk-muted">
                         Keterangan Lain-lain
                         <span class="text-red-500">*</span>
-                        <span class="text-gray-400 font-normal text-xs ml-1">— wajib diisi jika ada honor lain-lain</span>
+                        <span class="text-mk-dim font-normal text-xs ml-1">— wajib diisi jika ada honor lain-lain</span>
                     </label>
                     <input type="text"
                            name="other_honor_note"
                            value="{{ old('other_honor_note', $honor->other_honor_note) }}"
                            maxlength="255"
                            placeholder="Contoh: bonus akhir tahun, biaya event khusus"
-                           class="mt-1 block w-full border-gray-300 rounded @error('other_honor_note') border-red-500 @enderror">
+                           class="mt-1 block w-full border-mk-border rounded @error('other_honor_note') border-red-500 @enderror">
                     @error('other_honor_note')
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                     @enderror
@@ -115,7 +115,7 @@
 
                 {{-- Preview total --}}
                 <div class="mb-5 p-3 bg-blue-50 rounded text-sm">
-                    <div class="text-xs text-gray-500 mb-1">Preview Total Honor</div>
+                    <div class="text-xs text-mk-dim mb-1">Preview Total Honor</div>
                     <div class="font-bold text-blue-700">
                         Rp {{ number_format($honor->base_honor, 0, ',', '.') }}
                         + <span id="preview_event">Rp {{ number_format($honor->event_honor, 0, ',', '.') }}</span>
@@ -127,7 +127,7 @@
 
                 <div class="flex gap-2 justify-end">
                     <a href="{{ route('honors.show', $honor) }}"
-                       class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm">Batal</a>
+                       class="px-4 py-2 bg-mk-surface hover:bg-mk-surfaceHover rounded text-sm">Batal</a>
                     <button type="submit"
                             class="px-4 py-2 rounded text-sm font-bold transition-colors btn-mk-primary"
                             >

@@ -30,10 +30,10 @@
         </div>
         @endif
 
-        <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
+        <div class="bg-mk-card shadow-sm sm:rounded-lg overflow-hidden">
             <table class="w-full text-sm">
-                <thead class="bg-gray-50">
-                    <tr class="border-b text-xs text-gray-500 uppercase text-left">
+                <thead class="bg-mk-surface">
+                    <tr class="border-b text-xs text-mk-dim uppercase text-left">
                         <th class="px-4 py-3">Kode</th>
                         <th class="px-4 py-3">Nama</th>
                         <th class="px-4 py-3">Deskripsi</th>
@@ -44,16 +44,16 @@
                 </thead>
                 <tbody>
                     @forelse($categories as $cat)
-                        <tr class="border-b hover:bg-gray-50 {{ !$cat->is_active ? 'opacity-50' : '' }}">
+                        <tr class="border-b hover:bg-mk-surface {{ !$cat->is_active ? 'opacity-50' : '' }}">
                             <td class="px-4 py-3 font-mono text-xs">{{ $cat->code }}</td>
                             <td class="px-4 py-3 font-medium">{{ $cat->name }}</td>
-                            <td class="px-4 py-3 text-gray-500 text-xs">{{ $cat->description ?? '—' }}</td>
+                            <td class="px-4 py-3 text-mk-dim text-xs">{{ $cat->description ?? '—' }}</td>
                             <td class="px-4 py-3 text-center text-xs">{{ $cat->sort_order }}</td>
                             <td class="px-4 py-3 text-center">
                                 @if($cat->is_active)
                                     <span class="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">Aktif</span>
                                 @else
-                                    <span class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-500">Nonaktif</span>
+                                    <span class="px-2 py-0.5 rounded text-xs bg-mk-surface text-mk-dim">Nonaktif</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-right whitespace-nowrap">
@@ -72,7 +72,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                            <td colspan="6" class="px-4 py-8 text-center text-mk-dim">
                                 Belum ada kategori.
                             </td>
                         </tr>

@@ -41,7 +41,7 @@
                 </p>
                 <a href="{{ route('import.template') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold transition-colors"
-                   style="background:rgba(212,168,83,0.15);color:#D4A853;border:1px solid rgba(212,168,83,0.3)">
+                   style="background:rgba(93,184,144,0.15);color:#5DB890;border:1px solid rgba(93,184,144,0.3)">
                     ⬇ Download Template .xlsx
                 </a>
             </div>
@@ -64,7 +64,7 @@
                     </p>
                     <button type="button" @click="$refs.fileInput.click()"
                             class="text-sm px-3 py-1.5 rounded border transition-colors"
-                            style="border-color:rgba(255,255,255,0.2);color:#D4A853">
+                            style="border-color:rgba(255,255,255,0.2);color:#5DB890">
                         Pilih File
                     </button>
                     <p class="text-xs text-mk-muted mt-3">Format: .xlsx saja &nbsp;|&nbsp; Maks: 5MB</p>

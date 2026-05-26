@@ -52,12 +52,12 @@
         @endif
 
         {{-- ============= HEADER SLIP ============= --}}
-        <div class="bg-white shadow-sm sm:rounded-lg p-6">
+        <div class="bg-mk-card shadow-sm sm:rounded-lg p-6">
             <div class="flex justify-between items-start">
                 <div>
-                    <div class="font-mono text-sm text-gray-500">{{ $honor->slip_number }}</div>
+                    <div class="font-mono text-sm text-mk-dim">{{ $honor->slip_number }}</div>
                     <div class="text-2xl font-bold mt-1">{{ $honor->teacher->name }}</div>
-                    <div class="text-gray-600 text-sm mt-1">
+                    <div class="text-mk-muted text-sm mt-1">
                         Honor {{ $monthName }}
                         @if($honor->teacher->instruments->isNotEmpty())
                             · {{ $honor->teacher->instruments->pluck('name')->implode(', ') }}
@@ -68,7 +68,7 @@
                             {{ $honor->status_label }}
                         </span>
                         @if($honor->status === 'PAID' && $honor->paid_at)
-                            <span class="text-sm text-gray-500">
+                            <span class="text-sm text-mk-dim">
                                 Dibayar {{ $honor->paid_at->format('d M Y') }}
                                 @if($honor->paidBy) oleh {{ $honor->paidBy->name }} @endif
                             </span>
@@ -103,41 +103,41 @@
 
             {{-- Ringkasan komponen honor --}}
             <div class="mt-5 border-t pt-4">
-                <h3 class="text-sm font-medium text-gray-700 mb-3">Komponen Honor</h3>
+                <h3 class="text-sm font-medium text-mk-muted mb-3">Komponen Honor</h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div class="bg-gray-50 rounded p-3">
-                        <div class="text-xs text-gray-500">Honor Pokok (Otomatis)</div>
+                    <div class="bg-mk-surface rounded p-3">
+                        <div class="text-xs text-mk-dim">Honor Pokok (Otomatis)</div>
                         <div class="text-lg font-bold mt-1">
                             Rp {{ number_format($honor->base_honor, 0, ',', '.') }}
                         </div>
-                        <div class="text-xs text-gray-400 mt-1">dari {{ $sessions->count() }} sesi</div>
+                        <div class="text-xs text-mk-dim mt-1">dari {{ $sessions->count() }} sesi</div>
                     </div>
                     @if($honor->hasEventHonor())
-                    <div class="bg-gray-50 rounded p-3">
-                        <div class="text-xs text-gray-500">Honor Event (Manual)</div>
+                    <div class="bg-mk-surface rounded p-3">
+                        <div class="text-xs text-mk-dim">Honor Event (Manual)</div>
                         <div class="text-lg font-bold mt-1">
                             Rp {{ number_format($honor->event_honor, 0, ',', '.') }}
                         </div>
                         @if($honor->event_honor_note)
-                            <div class="text-xs text-gray-500 mt-1 italic">
+                            <div class="text-xs text-mk-dim mt-1 italic">
                                 {{ $honor->event_honor_note }}
                             </div>
                         @endif
                     </div>
                     @endif
-                    <div class="bg-gray-50 rounded p-3">
-                        <div class="text-xs text-gray-500">Transport (Manual)</div>
+                    <div class="bg-mk-surface rounded p-3">
+                        <div class="text-xs text-mk-dim">Transport (Manual)</div>
                         <div class="text-lg font-bold mt-1">
                             Rp {{ number_format($honor->transport_honor, 0, ',', '.') }}
                         </div>
                     </div>
-                    <div class="bg-gray-50 rounded p-3">
-                        <div class="text-xs text-gray-500">Lain-lain (Manual)</div>
+                    <div class="bg-mk-surface rounded p-3">
+                        <div class="text-xs text-mk-dim">Lain-lain (Manual)</div>
                         <div class="text-lg font-bold mt-1">
                             Rp {{ number_format($honor->other_honor, 0, ',', '.') }}
                         </div>
                         @if($honor->other_honor_note)
-                            <div class="text-xs text-gray-500 mt-1 italic">
+                            <div class="text-xs text-mk-dim mt-1 italic">
                                 {{ $honor->other_honor_note }}
                             </div>
                         @endif
@@ -151,7 +151,7 @@
                 </div>
 
                 @if($honor->teacher->bank_name || $honor->teacher->bank_account)
-                    <div class="mt-3 text-sm text-gray-600">
+                    <div class="mt-3 text-sm text-mk-muted">
                         Transfer ke:
                         <span class="font-medium">{{ $honor->teacher->bank_name }}</span>
                         <span class="font-mono ml-1">{{ $honor->teacher->bank_account }}</span>
@@ -161,17 +161,17 @@
         </div>
 
         {{-- ============= RINCIAN SESI PER KATEGORI ============= --}}
-        <div class="bg-white shadow-sm sm:rounded-lg p-6">
-            <h3 class="text-lg font-medium text-gray-700 mb-4">Rincian Honor per Kategori</h3>
+        <div class="bg-mk-card shadow-sm sm:rounded-lg p-6">
+            <h3 class="text-lg font-medium text-mk-muted mb-4">Rincian Honor per Kategori</h3>
 
             @if($breakdown->isEmpty())
-                <p class="text-sm text-gray-500">Belum ada sesi yang dihitung untuk bulan ini.</p>
+                <p class="text-sm text-mk-dim">Belum ada sesi yang dihitung untuk bulan ini.</p>
             @else
                 {{-- Tabel ringkasan per kode --}}
                 <div class="overflow-x-auto mb-6">
                     <table class="w-full text-sm">
                         <thead>
-                            <tr class="border-b text-xs text-gray-500 uppercase text-left">
+                            <tr class="border-b text-xs text-mk-dim uppercase text-left">
                                 <th class="py-1.5">Kode</th>
                                 <th class="py-1.5">Keterangan</th>
                                 <th class="py-1.5 text-right">Jumlah Sesi</th>
@@ -181,7 +181,7 @@
                         <tbody>
                             @foreach($breakdown as $code => $row)
                                 <tr class="border-b">
-                                    <td class="py-2 font-mono text-xs text-gray-600">{{ $code }}</td>
+                                    <td class="py-2 font-mono text-xs text-mk-muted">{{ $code }}</td>
                                     <td class="py-2">{{ $honorLabels[$code] ?? $code }}</td>
                                     <td class="py-2 text-right">{{ $row['count'] }}</td>
                                     <td class="py-2 text-right font-medium">
@@ -190,7 +190,7 @@
                                 </tr>
                             @endforeach
                             <tr class="font-bold border-t-2">
-                                <td colspan="2" class="py-2 text-gray-700">Total</td>
+                                <td colspan="2" class="py-2 text-mk-muted">Total</td>
                                 <td class="py-2 text-right">{{ $sessions->count() }}</td>
                                 <td class="py-2 text-right">
                                     Rp {{ number_format($sessions->sum('honor_amount'), 0, ',', '.') }}
@@ -208,7 +208,7 @@
                     <div class="overflow-x-auto mt-2">
                         <table class="w-full text-xs">
                             <thead>
-                                <tr class="border-b text-gray-500 uppercase text-left">
+                                <tr class="border-b text-mk-dim uppercase text-left">
                                     <th class="py-1.5">Tanggal</th>
                                     <th class="py-1.5">Murid</th>
                                     <th class="py-1.5">Status</th>
@@ -218,7 +218,7 @@
                             </thead>
                             <tbody>
                                 @foreach($sessions as $sesi)
-                                    <tr class="border-b hover:bg-gray-50">
+                                    <tr class="border-b hover:bg-mk-surface">
                                         <td class="py-1.5">{{ \Carbon\Carbon::parse($sesi->session_date)->format('d M') }}</td>
                                         <td class="py-1.5">
                                             {{ $sesi->student->full_name ?? '?' }}
@@ -240,7 +240,7 @@
             @endif
         </div>
 
-        <p class="text-xs text-gray-400 text-right">
+        <p class="text-xs text-mk-dim text-right">
             * Sesi dihitung hingga H-2 sebelum akhir bulan
             ({{ \Carbon\Carbon::create($honor->year, $honor->month, 1)->endOfMonth()->subDays(2)->format('d M Y') }}).
         </p>

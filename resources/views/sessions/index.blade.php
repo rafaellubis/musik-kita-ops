@@ -72,14 +72,14 @@
             @endforeach
         </div>
 
-        <div class="bg-white shadow-sm sm:rounded-lg p-5"
+        <div class="bg-mk-card shadow-sm sm:rounded-lg p-5"
              x-data="{ showGenerate: false, editSession: null }">
 
             @php $canEdit = auth()->user()?->hasAnyRole(['Owner', 'Admin']); @endphp
 
             {{-- ===== HEADER: Period + Generate Button ===== --}}
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-sm font-semibold text-gray-700">Sesi {{ $monthName }}</h3>
+                <h3 class="text-sm font-semibold text-mk-muted">Sesi {{ $monthName }}</h3>
                 @if($canEdit)
                     <div class="flex items-center gap-2">
                         <a href="{{ route('absensi.index') }}"
@@ -99,22 +99,22 @@
             {{-- ===== Form Generate (toggle pakai Alpine) ===== --}}
             @if($canEdit)
                 <div x-show="showGenerate" x-cloak
-                     class="mb-4 p-4 border border-gray-200 bg-gray-50 rounded-lg">
+                     class="mb-4 p-4 border border-mk-border bg-mk-surface rounded-lg">
                     <form method="POST" action="{{ route('sessions.generate') }}"
                           onsubmit="return confirm('Generate sesi untuk bulan terpilih? Idempotent — sesi yang sudah ada tidak duplikat.')">
                         @csrf
                         <div class="flex items-end gap-3 flex-wrap">
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1">Tahun</label>
+                                <label class="block text-xs text-mk-dim mb-1">Tahun</label>
                                 <input type="number" name="year" required min="2024" max="2030"
                                        value="{{ $nextYear }}"
-                                       class="border-gray-300 rounded text-sm w-24">
+                                       class="border-mk-border rounded text-sm w-24">
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1">Bulan (1-12)</label>
+                                <label class="block text-xs text-mk-dim mb-1">Bulan (1-12)</label>
                                 <input type="number" name="month" required min="1" max="12"
                                        value="{{ $nextMonth }}"
-                                       class="border-gray-300 rounded text-sm w-20">
+                                       class="border-mk-border rounded text-sm w-20">
                             </div>
                             <button type="submit"
                                     class="px-4 py-2 rounded-lg text-sm font-bold transition-colors btn-mk-primary"
@@ -122,7 +122,7 @@
                                 Jalankan Generator
                             </button>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2">
+                        <p class="text-xs text-mk-dim mt-2">
                             Default: bulan depan ({{ \Carbon\Carbon::create($nextYear, $nextMonth, 1)->format('F Y') }}).
                             Generator membaca semua schedule aktif, buat sesi sesuai BR-3.3 (max 4/bulan)
                             dan BR-4.10 (libur nasional → status LIBUR otomatis).
@@ -135,13 +135,13 @@
             <form method="GET" action="{{ route('sessions.index') }}" class="mb-4">
                 <div class="grid grid-cols-2 md:grid-cols-6 gap-2 text-sm">
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1">Tahun</label>
+                        <label class="block text-xs text-mk-dim mb-1">Tahun</label>
                         <input type="number" name="year" value="{{ $year }}" min="2024" max="2030"
-                               class="block w-full border-gray-300 rounded text-sm">
+                               class="block w-full border-mk-border rounded text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1">Bulan</label>
-                        <select name="month" class="block w-full border-gray-300 rounded text-sm">
+                        <label class="block text-xs text-mk-dim mb-1">Bulan</label>
+                        <select name="month" class="block w-full border-mk-border rounded text-sm">
                             @for($m = 1; $m <= 12; $m++)
                                 <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
                                     {{ \Carbon\Carbon::create(2026, $m, 1)->format('F') }}
@@ -150,8 +150,8 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1">Guru</label>
-                        <select name="teacher_id" class="block w-full border-gray-300 rounded text-sm">
+                        <label class="block text-xs text-mk-dim mb-1">Guru</label>
+                        <select name="teacher_id" class="block w-full border-mk-border rounded text-sm">
                             <option value="">Semua Guru</option>
                             @foreach($teachers as $t)
                                 <option value="{{ $t->id }}"
@@ -162,8 +162,8 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1">Ruang</label>
-                        <select name="room_id" class="block w-full border-gray-300 rounded text-sm">
+                        <label class="block text-xs text-mk-dim mb-1">Ruang</label>
+                        <select name="room_id" class="block w-full border-mk-border rounded text-sm">
                             <option value="">Semua Ruang</option>
                             @foreach($rooms as $r)
                                 <option value="{{ $r->id }}"
@@ -174,8 +174,8 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1">Murid</label>
-                        <select name="student_id" class="block w-full border-gray-300 rounded text-sm">
+                        <label class="block text-xs text-mk-dim mb-1">Murid</label>
+                        <select name="student_id" class="block w-full border-mk-border rounded text-sm">
                             <option value="">Semua Murid</option>
                             @foreach($students as $s)
                                 <option value="{{ $s->id }}"
@@ -186,8 +186,8 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1">Status</label>
-                        <select name="status" class="block w-full border-gray-300 rounded text-sm">
+                        <label class="block text-xs text-mk-dim mb-1">Status</label>
+                        <select name="status" class="block w-full border-mk-border rounded text-sm">
                             <option value="">Semua Status</option>
                             @foreach($statusList as $st)
                                 <option value="{{ $st }}"
@@ -203,7 +203,7 @@
                         Filter
                     </button>
                     <a href="{{ route('sessions.index') }}"
-                       class="px-4 py-1.5 bg-gray-200 rounded-lg text-xs font-medium hover:bg-gray-300 transition-colors">
+                       class="px-4 py-1.5 bg-mk-surface rounded-lg text-xs font-medium hover:bg-mk-surfaceHover transition-colors">
                         Reset
                     </a>
                 </div>
@@ -211,8 +211,8 @@
 
             {{-- ===== TABLE ===== --}}
             <div class="overflow-x-auto">
-                <table class="min-w-full text-sm divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full text-sm divide-y divide-mk-border">
+                    <thead class="bg-mk-surface">
                         <tr>
                             <th class="px-2 py-1.5 text-left text-xs uppercase font-medium">Tanggal</th>
                             <th class="px-2 py-1.5 text-left text-xs uppercase font-medium">Jam</th>
@@ -227,9 +227,9 @@
                             @endif
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody class="divide-y divide-mk-border">
                         @forelse($sessions as $s)
-                            <tr class="hover:bg-gray-50">
+                            <tr class="hover:bg-mk-surface">
                                 <td class="px-2 py-1.5 whitespace-nowrap text-sm">
                                     {{ \Carbon\Carbon::parse($s->session_date)->format('D, d M') }}
                                 </td>
@@ -243,7 +243,7 @@
                                        class="text-blue-600 hover:underline">
                                         {{ $s->student->full_name ?? '?' }}
                                     </a>
-                                    <span class="text-xs text-gray-500 font-mono ml-1">
+                                    <span class="text-xs text-mk-dim font-mono ml-1">
                                         {{ $s->student->student_code ?? '' }}
                                     </span>
                                 </td>
@@ -255,14 +255,14 @@
                                             {{ $label }}
                                         </span>
                                     @else
-                                        <span class="text-gray-400 text-xs">—</span>
+                                        <span class="text-mk-dim text-xs">—</span>
                                     @endif
                                 </td>
                                 <td class="px-2 py-1.5 text-sm">
                                     @if($s->substituteTeacher)
                                         {{ $s->substituteTeacher->name }}
                                         <span class="text-xs text-orange-600">(pengganti)</span>
-                                        <span class="text-xs text-gray-400 line-through ml-1">
+                                        <span class="text-xs text-mk-dim line-through ml-1">
                                             {{ $s->teacher->name ?? '' }}
                                         </span>
                                     @else
@@ -280,9 +280,9 @@
                                 <td class="px-2 py-1.5 text-right whitespace-nowrap text-xs">
                                     @if($s->honor_amount)
                                         Rp {{ number_format($s->honor_amount, 0, ',', '.') }}
-                                        <div class="text-gray-400">{{ $s->honor_code }}</div>
+                                        <div class="text-mk-dim">{{ $s->honor_code }}</div>
                                     @else
-                                        <span class="text-gray-400">—</span>
+                                        <span class="text-mk-dim">—</span>
                                     @endif
                                 </td>
                                 @if($canEdit)
@@ -317,7 +317,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $canEdit ? 8 : 7 }}" class="px-2 py-6 text-center text-gray-500">
+                                <td colspan="{{ $canEdit ? 8 : 7 }}" class="px-2 py-6 text-center text-mk-dim">
                                     Tidak ada sesi sesuai filter.
                                     @if($sessions->total() === 0 && !request()->has('teacher_id'))
                                         Coba klik "Generate Sesi Bulan" untuk men-generate sesi {{ $monthName }}.
@@ -338,13 +338,13 @@
             <div x-show="editSession !== null" x-cloak
                  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
                  @click.self="editSession = null">
-                <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+                <div class="bg-mk-card rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-sm font-semibold text-gray-800">
+                        <h3 class="text-sm font-semibold text-mk-text">
                             Edit Sesi — <span x-text="editSession?.sessionDate" class="font-mono"></span>
                         </h3>
                         <button @click="editSession = null"
-                                class="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+                                class="text-mk-dim hover:text-mk-muted text-lg leading-none">&times;</button>
                     </div>
 
                     <form :action="editSession?.action" method="POST" class="space-y-4">
@@ -353,25 +353,25 @@
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Jam Mulai</label>
+                                <label class="block text-xs font-medium text-mk-muted mb-1">Jam Mulai</label>
                                 <input type="time" name="start_time"
                                        :value="editSession?.startTime"
                                        required
-                                       class="block w-full border-gray-300 rounded-lg text-sm px-3 py-2">
+                                       class="block w-full border-mk-border rounded-lg text-sm px-3 py-2">
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Jam Selesai</label>
+                                <label class="block text-xs font-medium text-mk-muted mb-1">Jam Selesai</label>
                                 <input type="time" name="end_time"
                                        :value="editSession?.endTime"
                                        required
-                                       class="block w-full border-gray-300 rounded-lg text-sm px-3 py-2">
+                                       class="block w-full border-mk-border rounded-lg text-sm px-3 py-2">
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Guru</label>
+                            <label class="block text-xs font-medium text-mk-muted mb-1">Guru</label>
                             <select name="teacher_id" required
-                                    class="block w-full border-gray-300 rounded-lg text-sm px-3 py-2">
+                                    class="block w-full border-mk-border rounded-lg text-sm px-3 py-2">
                                 <option value="">— Pilih Guru —</option>
                                 @foreach($teachers as $t)
                                 <option value="{{ $t->id }}"
@@ -383,11 +383,11 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">
-                                Ruang <span class="text-gray-400">(opsional)</span>
+                            <label class="block text-xs font-medium text-mk-muted mb-1">
+                                Ruang <span class="text-mk-dim">(opsional)</span>
                             </label>
                             <select name="room_id"
-                                    class="block w-full border-gray-300 rounded-lg text-sm px-3 py-2">
+                                    class="block w-full border-mk-border rounded-lg text-sm px-3 py-2">
                                 <option value="">— Tidak Ditentukan —</option>
                                 @foreach($rooms as $r)
                                 <option value="{{ $r->id }}"
@@ -400,7 +400,7 @@
 
                         <div class="flex justify-end gap-2 pt-2">
                             <button type="button" @click="editSession = null"
-                                    class="px-4 py-2 text-xs bg-gray-100 rounded-lg hover:bg-gray-200">
+                                    class="px-4 py-2 text-xs bg-mk-surface rounded-lg hover:bg-mk-surfaceHover">
                                 Batal
                             </button>
                             <button type="submit"

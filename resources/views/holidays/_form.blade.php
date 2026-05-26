@@ -64,7 +64,7 @@
             <input type="date" name="date" required
                    x-model="holidayDate"
                    @change="computeSuggestion()"
-                   class="mt-1 block w-full border-gray-300 rounded-md">
+                   class="mt-1 block w-full border-mk-border rounded-md">
         </div>
 
         {{-- Tipe --}}
@@ -73,7 +73,7 @@
             <select name="type" required
                     x-model="type"
                     @change="computeSuggestion()"
-                    class="mt-1 block w-full border-gray-300 rounded-md">
+                    class="mt-1 block w-full border-mk-border rounded-md">
                 @php $types = ['Nasional', 'Cuti Bersama', 'Internal']; @endphp
                 <option value="">— Pilih —</option>
                 @foreach($types as $t)
@@ -88,7 +88,7 @@
             <label class="block text-sm font-medium">Nama Hari Libur <span class="text-red-500">*</span></label>
             <input type="text" name="name" required maxlength="100"
                    value="{{ old('name', $holiday->name ?? '') }}"
-                   class="mt-1 block w-full border-gray-300 rounded-md"
+                   class="mt-1 block w-full border-mk-border rounded-md"
                    placeholder="Tahun Baru Masehi">
         </div>
 
@@ -96,27 +96,27 @@
         <div class="md:col-span-2">
             <label class="block text-sm font-medium">
                 Tanggal Pengganti
-                <span class="text-gray-400 text-xs font-normal ml-1">(opsional — dalam bulan yang sama)</span>
+                <span class="text-mk-dim text-xs font-normal ml-1">(opsional — dalam bulan yang sama)</span>
             </label>
 
             <div class="mt-1 flex gap-2 items-start">
                 <input type="date" name="replacement_date"
                        x-model="replacementDate"
                        :disabled="replacementDisabled"
-                       :class="replacementDisabled ? 'opacity-40 cursor-not-allowed bg-gray-100' : ''"
-                       class="block w-full border-gray-300 rounded-md">
+                       :class="replacementDisabled ? 'opacity-40 cursor-not-allowed bg-mk-surface' : ''"
+                       class="block w-full border-mk-border rounded-md">
 
                 <button type="button"
                         x-show="!replacementDisabled && suggestion && suggestion.startsWith('Saran:')"
                         @click="useSuggestion()"
-                        class="shrink-0 px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50">
+                        class="shrink-0 px-3 py-2 text-sm border border-mk-border rounded-md hover:bg-mk-surface">
                     Pakai Saran
                 </button>
             </div>
 
             {{-- Hint / suggestion --}}
             <p class="mt-1 text-xs"
-               :class="replacementDisabled ? 'text-amber-600' : 'text-gray-500'"
+               :class="replacementDisabled ? 'text-amber-600' : 'text-mk-dim'"
                x-text="replacementDisabled
                    ? 'Event studio (Internal) — gunakan fitur Reschedule untuk sesi pengganti lintas bulan.'
                    : suggestion">
@@ -127,7 +127,7 @@
         <div class="md:col-span-2">
             <label class="block text-sm font-medium">Catatan</label>
             <textarea name="notes" rows="2"
-                      class="mt-1 block w-full border-gray-300 rounded-md"
+                      class="mt-1 block w-full border-mk-border rounded-md"
                       placeholder="Tanggal estimasi, perlu konfirmasi SKB Menteri">{{ old('notes', $holiday->notes ?? '') }}</textarea>
         </div>
 
@@ -136,7 +136,7 @@
             <label class="inline-flex items-center">
                 <input type="checkbox" name="is_active" value="1"
                     {{ old('is_active', $holiday->is_active ?? true) ? 'checked' : '' }}
-                    class="rounded border-gray-300">
+                    class="rounded border-mk-border">
                 <span class="ml-2 text-sm">Aktif</span>
             </label>
 
@@ -144,7 +144,7 @@
             <label class="inline-flex items-center" x-show="isInternal">
                 <input type="checkbox" name="is_honor_paid" value="1"
                     {{ old('is_honor_paid', $holiday->is_honor_paid ?? false) ? 'checked' : '' }}
-                    class="rounded border-gray-300">
+                    class="rounded border-mk-border">
                 <span class="ml-2 text-sm">Guru mendapat honor saat libur ini</span>
             </label>
 

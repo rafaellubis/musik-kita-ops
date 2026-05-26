@@ -13,19 +13,19 @@
         <label class="block text-sm font-medium">Code <span class="text-red-500">*</span></label>
         <input type="text" name="scenario_code" required maxlength="30"
                value="{{ old('scenario_code', $payrollConfig->scenario_code ?? '') }}"
-               class="mt-1 block w-full border-gray-300 rounded-md font-mono uppercase"
+               class="mt-1 block w-full border-mk-border rounded-md font-mono uppercase"
                placeholder="H_REG, H_KIDS, dll">
     </div>
     <div>
         <label class="block text-sm font-medium">Nama Tampilan <span class="text-red-500">*</span></label>
         <input type="text" name="scenario_name" required maxlength="100"
                value="{{ old('scenario_name', $payrollConfig->scenario_name ?? '') }}"
-               class="mt-1 block w-full border-gray-300 rounded-md"
+               class="mt-1 block w-full border-mk-border rounded-md"
                placeholder="Honor Reguler">
     </div>
     <div>
         <label class="block text-sm font-medium">Tipe Rumus <span class="text-red-500">*</span></label>
-        <select name="formula_type" required class="mt-1 block w-full border-gray-300 rounded-md">
+        <select name="formula_type" required class="mt-1 block w-full border-mk-border rounded-md">
             @php $types = ['PERCENTAGE', 'PER_STUDENT', 'FIXED', 'CONSTANT']; @endphp
             <option value="">— Pilih —</option>
             @foreach($types as $t)
@@ -40,19 +40,19 @@
         <label class="block text-sm font-medium">Value / Rumus <span class="text-red-500">*</span></label>
         <input type="text" name="value_or_formula" required maxlength="100"
                value="{{ old('value_or_formula', $payrollConfig->value_or_formula ?? '') }}"
-               class="mt-1 block w-full border-gray-300 rounded-md font-mono"
+               class="mt-1 block w-full border-mk-border rounded-md font-mono"
                placeholder="50% × harga ÷ 4">
     </div>
     <div class="md:col-span-2">
         <label class="block text-sm font-medium">Deskripsi</label>
         <textarea name="description" rows="2"
-                  class="mt-1 block w-full border-gray-300 rounded-md">{{ old('description', $payrollConfig->description ?? '') }}</textarea>
+                  class="mt-1 block w-full border-mk-border rounded-md">{{ old('description', $payrollConfig->description ?? '') }}</textarea>
     </div>
     <div class="flex items-end">
         <label class="inline-flex items-center">
             <input type="checkbox" name="is_active" value="1"
                 {{ old('is_active', $payrollConfig->is_active ?? true) ? 'checked' : '' }}
-                class="rounded border-gray-300">
+                class="rounded border-mk-border">
             <span class="ml-2 text-sm">Aktif</span>
         </label>
     </div>

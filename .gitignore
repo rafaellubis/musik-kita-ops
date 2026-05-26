@@ -23,3 +23,13 @@ yarn-error.log
 /.zed
 
 .superpowers/
+.claude/worktrees/
+
+# Dokumen & aset di root level (bukan source code)
+/*.docx
+/*.xlsx
+/*.png
+/*.jpg
+/*.jpeg
+/*.html
+/docs/mockups/

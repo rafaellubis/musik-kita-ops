@@ -15,7 +15,7 @@
 <nav class="flex-1 overflow-y-auto py-3 px-2 space-y-0.5 text-[13px]">
 
     {{-- Grup: UTAMA --}}
-    <div class="px-2 pt-1 pb-1.5 text-[10px] font-semibold tracking-widest text-mk-dim uppercase">Utama</div>
+    <div class="px-2 pt-1 pb-1.5 text-[10px] font-semibold tracking-widest text-white/40 uppercase">Utama</div>
 
     <x-sidebar-item route="dashboard" icon="🏠" label="Dashboard"
         :active="request()->routeIs('dashboard')" />
@@ -32,7 +32,7 @@
     @endhasanyrole
 
     {{-- Grup: KEUANGAN --}}
-    <div class="px-2 pt-4 pb-1.5 text-[10px] font-semibold tracking-widest text-mk-dim uppercase">Keuangan</div>
+    <div class="px-2 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-white/40 uppercase">Keuangan</div>
 
     <x-sidebar-item route="invoices.index" icon="💳" label="Tagihan"
         :active="request()->routeIs('invoices.*')" />
@@ -44,7 +44,7 @@
         :active="request()->routeIs('events.*') || request()->routeIs('event-participants.*')" />
 
     {{-- Grup: LAPORAN --}}
-    <div class="px-2 pt-4 pb-1.5 text-[10px] font-semibold tracking-widest text-mk-dim uppercase">Laporan</div>
+    <div class="px-2 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-white/40 uppercase">Laporan</div>
 
     @if(auth()->user()->hasRole('Owner'))
         <x-sidebar-item route="reports.finance" icon="📈" label="Laporan"
@@ -57,7 +57,7 @@
     @endif
 
     {{-- Grup: MASTER DATA --}}
-    <div class="px-2 pt-4 pb-1.5 text-[10px] font-semibold tracking-widest text-mk-dim uppercase">Master Data</div>
+    <div class="px-2 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-white/40 uppercase">Master Data</div>
 
     <x-sidebar-item route="teachers.index" icon="👨‍🏫" label="Guru"
         :active="request()->routeIs('teachers.*')" />
@@ -83,13 +83,13 @@
             {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
         </div>
         <div class="flex-1 min-w-0">
-            <div class="text-xs font-semibold text-mk-text truncate">{{ auth()->user()->name }}</div>
-            <div class="text-[10px] text-mk-dim truncate">
+            <div class="text-xs font-semibold text-white/90 truncate">{{ auth()->user()->name }}</div>
+            <div class="text-[10px] text-white/40 truncate">
                 @foreach(auth()->user()->getRoleNames() as $role){{ $role }}@endforeach
             </div>
         </div>
         <a href="{{ route('profile.edit') }}"
-           class="text-mk-dim hover:text-mk-muted transition-colors p-1 rounded"
+           class="text-white/40 hover:text-white/60 transition-colors p-1 rounded"
            title="Edit profil">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

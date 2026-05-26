@@ -27,13 +27,13 @@
         </div>
         @endif
 
-        <div class="bg-white shadow-sm sm:rounded-lg p-6 max-w-3xl">
+        <div class="bg-mk-card shadow-sm sm:rounded-lg p-6 max-w-3xl">
             <form action="{{ route('teachers.update', $teacher->id) }}" method="POST">
                 @csrf @method('PUT')
                 @include('teachers._form', ['teacher' => $teacher, 'instruments' => $instruments])
                 <div class="flex justify-end gap-2 mt-6">
                     <a href="{{ route('teachers.index') }}"
-                       class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm">Batal</a>
+                       class="px-4 py-2 bg-mk-surface hover:bg-mk-surfaceHover rounded text-sm">Batal</a>
                     <button type="submit"
                             class="px-4 py-2 rounded text-sm font-bold transition-colors btn-mk-primary"
                             >Simpan Perubahan</button>

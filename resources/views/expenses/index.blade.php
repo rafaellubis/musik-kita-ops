@@ -34,19 +34,19 @@
         @endif
 
         {{-- ===== FILTER ===== --}}
-        <div class="bg-white shadow-sm sm:rounded-lg p-4">
+        <div class="bg-mk-card shadow-sm sm:rounded-lg p-4">
             <form method="GET" class="flex flex-wrap gap-3 items-end">
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">Tahun</label>
-                    <select name="year" class="border-gray-300 rounded text-sm" onchange="this.form.submit()">
+                    <label class="block text-xs text-mk-dim mb-1">Tahun</label>
+                    <select name="year" class="border-mk-border rounded text-sm" onchange="this.form.submit()">
                         @foreach(range(now()->year - 1, now()->year + 1) as $y)
                             <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">Bulan</label>
-                    <select name="month" class="border-gray-300 rounded text-sm" onchange="this.form.submit()">
+                    <label class="block text-xs text-mk-dim mb-1">Bulan</label>
+                    <select name="month" class="border-mk-border rounded text-sm" onchange="this.form.submit()">
                         @foreach(range(1, 12) as $m)
                             <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
                                 {{ \Carbon\Carbon::create(null, $m)->format('M') }} ({{ $m }})
@@ -55,8 +55,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">Kategori</label>
-                    <select name="category_id" class="border-gray-300 rounded text-sm" onchange="this.form.submit()">
+                    <label class="block text-xs text-mk-dim mb-1">Kategori</label>
+                    <select name="category_id" class="border-mk-border rounded text-sm" onchange="this.form.submit()">
                         <option value="">Semua</option>
                         @foreach($categories as $cat)
                             <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
@@ -66,61 +66,61 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">Metode</label>
-                    <select name="method" class="border-gray-300 rounded text-sm" onchange="this.form.submit()">
+                    <label class="block text-xs text-mk-dim mb-1">Metode</label>
+                    <select name="method" class="border-mk-border rounded text-sm" onchange="this.form.submit()">
                         <option value="">Semua</option>
                         <option value="CASH" {{ request('method') == 'CASH' ? 'selected' : '' }}>CASH</option>
                         <option value="TRANSFER" {{ request('method') == 'TRANSFER' ? 'selected' : '' }}>TRANSFER</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">Cari</label>
+                    <label class="block text-xs text-mk-dim mb-1">Cari</label>
                     <input type="text" name="search" value="{{ request('search') }}"
                            placeholder="Keterangan..."
-                           class="border-gray-300 rounded text-sm"
+                           class="border-mk-border rounded text-sm"
                            onchange="this.form.submit()">
                 </div>
             </form>
         </div>
 
         {{-- ===== PETTY CASH HARI INI ===== --}}
-        <div class="bg-white shadow-sm sm:rounded-lg p-5">
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Petty Cash Hari Ini ({{ now()->format('d M Y') }})</h3>
+        <div class="bg-mk-card shadow-sm sm:rounded-lg p-5">
+            <h3 class="text-sm font-semibold text-mk-muted mb-3">Petty Cash Hari Ini ({{ now()->format('d M Y') }})</h3>
             <div class="grid grid-cols-3 gap-4 text-sm">
                 <div class="bg-green-50 rounded-lg p-3 border border-green-100">
-                    <div class="text-xs text-gray-500">Kas Masuk (Tunai)</div>
+                    <div class="text-xs text-mk-dim">Kas Masuk (Tunai)</div>
                     <div class="text-lg font-bold text-green-700 mt-1">
                         Rp {{ number_format($kasmasukHariIni, 0, ',', '.') }}
                     </div>
-                    <div class="text-xs text-gray-400">Pembayaran SPP tunai hari ini</div>
+                    <div class="text-xs text-mk-dim">Pembayaran SPP tunai hari ini</div>
                 </div>
                 <div class="bg-red-50 rounded-lg p-3 border border-red-100">
-                    <div class="text-xs text-gray-500">Kas Keluar (Tunai)</div>
+                    <div class="text-xs text-mk-dim">Kas Keluar (Tunai)</div>
                     <div class="text-lg font-bold text-red-700 mt-1">
                         Rp {{ number_format($kaskeluarHariIni, 0, ',', '.') }}
                     </div>
-                    <div class="text-xs text-gray-400">Pengeluaran CASH hari ini</div>
+                    <div class="text-xs text-mk-dim">Pengeluaran CASH hari ini</div>
                 </div>
                 <div class="bg-blue-50 rounded-lg p-3 border border-blue-100">
-                    <div class="text-xs text-gray-500">Saldo Kas Hari Ini</div>
+                    <div class="text-xs text-mk-dim">Saldo Kas Hari Ini</div>
                     @php $saldoHariIni = $kasmasukHariIni - $kaskeluarHariIni; @endphp
                     <div class="text-lg font-bold mt-1 {{ $saldoHariIni >= 0 ? 'text-blue-700' : 'text-red-700' }}">
                         Rp {{ number_format($saldoHariIni, 0, ',', '.') }}
                     </div>
-                    <div class="text-xs text-gray-400">Masuk - Keluar</div>
+                    <div class="text-xs text-mk-dim">Masuk - Keluar</div>
                 </div>
             </div>
             <div class="mt-3 pt-3 border-t grid grid-cols-3 gap-4 text-sm">
                 <div>
-                    <div class="text-xs text-gray-500">Kas Masuk Bulan Ini</div>
+                    <div class="text-xs text-mk-dim">Kas Masuk Bulan Ini</div>
                     <div class="font-semibold text-green-700">Rp {{ number_format($kasmasukBulan, 0, ',', '.') }}</div>
                 </div>
                 <div>
-                    <div class="text-xs text-gray-500">Total Pengeluaran CASH</div>
+                    <div class="text-xs text-mk-dim">Total Pengeluaran CASH</div>
                     <div class="font-semibold text-red-700">Rp {{ number_format($kaskeluarBulan, 0, ',', '.') }}</div>
                 </div>
                 <div>
-                    <div class="text-xs text-gray-500">Saldo Kas Bulan Ini</div>
+                    <div class="text-xs text-mk-dim">Saldo Kas Bulan Ini</div>
                     @php $saldoBulan = $kasmasukBulan - $kaskeluarBulan; @endphp
                     <div class="font-semibold {{ $saldoBulan >= 0 ? 'text-blue-700' : 'text-red-700' }}">
                         Rp {{ number_format($saldoBulan, 0, ',', '.') }}
@@ -131,19 +131,19 @@
 
         {{-- ===== RINGKASAN PER KATEGORI ===== --}}
         @if($summary->isNotEmpty())
-        <div class="bg-white shadow-sm sm:rounded-lg p-5">
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">
+        <div class="bg-mk-card shadow-sm sm:rounded-lg p-5">
+            <h3 class="text-sm font-semibold text-mk-muted mb-3">
                 Ringkasan per Kategori — {{ $monthName }}
-                <span class="ml-2 font-normal text-gray-500">
+                <span class="ml-2 font-normal text-mk-dim">
                     Total: Rp {{ number_format($totalBulan, 0, ',', '.') }}
                 </span>
             </h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                 @foreach($summary as $row)
-                    <div class="bg-gray-50 rounded-lg p-2.5">
-                        <div class="text-xs text-gray-500">{{ $row->cat_name }}</div>
+                    <div class="bg-mk-surface rounded-lg p-2.5">
+                        <div class="text-xs text-mk-dim">{{ $row->cat_name }}</div>
                         <div class="font-semibold mt-0.5">Rp {{ number_format($row->total, 0, ',', '.') }}</div>
-                        <div class="text-xs text-gray-400">{{ $row->cnt }} transaksi</div>
+                        <div class="text-xs text-mk-dim">{{ $row->cnt }} transaksi</div>
                     </div>
                 @endforeach
             </div>
@@ -151,9 +151,9 @@
         @endif
 
         {{-- ===== TABEL PENGELUARAN ===== --}}
-        <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
+        <div class="bg-mk-card shadow-sm sm:rounded-lg overflow-hidden">
             @if($expenses->isEmpty())
-                <div class="p-8 text-center text-gray-500">
+                <div class="p-8 text-center text-mk-dim">
                     <p>Belum ada pengeluaran untuk {{ $monthName }}.</p>
                     @hasanyrole('Owner|Admin')
                         <a href="{{ route('expenses.create') }}" class="mt-2 inline-block text-blue-600 hover:underline text-sm">
@@ -164,8 +164,8 @@
             @else
                 <div class="overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead class="bg-gray-50">
-                        <tr class="border-b text-xs text-gray-500 uppercase text-left">
+                    <thead class="bg-mk-surface">
+                        <tr class="border-b text-xs text-mk-dim uppercase text-left">
                             <th class="px-4 py-3">No.</th>
                             <th class="px-4 py-3">Tanggal</th>
                             <th class="px-4 py-3">Kategori</th>
@@ -178,11 +178,11 @@
                     </thead>
                     <tbody>
                         @foreach($expenses as $exp)
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="px-4 py-3 font-mono text-xs text-gray-400">{{ $exp->expense_number }}</td>
+                            <tr class="border-b hover:bg-mk-surface">
+                                <td class="px-4 py-3 font-mono text-xs text-mk-dim">{{ $exp->expense_number }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap">{{ $exp->expense_date->format('d M Y') }}</td>
                                 <td class="px-4 py-3">
-                                    <span class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700">
+                                    <span class="px-2 py-0.5 rounded text-xs bg-mk-surface text-mk-muted">
                                         {{ $exp->category->name ?? '?' }}
                                     </span>
                                 </td>
@@ -195,7 +195,7 @@
                                 <td class="px-4 py-3 text-right font-medium">
                                     Rp {{ number_format($exp->amount, 0, ',', '.') }}
                                 </td>
-                                <td class="px-4 py-3 text-xs text-gray-500">{{ $exp->createdBy->name ?? '—' }}</td>
+                                <td class="px-4 py-3 text-xs text-mk-dim">{{ $exp->createdBy->name ?? '—' }}</td>
                                 <td class="px-4 py-3 text-right whitespace-nowrap">
                                     <a href="{{ route('expenses.show', $exp) }}"
                                        class="text-xs text-blue-600 hover:underline">Detail</a>
@@ -218,9 +218,9 @@
                             </tr>
                         @endforeach
                     </tbody>
-                    <tfoot class="bg-gray-50">
+                    <tfoot class="bg-mk-surface">
                         <tr>
-                            <td colspan="5" class="px-4 py-2 text-xs text-gray-500">
+                            <td colspan="5" class="px-4 py-2 text-xs text-mk-dim">
                                 {{ $expenses->total() }} transaksi
                             </td>
                             <td class="px-4 py-2 text-right font-bold text-sm">

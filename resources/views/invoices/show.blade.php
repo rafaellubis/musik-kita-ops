@@ -49,13 +49,13 @@
         @endif
 
         {{-- ============= HEADER INVOICE ============= --}}
-        <div class="bg-white shadow-sm sm:rounded-lg p-6"
+        <div class="bg-mk-card shadow-sm sm:rounded-lg p-6"
              x-data="{ showPay: false }">
             <div class="flex justify-between items-start">
                 <div>
-                    <div class="font-mono text-sm text-gray-500">{{ $invoice->invoice_number }}</div>
+                    <div class="font-mono text-sm text-mk-dim">{{ $invoice->invoice_number }}</div>
                     <div class="text-2xl font-bold mt-1">{{ $invoice->student->full_name ?? '?' }}</div>
-                    <div class="text-gray-600 text-sm">
+                    <div class="text-mk-muted text-sm">
                         <a href="{{ route('students.show', $invoice->student_id) }}"
                            class="text-blue-600 hover:underline">
                             {{ $invoice->student->student_code ?? '' }}
@@ -74,7 +74,7 @@
                                 Kids Bundle – Lunas
                             </span>
                         @endif
-                        <span class="text-sm text-gray-600">
+                        <span class="text-sm text-mk-muted">
                             Jatuh tempo: {{ $invoice->due_date->format('d M Y') }}
                             @if($invoice->balance > 0 && $invoice->due_date->lt(now()))
                                 <span class="text-orange-600">
@@ -108,11 +108,11 @@
                 $totalAmount = $siblings->where('status', '!=', 'VOID')->sum('total_amount');
                 $paidAmount  = $siblings->where('status', '!=', 'VOID')->sum('paid_amount');
             @endphp
-            <div class="mt-4 pt-4 border-t border-gray-100">
+            <div class="mt-4 pt-4 border-t border-mk-borderLight">
                 <div class="flex justify-between items-center mb-3">
                     <div>
-                        <div class="text-sm font-semibold text-gray-800">Cicilan Kids Class Bundle</div>
-                        <div class="text-xs text-gray-500 mt-0.5">
+                        <div class="text-sm font-semibold text-mk-text">Cicilan Kids Class Bundle</div>
+                        <div class="text-xs text-mk-dim mt-0.5">
                             {{ $paidCount }} dari {{ $totalCount }} termin lunas ·
                             Rp {{ number_format($paidAmount, 0, ',', '.') }} dari
                             Rp {{ number_format($totalAmount, 0, ',', '.') }}
@@ -164,14 +164,14 @@
                     <div class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm
                         {{ $isActive ? 'border border-yellow-200 bg-yellow-50' : 'border border-transparent' }}">
                         <div class="w-2 h-2 rounded-full flex-shrink-0 {{ $dotColor }}"></div>
-                        <div class="flex-1 text-gray-700">
+                        <div class="flex-1 text-mk-muted">
                             Termin {{ $sib->installment_number }}/3
-                            <span class="text-gray-400 text-xs ml-1">
+                            <span class="text-mk-dim text-xs ml-1">
                                 · {{ $sib->due_date?->format('d M Y') ?? '—' }}
                                 @if($isActive) <span class="text-yellow-600 font-medium">← ini</span> @endif
                             </span>
                         </div>
-                        <div class="text-gray-700 font-mono text-xs">
+                        <div class="text-mk-muted font-mono text-xs">
                             Rp {{ number_format($sib->total_amount, 0, ',', '.') }}
                         </div>
                         @if(!$isActive)
@@ -191,15 +191,15 @@
             {{-- ===== Total summary ===== --}}
             <div class="mt-4 grid grid-cols-3 gap-4 text-sm border-t pt-3">
                 <div>
-                    <div class="text-gray-500 text-xs">Total Tagihan</div>
+                    <div class="text-mk-dim text-xs">Total Tagihan</div>
                     <div class="text-lg font-bold">Rp {{ number_format($invoice->total_amount, 0, ',', '.') }}</div>
                 </div>
                 <div>
-                    <div class="text-gray-500 text-xs">Sudah Dibayar</div>
+                    <div class="text-mk-dim text-xs">Sudah Dibayar</div>
                     <div class="text-lg font-bold text-green-600">Rp {{ number_format($invoice->paid_amount, 0, ',', '.') }}</div>
                 </div>
                 <div>
-                    <div class="text-gray-500 text-xs">Saldo</div>
+                    <div class="text-mk-dim text-xs">Saldo</div>
                     <div class="text-lg font-bold {{ $invoice->balance > 0 ? 'text-red-600' : 'text-green-600' }}">
                         Rp {{ number_format($invoice->balance, 0, ',', '.') }}
                     </div>
@@ -223,8 +223,8 @@
                                            min="{{ $invoice->balance }}" max="{{ $invoice->balance }}"
                                            value="{{ $invoice->balance }}"
                                            readonly
-                                           class="mt-1 block w-full border-gray-300 rounded bg-gray-50 cursor-not-allowed">
-                                    <p class="text-xs text-gray-500 mt-1">
+                                           class="mt-1 block w-full border-mk-border rounded bg-mk-surface cursor-not-allowed">
+                                    <p class="text-xs text-mk-dim mt-1">
                                         Harus dilunasi penuh: Rp {{ number_format($invoice->balance, 0, ',', '.') }}
                                     </p>
                                 @endif
@@ -232,7 +232,7 @@
                             <div>
                                 <label class="block">Metode <span class="text-red-500">*</span></label>
                                 <select name="method" required
-                                        class="mt-1 block w-full border-gray-300 rounded">
+                                        class="mt-1 block w-full border-mk-border rounded">
                                     @foreach(\App\Models\Payment::METHODS as $code => $label)
                                         <option value="{{ $code }}">{{ $label }}</option>
                                     @endforeach
@@ -243,18 +243,18 @@
                                 <input type="date" name="payment_date" required
                                        value="{{ old('payment_date', now()->toDateString()) }}"
                                        max="{{ now()->toDateString() }}"
-                                       class="mt-1 block w-full border-gray-300 rounded">
+                                       class="mt-1 block w-full border-mk-border rounded">
                             </div>
                             <div>
                                 <label class="block">Bukti Pembayaran (opsional)</label>
                                 <input type="file" name="proof_image" accept="image/*"
                                        class="mt-1 block w-full text-sm">
-                                <p class="text-xs text-gray-500 mt-1">Maks 2 MB, JPG/PNG.</p>
+                                <p class="text-xs text-mk-dim mt-1">Maks 2 MB, JPG/PNG.</p>
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block">Catatan</label>
                                 <textarea name="notes" rows="2" maxlength="500"
-                                          class="mt-1 block w-full border-gray-300 rounded"></textarea>
+                                          class="mt-1 block w-full border-mk-border rounded"></textarea>
                             </div>
                         </div>
                         <button type="submit"
@@ -268,11 +268,11 @@
         </div>
 
         {{-- ============= ITEMS ============= --}}
-        <div class="bg-white shadow-sm sm:rounded-lg p-6"
+        <div class="bg-mk-card shadow-sm sm:rounded-lg p-6"
              x-data="{ showAddItem: false }">
 
             <div class="flex justify-between items-center mb-3">
-                <h3 class="text-lg font-medium text-gray-700">Item Tagihan</h3>
+                <h3 class="text-lg font-medium text-mk-muted">Item Tagihan</h3>
                 @hasanyrole('Owner|Admin')
                     @if($canEditItems && $catalogItems->isNotEmpty())
                         <button type="button" @click="showAddItem = !showAddItem"
@@ -311,7 +311,7 @@
                                         Item <span class="text-red-500">*</span>
                                     </label>
                                     <select name="invoice_component_id" required
-                                            class="block w-full border-gray-300 rounded"
+                                            class="block w-full border-mk-border rounded"
                                             @change="selectComponent($event.target.value,
                                                 $event.target.selectedOptions[0]?.dataset.price,
                                                 $event.target.selectedOptions[0]?.dataset.name)">
@@ -334,7 +334,7 @@
                                     <input type="text" name="description" required maxlength="255"
                                            x-ref="description"
                                            value="{{ old('description') }}"
-                                           class="block w-full border-gray-300 rounded"
+                                           class="block w-full border-mk-border rounded"
                                            placeholder="Nama item di invoice">
                                 </div>
                                 <div>
@@ -345,9 +345,9 @@
                                            min="1" max="99999999"
                                            x-ref="amount"
                                            value="{{ old('amount') }}"
-                                           class="block w-full border-gray-300 rounded"
+                                           class="block w-full border-mk-border rounded"
                                            placeholder="100000">
-                                    <p class="text-xs text-gray-400 mt-1">
+                                    <p class="text-xs text-mk-dim mt-1">
                                         Pre-fill dari harga default, bisa diubah.
                                     </p>
                                 </div>
@@ -359,7 +359,7 @@
                                     Tambahkan ke Invoice
                                 </button>
                                 <button type="button" @click="showAddItem = false"
-                                        class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm">
+                                        class="px-4 py-2 text-mk-muted hover:text-mk-text text-sm">
                                     Batal
                                 </button>
                             </div>
@@ -382,7 +382,7 @@
             {{-- ===== Tabel item ===== --}}
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b text-left text-xs text-gray-500 uppercase">
+                    <tr class="border-b text-left text-xs text-mk-dim uppercase">
                         <th class="py-1">Kode</th>
                         <th class="py-1">Deskripsi</th>
                         <th class="py-1 text-right">Jumlah</th>
@@ -417,7 +417,7 @@
                         <td class="py-2">
                             {{ $item->description }}
                             @if($item->isManual() && $item->addedBy)
-                                <div class="text-xs text-gray-400">+ oleh {{ $item->addedBy->name }}</div>
+                                <div class="text-xs text-mk-dim">+ oleh {{ $item->addedBy->name }}</div>
                             @endif
                         </td>
                         <td class="py-2 text-right">Rp {{ number_format($item->amount, 0, ',', '.') }}</td>
@@ -425,7 +425,7 @@
                             @if($item->isManual())
                                 <span class="px-2 py-0.5 rounded text-xs bg-indigo-100 text-indigo-700">Manual</span>
                             @else
-                                <span class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-500">Sistem</span>
+                                <span class="px-2 py-0.5 rounded text-xs bg-mk-surface text-mk-dim">Sistem</span>
                             @endif
                         </td>
                         @hasanyrole('Owner|Admin')
@@ -441,7 +441,7 @@
                                             <button type="submit" class="text-xs text-red-600 hover:underline">Hapus</button>
                                         </form>
                                     @else
-                                        <span class="text-xs text-gray-300">—</span>
+                                        <span class="text-xs text-mk-dim">—</span>
                                     @endif
                                     @if($canDiscount)
                                         <button type="button"
@@ -469,15 +469,15 @@
                                         </p>
                                         <div class="flex gap-3 items-end flex-wrap">
                                             <div class="shrink-0">
-                                                <label class="block text-xs font-medium text-gray-700 mb-1">Tipe</label>
+                                                <label class="block text-xs font-medium text-mk-muted mb-1">Tipe</label>
                                                 <select name="discount_type" x-model="type"
-                                                        class="block w-36 border-gray-300 rounded text-sm">
+                                                        class="block w-36 border-mk-border rounded text-sm">
                                                     <option value="NOMINAL">Nominal (Rp)</option>
                                                     <option value="PERCENT">Persentase (%)</option>
                                                 </select>
                                             </div>
                                             <div class="shrink-0">
-                                                <label class="block text-xs font-medium text-gray-700 mb-1">
+                                                <label class="block text-xs font-medium text-mk-muted mb-1">
                                                     Nilai <span class="text-red-500">*</span>
                                                 </label>
                                                 <input type="number" name="discount_value"
@@ -485,28 +485,28 @@
                                                        min="1"
                                                        :max="type === 'PERCENT' ? (isDenda ? 100 : 90) : (isDenda ? itemAmount : itemAmount - 1)"
                                                        required
-                                                       class="block w-28 border-gray-300 rounded text-sm"
+                                                       class="block w-28 border-mk-border rounded text-sm"
                                                        placeholder="0">
                                             </div>
                                             <div class="flex-1 min-w-[180px]">
-                                                <label class="block text-xs font-medium text-gray-700 mb-1">
+                                                <label class="block text-xs font-medium text-mk-muted mb-1">
                                                     Alasan <span class="text-red-500">*</span>
                                                 </label>
                                                 <input type="text" name="discount_reason"
                                                        required minlength="3" maxlength="500"
                                                        value="{{ $item->discountItem?->discount_reason }}"
-                                                       class="block w-full border-gray-300 rounded text-sm"
+                                                       class="block w-full border-mk-border rounded text-sm"
                                                        placeholder="Mis: Diskon ulang tahun, promosi bulan ini...">
                                             </div>
                                             <div class="flex gap-2 shrink-0">
                                                 <button type="submit"
                                                         class="px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap"
-                                                        style="background:rgba(212,168,83,0.9);color:#1A1000">
+                                                        style="background:rgba(93,184,144,0.9);color:#FFFFFF">
                                                     Simpan Diskon
                                                 </button>
                                                 <button type="button"
                                                         @click="showDiscount = false"
-                                                        class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 whitespace-nowrap">
+                                                        class="px-3 py-1.5 text-sm text-mk-muted hover:text-mk-text whitespace-nowrap">
                                                     Batal
                                                 </button>
                                             </div>
@@ -526,10 +526,10 @@
                             <td class="py-1.5 pl-6 font-mono text-xs">
                                 <span class="px-1.5 py-0.5 rounded text-xs bg-amber-100 text-amber-800">DISKON</span>
                             </td>
-                            <td class="py-1.5 text-xs text-gray-600">
+                            <td class="py-1.5 text-xs text-mk-muted">
                                 ↳ {{ $item->discountItem->discount_reason }}
                                 @if($item->discountItem->discount_type === 'PERCENT')
-                                    <span class="text-gray-400">({{ $item->discountItem->discount_value }}%)</span>
+                                    <span class="text-mk-dim">({{ $item->discountItem->discount_value }}%)</span>
                                 @endif
                             </td>
                             <td class="py-1.5 text-right text-red-600 text-xs font-medium">
@@ -562,7 +562,7 @@
                 {{-- Baris total — pakai total_amount dari DB (sudah termasuk diskon) --}}
                 <tbody>
                     <tr class="font-bold border-t-2">
-                        <td colspan="2" class="py-2 text-right text-gray-700">Total</td>
+                        <td colspan="2" class="py-2 text-right text-mk-muted">Total</td>
                         <td class="py-2 text-right">
                             Rp {{ number_format($invoice->total_amount, 0, ',', '.') }}
                         </td>
@@ -573,15 +573,15 @@
         </div>
 
         {{-- ============= PAYMENTS ============= --}}
-        <div class="bg-white shadow-sm sm:rounded-lg p-6">
-            <h3 class="text-lg font-medium text-gray-700 mb-3">Riwayat Pembayaran</h3>
+        <div class="bg-mk-card shadow-sm sm:rounded-lg p-6">
+            <h3 class="text-lg font-medium text-mk-muted mb-3">Riwayat Pembayaran</h3>
 
             @if($invoice->payments->isEmpty())
-                <p class="text-sm text-gray-500">Belum ada pembayaran.</p>
+                <p class="text-sm text-mk-dim">Belum ada pembayaran.</p>
             @else
                 <table class="w-full text-sm">
                     <thead>
-                        <tr class="border-b text-left text-xs text-gray-500 uppercase">
+                        <tr class="border-b text-left text-xs text-mk-dim uppercase">
                             <th class="py-1">Tanggal</th>
                             <th class="py-1">No. Kuitansi</th>
                             <th class="py-1">Metode</th>
@@ -603,7 +603,7 @@
                                         <a href="{{ asset('storage/'.$p->proof_image) }}" target="_blank"
                                            class="text-blue-600 hover:underline text-xs">Lihat</a>
                                     @else
-                                        <span class="text-gray-400">—</span>
+                                        <span class="text-mk-dim">—</span>
                                     @endif
                                 </td>
                                 <td class="py-2 text-xs">
@@ -615,7 +615,7 @@
                                     @else
                                         {{ $p->notes ?? '—' }}
                                         @if($p->createdBy)
-                                            <div class="text-gray-400">
+                                            <div class="text-mk-dim">
                                                 dicatat oleh {{ $p->createdBy->name }}
                                             </div>
                                         @endif
@@ -644,7 +644,7 @@
                                             @csrf
                                             <label class="block text-xs">Alasan Void <span class="text-red-500">*</span></label>
                                             <input type="text" name="reason" required maxlength="500"
-                                                   class="mt-1 block w-full border-gray-300 rounded text-sm"
+                                                   class="mt-1 block w-full border-mk-border rounded text-sm"
                                                    placeholder="Mis: pembayaran double, dibatalkan murid">
                                             <button type="submit"
                                                     class="mt-2 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs">
@@ -652,7 +652,7 @@
                                             </button>
                                             <button type="button"
                                                     onclick="document.getElementById('void-form-{{ $p->id }}').style.display = 'none'"
-                                                    class="text-xs text-gray-600 ml-2">Batal</button>
+                                                    class="text-xs text-mk-muted ml-2">Batal</button>
                                         </form>
                                     </td>
                                 </tr>
@@ -663,7 +663,7 @@
             @endif
 
             @if(!$isOwner)
-                <p class="mt-3 text-xs text-gray-500">
+                <p class="mt-3 text-xs text-mk-dim">
                     Void pembayaran hanya bisa dilakukan oleh role Owner (BR-5.18).
                 </p>
             @endif

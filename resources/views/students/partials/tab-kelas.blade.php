@@ -31,21 +31,21 @@
                         Hentikan &amp; Ganti Utama
                     </button>
                     <a href="{{ route('students.show', $student) }}"
-                       class="px-4 py-2 text-sm text-gray-500 hover:underline">Batal</a>
+                       class="px-4 py-2 text-sm text-mk-dim hover:underline">Batal</a>
                 </div>
             </form>
         </div>
     @endif
 
     {{-- ===== KELAS BERJALAN ===== --}}
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm overflow-hidden">
 
         {{-- Header section kelas berjalan --}}
-        <div class="px-5 py-3.5 flex items-center justify-between border-b border-gray-100">
-            <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#D4A853">
+        <div class="px-5 py-3.5 flex items-center justify-between border-b border-mk-borderLight">
+            <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#5DB890">
                 Kelas Berjalan
                 <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold"
-                      style="background:rgba(212,168,83,0.12);color:#D4A853">
+                      style="background:rgba(93,184,144,0.12);color:#5DB890">
                     {{ $activeEnrollments->count() }}
                 </span>
             </div>
@@ -53,7 +53,7 @@
                 <button type="button"
                         onclick="document.getElementById('modal-tambah-kelas').classList.remove('hidden')"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                        style="background:rgba(212,168,83,0.15);color:#D4A853;border:1px solid rgba(212,168,83,0.3)">
+                        style="background:rgba(93,184,144,0.15);color:#5DB890;border:1px solid rgba(93,184,144,0.3)">
                     + Tambah Kelas
                 </button>
             @endif
@@ -66,32 +66,32 @@
                 $jadwal = $enrollment->schedules->first();
                 $hariMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
             @endphp
-            <div class="px-5 py-4 flex items-start gap-4 border-b border-gray-100 last:border-0">
+            <div class="px-5 py-4 flex items-start gap-4 border-b border-mk-borderLight last:border-0">
 
                 {{-- Ikon instrumen --}}
                 <div class="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0 mt-0.5"
-                     style="background:rgba(212,168,83,0.1)">
+                     style="background:rgba(93,184,144,0.1)">
                     🎵
                 </div>
 
                 {{-- Informasi kelas --}}
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
-                        <span class="text-sm font-semibold text-gray-800">
+                        <span class="text-sm font-semibold text-mk-text">
                             {{ $enrollment->package->instrument->name ?? '—' }}
                             &nbsp;·&nbsp;
                             <span class="font-mono">{{ $enrollment->package->code ?? '—' }}</span>
                         </span>
                         @if($enrollment->is_primary)
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                                  style="background:rgba(212,168,83,0.15);color:#D4A853">
+                                  style="background:rgba(93,184,144,0.15);color:#5DB890">
                                 ★ Kelas Utama
                             </span>
                         @endif
                     </div>
-                    <div class="text-xs text-gray-500 mt-1 space-y-0.5">
+                    <div class="text-xs text-mk-dim mt-1 space-y-0.5">
                         <div>
-                            Guru: <span class="text-gray-700">{{ $enrollment->teacher->name ?? '—' }}</span>
+                            Guru: <span class="text-mk-muted">{{ $enrollment->teacher->name ?? '—' }}</span>
                             @if($jadwal)
                                 &nbsp;·&nbsp;
                                 {{ $hariMap[$jadwal->day_of_week] ?? '?' }},
@@ -102,7 +102,7 @@
                                     <span class="font-mono">({{ $jadwal->room->code }})</span>
                                 @endif
                             @else
-                                &nbsp;·&nbsp; <span class="italic text-gray-400">Jadwal belum diatur</span>
+                                &nbsp;·&nbsp; <span class="italic text-mk-dim">Jadwal belum diatur</span>
                             @endif
                         </div>
                         <div>
@@ -131,7 +131,7 @@
                                 @csrf @method('PATCH')
                                 <button type="submit"
                                         class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors"
-                                        style="background:rgba(212,168,83,0.12);color:#D4A853;border:1px solid rgba(212,168,83,0.25)">
+                                        style="background:rgba(93,184,144,0.12);color:#5DB890;border:1px solid rgba(93,184,144,0.25)">
                                     Jadikan Utama
                                 </button>
                             </form>
@@ -151,7 +151,7 @@
                 @endif
             </div>
         @empty
-            <div class="px-5 py-8 text-center text-sm text-gray-400">
+            <div class="px-5 py-8 text-center text-sm text-mk-dim">
                 Belum ada kelas berjalan.<br>
                 <span class="text-xs">Klik "+ Tambah Kelas" untuk mendaftarkan kelas baru.</span>
             </div>
@@ -160,25 +160,25 @@
 
     {{-- ===== RIWAYAT KELAS ===== --}}
     @if($historyEnrollments->isNotEmpty())
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-            <div class="px-5 py-3.5 border-b border-gray-100">
-                <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#D4A853">
+        <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm overflow-hidden">
+            <div class="px-5 py-3.5 border-b border-mk-borderLight">
+                <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#5DB890">
                     Riwayat Kelas
                 </div>
             </div>
             @foreach($historyEnrollments as $enrollment)
-                <div class="px-5 py-3.5 flex items-center gap-4 border-b border-gray-100 last:border-0 opacity-60">
+                <div class="px-5 py-3.5 flex items-center gap-4 border-b border-mk-borderLight last:border-0 opacity-60">
                     <div class="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0"
-                         style="background:rgba(212,168,83,0.07)">
+                         style="background:rgba(93,184,144,0.07)">
                         🎵
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="text-sm text-gray-700">
+                        <div class="text-sm text-mk-muted">
                             {{ $enrollment->package->instrument->name ?? '—' }}
                             &nbsp;·&nbsp;
                             <span class="font-mono">{{ $enrollment->package->code ?? '—' }}</span>
                         </div>
-                        <div class="text-xs text-gray-400 mt-0.5">
+                        <div class="text-xs text-mk-dim mt-0.5">
                             Guru: {{ $enrollment->teacher->name ?? '—' }}
                             &nbsp;·&nbsp;
                             {{ $enrollment->effective_date ? \Carbon\Carbon::parse($enrollment->effective_date)->format('M Y') : '—' }}
@@ -206,18 +206,18 @@
      class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
      style="background:rgba(0,0,0,0.55)"
      onclick="if(event.target===this) this.classList.add('hidden')">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[80vh] flex flex-col"
+    <div class="bg-mk-card rounded-xl shadow-2xl w-full max-w-xl max-h-[80vh] flex flex-col"
          onclick="event.stopPropagation()">
 
         {{-- Header modal — fixed, tidak ikut scroll --}}
-        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+        <div class="px-5 py-4 border-b border-mk-borderLight flex items-center justify-between flex-shrink-0">
             <div>
-                <h4 class="font-semibold text-gray-800 text-sm">Tambah Kelas</h4>
-                <p class="text-xs text-gray-400 mt-0.5">{{ $student->full_name }}</p>
+                <h4 class="font-semibold text-mk-text text-sm">Tambah Kelas</h4>
+                <p class="text-xs text-mk-dim mt-0.5">{{ $student->full_name }}</p>
             </div>
             <button type="button"
                     onclick="document.getElementById('modal-tambah-kelas').classList.add('hidden')"
-                    class="text-gray-400 hover:text-gray-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded">&times;</button>
+                    class="text-mk-dim hover:text-mk-muted text-2xl leading-none w-8 h-8 flex items-center justify-center rounded">&times;</button>
         </div>
 
         {{-- Body scrollable --}}
@@ -242,12 +242,12 @@
 
                 {{-- Pilih paket --}}
                 <div class="col-span-2">
-                    <label class="block text-xs text-gray-500 mb-1">
+                    <label class="block text-xs text-mk-dim mb-1">
                         Paket <span class="text-red-400">*</span>
                     </label>
                     <select name="package_id" required
                             @change="onPackageChange($event.target.value)"
-                            class="block w-full rounded-lg text-sm px-3 py-2 border border-gray-200">
+                            class="block w-full rounded-lg text-sm px-3 py-2 border border-mk-border">
                         <option value="">— Pilih Paket —</option>
                         @foreach($allPackages as $pkg)
                             <option value="{{ $pkg->id }}">
@@ -260,10 +260,10 @@
 
                 {{-- Pilih guru — difilter sesuai instrumen paket yang dipilih --}}
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">
+                    <label class="block text-xs text-mk-dim mb-1">
                         Guru <span class="text-red-400">*</span>
                     </label>
-                    <select name="teacher_id" required class="block w-full rounded-lg text-sm px-3 py-2 border border-gray-200"
+                    <select name="teacher_id" required class="block w-full rounded-lg text-sm px-3 py-2 border border-mk-border"
                             :disabled="!teachers.length">
                         <option value="">
                             <span x-show="!teachers.length">— Pilih paket dulu —</span>
@@ -273,15 +273,15 @@
                             <option :value="t.id" x-text="t.name"></option>
                         </template>
                     </select>
-                    <p x-show="loadingTeachers" class="text-xs text-gray-400 mt-1">Memuat guru…</p>
+                    <p x-show="loadingTeachers" class="text-xs text-mk-dim mt-1">Memuat guru…</p>
                 </div>
 
                 {{-- Pilih ruangan --}}
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">
+                    <label class="block text-xs text-mk-dim mb-1">
                         Ruangan <span class="text-red-400">*</span>
                     </label>
-                    <select name="room_id" required class="block w-full rounded-lg text-sm px-3 py-2 border border-gray-200">
+                    <select name="room_id" required class="block w-full rounded-lg text-sm px-3 py-2 border border-mk-border">
                         <option value="">— Pilih —</option>
                         @foreach($allRooms as $room)
                             <option value="{{ $room->id }}">[{{ $room->code }}] {{ $room->name }}</option>
@@ -291,10 +291,10 @@
 
                 {{-- Hari jadwal --}}
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">
+                    <label class="block text-xs text-mk-dim mb-1">
                         Hari <span class="text-red-400">*</span>
                     </label>
-                    <select name="day_of_week" required class="block w-full rounded-lg text-sm px-3 py-2 border border-gray-200">
+                    <select name="day_of_week" required class="block w-full rounded-lg text-sm px-3 py-2 border border-mk-border">
                         @foreach(['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $i => $hari)
                             <option value="{{ $i }}" {{ $i === 1 ? 'selected' : '' }}>{{ $hari }}</option>
                         @endforeach
@@ -303,46 +303,46 @@
 
                 {{-- Jam mulai --}}
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">
+                    <label class="block text-xs text-mk-dim mb-1">
                         Jam Mulai <span class="text-red-400">*</span>
                     </label>
                     <input type="time" name="start_time" value="15:00" required
-                           class="block w-full rounded-lg text-sm px-3 py-2 border border-gray-200">
+                           class="block w-full rounded-lg text-sm px-3 py-2 border border-mk-border">
                 </div>
 
                 {{-- Berlaku mulai --}}
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">
+                    <label class="block text-xs text-mk-dim mb-1">
                         Berlaku Mulai <span class="text-red-400">*</span>
                     </label>
                     <input type="date" name="effective_date"
                            value="{{ now()->addDay()->format('Y-m-d') }}" required
-                           class="block w-full rounded-lg text-sm px-3 py-2 border border-gray-200">
+                           class="block w-full rounded-lg text-sm px-3 py-2 border border-mk-border">
                 </div>
 
                 {{-- Jadikan utama (checkbox) --}}
                 <div class="col-span-2 flex items-center gap-2 pt-1">
                     <input type="checkbox" name="jadikan_utama" value="1" id="modal-jadikan-utama"
-                           class="rounded border-gray-300">
-                    <label for="modal-jadikan-utama" class="text-sm text-gray-600 cursor-pointer">
+                           class="rounded border-mk-border">
+                    <label for="modal-jadikan-utama" class="text-sm text-mk-muted cursor-pointer">
                         Jadikan kelas utama
-                        <span class="text-xs text-gray-400">(kelas referensi SPP &amp; honor)</span>
+                        <span class="text-xs text-mk-dim">(kelas referensi SPP &amp; honor)</span>
                     </label>
                 </div>
 
             </div>
 
             {{-- Footer modal — fixed, tidak ikut scroll --}}
-            <div class="px-5 py-3 border-t border-gray-100 flex justify-end gap-2 flex-shrink-0">
+            <div class="px-5 py-3 border-t border-mk-borderLight flex justify-end gap-2 flex-shrink-0">
                 <button type="button"
                         onclick="document.getElementById('modal-tambah-kelas').classList.add('hidden')"
-                        class="px-4 py-2 text-sm text-gray-600 rounded-lg transition-colors"
-                        style="border:1px solid rgba(212,168,83,0.2)">
+                        class="px-4 py-2 text-sm text-mk-muted rounded-lg transition-colors"
+                        style="border:1px solid rgba(93,184,144,0.2)">
                     Batal
                 </button>
                 <button type="submit"
                         class="px-4 py-2 text-sm font-semibold rounded-lg transition-colors"
-                        style="background:rgba(212,168,83,0.9);color:#1A1000">
+                        style="background:rgba(93,184,144,0.9);color:#FFFFFF">
                     Simpan &amp; Buat Jadwal
                 </button>
             </div>

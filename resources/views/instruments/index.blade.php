@@ -22,9 +22,9 @@
         </div>
         @endif
 
-        <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-100">
+        <div class="bg-mk-card shadow-sm sm:rounded-lg overflow-hidden">
+            <table class="min-w-full divide-y divide-mk-border">
+                <thead class="bg-mk-surface">
                     <tr>
                         <th class="px-4 py-2 text-left text-xs font-bold uppercase">Code</th>
                         <th class="px-4 py-2 text-left text-xs font-bold uppercase">Nama</th>
@@ -34,17 +34,17 @@
                         <th class="px-4 py-2 text-center text-xs font-bold uppercase">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-mk-card divide-y divide-mk-border">
                     @foreach($instruments as $instr)
-                        <tr class="{{ $instr->is_active ? '' : 'bg-gray-50 opacity-60' }}">
+                        <tr class="{{ $instr->is_active ? '' : 'bg-mk-surface opacity-60' }}">
                             <td class="px-4 py-2 text-sm font-mono font-bold">{{ $instr->code }}</td>
                             <td class="px-4 py-2 text-sm">{{ $instr->name }}</td>
-                            <td class="px-4 py-2 text-sm text-gray-600">{{ $instr->description }}</td>
+                            <td class="px-4 py-2 text-sm text-mk-muted">{{ $instr->description }}</td>
                             <td class="px-4 py-2 text-sm text-center">
                                 @if($instr->is_active)
                                     <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Aktif</span>
                                 @else
-                                    <span class="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded">Non-aktif</span>
+                                    <span class="px-2 py-1 text-xs bg-mk-surface text-mk-muted rounded">Non-aktif</span>
                                 @endif
                             </td>
                             <td class="px-4 py-2 text-sm text-center">{{ $instr->sort_order }}</td>

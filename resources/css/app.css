@@ -5,652 +5,174 @@
 /* Sembunyikan elemen x-cloak sampai Alpine.js siap */
 [x-cloak] { display: none !important; }
 
-/* Scrollbar tipis untuk area scroll */
+/* ================================================================
+   SCROLLBAR — mint accent
+================================================================ */
 .overflow-y-auto::-webkit-scrollbar { width: 4px; }
 .overflow-y-auto::-webkit-scrollbar-track { background: transparent; }
-.overflow-y-auto::-webkit-scrollbar-thumb { background: rgba(212,168,83,0.20); border-radius: 4px; }
-.overflow-y-auto::-webkit-scrollbar-thumb:hover { background: rgba(212,168,83,0.35); }
-
-/* Transisi halus saat toggle tema dark ↔ light.
-   PENTING: selector tidak boleh bergantung pada theme class (.dark-content / .light-content)
-   karena Alpine mengganti class dan warna secara bersamaan dalam satu frame —
-   jika transition rule hilang tepat saat warna berubah, browser tidak sempat
-   menganimasikannya. Selector main/aside/mk-topbar selalu aktif tanpa syarat. */
-main, main *,
-aside, aside *,
-.mk-topbar, .mk-topbar *,
-.mk-page-header, .mk-page-header * {
-    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: rgba(93,184,144,0.30);
+    border-radius: 4px;
 }
-
-/* Cegah flash background gelap saat pertama kali load di light mode */
-html[data-theme="light"] body { background-color: #F2E9DC; }
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: rgba(93,184,144,0.55);
+}
 
 /* ================================================================
-   DARK CONTENT THEME
-   Semua override di-scope ke .dark-content agar tidak bocor
-   ke halaman login, print, atau receipt (yang tetap terang).
-   Ditempatkan setelah @tailwind utilities sehingga menang via
-   cascade order tanpa butuh !important (kecuali form inputs
-   yang perlu override @tailwindcss/forms).
+   TIPOGRAFI
 ================================================================ */
-
-/* === DEFAULT BORDER COLOR OVERRIDE ===
-   Tailwind base set border-color default ke gray-200 (#e5e7eb) —
-   garis terang di dark mode untuk elemen yg pakai border-b/t/l/r
-   tanpa class warna eksplisit. Override di sini sbg fondasi.
-   Specificity (0,1,0) lebih rendah dari explicit color class (0,2,0)
-   jadi border-green-300, border-red-300, dll tetap bekerja benar. */
-.dark-content *,
-.dark-content *::before,
-.dark-content *::after            { border-color: rgba(212,168,83,0.10); }
-
-/* === BACKGROUND CARDS & PANEL === */
-.dark-content .bg-white          { background-color: #241608; }
-.dark-content .bg-gray-50        { background-color: rgba(212,168,83,0.04); }
-.dark-content .bg-gray-100       { background-color: rgba(212,168,83,0.07); }
-.dark-content .bg-gray-200       { background-color: rgba(212,168,83,0.11); }
-.dark-content .bg-gray-300       { background-color: rgba(212,168,83,0.17); }
-.dark-content .bg-gray-400       { background-color: rgba(212,168,83,0.24); }
-.dark-content .bg-gray-500       { background-color: rgba(212,168,83,0.32); }
-.dark-content .bg-gray-600       { background-color: rgba(212,168,83,0.40); }
-
-/* === HOVER BACKGROUNDS === */
-.dark-content .hover\:bg-gray-50:hover   { background-color: #2E1C0E; }
-.dark-content .hover\:bg-gray-100:hover  { background-color: #351F10; }
-.dark-content .hover\:bg-gray-200:hover  { background-color: #3A2214; }
-.dark-content .hover\:bg-gray-300:hover  { background-color: #3F2618; }
-.dark-content .hover\:bg-white:hover     { background-color: #2E1C0E; }
-
-/* === BORDERS === */
-.dark-content .border-gray-100,
-.dark-content .border-gray-200           { border-color: rgba(212,168,83,0.10); }
-.dark-content .border-gray-300           { border-color: rgba(212,168,83,0.16); }
-.dark-content .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
-.dark-content .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
-    border-color: rgba(212,168,83,0.10);
-}
-
-/* === TEXT === */
-.dark-content .text-gray-900,
-.dark-content .text-gray-800             { color: #EDE0CC; }
-.dark-content .text-gray-700             { color: #C0A882; }
-.dark-content .text-gray-600             { color: #8A6848; }
-.dark-content .text-gray-500             { color: #6B4A2A; }
-.dark-content .text-gray-400             { color: #4A3020; }
-.dark-content .text-gray-300             { color: #382010; }
-
-/* === HOVER TEXT === */
-.dark-content .hover\:text-gray-700:hover  { color: #C0A882; }
-.dark-content .hover\:text-gray-800:hover,
-.dark-content .hover\:text-gray-900:hover  { color: #EDE0CC; }
-
-/* === LINKS (indigo) === */
-/* text-indigo-700/800 di-handle di blok STATUS BADGE — TEXT (lebih bawah) */
-.dark-content .text-indigo-600           { color: #C8A870; }
-.dark-content .hover\:text-indigo-700:hover,
-.dark-content .hover\:text-indigo-800:hover { color: #EDE0CC; }
-.dark-content a.text-indigo-600:hover    { color: #EDE0CC; }
-
-/* === STATUS BADGE — BACKGROUND (bg-*-50 dan bg-*-100) === */
-/* Green: Aktif, PAID, HADIR, Lunas */
-.dark-content .bg-green-50               { background-color: rgba(58,125,68,0.14); }
-.dark-content .bg-green-100              { background-color: rgba(58,125,68,0.20); }
-/* Yellow: Trial, PARTIAL */
-.dark-content .bg-yellow-50              { background-color: rgba(212,168,83,0.12); }
-.dark-content .bg-yellow-100             { background-color: rgba(212,168,83,0.18); }
-/* Orange: Cuti, DIGANTI */
-.dark-content .bg-orange-50              { background-color: rgba(181,101,29,0.14); }
-.dark-content .bg-orange-100             { background-color: rgba(181,101,29,0.20); }
-/* Amber: LIFECYCLE, CALCULATED */
-.dark-content .bg-amber-50               { background-color: rgba(212,168,83,0.12); }
-.dark-content .bg-amber-100              { background-color: rgba(212,168,83,0.18); }
-/* Blue: Selesai, info */
-.dark-content .bg-blue-50                { background-color: rgba(58,97,134,0.14); }
-.dark-content .bg-blue-100               { background-color: rgba(58,97,134,0.20); }
-/* Indigo: PAID, Aktif alt */
-.dark-content .bg-indigo-50              { background-color: rgba(58,97,134,0.14); }
-.dark-content .bg-indigo-100             { background-color: rgba(58,97,134,0.18); }
-/* Red: UNPAID, Void, Mengundurkan Diri, HANGUS */
-.dark-content .bg-red-50                 { background-color: rgba(176,58,46,0.14); }
-.dark-content .bg-red-100                { background-color: rgba(176,58,46,0.20); }
-/* Purple: Trial alt, IZIN */
-.dark-content .bg-purple-50              { background-color: rgba(123,94,167,0.14); }
-.dark-content .bg-purple-100             { background-color: rgba(123,94,167,0.18); }
-
-/* === STATUS BADGE — TEXT === */
-.dark-content .text-green-600,
-.dark-content .text-green-700,
-.dark-content .text-green-800            { color: #6BC07A; }
-.dark-content .text-yellow-600,
-.dark-content .text-yellow-700,
-.dark-content .text-yellow-800           { color: #D4A853; }
-.dark-content .text-orange-600,
-.dark-content .text-orange-700,
-.dark-content .text-orange-800           { color: #D4853A; }
-.dark-content .text-amber-600,
-.dark-content .text-amber-700            { color: #D4A853; }
-.dark-content .text-blue-600,
-.dark-content .text-blue-700,
-.dark-content .text-blue-800             { color: #7AAAC8; }
-.dark-content .text-indigo-700,
-.dark-content .text-indigo-800           { color: #8A9AC8; }
-.dark-content .text-red-500,
-.dark-content .text-red-600,
-.dark-content .text-red-700              { color: #D07868; }
-.dark-content .text-purple-600,
-.dark-content .text-purple-700           { color: #B09AD8; }
-
-/* === BADGE — BORDERS === */
-.dark-content .border-green-300          { border-color: rgba(58,125,68,0.35); }
-.dark-content .border-yellow-300,
-.dark-content .border-amber-300          { border-color: rgba(212,168,83,0.35); }
-.dark-content .border-orange-300         { border-color: rgba(181,101,29,0.35); }
-.dark-content .border-red-300            { border-color: rgba(176,58,46,0.35); }
-.dark-content .border-blue-300           { border-color: rgba(58,97,134,0.35); }
-.dark-content .border-indigo-300         { border-color: rgba(58,97,134,0.35); }
-.dark-content .border-purple-300         { border-color: rgba(123,94,167,0.35); }
-
-/* === FORM INPUTS ===
-   Butuh !important karena @tailwindcss/forms plugin memakai
-   @layer base yang kalah cascade, tapi attribute selector-nya
-   kadang spesifisitasnya sama. Lebih aman pakai !important. */
-.dark-content input[type="text"],
-.dark-content input[type="email"],
-.dark-content input[type="password"],
-.dark-content input[type="date"],
-.dark-content input[type="number"],
-.dark-content input[type="tel"],
-.dark-content input[type="time"],
-.dark-content input[type="search"],
-.dark-content input[type="url"],
-.dark-content input:not([type]),
-.dark-content input[type="file"],
-.dark-content select,
-.dark-content textarea {
-    background-color: #2E1C0E !important;
-    border-color: rgba(212,168,83,0.18) !important;
-    color: #EDE0CC !important;
-}
-
-/* Tombol "Pilih File" di dalam input file */
-.dark-content input[type="file"]::file-selector-button {
-    background-color: rgba(212,168,83,0.15);
-    border: 1px solid rgba(212,168,83,0.3);
-    color: #D4A853;
-    border-radius: 4px;
-    padding: 2px 10px;
-    margin-right: 10px;
-    cursor: pointer;
-    font-size: 0.75rem;
-    transition: background-color 0.15s ease;
-}
-.dark-content input[type="file"]:hover::file-selector-button {
-    background-color: rgba(212,168,83,0.25);
-}
-
-.dark-content input::placeholder,
-.dark-content textarea::placeholder      { color: #7A5540 !important; }
-
-/* Dropdown option styling */
-.dark-content select option              { background-color: #2E1C0E; color: #EDE0CC; }
-
-/* Focus ring: gold accent sesuai tema sidebar */
-.dark-content input:focus,
-.dark-content select:focus,
-.dark-content textarea:focus {
-    border-color: rgba(212,168,83,0.5) !important;
-    box-shadow: 0 0 0 3px rgba(212,168,83,0.1) !important;
-    outline: none !important;
-}
-
-/* Input readonly — jelas tidak bisa diedit, berbeda dari disabled */
-.dark-content input[readonly],
-.dark-content select[readonly],
-.dark-content textarea[readonly] {
-    background-color: rgba(212,168,83,0.06) !important;
-    border-color: rgba(212,168,83,0.18) !important;
-    color: #C0A882 !important;  /* #8A6848 hanya 3.14:1 — gagal WCAG AA; #C0A882 ~5.8:1 */
-    cursor: not-allowed;
-}
-
-/* Input disabled — redup, tidak aktif sama sekali */
-.dark-content input:disabled,
-.dark-content select:disabled,
-.dark-content textarea:disabled {
-    background-color: rgba(212,168,83,0.04) !important;
-    border-color: rgba(212,168,83,0.08) !important;
-    color: #4A3020 !important;
-    cursor: not-allowed;
-    opacity: 0.5;
-}
-
-/* Checkbox dan radio tetap berwarna */
-.dark-content input[type="checkbox"],
-.dark-content input[type="radio"]        { background-color: #2E1C0E !important; }
-
-/* === SHADOW — lebih dalam di dark background === */
-.dark-content .shadow-sm                 { box-shadow: 0 1px 4px rgba(18,8,2,0.55); }
-.dark-content .shadow                    { box-shadow: 0 2px 10px rgba(18,8,2,0.65); }
-
-/* ===== ANIMASI FADE-IN UNTUK CARD DASHBOARD ===== */
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(14px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-.fade-in-up {
-    animation: fadeInUp 0.4s ease-out both;
-}
-
-/* === ACTION BUTTONS — konversi warna button ke dark theme ===
-   bg-blue-600 / bg-purple-600 tidak di-cover override di atas
-   karena nilai -600 bukan badge (badge pakai -50/-100).
-   Override ke gold accent supaya konsisten di semua halaman.      */
-.dark-content .bg-blue-600   { background-color: rgba(212,168,83,0.9) !important; color: #1A1000 !important; }
-.dark-content .hover\:bg-blue-700:hover  { background-color: #D4A853 !important; color: #1A1000 !important; }
-.dark-content .bg-blue-500   { background-color: rgba(212,168,83,0.85) !important; color: #1A1000 !important; }
-.dark-content .hover\:bg-blue-600:hover  { background-color: rgba(212,168,83,0.9) !important; }
-
-.dark-content .bg-purple-600 { background-color: rgba(212,168,83,0.9) !important; color: #1A1000 !important; }
-.dark-content .hover\:bg-purple-700:hover { background-color: #D4A853 !important; color: #1A1000 !important; }
-
-/* Indigo buttons → gold (konsisten dengan blue/purple) */
-.dark-content .bg-indigo-600 { background-color: rgba(212,168,83,0.9) !important; color: #1A1000 !important; }
-.dark-content .hover\:bg-indigo-700:hover { background-color: #D4A853 !important; color: #1A1000 !important; }
-
-/* Green success buttons — tetap hijau semantik (tidak di-convert ke gold) */
-.dark-content .bg-green-600   { background-color: #059669 !important; color: #ECFDF5 !important; }
-.dark-content .hover\:bg-green-700:hover { background-color: #047857 !important; color: #ECFDF5 !important; }
-.dark-content .bg-green-500   { background-color: rgba(5,150,105,0.85) !important; color: #ECFDF5 !important; }
-.dark-content .hover\:bg-green-600:hover { background-color: #059669 !important; color: #ECFDF5 !important; }
-
-/* Red danger buttons — tetap merah semantik, sedikit muted agar tidak terlalu menyilaukan */
-.dark-content .bg-red-600    { background-color: rgba(220,38,38,0.85) !important; color: #FEF2F2 !important; }
-.dark-content .hover\:bg-red-700:hover { background-color: #B91C1C !important; color: #FEF2F2 !important; }
-.dark-content .bg-red-500    { background-color: rgba(220,38,38,0.75) !important; color: #FEF2F2 !important; }
-.dark-content .hover\:bg-red-600:hover { background-color: rgba(220,38,38,0.85) !important; }
-
-/* Playfair Display untuk heading utama di konten halaman */
-.dark-content h1, .light-content h1 {
+.mk-content h1 {
     font-family: 'Playfair Display', Georgia, serif;
     font-weight: 700;
     letter-spacing: -0.01em;
 }
 
-/* === STATUS CARD INACTIVE — dark mode */
-.dark-content .mk-status-card-inactive {
-    background: rgba(212,168,83,0.06) !important;
-    border: 1px solid rgba(212,168,83,0.20) !important;
-}
-.dark-content .mk-status-card-inactive:hover {
-    background: rgba(212,168,83,0.12) !important;
-    border-color: rgba(212,168,83,0.40) !important;
-}
-.dark-content .mk-status-card-inactive .mk-status-label { color: #8A6848 !important; }
-
-/* === PAGINATION === */
-.dark-content nav[aria-label="Pagination"] span,
-.dark-content nav[aria-label="Pagination"] a {
-    background-color: #241608;
-    border-color: rgba(212,168,83,0.12);
-    color: #8A6848;
-}
-.dark-content nav[aria-label="Pagination"] a:hover {
-    background-color: #2E1C0E;
-    color: #EDE0CC;
-}
-/* Halaman aktif */
-.dark-content nav[aria-label="Pagination"] [aria-current="page"] > span {
-    background-color: rgba(212,168,83,0.15);
-    border-color: rgba(212,168,83,0.3);
-    color: #D4A853;
-}
-
 /* ================================================================
-   DARK MODE STRUKTURAL — sidebar, topbar, page header
-   Elemen-elemen ini pakai kelas mk-* dari tailwind.config (bukan
-   Tailwind standar), dan Blade hardcode border-white/[0.06].
-   Override border di sini agar konsisten dengan palet warm gold.
+   FORM INPUTS — 1.5px mint border, selalu terlihat
+   Butuh !important karena @tailwindcss/forms plugin.
 ================================================================ */
-[data-theme="dark"] aside                        { border-right-color:  rgba(212,168,83,0.08) !important; }
-[data-theme="dark"] .mk-topbar                   { border-bottom-color: rgba(212,168,83,0.08) !important; }
-[data-theme="dark"] .mk-page-header              { border-bottom-color: rgba(212,168,83,0.08) !important; }
-[data-theme="dark"] .hover\:bg-white\/5:hover    { background-color: rgba(212,168,83,0.06) !important; }
-
-/* ================================================================
-   STRUCTURAL OVERRIDES — LIGHT MODE (Warm Brown / Daylight)
-   Berdasarkan MusikKITA-UI-WarmBrown.jsx.
-   Di-scope ke [data-theme="light"] agar tidak mengganggu dark mode.
-================================================================ */
-
-/* === WARNA STRUKTURAL HALAMAN === */
-[data-theme="light"] .bg-mk-bg          { background-color: #F2E9DC !important; }
-[data-theme="light"] .bg-mk-card        { background-color: #FBF5EC !important; }
-/* Sidebar tetap gelap mahoni — konsisten dengan referensi WarmBrown */
-[data-theme="light"] .bg-mk-sidebar     { background-color: #3B2208 !important; }
-
-/* === TOPBAR di LIGHT MODE === */
-/* Topbar berubah jadi krem hangat — berbeda dari sidebar yang tetap gelap mahoni */
-[data-theme="light"] .mk-topbar {
-    background-color: rgba(242,233,220,0.96) !important;
-    border-bottom-color: rgba(101,65,27,0.15) !important;
-    backdrop-filter: blur(8px);
-}
-[data-theme="light"] .mk-topbar .text-mk-dim              { color: #A8845A; }
-[data-theme="light"] .mk-topbar .text-mk-muted            { color: #7A5C3A; }
-[data-theme="light"] .mk-topbar .hover\:text-mk-muted:hover { color: #3D2610; }
-[data-theme="light"] .mk-topbar .hover\:bg-white\/5:hover { background-color: rgba(101,65,27,0.08) !important; }
-[data-theme="light"] .mk-topbar .bg-mk-accentDim          { background-color: rgba(160,82,45,0.15) !important; }
-[data-theme="light"] .mk-topbar .text-mk-accent           { color: #A0522D !important; }
-
-/* === BORDER HEADER di LIGHT MODE === */
-/* Header div punya .light-content + border-b, override warnanya */
-[data-theme="light"] .light-content     { border-color: rgba(101,65,27,0.15); }
-
-/* === SCROLLBAR di LIGHT MODE === */
-[data-theme="light"] .overflow-y-auto::-webkit-scrollbar-thumb {
-    background: rgba(101,65,27,0.20);
-}
-[data-theme="light"] .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-    background: rgba(101,65,27,0.35);
+.mk-content input[type="text"],
+.mk-content input[type="email"],
+.mk-content input[type="password"],
+.mk-content input[type="date"],
+.mk-content input[type="number"],
+.mk-content input[type="tel"],
+.mk-content input[type="time"],
+.mk-content input[type="search"],
+.mk-content input[type="url"],
+.mk-content input:not([type]),
+.mk-content select,
+.mk-content textarea {
+    border-width: 1.5px !important;
+    border-color: rgba(93,184,144,0.70) !important;
+    color: #3A2015 !important;
+    background-color: #ffffff !important;
 }
 
-/* ================================================================
-   LIGHT CONTENT THEME — Warm Brown (Daylight)
-   Mirror dari .dark-content, disesuaikan dengan palet warna hangat.
-   Kelas .light-content di-scope sama seperti .dark-content.
-================================================================ */
-
-/* === BASE TEXT COLOR ===
-   Tanpa ini, elemen tanpa class warna eksplisit (th, td, span, p)
-   mewarisi warna browser default — hampir tidak kelihatan di background krem. */
-.light-content                     { color: #2C1A07; }
-
-/* === BACKGROUND CARDS & PANEL === */
-.light-content .bg-white          { background-color: #FBF5EC; }
-.light-content .bg-gray-50        { background-color: rgba(101,65,27,0.04); }
-.light-content .bg-gray-100       { background-color: rgba(101,65,27,0.07); }
-.light-content .bg-gray-200       { background-color: rgba(101,65,27,0.11); }
-.light-content .bg-gray-300       { background-color: rgba(101,65,27,0.18); }
-.light-content .bg-gray-400       { background-color: rgba(101,65,27,0.26); }
-.light-content .bg-gray-500       { background-color: rgba(101,65,27,0.35); }
-.light-content .bg-gray-600       { background-color: rgba(101,65,27,0.45); }
-
-/* === HOVER BACKGROUNDS === */
-.light-content .hover\:bg-gray-50:hover   { background-color: #F5EAD8; }
-.light-content .hover\:bg-gray-100:hover  { background-color: #F5EAD8; }
-.light-content .hover\:bg-gray-200:hover  { background-color: #EADCC8; }
-.light-content .hover\:bg-gray-300:hover  { background-color: #DDD0BE; }
-.light-content .hover\:bg-white:hover     { background-color: #F5EAD8; }
-
-/* === BORDERS === */
-.light-content .border-gray-100,
-.light-content .border-gray-200           { border-color: rgba(101,65,27,0.10); }
-.light-content .border-gray-300           { border-color: rgba(101,65,27,0.20); }
-.light-content .border-amber-200          { border-color: rgba(181,101,29,0.25); }
-.light-content .border-yellow-200         { border-color: rgba(181,101,29,0.25); }
-.light-content .border-green-200          { border-color: rgba(58,125,68,0.25); }
-.light-content .border-red-200            { border-color: rgba(176,58,46,0.25); }
-.light-content .border-blue-200           { border-color: rgba(58,97,134,0.25); }
-.light-content .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
-.light-content .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
-    border-color: rgba(101,65,27,0.10);
+/* Focus ring — mint lebih kuat */
+.mk-content input:focus,
+.mk-content select:focus,
+.mk-content textarea:focus {
+    border-color: #5DB890 !important;
+    box-shadow: 0 0 0 3px rgba(93,184,144,0.18) !important;
+    outline: none !important;
 }
 
-/* === TEXT === */
-.light-content .text-gray-900,
-.light-content .text-gray-800             { color: #2C1A07; }
-.light-content .text-gray-700             { color: #3D2610; }
-.light-content .text-gray-600             { color: #7A5C3A; }
-.light-content .text-gray-500             { color: #9A7050; }
-.light-content .text-gray-400             { color: #C0956A; }
-.light-content .text-gray-300             { color: #D4B896; }
+/* Placeholder */
+.mk-content input::placeholder,
+.mk-content textarea::placeholder { color: #A8C4B8 !important; }
 
-/* === HOVER TEXT === */
-.light-content .hover\:text-gray-700:hover  { color: #3D2610; }
-.light-content .hover\:text-gray-800:hover,
-.light-content .hover\:text-gray-900:hover  { color: #2C1A07; }
-
-/* === LINKS (indigo → sienna coklat hangat) === */
-.light-content .text-indigo-600           { color: #A0522D; }
-.light-content .text-indigo-700           { color: #8B4226; }
-.light-content .hover\:text-indigo-700:hover,
-.light-content .hover\:text-indigo-800:hover { color: #8B4226; }
-.light-content a.text-indigo-600:hover    { color: #8B4226; }
-
-/* === STATUS BADGE — BACKGROUND === */
-/* Green: Aktif, PAID, HADIR, Lunas */
-.light-content .bg-green-50               { background-color: rgba(58,125,68,0.10); }
-.light-content .bg-green-100              { background-color: rgba(58,125,68,0.16); }
-/* Yellow: Trial, PARTIAL — sienna keemasan */
-.light-content .bg-yellow-50              { background-color: rgba(181,101,29,0.10); }
-.light-content .bg-yellow-100             { background-color: rgba(181,101,29,0.16); }
-/* Amber: CALCULATED — lebih keemasan dari yellow */
-.light-content .bg-amber-50               { background-color: rgba(180,83,9,0.10); }
-.light-content .bg-amber-100              { background-color: rgba(180,83,9,0.16); }
-/* Orange: Cuti, DIGANTI — lebih merah-oranye dari amber */
-.light-content .bg-orange-50              { background-color: rgba(194,65,12,0.10); }
-.light-content .bg-orange-100             { background-color: rgba(194,65,12,0.16); }
-/* Blue: Selesai, info */
-.light-content .bg-blue-50                { background-color: rgba(58,97,134,0.10); }
-.light-content .bg-blue-100               { background-color: rgba(58,97,134,0.14); }
-/* Indigo: alternatif */
-.light-content .bg-indigo-50              { background-color: rgba(58,97,134,0.10); }
-.light-content .bg-indigo-100             { background-color: rgba(58,97,134,0.14); }
-/* Red: UNPAID, Void, Mengundurkan Diri */
-.light-content .bg-red-50                 { background-color: rgba(176,58,46,0.10); }
-.light-content .bg-red-100                { background-color: rgba(176,58,46,0.16); }
-/* Purple: Trial alt */
-.light-content .bg-purple-50              { background-color: rgba(123,94,167,0.10); }
-.light-content .bg-purple-100             { background-color: rgba(123,94,167,0.14); }
-
-/* === STATUS BADGE — TEXT === */
-.light-content .text-green-600,
-.light-content .text-green-700,
-.light-content .text-green-800            { color: #3A7D44; }
-.light-content .text-yellow-600,
-.light-content .text-yellow-700,
-.light-content .text-yellow-800           { color: #B5651D; }
-.light-content .text-orange-600,
-.light-content .text-orange-700           { color: #C2410C; }  /* merah-oranye, beda dari amber */
-.light-content .text-amber-600,
-.light-content .text-amber-700,
-.light-content .text-amber-800            { color: #B45309; }  /* keemasan, beda dari orange */
-.light-content .text-blue-600,
-.light-content .text-blue-700,
-.light-content .text-blue-800             { color: #3A6186; }
-.light-content .text-indigo-700,
-.light-content .text-indigo-800           { color: #3A6186; }
-.light-content .text-red-500,
-.light-content .text-red-600,
-.light-content .text-red-700              { color: #B03A2E; }
-.light-content .text-purple-600,
-.light-content .text-purple-700           { color: #7B5EA7; }
-
-/* === BADGE — BORDERS === */
-.light-content .border-green-300          { border-color: rgba(58,125,68,0.30); }
-.light-content .border-yellow-300         { border-color: rgba(181,101,29,0.30); }
-.light-content .border-orange-300         { border-color: rgba(181,101,29,0.30); }
-.light-content .border-red-300            { border-color: rgba(176,58,46,0.30); }
-.light-content .border-blue-300           { border-color: rgba(58,97,134,0.30); }
-.light-content .border-indigo-300         { border-color: rgba(58,97,134,0.30); }
-.light-content .border-purple-300         { border-color: rgba(123,94,167,0.30); }
-
-/* === FORM INPUTS ===
-   Butuh !important karena @tailwindcss/forms plugin. */
-.light-content input[type="text"],
-.light-content input[type="email"],
-.light-content input[type="password"],
-.light-content input[type="date"],
-.light-content input[type="number"],
-.light-content input[type="tel"],
-.light-content input[type="time"],
-.light-content input[type="search"],
-.light-content input[type="url"],
-.light-content input:not([type]),
-.light-content input[type="file"],
-.light-content select,
-.light-content textarea {
-    background-color: #FFFFFF !important;
-    border-color: rgba(101,65,27,0.25) !important;
-    color: #2C1A07 !important;
+/* Readonly */
+.mk-content input[readonly],
+.mk-content textarea[readonly] {
+    background-color: rgba(93,184,144,0.05) !important;
+    border-color: rgba(93,184,144,0.25) !important;
+    color: #7A3818 !important;
+    cursor: not-allowed;
 }
 
-/* Tombol "Pilih File" di dalam input file */
-.light-content input[type="file"]::file-selector-button {
-    background-color: rgba(160,82,45,0.12);
-    border: 1px solid rgba(160,82,45,0.3);
-    color: #A0522D;
+/* Disabled */
+.mk-content input:disabled,
+.mk-content select:disabled,
+.mk-content textarea:disabled {
+    background-color: rgba(93,184,144,0.04) !important;
+    border-color: rgba(93,184,144,0.15) !important;
+    color: #A8C4B8 !important;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* File selector button */
+.mk-content input[type="file"]::file-selector-button {
+    background-color: rgba(93,184,144,0.12);
+    border: 1px solid rgba(93,184,144,0.35);
+    color: #1A7A55;
     border-radius: 4px;
     padding: 2px 10px;
     margin-right: 10px;
     cursor: pointer;
     font-size: 0.75rem;
-    transition: background-color 0.15s ease;
 }
-.light-content input[type="file"]:hover::file-selector-button {
-    background-color: rgba(160,82,45,0.22);
-}
-
-.light-content input::placeholder,
-.light-content textarea::placeholder      { color: #9A7050 !important; }
-
-.light-content select option              { background-color: #FFFFFF; color: #2C1A07; }
-
-/* Focus ring: sienna hangat */
-.light-content input:focus,
-.light-content select:focus,
-.light-content textarea:focus {
-    border-color: rgba(160,82,45,0.60) !important;
-    box-shadow: 0 0 0 3px rgba(160,82,45,0.12) !important;
-    outline: none !important;
+.mk-content input[type="file"]:hover::file-selector-button {
+    background-color: rgba(93,184,144,0.22);
 }
 
-/* Input readonly — visual dibedakan dari editable tapi bukan disabled */
-.light-content input[readonly],
-.light-content textarea[readonly] {
-    background-color: rgba(160,82,45,0.05) !important;
-    border-color: rgba(160,82,45,0.22) !important;
-    color: #7A5C3A !important;
-    cursor: not-allowed;
+/* Dropdown option */
+.mk-content select option { background-color: #ffffff; color: #3A2015; }
+
+/* Checkbox checked → mint */
+.mk-content input[type="checkbox"] { background-color: #ffffff !important; }
+.mk-content input[type="checkbox"]:checked {
+    background-color: #5DB890 !important;
+    border-color: #5DB890 !important;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='%23ffffff' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e") !important;
 }
 
-/* Input disabled — redup, tidak aktif */
-.light-content input:disabled,
-.light-content select:disabled,
-.light-content textarea:disabled {
-    background-color: rgba(101,65,27,0.03) !important;
-    border-color: rgba(101,65,27,0.08) !important;
-    color: #C0956A !important;
-    cursor: not-allowed;
-    opacity: 0.5;
-}
-
-.light-content input[type="checkbox"],
-.light-content input[type="radio"]        { background-color: #FFFFFF !important; }
-
-.light-content input[type="checkbox"]:checked {
-    background-color: #FFFFFF !important;
-    border-color:     #3B82F6 !important;
-    /* SVG checkmark biru — fill %233B82F6 = #3B82F6 */
-    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='%233B82F6' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e") !important;
-}
-
-.light-content input[type="radio"]:checked {
-    background-color: #FFFFFF !important;
-    border-color:     #A0522D !important;
-    /* SVG dot sienna — fill %23A0522D = #A0522D */
-    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='%23A0522D' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e") !important;
-}
-
-/* === SHADOW === */
-.light-content .shadow-sm                 { box-shadow: 0 1px 4px rgba(101,65,27,0.12); }
-.light-content .shadow                    { box-shadow: 0 2px 10px rgba(101,65,27,0.16); }
-
-/* === ACTION BUTTONS — konversi warna button ke sienna coklat hangat === */
-.light-content .bg-blue-600   { background-color: #A0522D !important; color: #FBF5EC !important; }
-.light-content .hover\:bg-blue-700:hover  { background-color: #8B4226 !important; color: #FBF5EC !important; }
-.light-content .bg-blue-500   { background-color: rgba(160,82,45,0.9) !important; color: #FBF5EC !important; }
-.light-content .hover\:bg-blue-600:hover  { background-color: #A0522D !important; }
-
-.light-content .bg-purple-600 { background-color: #A0522D !important; color: #FBF5EC !important; }
-.light-content .hover\:bg-purple-700:hover { background-color: #8B4226 !important; color: #FBF5EC !important; }
-
-.light-content .bg-indigo-600 { background-color: #A0522D !important; color: #FBF5EC !important; }
-.light-content .hover\:bg-indigo-700:hover { background-color: #8B4226 !important; color: #FBF5EC !important; }
-
-/* Green success buttons */
-.light-content .bg-green-600   { background-color: #16a34a !important; color: #F0FFF4 !important; }
-.light-content .hover\:bg-green-700:hover { background-color: #15803d !important; color: #F0FFF4 !important; }
-.light-content .bg-green-500   { background-color: rgba(22,163,74,0.9) !important; color: #F0FFF4 !important; }
-.light-content .hover\:bg-green-600:hover { background-color: #16a34a !important; color: #F0FFF4 !important; }
-
-/* === BTN-MK-PRIMARY: tombol aksi utama — gold di dark mode, sienna di light mode === */
-.btn-mk-primary               { background: #D4A853 !important; color: #1A0E06 !important; }
-.light-content .btn-mk-primary { background: #A0522D !important; color: #FBF5EC !important; }
-
-/* Red danger buttons */
-.light-content .bg-red-600    { background-color: #DC2626 !important; color: #FFF5F5 !important; }
-.light-content .hover\:bg-red-700:hover { background-color: #B91C1C !important; color: #FFF5F5 !important; }
-.light-content .bg-red-500    { background-color: rgba(220,38,38,0.9) !important; color: #FFF5F5 !important; }
-.light-content .hover\:bg-red-600:hover { background-color: #DC2626 !important; }
-
-/* === PAGINATION === */
-.light-content nav[aria-label="Pagination"] span,
-.light-content nav[aria-label="Pagination"] a {
-    background-color: #FBF5EC;
-    border-color: rgba(101,65,27,0.15);
-    color: #7A5C3A;
-}
-.light-content nav[aria-label="Pagination"] a:hover {
-    background-color: #F5EAD8;
-    color: #2C1A07;
-}
-.light-content nav[aria-label="Pagination"] [aria-current="page"] > span {
-    background-color: rgba(160,82,45,0.12);
-    border-color: rgba(160,82,45,0.30);
-    color: #A0522D;
+/* Radio checked → mint */
+.mk-content input[type="radio"] { background-color: #ffffff !important; }
+.mk-content input[type="radio"]:checked {
+    background-color: #5DB890 !important;
+    border-color: #5DB890 !important;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='%23ffffff' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e") !important;
 }
 
 /* ================================================================
-   LIGHT CONTENT — OVERRIDE text-mk-* DAN bg-mk-* CUSTOM COLORS
-   Tanpa override ini, text-mk-text (#E8EAF0 near-white) tidak
-   terlihat di atas background krem (#FBF5EC).
+   STATUS CARD INACTIVE (students/index filter cards)
 ================================================================ */
-.light-content .text-mk-text               { color: #2C1A07 !important; }
-.light-content .text-mk-muted              { color: #7A5C3A !important; }
-.light-content .text-mk-dim                { color: #A8845A !important; }
-.light-content .text-mk-accent             { color: #A0522D !important; }
-.light-content .hover\:text-mk-text:hover  { color: #2C1A07 !important; }
-.light-content .hover\:text-mk-muted:hover { color: #5A3C1E !important; }
-.light-content .bg-mk-accentDim            { background-color: rgba(160,82,45,0.12) !important; }
-
-/* Tombol / badge inline yang pakai warna dark mode */
-.light-content .mk-filter-btn   { background: rgba(160,82,45,0.12) !important; color: #A0522D !important; }
-.light-content .mk-reset-btn    { background: rgba(101,65,27,0.08) !important; color: #7A5C3A !important; }
-/* Status card inactive — light mode */
-.light-content .mk-status-card-inactive {
-    background: rgba(101,65,27,0.06) !important;
-    border: 1px solid rgba(101,65,27,0.20) !important;
+.mk-status-card-inactive {
+    background: rgba(93,184,144,0.05) !important;
+    border: 1px solid rgba(93,184,144,0.22) !important;
 }
-.light-content .mk-status-card-inactive:hover {
-    background: rgba(101,65,27,0.12) !important;
-    border-color: rgba(101,65,27,0.35) !important;
+.mk-status-card-inactive:hover {
+    background: rgba(93,184,144,0.10) !important;
+    border-color: rgba(93,184,144,0.38) !important;
 }
-/* Label status tidak aktif pada status card */
-.light-content .mk-status-card-inactive .mk-status-label { color: #9A7050 !important; }
 
 /* ================================================================
-   SIDEBAR (aside) — OVERRIDES KHUSUS LIGHT MODE
-   Sidebar tetap gelap mahoni (#3B2208) di light mode.
-   Teks disesuaikan ke palet wheat/krem agar kontras dengan mahoni.
+   PAGINATION — active page mint solid
 ================================================================ */
-[data-theme="light"] aside .text-mk-muted             { color: rgba(245,222,179,0.65) !important; }
-[data-theme="light"] aside .text-mk-dim               { color: rgba(245,222,179,0.35) !important; }
-[data-theme="light"] aside .text-mk-text              { color: rgba(245,222,179,0.90) !important; }
-[data-theme="light"] aside .text-mk-accent            { color: #F5DEB3 !important; }
-[data-theme="light"] aside .bg-mk-accentDim           { background-color: rgba(245,222,179,0.18) !important; }
-[data-theme="light"] aside .border-mk-accent          { border-color: rgba(245,222,179,0.70) !important; }
-[data-theme="light"] aside .hover\:bg-white\/5:hover  { background-color: rgba(245,222,179,0.08) !important; }
-[data-theme="light"] aside .hover\:text-mk-text:hover { color: rgba(245,222,179,0.95) !important; }
-[data-theme="light"] aside .border-white\/\[0\.06\]   { border-color: rgba(245,222,179,0.12) !important; }
+.mk-content nav[aria-label="Pagination"] [aria-current="page"] > span {
+    background-color: #5DB890;
+    border-color: #5DB890;
+    color: #1A3D30;
+    font-weight: 700;
+}
+
+/* ================================================================
+   SHADOW — mint-tinted
+================================================================ */
+.mk-content .shadow-sm { box-shadow: 0 1px 4px rgba(74,31,10,0.08); }
+.mk-content .shadow    { box-shadow: 0 2px 12px rgba(74,31,10,0.10); }
+
+/* ================================================================
+   FILTER / RESET buttons
+================================================================ */
+.mk-filter-btn { background: rgba(93,184,144,0.12) !important; color: #1A7A55 !important; }
+.mk-filter-btn:hover { background: rgba(93,184,144,0.22) !important; }
+.mk-reset-btn  { background: rgba(74,31,10,0.07) !important; color: #7A3818 !important; }
+
+/* ================================================================
+   ANIMASI
+================================================================ */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up { animation: fadeInUp 0.4s ease-out both; }
+
+/* ================================================================
+   BTN-MK-PRIMARY — utility class untuk tombol mahogany + mint
+================================================================ */
+.btn-mk-primary {
+    background: #4A1F0A !important;
+    color: #5DB890 !important;
+    font-weight: 600;
+}
+.btn-mk-primary:hover { background: #7A3818 !important; }
+
+/* ================================================================
+   STRUKTURAL — borders sidebar, topbar, page header
+================================================================ */
+aside           { border-right-color:  rgba(93,184,144,0.30) !important; }
+.mk-topbar      { border-bottom-color: rgba(93,184,144,0.30) !important; }
+.mk-page-header { border-bottom-color: rgba(93,184,144,0.22) !important; }

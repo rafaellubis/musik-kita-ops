@@ -53,11 +53,11 @@
             </div>
         </div>
 
-        <div class="bg-white shadow-sm sm:rounded-lg p-5"
+        <div class="bg-mk-card shadow-sm sm:rounded-lg p-5"
              x-data="{ tool: null }">
 
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-sm font-semibold text-gray-700">Tagihan {{ $monthName }}</h3>
+                <h3 class="text-sm font-semibold text-mk-muted">Tagihan {{ $monthName }}</h3>
                 @if($canManage)
                     <div class="flex gap-2">
                         <button type="button" @click="tool = tool === 'spp' ? null : 'spp'"
@@ -76,27 +76,27 @@
             @if($canManage)
                 {{-- ===== Form Generate SPP ===== --}}
                 <div x-show="tool === 'spp'" x-cloak
-                     class="mb-4 p-4 border border-gray-200 bg-gray-50 rounded-lg">
+                     class="mb-4 p-4 border border-mk-border bg-mk-surface rounded-lg">
                     <form method="POST" action="{{ route('invoices.generate-spp') }}"
                           onsubmit="return confirm('Generate invoice SPP untuk bulan terpilih? Idempotent — invoice yang sudah ada tidak duplikat.')">
                         @csrf
                         <h4 class="font-semibold text-sm mb-1">Generate SPP Bulanan</h4>
-                        <p class="text-xs text-gray-500 mb-3">
+                        <p class="text-xs text-mk-dim mb-3">
                             Terbitkan invoice SPP untuk semua murid Aktif yang belum punya tagihan SPP di bulan target.
                             Jadwal otomatis: tanggal 1 setiap bulan (BR-5.1).
                         </p>
                         <div class="flex items-end gap-3">
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1">Tahun</label>
+                                <label class="block text-xs text-mk-dim mb-1">Tahun</label>
                                 <input type="number" name="year" required min="2024" max="2030"
                                        value="{{ now()->addMonth()->year }}"
-                                       class="border-gray-300 rounded text-sm w-24">
+                                       class="border-mk-border rounded text-sm w-24">
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1">Bulan</label>
+                                <label class="block text-xs text-mk-dim mb-1">Bulan</label>
                                 <input type="number" name="month" required min="1" max="12"
                                        value="{{ now()->addMonth()->month }}"
-                                       class="border-gray-300 rounded text-sm w-20">
+                                       class="border-mk-border rounded text-sm w-20">
                             </div>
                             <button type="submit"
                                     class="px-4 py-2 rounded-lg text-sm font-bold transition-colors btn-mk-primary"
@@ -114,22 +114,22 @@
                           onsubmit="return confirm('Apply denda untuk invoice yang masih unpaid di bulan terpilih?')">
                         @csrf
                         <h4 class="font-semibold text-sm mb-1">Apply Denda Harian</h4>
-                        <p class="text-xs text-gray-500 mb-3">
+                        <p class="text-xs text-mk-dim mb-3">
                             Tambah/update item DENDA Rp 5.000/hari untuk invoice UNPAID/PARTIAL.
                             Hari telat dihitung dari tanggal 11 sampai hari ini (BR-5.3). Jadwal otomatis: harian.
                         </p>
                         <div class="flex items-end gap-3">
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1">Tahun</label>
+                                <label class="block text-xs text-mk-dim mb-1">Tahun</label>
                                 <input type="number" name="year" required min="2024" max="2030"
                                        value="{{ $year }}"
-                                       class="border-gray-300 rounded text-sm w-24">
+                                       class="border-mk-border rounded text-sm w-24">
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1">Bulan</label>
+                                <label class="block text-xs text-mk-dim mb-1">Bulan</label>
                                 <input type="number" name="month" required min="1" max="12"
                                        value="{{ $month }}"
-                                       class="border-gray-300 rounded text-sm w-20">
+                                       class="border-mk-border rounded text-sm w-20">
                             </div>
                             <button type="submit"
                                     class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-bold">
@@ -144,21 +144,21 @@
             <form method="GET" action="{{ route('invoices.index') }}" class="mb-4">
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm">
                     <input type="number" name="year" value="{{ $year }}" min="2024" max="2030"
-                           class="border-gray-300 rounded text-sm" placeholder="Tahun">
-                    <select name="month" class="border-gray-300 rounded text-sm">
+                           class="border-mk-border rounded text-sm" placeholder="Tahun">
+                    <select name="month" class="border-mk-border rounded text-sm">
                         @for($m = 1; $m <= 12; $m++)
                             <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
                                 {{ \Carbon\Carbon::create(2026, $m, 1)->format('F') }}
                             </option>
                         @endfor
                     </select>
-                    <select name="status" class="border-gray-300 rounded text-sm">
+                    <select name="status" class="border-mk-border rounded text-sm">
                         <option value="">Semua Status</option>
                         @foreach(['UNPAID', 'PARTIAL', 'PAID', 'VOID'] as $st)
                             <option value="{{ $st }}" {{ request('status') == $st ? 'selected' : '' }}>{{ $st }}</option>
                         @endforeach
                     </select>
-                    <select name="student_id" class="border-gray-300 rounded text-sm">
+                    <select name="student_id" class="border-mk-border rounded text-sm">
                         <option value="">Semua Murid</option>
                         @foreach($students as $s)
                             <option value="{{ $s->id }}" {{ request('student_id') == $s->id ? 'selected' : '' }}>
@@ -167,7 +167,7 @@
                         @endforeach
                     </select>
                     <input type="text" name="search" value="{{ request('search') }}"
-                           class="border-gray-300 rounded text-sm"
+                           class="border-mk-border rounded text-sm"
                            placeholder="No. invoice / nama">
                 </div>
                 <div class="mt-2 flex gap-2">
@@ -177,7 +177,7 @@
                         Filter
                     </button>
                     <a href="{{ route('invoices.index') }}"
-                       class="px-4 py-1.5 bg-gray-200 rounded-lg text-xs font-medium hover:bg-gray-300 transition-colors">
+                       class="px-4 py-1.5 bg-mk-surface rounded-lg text-xs font-medium hover:bg-mk-surfaceHover transition-colors">
                         Reset
                     </a>
                 </div>
@@ -185,8 +185,8 @@
 
             {{-- ===== TABLE ===== --}}
             <div class="overflow-x-auto">
-                <table class="min-w-full text-sm divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full text-sm divide-y divide-mk-border">
+                    <thead class="bg-mk-surface">
                         <tr>
                             <th class="px-2 py-1.5 text-left text-xs uppercase font-medium">No. Invoice</th>
                             <th class="px-2 py-1.5 text-left text-xs uppercase font-medium">Murid</th>
@@ -198,9 +198,9 @@
                             <th class="px-2 py-1.5 text-center text-xs uppercase font-medium">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody class="divide-y divide-mk-border">
                         @forelse($invoices as $inv)
-                            <tr class="hover:bg-gray-50">
+                            <tr class="hover:bg-mk-surface">
                                 <td class="px-2 py-1.5 font-mono text-xs">{{ $inv->invoice_number }}</td>
                                 <td class="px-2 py-1.5">
                                     <a href="{{ route('students.show', $inv->student_id) }}"
@@ -210,7 +210,7 @@
                                 </td>
                                 <td class="px-2 py-1.5 text-xs">
                                     @foreach($inv->items as $item)
-                                        <span class="inline-block px-1 bg-gray-100 rounded mr-0.5">{{ $item->item_code }}</span>
+                                        <span class="inline-block px-1 bg-mk-surface rounded mr-0.5">{{ $item->item_code }}</span>
                                     @endforeach
                                     {{-- Badge khusus KIDS_CLASS_BUNDLE --}}
                                     @if($inv->class_type === 'KIDS_CLASS_BUNDLE')
@@ -254,7 +254,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-2 py-6 text-center text-gray-500">
+                                <td colspan="8" class="px-2 py-6 text-center text-mk-dim">
                                     Tidak ada tagihan untuk periode/filter ini.
                                 </td>
                             </tr>

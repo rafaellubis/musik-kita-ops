@@ -36,19 +36,19 @@
         @endif
 
         {{-- ===== FILTER ===== --}}
-        <div class="bg-white shadow-sm sm:rounded-lg p-4">
+        <div class="bg-mk-card shadow-sm sm:rounded-lg p-4">
             <form method="GET" class="flex flex-wrap gap-3 items-end">
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">Tahun</label>
-                    <select name="year" class="border-gray-300 rounded text-sm" onchange="this.form.submit()">
+                    <label class="block text-xs text-mk-dim mb-1">Tahun</label>
+                    <select name="year" class="border-mk-border rounded text-sm" onchange="this.form.submit()">
                         @foreach(range(now()->year - 1, now()->year + 1) as $y)
                             <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">Bulan</label>
-                    <select name="month" class="border-gray-300 rounded text-sm" onchange="this.form.submit()">
+                    <label class="block text-xs text-mk-dim mb-1">Bulan</label>
+                    <select name="month" class="border-mk-border rounded text-sm" onchange="this.form.submit()">
                         @foreach(range(1, 12) as $m)
                             <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
                                 {{ \Carbon\Carbon::create(null, $m, 1)->format('M') }} ({{ $m }})
@@ -57,8 +57,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-500 mb-1">Status</label>
-                    <select name="status" class="border-gray-300 rounded text-sm" onchange="this.form.submit()">
+                    <label class="block text-xs text-mk-dim mb-1">Status</label>
+                    <select name="status" class="border-mk-border rounded text-sm" onchange="this.form.submit()">
                         <option value="">Semua</option>
                         @foreach(['DRAFT' => 'Draft', 'CALCULATED' => 'Terhitung', 'PAID' => 'Dibayarkan'] as $val => $label)
                             <option value="{{ $val }}" {{ request('status') == $val ? 'selected' : '' }}>
@@ -77,23 +77,23 @@
             $totalCalc = $stats->get('CALCULATED')?->sum_total ?? 0;
         @endphp
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div class="bg-white shadow-sm sm:rounded-lg p-4">
-                <div class="text-xs text-gray-500">Total Honor Bulan Ini</div>
+            <div class="bg-mk-card shadow-sm sm:rounded-lg p-4">
+                <div class="text-xs text-mk-dim">Total Honor Bulan Ini</div>
                 <div class="text-xl font-bold mt-1">Rp {{ number_format($totalAll, 0, ',', '.') }}</div>
             </div>
-            <div class="bg-white shadow-sm sm:rounded-lg p-4">
-                <div class="text-xs text-gray-500">Sudah Dibayarkan</div>
+            <div class="bg-mk-card shadow-sm sm:rounded-lg p-4">
+                <div class="text-xs text-mk-dim">Sudah Dibayarkan</div>
                 <div class="text-xl font-bold mt-1 text-green-600">Rp {{ number_format($totalPaid, 0, ',', '.') }}</div>
-                <div class="text-xs text-gray-400">{{ $stats->get('PAID')?->cnt ?? 0 }} slip</div>
+                <div class="text-xs text-mk-dim">{{ $stats->get('PAID')?->cnt ?? 0 }} slip</div>
             </div>
-            <div class="bg-white shadow-sm sm:rounded-lg p-4">
-                <div class="text-xs text-gray-500">Belum Dibayar (Terhitung)</div>
+            <div class="bg-mk-card shadow-sm sm:rounded-lg p-4">
+                <div class="text-xs text-mk-dim">Belum Dibayar (Terhitung)</div>
                 <div class="text-xl font-bold mt-1 text-blue-600">Rp {{ number_format($totalCalc, 0, ',', '.') }}</div>
-                <div class="text-xs text-gray-400">{{ $stats->get('CALCULATED')?->cnt ?? 0 }} slip</div>
+                <div class="text-xs text-mk-dim">{{ $stats->get('CALCULATED')?->cnt ?? 0 }} slip</div>
             </div>
-            <div class="bg-white shadow-sm sm:rounded-lg p-4">
-                <div class="text-xs text-gray-500">Guru Belum Ada Slip</div>
-                <div class="text-xl font-bold mt-1 {{ $missingCount > 0 ? 'text-orange-500' : 'text-gray-400' }}">
+            <div class="bg-mk-card shadow-sm sm:rounded-lg p-4">
+                <div class="text-xs text-mk-dim">Guru Belum Ada Slip</div>
+                <div class="text-xl font-bold mt-1 {{ $missingCount > 0 ? 'text-orange-500' : 'text-mk-dim' }}">
                     {{ $missingCount }} guru
                 </div>
             </div>
@@ -101,7 +101,7 @@
 
         {{-- ===== KALKULASI HONOR (Owner) ===== --}}
         @if($isOwner)
-        <div class="bg-white shadow-sm sm:rounded-lg p-4 flex items-center gap-4 flex-wrap">
+        <div class="bg-mk-card shadow-sm sm:rounded-lg p-4 flex items-center gap-4 flex-wrap">
             <form method="POST" action="{{ route('honors.calculate') }}"
                   onsubmit="return confirm('Kalkulasi honor {{ $monthName }} untuk semua guru aktif? Slip PAID tidak akan diubah.')">
                 @csrf
@@ -113,7 +113,7 @@
                     Hitung Honor {{ $monthName }}
                 </button>
             </form>
-            <p class="text-sm text-gray-500">
+            <p class="text-sm text-mk-dim">
                 Generate/update slip untuk semua {{ \App\Models\Teacher::where('is_active', true)->count() }} guru aktif.
                 Slip PAID tidak akan diubah.
                 @if($missingCount > 0)
@@ -126,9 +126,9 @@
         @endif
 
         {{-- ===== TABEL SLIP ===== --}}
-        <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
+        <div class="bg-mk-card shadow-sm sm:rounded-lg overflow-hidden">
             @if($slips->isEmpty())
-                <div class="p-8 text-center text-gray-500">
+                <div class="p-8 text-center text-mk-dim">
                     <p>Belum ada slip honor untuk {{ $monthName }}.</p>
                     @if($isOwner)
                         <p class="text-sm mt-1">Klik "Hitung Honor" di atas untuk membuat slip dari data absensi.</p>
@@ -137,8 +137,8 @@
             @else
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
-                        <thead class="bg-gray-50">
-                            <tr class="border-b text-left text-xs text-gray-500 uppercase">
+                        <thead class="bg-mk-surface">
+                            <tr class="border-b text-left text-xs text-mk-dim uppercase">
                                 <th class="px-4 py-3">No. Slip</th>
                                 <th class="px-4 py-3">Guru</th>
                                 <th class="px-4 py-3 text-right">Honor Pokok</th>
@@ -151,8 +151,8 @@
                         </thead>
                         <tbody>
                             @foreach($slips as $slip)
-                                <tr class="border-b hover:bg-gray-50">
-                                    <td class="px-4 py-3 font-mono text-xs text-gray-500">{{ $slip->slip_number }}</td>
+                                <tr class="border-b hover:bg-mk-surface">
+                                    <td class="px-4 py-3 font-mono text-xs text-mk-dim">{{ $slip->slip_number }}</td>
                                     <td class="px-4 py-3 font-medium">{{ $slip->teacher->name ?? '?' }}</td>
                                     <td class="px-4 py-3 text-right">
                                         Rp {{ number_format($slip->base_honor, 0, ',', '.') }}
@@ -185,14 +185,14 @@
                                         @endif
                                         ·
                                         <a href="{{ route('honors.print', $slip) }}" target="_blank"
-                                           class="text-xs text-gray-600 hover:underline">Cetak</a>
+                                           class="text-xs text-mk-muted hover:underline">Cetak</a>
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
-                        <tfoot class="bg-gray-50">
+                        <tfoot class="bg-mk-surface">
                             <tr>
-                                <td colspan="2" class="px-4 py-2 text-xs text-gray-500">{{ $slips->total() }} slip</td>
+                                <td colspan="2" class="px-4 py-2 text-xs text-mk-dim">{{ $slips->total() }} slip</td>
                                 <td class="px-4 py-2 text-right text-sm font-medium">
                                     Rp {{ number_format($slips->sum('base_honor'), 0, ',', '.') }}
                                 </td>

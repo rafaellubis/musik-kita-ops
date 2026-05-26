@@ -31,12 +31,12 @@
         </div>
         @endif
 
-        <div class="bg-white shadow-sm sm:rounded-lg p-6">
+        <div class="bg-mk-card shadow-sm sm:rounded-lg p-6">
             <div class="flex justify-between items-start mb-4">
                 <div>
-                    <div class="font-mono text-xs text-gray-400">{{ $expense->expense_number }}</div>
+                    <div class="font-mono text-xs text-mk-dim">{{ $expense->expense_number }}</div>
                     <div class="text-xl font-bold mt-1">{{ $expense->description }}</div>
-                    <div class="text-sm text-gray-500 mt-1">
+                    <div class="text-sm text-mk-dim mt-1">
                         {{ $expense->expense_date->format('d M Y') }} ·
                         <span class="font-medium">{{ $expense->category->name ?? '?' }}</span> ·
                         <span class="{{ $expense->payment_method === 'CASH' ? 'text-green-700' : 'text-blue-700' }}">
@@ -70,12 +70,12 @@
             </div>
 
             @if($expense->notes)
-                <div class="text-sm text-gray-600 mb-4 p-3 bg-gray-50 rounded">
+                <div class="text-sm text-mk-muted mb-4 p-3 bg-mk-surface rounded">
                     {{ $expense->notes }}
                 </div>
             @endif
 
-            <div class="text-xs text-gray-400">
+            <div class="text-xs text-mk-dim">
                 Dicatat oleh {{ $expense->createdBy->name ?? '—' }} ·
                 {{ $expense->created_at->format('d M Y H:i') }}
             </div>
@@ -83,11 +83,11 @@
 
         {{-- Foto bukti --}}
         @if($expense->receipt_image)
-            <div class="bg-white shadow-sm sm:rounded-lg p-4">
-                <h3 class="text-sm font-medium text-gray-700 mb-3">Foto Bukti</h3>
+            <div class="bg-mk-card shadow-sm sm:rounded-lg p-4">
+                <h3 class="text-sm font-medium text-mk-muted mb-3">Foto Bukti</h3>
                 <img src="{{ asset('storage/' . $expense->receipt_image) }}"
                      alt="Bukti pengeluaran"
-                     class="max-w-full rounded border border-gray-200"
+                     class="max-w-full rounded border border-mk-border"
                      style="max-height: 400px; object-fit: contain;">
             </div>
         @endif

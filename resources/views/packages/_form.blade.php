@@ -11,12 +11,12 @@
         <label class="block text-sm font-medium">Code <span class="text-red-500">*</span></label>
         <input type="text" name="code" required maxlength="30"
                value="{{ old('code', $package->code ?? '') }}"
-               class="mt-1 block w-full border-gray-300 rounded-md font-mono uppercase"
+               class="mt-1 block w-full border-mk-border rounded-md font-mono uppercase"
                placeholder="PIANO_REG_BASIC">
     </div>
     <div>
         <label class="block text-sm font-medium">Instrumen <span class="text-red-500">*</span></label>
-        <select name="instrument_id" required class="mt-1 block w-full border-gray-300 rounded-md">
+        <select name="instrument_id" required class="mt-1 block w-full border-mk-border rounded-md">
             <option value="">— Pilih —</option>
             @foreach($instruments as $instr)
                 <option value="{{ $instr->id }}"
@@ -28,7 +28,7 @@
     </div>
     <div>
         <label class="block text-sm font-medium">Tipe <span class="text-red-500">*</span></label>
-        <select name="class_type" required class="mt-1 block w-full border-gray-300 rounded-md">
+        <select name="class_type" required class="mt-1 block w-full border-mk-border rounded-md">
             @php $types = ['REGULER', 'HOBBY', 'KIDS_CLASS', 'KIDS_CLASS_BUNDLE']; @endphp
             <option value="">— Pilih —</option>
             @foreach($types as $t)
@@ -41,33 +41,33 @@
         <label class="block text-sm font-medium">Grade</label>
         <input type="text" name="grade" maxlength="10"
                value="{{ old('grade', $package->grade ?? '') }}"
-               class="mt-1 block w-full border-gray-300 rounded-md"
+               class="mt-1 block w-full border-mk-border rounded-md"
                placeholder="BASIC / L1-L4">
     </div>
     <div>
         <label class="block text-sm font-medium">Durasi (menit) <span class="text-red-500">*</span></label>
         <input type="number" name="duration_min" required min="15" max="120"
                value="{{ old('duration_min', $package->duration_min ?? 30) }}"
-               class="mt-1 block w-full border-gray-300 rounded-md">
+               class="mt-1 block w-full border-mk-border rounded-md">
     </div>
     <div>
         <label class="block text-sm font-medium">Harga/Bulan (Rp) <span class="text-red-500">*</span></label>
         <input type="number" name="price_per_month" required min="0"
                value="{{ old('price_per_month', $package->price_per_month ?? '') }}"
-               class="mt-1 block w-full border-gray-300 rounded-md"
+               class="mt-1 block w-full border-mk-border rounded-md"
                placeholder="340000">
     </div>
     <div>
         <label class="block text-sm font-medium">Urutan</label>
         <input type="number" name="sort_order" min="0"
                value="{{ old('sort_order', $package->sort_order ?? 0) }}"
-               class="mt-1 block w-32 border-gray-300 rounded-md">
+               class="mt-1 block w-32 border-mk-border rounded-md">
     </div>
     <div class="flex items-end">
         <label class="inline-flex items-center">
             <input type="checkbox" name="is_active" value="1"
                 {{ old('is_active', $package->is_active ?? true) ? 'checked' : '' }}
-                class="rounded border-gray-300">
+                class="rounded border-mk-border">
             <span class="ml-2 text-sm">Aktif</span>
         </label>
     </div>

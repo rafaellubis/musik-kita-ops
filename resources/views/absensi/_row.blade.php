@@ -9,7 +9,7 @@
     }
 @endphp
 
-<tr class="hover:bg-gray-50 transition-colors"
+<tr class="hover:bg-mk-surface transition-colors"
     data-teacher-id="{{ $session->teacher_id }}"
     data-status="{{ $session->status }}"
     data-murid="{{ $session->student->full_name }}"
@@ -131,10 +131,10 @@
     {{-- Jam --}}
     <td class="px-3 py-2.5 font-bold text-sm"
         @if(! $isLibur)
-        :style="status === 'SCHEDULED' ? 'color:#D4A853;font-weight:700' : ''"
-        :class="status !== 'SCHEDULED' ? 'text-gray-500' : ''"
+        :style="status === 'SCHEDULED' ? 'color:#5DB890;font-weight:700' : ''"
+        :class="status !== 'SCHEDULED' ? 'text-mk-dim' : ''"
         @else
-        class="text-gray-500"
+        class="text-mk-dim"
         @endif>
         {{ substr($session->start_time, 0, 5) }}
     </td>
@@ -142,11 +142,14 @@
     {{-- Murid --}}
     <td class="px-3 py-2.5 text-sm min-w-0 max-w-0"
         @if(! $isLibur)
-        :class="status === 'SCHEDULED' ? 'text-gray-800 font-medium' : 'text-gray-500'"
+        :class="status === 'SCHEDULED' ? 'text-mk-text font-medium' : 'text-mk-dim'"
         @else
-        class="text-gray-500"
+        class="text-mk-dim"
         @endif>
         {{ $session->student->full_name }}
+        @if($session->student->nickname)
+            <div class="text-[12px] text-mk-dim mt-0.5">'{{ $session->student->nickname }}'</div>
+        @endif
         @php
             $label       = $session->getSessionLabel();
             $instrumen   = $session->enrollment?->package?->instrument?->name;
@@ -162,7 +165,7 @@
         @if($label !== '—' || $subInfo)
             <div class="text-[11px] mt-0.5">
                 @if($label !== '—')
-                    <span class="{{ $session->origin_session_id ? 'text-blue-500' : 'text-gray-400' }}">{{ $label }}</span>
+                    <span class="{{ $session->origin_session_id ? 'text-blue-500' : 'text-mk-dim' }}">{{ $label }}</span>
                 @endif
                 @if($subInfo)
                     <span class="text-blue-500">{{ $subInfo }}</span>
@@ -172,16 +175,16 @@
     </td>
 
     {{-- Guru --}}
-    <td class="px-3 py-2.5 text-xs text-gray-500 text-center">{{ $session->teacher->name }}</td>
+    <td class="px-3 py-2.5 text-xs text-mk-dim text-center">{{ $session->teacher->name }}</td>
 
     {{-- Ruang --}}
-    <td class="px-3 py-2.5 text-xs text-gray-500">{{ $session->room?->code ?? '—' }}</td>
+    <td class="px-3 py-2.5 text-xs text-mk-dim">{{ $session->room?->code ?? '—' }}</td>
 
     {{-- Aksi --}}
     <td class="px-3 py-2.5 text-right">
 
         @if($isLibur)
-            <span class="bg-gray-100 text-gray-500 border border-gray-200 rounded px-3 py-1 text-xs">
+            <span class="bg-mk-surface text-mk-dim border border-mk-border rounded px-3 py-1 text-xs">
                 🗓 LIBUR
             </span>
 
@@ -204,7 +207,7 @@
                         'bg-yellow-100 text-yellow-700 border-yellow-200': status === 'IZIN_RESCHEDULE',
                         'bg-blue-100 text-blue-700 border-blue-200':       status === 'IZIN_VIDEO',
                         'bg-purple-100 text-purple-700 border-purple-200': status === 'DIGANTI',
-                        'bg-gray-100 text-gray-400 border-gray-200':       status === 'CANCELLED',
+                        'bg-mk-surface text-mk-dim border-mk-border':       status === 'CANCELLED',
                     }"
                     x-text="
                         status === 'HADIR'            ? '✓ HADIR' :
@@ -226,7 +229,7 @@
                 @if(!isset($sessionIdsWithReplacement[$session->id]))
                 <button x-show="status !== 'HADIR' && status !== 'HADIR_TERLAMBAT'"
                     @click="status = 'SCHEDULED'; errorMsg = ''"
-                    class="text-gray-400 hover:text-gray-600 text-xs underline">ubah</button>
+                    class="text-mk-dim hover:text-mk-muted text-xs underline">ubah</button>
                 @endif
             </div>
 
@@ -257,34 +260,34 @@
                 {{-- Tombol ··· dengan dropdown --}}
                 <div class="relative">
                     <button @click="showModal = showModal === 'menu' ? null : 'menu'"
-                        class="border border-gray-300 text-gray-600 hover:bg-gray-100 rounded px-2.5 py-1.5 text-xs">
+                        class="border border-mk-border text-mk-muted hover:bg-mk-surfaceHover rounded px-2.5 py-1.5 text-xs">
                         ···
                     </button>
 
                     {{-- Dropdown menu --}}
                     <div x-show="showModal === 'menu'" @click.outside="showModal = null"
-                        class="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-lg w-36 py-1">
+                        class="absolute right-0 top-8 z-20 bg-mk-card border border-mk-border rounded-lg shadow-lg w-36 py-1">
                         <button @click="showModal = 'terlambat'"
-                            class="w-full text-left px-4 py-2 text-orange-600 text-xs hover:bg-gray-50">
+                            class="w-full text-left px-4 py-2 text-orange-600 text-xs hover:bg-mk-surface">
                             Terlambat
                         </button>
                         <button @click="showModal = 'diganti'"
-                            class="w-full text-left px-4 py-2 text-purple-600 text-xs hover:bg-gray-50">
+                            class="w-full text-left px-4 py-2 text-purple-600 text-xs hover:bg-mk-surface">
                             Diganti
                         </button>
                     </div>
 
                     {{-- Mini-modal: TERLAMBAT --}}
                     <div x-show="showModal === 'terlambat'" @click.outside="showModal = null"
-                        class="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-lg w-56 p-4">
-                        <p class="text-gray-500 text-xs mb-3 truncate">
+                        class="absolute right-0 top-8 z-20 bg-mk-card border border-mk-border rounded-lg shadow-lg w-56 p-4">
+                        <p class="text-mk-dim text-xs mb-3 truncate">
                             {{ $session->student->full_name }} · {{ $session->teacher->name }}
                         </p>
-                        <label class="block text-gray-500 text-xs mb-1">Terlambat berapa menit?</label>
+                        <label class="block text-mk-dim text-xs mb-1">Terlambat berapa menit?</label>
                         <div class="flex items-center gap-2 mb-4">
                             <input type="number" x-model.number="lateMinutes" min="1" max="60"
-                                class="border border-gray-300 text-gray-700 rounded px-3 py-1.5 w-20 text-center text-sm">
-                            <span class="text-gray-500 text-xs">menit</span>
+                                class="border border-mk-border text-mk-muted rounded px-3 py-1.5 w-20 text-center text-sm">
+                            <span class="text-mk-dim text-xs">menit</span>
                         </div>
                         <div class="flex gap-2">
                             <button @click="save('HADIR_TERLAMBAT', { late_minutes: lateMinutes })"
@@ -292,7 +295,7 @@
                                 Simpan
                             </button>
                             <button @click="showModal = null"
-                                class="border border-gray-200 text-gray-500 hover:bg-gray-50 text-xs py-2 px-3 rounded">
+                                class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2 px-3 rounded">
                                 Batal
                             </button>
                         </div>
@@ -300,19 +303,19 @@
 
                     {{-- Mini-modal: DIGANTI --}}
                     <div x-show="showModal === 'diganti'" @click.outside="showModal = null"
-                        class="absolute right-0 top-8 z-20 bg-white border border-gray-200 rounded-lg shadow-lg w-64 p-4">
-                        <p class="text-gray-500 text-xs mb-3 truncate">
+                        class="absolute right-0 top-8 z-20 bg-mk-card border border-mk-border rounded-lg shadow-lg w-64 p-4">
+                        <p class="text-mk-dim text-xs mb-3 truncate">
                             {{ $session->student->full_name }} · {{ $session->teacher->name }}
                         </p>
-                        <label class="block text-gray-500 text-xs mb-1">Guru pengganti</label>
+                        <label class="block text-mk-dim text-xs mb-1">Guru pengganti</label>
                         <select x-model="substituteId"
-                            class="w-full border border-gray-300 text-gray-700 rounded px-3 py-1.5 text-sm mb-1">
+                            class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-1">
                             <option value="">— Pilih guru pengganti —</option>
                             @foreach($teachers as $t)
                                 <option value="{{ $t->id }}">{{ $t->name }}</option>
                             @endforeach
                         </select>
-                        <p class="text-gray-400 text-xs mb-3">Honor otomatis ke guru pengganti.</p>
+                        <p class="text-mk-dim text-xs mb-3">Honor otomatis ke guru pengganti.</p>
                         <div class="flex gap-2">
                             <button @click="if(substituteId) save('DIGANTI', { substitute_teacher_id: substituteId })"
                                 :disabled="!substituteId"
@@ -320,7 +323,7 @@
                                 Simpan
                             </button>
                             <button @click="showModal = null"
-                                class="border border-gray-200 text-gray-500 hover:bg-gray-50 text-xs py-2 px-3 rounded">
+                                class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2 px-3 rounded">
                                 Batal
                             </button>
                         </div>
@@ -333,9 +336,9 @@
             <div x-show="showModal === 'reschedule'" @click.outside="showModal = null"
                 class="fixed inset-0 z-40 flex items-center justify-center"
                 style="display: none;">
-                <div class="bg-white border border-gray-200 rounded-lg shadow-xl w-80 p-5">
-                    <p class="text-gray-700 text-sm font-medium mb-1">Jadwalkan Sesi Pengganti</p>
-                    <p class="text-gray-400 text-xs mb-4 truncate">
+                <div class="bg-mk-card border border-mk-border rounded-lg shadow-xl w-80 p-5">
+                    <p class="text-mk-muted text-sm font-medium mb-1">Jadwalkan Sesi Pengganti</p>
+                    <p class="text-mk-dim text-xs mb-4 truncate">
                         {{ $session->student->full_name }} · {{ $session->teacher->name }}
                     </p>
 
@@ -344,17 +347,17 @@
                         class="bg-red-50 border border-red-200 text-red-600 text-xs rounded px-3 py-2 mb-3">
                     </p>
 
-                    <label class="block text-gray-500 text-xs mb-1">Tanggal Pengganti</label>
+                    <label class="block text-mk-dim text-xs mb-1">Tanggal Pengganti</label>
                     <input type="date" x-model="rescheduleDate"
-                        class="w-full border border-gray-300 text-gray-700 rounded px-3 py-1.5 text-sm mb-3">
+                        class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-3">
 
-                    <label class="block text-gray-500 text-xs mb-1">Jam Mulai</label>
+                    <label class="block text-mk-dim text-xs mb-1">Jam Mulai</label>
                     <input type="time" x-model="rescheduleTime"
-                        class="w-full border border-gray-300 text-gray-700 rounded px-3 py-1.5 text-sm mb-3">
+                        class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-3">
 
-                    <label class="block text-gray-500 text-xs mb-1">Ruangan <span class="text-gray-400">(opsional)</span></label>
+                    <label class="block text-mk-dim text-xs mb-1">Ruangan <span class="text-mk-dim">(opsional)</span></label>
                     <select x-model="rescheduleRoomId"
-                        class="w-full border border-gray-300 text-gray-700 rounded px-3 py-1.5 text-sm mb-4">
+                        class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-4">
                         <option value="">— Tanpa ruangan —</option>
                         @foreach($rooms as $room)
                             <option value="{{ $room->id }}">{{ $room->code }} — {{ $room->name }}</option>
@@ -369,9 +372,9 @@
                             :class="splitMode ? 'bg-amber-600' : 'bg-gray-400'"
                             class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none">
                             <span :class="splitMode ? 'translate-x-5' : 'translate-x-1'"
-                                  class="inline-block h-3 w-3 transform rounded-full bg-white transition-transform"></span>
+                                  class="inline-block h-3 w-3 transform rounded-full bg-mk-card transition-transform"></span>
                         </button>
-                        <span class="text-xs text-gray-600">Bagi menjadi 2 bagian</span>
+                        <span class="text-xs text-mk-muted">Bagi menjadi 2 bagian</span>
                         <span x-show="splitMode" class="text-xs text-amber-600">(15 menit + 15 menit)</span>
                     </div>
                     @endif
@@ -384,7 +387,7 @@
                             <span x-text="splitMode ? 'Jadwalkan Bagian 1' : 'Buat Sesi Pengganti'"></span>
                         </button>
                         <button @click="showModal = null; errorMsg = ''; splitMode = false"
-                            class="border border-gray-200 text-gray-500 hover:bg-gray-50 text-xs py-2 px-3 rounded">
+                            class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2 px-3 rounded">
                             Batal
                         </button>
                     </div>
@@ -397,9 +400,9 @@
                  class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
                  style="display: none;"
                  @click.self="showModal = null; part2Error = ''">
-                <div class="bg-white border border-gray-200 rounded-lg shadow-xl w-80 p-5" @click.stop>
-                    <p class="text-gray-700 text-sm font-medium mb-1">Jadwalkan Bagian 2</p>
-                    <p class="text-gray-400 text-xs mb-4 truncate">
+                <div class="bg-mk-card border border-mk-border rounded-lg shadow-xl w-80 p-5" @click.stop>
+                    <p class="text-mk-muted text-sm font-medium mb-1">Jadwalkan Bagian 2</p>
+                    <p class="text-mk-dim text-xs mb-4 truncate">
                         {{ $session->student->full_name }} · {{ $session->teacher->name }}
                         @php $lbl = $session->getSessionLabel(); @endphp
                         @if($lbl !== '—')
@@ -412,17 +415,17 @@
                         class="bg-red-50 border border-red-200 text-red-600 text-xs rounded px-3 py-2 mb-3">
                     </p>
 
-                    <label class="block text-gray-500 text-xs mb-1">Tanggal</label>
+                    <label class="block text-mk-dim text-xs mb-1">Tanggal</label>
                     <input type="date" x-model="part2Date"
-                        class="w-full border border-gray-300 text-gray-700 rounded px-3 py-1.5 text-sm mb-3">
+                        class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-3">
 
-                    <label class="block text-gray-500 text-xs mb-1">Jam Mulai</label>
+                    <label class="block text-mk-dim text-xs mb-1">Jam Mulai</label>
                     <input type="time" x-model="part2Time"
-                        class="w-full border border-gray-300 text-gray-700 rounded px-3 py-1.5 text-sm mb-3">
+                        class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-3">
 
-                    <label class="block text-gray-500 text-xs mb-1">Ruangan <span class="text-gray-400">(opsional)</span></label>
+                    <label class="block text-mk-dim text-xs mb-1">Ruangan <span class="text-mk-dim">(opsional)</span></label>
                     <select x-model="part2RoomId"
-                        class="w-full border border-gray-300 text-gray-700 rounded px-3 py-1.5 text-sm mb-4">
+                        class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-4">
                         <option value="">— Tanpa ruangan —</option>
                         @foreach($rooms as $room)
                             <option value="{{ $room->id }}">{{ $room->code }} — {{ $room->name }}</option>
@@ -436,7 +439,7 @@
                             Jadwalkan Bagian 2
                         </button>
                         <button type="button" @click="showModal = null; part2Error = ''"
-                            class="border border-gray-200 text-gray-500 hover:bg-gray-50 text-xs py-2 px-3 rounded">
+                            class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2 px-3 rounded">
                             Batal
                         </button>
                     </div>

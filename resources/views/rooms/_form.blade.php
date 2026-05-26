@@ -13,24 +13,24 @@
         <label class="block text-sm font-medium">Kode Ruangan <span class="text-red-500">*</span></label>
         <input type="text" name="code" required maxlength="10"
                value="{{ old('code', $room->code ?? '') }}"
-               class="mt-1 block w-full border-gray-300 rounded-md font-mono uppercase"
+               class="mt-1 block w-full border-mk-border rounded-md font-mono uppercase"
                placeholder="R1 / R10"
                oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
-        <p class="text-xs text-gray-500 mt-1">Hanya huruf besar dan angka. Contoh: R1, R10</p>
+        <p class="text-xs text-mk-dim mt-1">Hanya huruf besar dan angka. Contoh: R1, R10</p>
     </div>
     <div>
         <label class="block text-sm font-medium">Nama Ruangan <span class="text-red-500">*</span></label>
         <input type="text" name="name" required maxlength="50"
                value="{{ old('name', $room->name ?? '') }}"
-               class="mt-1 block w-full border-gray-300 rounded-md"
+               class="mt-1 block w-full border-mk-border rounded-md"
                placeholder="Studio 1">
     </div>
     <div>
         <label class="block text-sm font-medium">Kapasitas <span class="text-red-500">*</span></label>
         <input type="number" name="capacity" required min="1" max="20"
                value="{{ old('capacity', $room->capacity ?? 1) }}"
-               class="mt-1 block w-full border-gray-300 rounded-md">
-        <p class="text-xs text-gray-500 mt-1">Isi 4 untuk ruang Kids Class, 1 untuk ruang privat.</p>
+               class="mt-1 block w-full border-mk-border rounded-md">
+        <p class="text-xs text-mk-dim mt-1">Isi 4 untuk ruang Kids Class, 1 untuk ruang privat.</p>
     </div>
     <div></div>
 
@@ -46,18 +46,18 @@
                        name="supported_instruments[]"
                        value="{{ $instrument->name }}"
                        {{ in_array($instrument->name, old('supported_instruments', $room->supported_instruments ?? [])) ? 'checked' : '' }}
-                       class="rounded border-gray-300">
+                       class="rounded border-mk-border">
                 <span class="text-sm">{{ $instrument->name }}</span>
             </label>
             @endforeach
         </div>
-        <p class="text-xs text-gray-500 mt-1">Pilih instrumen apa saja yang bisa diajarkan di ruangan ini.</p>
+        <p class="text-xs text-mk-dim mt-1">Pilih instrumen apa saja yang bisa diajarkan di ruangan ini.</p>
     </div>
 
     <div class="md:col-span-2">
         <label class="block text-sm font-medium">Catatan</label>
         <textarea name="notes" rows="2"
-                  class="mt-1 block w-full border-gray-300 rounded-md"
+                  class="mt-1 block w-full border-mk-border rounded-md"
                   placeholder="Catatan khusus tentang ruangan">{{ old('notes', $room->notes ?? '') }}</textarea>
     </div>
 
@@ -65,7 +65,7 @@
         <label class="inline-flex items-center">
             <input type="checkbox" name="is_active" value="1"
                 {{ old('is_active', $room->is_active ?? true) ? 'checked' : '' }}
-                class="rounded border-gray-300">
+                class="rounded border-mk-border">
             <span class="ml-2 text-sm">Ruangan Aktif</span>
         </label>
     </div>
