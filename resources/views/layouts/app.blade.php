@@ -13,27 +13,13 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-        {{-- Set data-theme di <html> sebelum Alpine load agar tidak ada flash background salah --}}
-        <script>
-            (function () {
-                var t = localStorage.getItem('mk-theme') || 'light';
-                document.documentElement.setAttribute('data-theme', t);
-            }());
-        </script>
     </head>
     <body class="font-sans antialiased bg-mk-bg text-mk-text">
 
         {{-- Layout: Sidebar gelap (kiri) + Area Konten (kanan) --}}
         <div class="flex h-screen overflow-hidden"
-             x-data="{
-                 sidebarOpen: false,
-                 theme: localStorage.getItem('mk-theme') || 'light',
-                 toggleTheme() {
-                     this.theme = this.theme === 'dark' ? 'light' : 'dark';
-                     localStorage.setItem('mk-theme', this.theme);
-                 }
-             }"
-             :data-theme="theme">
+             x-data="{ sidebarOpen: false }"
+             data-theme="mahogany-mint">
 
             {{-- ===== MOBILE OVERLAY ===== --}}
             <div x-show="sidebarOpen"
@@ -68,7 +54,7 @@
 
                     {{-- Hamburger (mobile) --}}
                     <button @click="sidebarOpen = !sidebarOpen"
-                            class="lg:hidden p-1.5 rounded-md text-mk-muted hover:text-mk-text
+                            class="lg:hidden p-1.5 rounded-md text-white/55 hover:text-white/80
                                    hover:bg-white/5 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -76,21 +62,16 @@
                         </svg>
                     </button>
 
-                    {{-- Identitas sistem: logo dark di dark mode, logo light di light mode --}}
+                    {{-- Identitas sistem --}}
                     <div class="flex-1 items-center hidden lg:flex">
                         <img src="{{ asset('images/logo-musikkita-dark-mode.PNG') }}"
-                             x-show="theme === 'dark'"
                              alt="Musik KITA" class="h-8 object-contain object-left"
                              style="max-width:140px">
-                        <img src="{{ asset('images/logo-musikkita-light-mode.PNG') }}"
-                             x-show="theme === 'light'" x-cloak
-                             alt="Musik KITA" class="h-8 object-contain object-left"
-                             style="max-width:140px; mix-blend-mode:multiply">
                     </div>
 
-                    {{-- Kanan: Tanggal + Bell Notif + Avatar + Toggle tema + Keluar --}}
+                    {{-- Kanan: Tanggal + Bell Notif + Avatar + Keluar --}}
                     <div class="flex items-center gap-3 ml-auto">
-                        <span class="hidden sm:block text-xs text-mk-dim">
+                        <span class="hidden sm:block text-xs text-white/55">
                             {{ now()->translatedFormat('l, j F Y') }}
                         </span>
 
@@ -183,24 +164,17 @@
                         </div>
                         @endif
 
-                        {{-- Avatar inisial (nama tampil di sidebar kiri bawah) --}}
+                        {{-- Avatar inisial --}}
                         <div class="w-7 h-7 rounded-full bg-mk-accentDim flex items-center
                                     justify-center text-xs font-bold text-mk-accent shrink-0">
                             {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                         </div>
 
-                        {{-- Tombol toggle tema gelap/terang --}}
-                        <button @click="toggleTheme()"
-                                class="text-mk-dim hover:text-mk-muted transition-colors p-1.5 rounded hover:bg-white/5 text-sm leading-none"
-                                :title="theme === 'dark' ? 'Beralih ke tema terang' : 'Beralih ke tema gelap'">
-                            <span x-text="theme === 'dark' ? '☀️' : '🌙'">☀️</span>
-                        </button>
-
                         {{-- Tombol keluar --}}
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit"
-                                    class="text-xs text-mk-dim hover:text-mk-muted transition-colors
+                                    class="text-xs text-white/55 hover:text-white/80 transition-colors
                                            px-2 py-1 rounded hover:bg-white/5">
                                 Keluar
                             </button>
@@ -208,17 +182,32 @@
                     </div>
                 </div>
 
-                {{-- Page Header — tema menyesuaikan pilihan dark/light --}}
+                {{-- Page Header --}}
                 @isset($header)
-                <div :class="theme === 'dark' ? 'dark-content' : 'light-content'"
-                     class="mk-page-header shrink-0 bg-mk-card border-b border-white/[0.06] px-4 lg:px-8 py-4">
+                <div class="mk-content mk-page-header shrink-0 bg-mk-card border-b border-white/[0.06] px-4 lg:px-8 py-4">
                     {{ $header }}
                 </div>
                 @endisset
 
-                {{-- Konten Halaman — tema menyesuaikan pilihan dark/light --}}
-                <main :class="theme === 'dark' ? 'dark-content' : 'light-content'"
-                      class="flex-1 overflow-y-auto bg-mk-bg">
+                {{-- Konten Halaman --}}
+                <main class="mk-content flex-1 overflow-y-auto bg-mk-bg">
+                    {{-- Flash Messages --}}
+                    @if(session('success'))
+                    <div class="mx-4 lg:mx-8 mt-4 p-4 bg-green-900/30 border border-green-600/40 text-green-300 rounded-lg text-sm">
+                        {{ session('success') }}
+                    </div>
+                    @endif
+                    @if(session('error'))
+                    <div class="mx-4 lg:mx-8 mt-4 p-4 bg-red-900/30 border border-red-600/40 text-red-300 rounded-lg text-sm">
+                        {{ session('error') }}
+                    </div>
+                    @endif
+                    @if(session('warning'))
+                    <div class="mx-4 lg:mx-8 mt-4 p-4 bg-yellow-900/30 border border-yellow-600/40 text-yellow-300 rounded-lg text-sm">
+                        {{ session('warning') }}
+                    </div>
+                    @endif
+
                     {{ $slot }}
                 </main>
 
@@ -227,7 +216,6 @@
         @stack('scripts')
 
         <script>
-        // Mark satu notifikasi sebagai dibaca lalu biarkan navigasi berjalan ke halaman murid
         function markRead(notifId, linkEl) {
             fetch(`/notifications/${notifId}/read`, {
                 method: 'POST',
@@ -235,10 +223,9 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     'Accept': 'application/json',
                 },
-            }).catch(() => {}); // fire-and-forget — redirect tetap jalan
+            }).catch(() => {});
         }
 
-        // Mark semua notifikasi sebagai dibaca lalu reload halaman
         function markAllRead(btn) {
             btn.disabled = true;
             fetch('/notifications/read-all', {
@@ -249,7 +236,7 @@
                 },
             })
             .then(() => window.location.reload())
-            .catch(() => { btn.disabled = false; }); // biarkan user coba lagi jika gagal
+            .catch(() => { btn.disabled = false; });
         }
         </script>
     </body>
