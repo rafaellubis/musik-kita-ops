@@ -19,11 +19,14 @@ class EventHonorServiceTest extends TestCase
     use RefreshDatabase;
 
     private EventHonorService $service;
-    private int $createdBy = 1;
+    private int $createdBy;
 
     protected function setUp(): void
     {
         parent::setUp();
+        // Buat user nyata agar FK created_by tidak violation saat service insert slip
+        $user = \App\Models\User::factory()->create();
+        $this->createdBy = $user->id;
         $this->service = app(EventHonorService::class);
     }
 
@@ -63,6 +66,7 @@ class EventHonorServiceTest extends TestCase
             'year'         => 2026,
             'base_honor'   => 100000,
             'event_honor'  => 0,
+            'total_honor'  => 100000,  // eksplisit: total = base saja, sebelum event honor ditambah
             'status'       => HonorSlip::STATUS_CALCULATED,
         ]);
 
