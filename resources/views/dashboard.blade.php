@@ -160,7 +160,7 @@
         @endif
 
         {{-- ===== BARIS 3: BAR CHART ABSENSI + AGING PIUTANG ===== --}}
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="grid grid-cols-1 {{ $isAdmin ? '' : 'lg:grid-cols-2' }} gap-5">
 
             {{-- Bar Chart: Absensi Mingguan --}}
             <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 fade-in-up" style="animation-delay:240ms">
@@ -180,6 +180,7 @@
                 <div id="chart-attendance"></div>
             </div>
 
+            @if(!$isAdmin)
             {{-- Aging Piutang --}}
             <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 fade-in-up" style="animation-delay:280ms">
                 <div class="flex justify-between items-center mb-4">
@@ -208,6 +209,7 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
 
         {{-- ===== BARIS 4: STATISTIK MURID + INVOICE TERLAMA ===== --}}
@@ -341,12 +343,11 @@
     <script>
     document.addEventListener('DOMContentLoaded', function () {
 
-        // Warna chart: theme-aware (dark vs light)
-        const isDark = (localStorage.getItem('mk-theme') || 'dark') === 'dark';
-        const chartLabelColor  = isDark ? '#8B92A8' : '#9A7050';
-        const chartGridColor   = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(101,65,27,0.08)';
-        const chartTooltipTheme = isDark ? 'dark' : 'light';
-        const chartTooltipBg    = isDark ? '#1E2235' : '#FBF5EC';
+        // Warna chart — Mahogany & Mint light theme
+        const chartLabelColor   = '#7A3818';
+        const chartGridColor    = 'rgba(74,31,10,0.08)';
+        const chartTooltipTheme = 'light';
+        const chartTooltipBg    = '#FFFFFF';
 
         // ---- Area Chart: P&L 6 Bulan (Owner only) ----
         @if($isOwner)
