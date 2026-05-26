@@ -9,6 +9,7 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Package;
 use App\Models\Student;
+use App\Services\EventHonorService;
 use App\Services\InvoiceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -26,7 +27,10 @@ use Illuminate\Support\Facades\DB;
  */
 class EventController extends Controller
 {
-    public function __construct(private InvoiceService $invoiceService) {}
+    public function __construct(
+        private InvoiceService $invoiceService,
+        private EventHonorService $eventHonorService,
+    ) {}
 
     public function index()
     {
@@ -335,6 +339,7 @@ class EventController extends Controller
     /**
      * Tandai event sebagai COMPLETED.
      * Setelah ini, peserta tidak bisa ditambah/dihapus.
+     * Otomatis meng-inject honor guru pendamping ke slip honor bulan event.
      */
     public function complete(Event $event)
     {
@@ -343,8 +348,32 @@ class EventController extends Controller
         }
 
         $event->update(['status' => Event::STATUS_COMPLETED]);
+
+        $result = $this->eventHonorService->processEventCompletion($event, auth()->id());
+
+        // Susun flash message dari hasil proses
+        $messages = [];
+
+        if ($result['slips_updated'] > 0) {
+            $messages[] = "{$result['slips_updated']} slip honor guru pendamping diperbarui.";
+        } elseif ($result['slips_updated'] === 0 && $result['slips_skipped'] === 0) {
+            $messages[] = 'Tidak ada guru pendamping yang terdaftar.';
+        }
+
+        if ($result['slips_skipped'] > 0) {
+            $messages[] = "{$result['slips_skipped']} slip dilewati karena sudah berstatus PAID — perlu update manual.";
+        }
+
+        $successMsg = 'Event ditandai selesai. ' . implode(' ', $messages);
+
+        if ($result['holiday_warning']) {
+            return redirect()->route('events.show', $event)
+                ->with('success', $successMsg)
+                ->with('warning', 'Tidak ada Hari Libur Internal untuk tanggal ini. Pastikan sesi kelas sudah diatur via menu Hari Libur.');
+        }
+
         return redirect()->route('events.show', $event)
-            ->with('success', 'Event ditandai selesai. Silakan generate slip honor guru.');
+            ->with('success', $successMsg);
     }
 
     // ============= HELPERS =============
