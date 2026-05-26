@@ -22,6 +22,7 @@
 
     <div class="py-6 px-4 lg:px-8 space-y-5">
 
+        @if(!$isAdmin)
         {{-- ===== BARIS 1: KARTU KPI ===== --}}
         <div class="grid grid-cols-2 {{ $isOwner ? 'lg:grid-cols-4' : 'lg:grid-cols-2' }} gap-4">
 
@@ -114,6 +115,7 @@
             </div>
             @endif
         </div>
+        @endif
 
         {{-- ===== BARIS 2: CHART P&L + DONUT INSTRUMEN (Owner only) ===== --}}
         @if($isOwner)
@@ -290,6 +292,7 @@
             </div>
         </div>
 
+        @if(!$isAdmin)
         {{-- ===== BARIS 5: HONOR BELUM DIBAYAR ===== --}}
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden fade-in-up" style="animation-delay:400ms">
             <div class="px-5 py-3.5 border-b border-gray-100 flex justify-between items-center">
@@ -329,6 +332,7 @@
             <div class="px-5 py-8 text-center text-gray-400 text-sm">Semua honor sudah dibayarkan. ✓</div>
             @endif
         </div>
+        @endif
 
     </div>
 
@@ -337,12 +341,11 @@
     <script>
     document.addEventListener('DOMContentLoaded', function () {
 
-        // Deteksi tema saat halaman dimuat untuk chart yang theme-aware
-        const isDark = (localStorage.getItem('mk-theme') || 'dark') === 'dark';
-        const chartLabelColor  = isDark ? '#8B92A8' : '#9A7050';
-        const chartGridColor   = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(101,65,27,0.08)';
-        const chartTooltipTheme = isDark ? 'dark' : 'light';
-        const chartTooltipBg    = isDark ? '#1E2235' : '#FBF5EC';
+        // Warna chart untuk dark mode
+        const chartLabelColor   = '#8B92A8';
+        const chartGridColor    = 'rgba(255,255,255,0.07)';
+        const chartTooltipTheme = 'dark';
+        const chartTooltipBg    = '#1E2235';
 
         // ---- Area Chart: P&L 6 Bulan (Owner only) ----
         @if($isOwner)
