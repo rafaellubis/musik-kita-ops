@@ -215,7 +215,56 @@
         {{-- ===== BARIS 4: STATISTIK MURID + INVOICE TERLAMA ===== --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
-            {{-- Statistik Murid --}}
+            @if($isAdmin)
+            {{-- Daftar Absensi Hari Ini (Admin only) --}}
+            <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden fade-in-up" style="animation-delay:320ms">
+                <div class="px-5 py-3.5 border-b border-gray-100 flex justify-between items-center">
+                    <div class="text-sm font-semibold text-gray-800">Daftar Absensi Hari Ini</div>
+                    <a href="{{ route('absensi.index') }}" class="text-xs text-indigo-600 hover:underline">Buka Absensi →</a>
+                </div>
+                @if($absensiHariIni->count() > 0)
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="border-b border-gray-100 bg-gray-50">
+                            <th class="px-4 py-2.5 text-left text-gray-500 font-semibold uppercase tracking-wide text-[10px]">Jam</th>
+                            <th class="px-4 py-2.5 text-left text-gray-500 font-semibold uppercase tracking-wide text-[10px]">Murid</th>
+                            <th class="px-4 py-2.5 text-left text-gray-500 font-semibold uppercase tracking-wide text-[10px]">Guru</th>
+                            <th class="px-4 py-2.5 text-left text-gray-500 font-semibold uppercase tracking-wide text-[10px]">Ruangan</th>
+                            <th class="px-4 py-2.5 text-center text-gray-500 font-semibold uppercase tracking-wide text-[10px]">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($absensiHariIni as $sesi)
+                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-2.5 font-mono text-gray-600">
+                                {{ $sesi->schedule ? \Carbon\Carbon::parse($sesi->schedule->start_time)->format('H:i') : '—' }}
+                            </td>
+                            <td class="px-4 py-2.5">
+                                <a href="{{ route('students.show', $sesi->student_id) }}" class="text-indigo-600 hover:underline font-medium">
+                                    {{ $sesi->student->full_name ?? '—' }}
+                                </a>
+                            </td>
+                            <td class="px-4 py-2.5 text-gray-600">
+                                {{ $sesi->teacher->name ?? '—' }}
+                            </td>
+                            <td class="px-4 py-2.5 text-gray-600">
+                                {{ $sesi->schedule?->room?->code ?? '—' }}
+                            </td>
+                            <td class="px-4 py-2.5 text-center">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-50 text-yellow-700">
+                                    Belum Diabsen
+                                </span>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                @else
+                <div class="px-5 py-8 text-center text-gray-400 text-sm">Tidak ada sesi yang perlu diabsen hari ini.</div>
+                @endif
+            </div>
+            @else
+            {{-- Statistik Murid (Owner + Auditor) --}}
             <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 fade-in-up" style="animation-delay:320ms">
                 <div class="flex justify-between items-center mb-4">
                     <div class="text-sm font-semibold text-gray-800">Statistik Murid</div>
@@ -245,6 +294,7 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             {{-- 10 Invoice Terlama Belum Lunas --}}
             <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden fade-in-up" style="animation-delay:360ms">
