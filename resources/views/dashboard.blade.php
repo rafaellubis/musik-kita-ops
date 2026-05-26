@@ -343,11 +343,12 @@
     <script>
     document.addEventListener('DOMContentLoaded', function () {
 
-        // Warna chart — Mahogany & Mint light theme
-        const chartLabelColor   = '#7A3818';
-        const chartGridColor    = 'rgba(74,31,10,0.08)';
-        const chartTooltipTheme = 'light';
-        const chartTooltipBg    = '#FFFFFF';
+        // Warna chart — theme-aware (dark/light sesuai preferensi user)
+        const isDark = (localStorage.getItem('mk-theme') || 'dark') === 'dark';
+        const chartLabelColor  = isDark ? '#8B92A8' : '#9A7050';
+        const chartGridColor   = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(101,65,27,0.08)';
+        const chartTooltipTheme = isDark ? 'dark' : 'light';
+        const chartTooltipBg    = isDark ? '#1E2235' : '#FBF5EC';
 
         // ---- Area Chart: P&L 6 Bulan (Owner only) ----
         @if($isOwner)
