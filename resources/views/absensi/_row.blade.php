@@ -147,6 +147,9 @@
         class="text-mk-dim"
         @endif>
         {{ $session->student->full_name }}
+        @if($session->enrollment?->package?->isDuo())
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-800 ml-1">DUO</span>
+        @endif
         @if($session->student->nickname)
             <div class="text-[12px] text-mk-dim mt-0.5">'{{ $session->student->nickname }}'</div>
         @endif
