@@ -26,6 +26,8 @@ class PayrollConfigSeeder extends Seeder
              'Honor flat per sesi ujian.'],
             ['H_PENDAMPING', 'Honor Guru Pendamping Konser KITA', 'FIXED', '250000',
              'Honor flat per event untuk guru yang mendampingi murid di Konser KITA. Bisa berbeda dengan H_UJIAN.'],
+            ['H_DUO', 'Sesi DUO Terlaksana', 'FIXED', '40000',
+             'Honor guru kelas DUO per murid per sesi. Karena 2 murid, total honor satu slot = 2 × nilai ini.'],
             ['H_CUTI', 'Sesi Saat Murid Cuti', 'FIXED', '0',
              'Periode cuti: sesi tidak ter-generate, honor nol.'],
             ['PAYROLL_CALC_DAY', 'Hari Kalkulasi Honor', 'CONSTANT', 'H-2_AKHIR_BULAN',

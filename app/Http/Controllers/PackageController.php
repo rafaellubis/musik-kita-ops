@@ -28,7 +28,7 @@ class PackageController extends Controller
         $validated = $request->validate([
             'code' => 'required|string|max:30|unique:packages,code',
             'instrument_id' => 'required|exists:instruments,id',
-            'class_type' => 'required|in:REGULER,HOBBY,KIDS_CLASS,KIDS_CLASS_BUNDLE',
+            'class_type' => 'required|in:REGULER,HOBBY,DUO,KIDS_CLASS,KIDS_CLASS_BUNDLE',
             'grade' => 'nullable|string|max:10',
             'duration_min' => 'required|integer|min:15|max:120',
             'price_per_month' => 'required|integer|min:0',
@@ -52,7 +52,7 @@ class PackageController extends Controller
         $validated = $request->validate([
             'code' => 'required|string|max:30|unique:packages,code,' . $id,
             'instrument_id' => 'required|exists:instruments,id',
-            'class_type' => 'required|in:REGULER,HOBBY,KIDS_CLASS,KIDS_CLASS_BUNDLE',
+            'class_type' => 'required|in:REGULER,HOBBY,DUO,KIDS_CLASS,KIDS_CLASS_BUNDLE',
             'grade' => 'nullable|string|max:10',
             'duration_min' => 'required|integer|min:15|max:120',
             'price_per_month' => 'required|integer|min:0',

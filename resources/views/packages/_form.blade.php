@@ -29,7 +29,7 @@
     <div>
         <label class="block text-sm font-medium">Tipe <span class="text-red-500">*</span></label>
         <select name="class_type" required class="mt-1 block w-full border-mk-border rounded-md">
-            @php $types = ['REGULER', 'HOBBY', 'KIDS_CLASS', 'KIDS_CLASS_BUNDLE']; @endphp
+            @php $types = ['REGULER', 'HOBBY', 'DUO', 'KIDS_CLASS', 'KIDS_CLASS_BUNDLE']; @endphp
             <option value="">— Pilih —</option>
             @foreach($types as $t)
                 <option value="{{ $t }}"

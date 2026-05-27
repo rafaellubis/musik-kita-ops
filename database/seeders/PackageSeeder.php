@@ -57,5 +57,36 @@ class PackageSeeder extends Seeder
             'instrument_id' => $instruments['KIDS'], 'class_type' => 'KIDS_CLASS_BUNDLE', 'grade' => null,
             'duration_min' => 45, 'price_per_month' => 2180000, 'is_active' => true, 'sort_order' => $sort++,
         ]);
+
+        // Paket DUO — 6 instrumen reguler (Rp 320.000/bulan, honor guru Rp 40.000/murid/sesi)
+        $duoInstruments = ['PIANO', 'GITAR', 'DRUM', 'VOCAL', 'BASS', 'VIOLIN'];
+        foreach ($duoInstruments as $instr) {
+            Package::firstOrCreate(
+                ['code' => "DUO_{$instr}_30"],
+                [
+                    'instrument_id'   => $instruments[$instr],
+                    'class_type'      => 'DUO',
+                    'grade'           => null,
+                    'duration_min'    => 30,
+                    'price_per_month' => 320000,
+                    'is_active'       => true,
+                    'sort_order'      => $sort++,
+                ]
+            );
+        }
+
+        // Saxophone DUO: nonaktif sampai ada guru SAX aktif
+        Package::firstOrCreate(
+            ['code' => 'DUO_SAX_30'],
+            [
+                'instrument_id'   => $instruments['SAX'],
+                'class_type'      => 'DUO',
+                'grade'           => null,
+                'duration_min'    => 30,
+                'price_per_month' => 320000,
+                'is_active'       => false,
+                'sort_order'      => $sort++,
+            ]
+        );
     }
 }
