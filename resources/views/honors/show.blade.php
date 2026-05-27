@@ -33,8 +33,9 @@
             'H_PENG'   => 'Guru Pengganti',
             'H_KIDS'   => 'Kids Class',
             'H_UJIAN'  => 'Pengawas Ujian',
-            'H_IZIN'   => 'Izin Reschedule (Honor via Sesi Pengganti)',
+            'H_IZIN'   => 'Izin Reschedule (Honor Rp 0 — dibayar via sesi pengganti)',
             'H_DUO'    => 'Kelas DUO',
+            'H_SPLIT'  => 'Split Reschedule (Sesi Dibagi Dua)',
         ];
     @endphp
 
