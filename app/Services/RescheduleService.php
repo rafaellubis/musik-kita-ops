@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ClassSession;
+use App\Models\PayrollConfig;
 use App\Models\Room;
 use Carbon\Carbon;
 use InvalidArgumentException;
@@ -172,8 +173,14 @@ class RescheduleService
             }
         }
 
-        // Honor = setengah honor normal satu sesi
-        $honorAmount = (int) round($original->enrollment->package->price_per_month * 0.5 / 4 / 2);
+        // Honor = setengah honor normal satu sesi (DUO pakai rate dari PayrollConfig)
+        $package = $original->enrollment->package;
+        if ($package?->isDuo()) {
+            $duoRate     = (int) (PayrollConfig::where('scenario_code', 'H_DUO')->value('value_or_formula') ?? 40000);
+            $honorAmount = (int) round($duoRate / 2);
+        } else {
+            $honorAmount = (int) round($package->price_per_month * 0.5 / 4 / 2);
+        }
 
         return ClassSession::create([
             'schedule_id'           => null,

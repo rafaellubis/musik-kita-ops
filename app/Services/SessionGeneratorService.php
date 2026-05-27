@@ -258,6 +258,15 @@ class SessionGeneratorService
                 continue;
             }
 
+            // Tentukan honor sesi pengganti: DUO pakai H_DUO dari config, lainnya H_REG
+            if ($enrollment->package?->isDuo()) {
+                $repHonorCode   = 'H_DUO';
+                $repHonorAmount = (int) (PayrollConfig::where('scenario_code', 'H_DUO')->value('value_or_formula') ?? 40000);
+            } else {
+                $repHonorCode   = 'H_REG';
+                $repHonorAmount = $this->calculateBaseHonor($enrollment);
+            }
+
             ClassSession::create([
                 'schedule_id'      => $schedule->id,
                 'enrollment_id'    => $enrollment->id,
@@ -268,8 +277,8 @@ class SessionGeneratorService
                 'end_time'         => $schedule->end_time,
                 'room_id'          => $schedule->room_id,
                 'status'           => 'SCHEDULED',
-                'honor_code'       => 'H_REG',
-                'honor_amount'     => $this->calculateBaseHonor($enrollment),
+                'honor_code'       => $repHonorCode,
+                'honor_amount'     => $repHonorAmount,
                 'notes'            => 'Sesi pengganti dari tanggal libur',
                 'session_sequence' => $repItem['reserved_slot'],    // mewarisi slot LIBUR
                 'origin_session_id'=> $repItem['libur_session_id'], // referensi ke sesi LIBUR
