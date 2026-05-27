@@ -44,4 +44,12 @@ class Package extends Model
     {
         return in_array($this->class_type, ['KIDS_CLASS', 'KIDS_CLASS_BUNDLE'], true);
     }
+
+    /**
+     * Helper kategori paket: cek apakah paket ini tipe Duo (privat berdua).
+     */
+    public function isDuo(): bool
+    {
+        return $this->class_type === 'DUO';
+    }
 }
