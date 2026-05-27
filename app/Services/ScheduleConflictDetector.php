@@ -54,7 +54,7 @@ class ScheduleConflictDetector
             ->where('day_of_week', $dayOfWeek)
             ->where(fn ($q) => $this->whereTimeOverlaps($q, $startTime, $endTime))
             ->when($excludeScheduleId, fn ($q) => $q->where('id', '!=', $excludeScheduleId))
-            ->with('enrollment.student')
+            ->with('enrollment.student', 'enrollment.package')
             ->get();
     }
 
@@ -77,7 +77,7 @@ class ScheduleConflictDetector
             ->where('day_of_week', $dayOfWeek)
             ->where(fn ($q) => $this->whereTimeOverlaps($q, $startTime, $endTime))
             ->when($excludeScheduleId, fn ($q) => $q->where('id', '!=', $excludeScheduleId))
-            ->with('enrollment.student')
+            ->with('enrollment.student', 'enrollment.package')
             ->get();
     }
 
