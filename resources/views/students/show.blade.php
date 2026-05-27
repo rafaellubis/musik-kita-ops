@@ -794,8 +794,8 @@
                                      const occupants = this.booked.filter(s =>
                                          s.room_id === room.id &&
                                          s.day_of_week === parseInt(this.selectedDay) &&
-                                         s.start_time < this.endTime &&
-                                         s.end_time > this.startTime
+                                         s.start_time.slice(0,5) < this.endTime &&
+                                         s.end_time.slice(0,5) > this.startTime
                                      ).length;
                                      return occupants < room.capacity;
                                  });
