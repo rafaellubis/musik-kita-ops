@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\ClassSession;
 use App\Models\Enrollment;
 use App\Models\Holiday;
+use App\Models\PayrollConfig;
 use App\Models\Schedule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -311,6 +312,13 @@ class SessionGeneratorService
             return ['H_KIDS', 42500];
         }
 
+        // DUO: honor libur per murid diambil dari PayrollConfig H_DUO
+        if ($enrollment->package?->isDuo()) {
+            $honorPerMurid = (int) (PayrollConfig::where('scenario_code', 'H_DUO')
+                ->value('value_or_formula') ?? 40000);
+            return ['H_DUO', $honorPerMurid];
+        }
+
         return ['H_LIBUR', $this->calculateBaseHonor($enrollment)];
     }
 
@@ -349,6 +357,44 @@ class SessionGeneratorService
         // sekaligus. Tidak ada "konflik" untuk sesi Kids Class.
         $classType = $schedule->enrollment->package?->class_type;
         if (in_array($classType, ['KIDS_CLASS', 'KIDS_CLASS_BUNDLE'])) {
+            return null;
+        }
+
+        // DUO: boleh berbagi slot dengan tepat satu DUO lain (pasangan).
+        // Konflik tetap berlaku jika slot dipakai kelas non-DUO (REGULER, HOBBY, dll).
+        if ($classType === 'DUO') {
+            $teacherId = $schedule->enrollment->teacher_id;
+
+            // Cek guru: konflik hanya jika sesi lain di slot ini BUKAN DUO
+            $teacherConflict = ClassSession::where('teacher_id', $teacherId)
+                ->whereDate('session_date', $date)
+                ->where('start_time', '<', $schedule->end_time)
+                ->where('end_time', '>', $schedule->start_time)
+                ->where('schedule_id', '!=', $schedule->id)
+                ->whereNotIn('status', ['CANCELLED'])
+                ->whereHas('enrollment.package', fn ($q) => $q->where('class_type', '!=', 'DUO'))
+                ->first();
+
+            if ($teacherConflict) {
+                return $teacherConflict;
+            }
+
+            // Cek ruang: konflik hanya jika sesi lain di slot ini BUKAN DUO
+            if ($schedule->room_id) {
+                $roomConflict = ClassSession::where('room_id', $schedule->room_id)
+                    ->whereDate('session_date', $date)
+                    ->where('start_time', '<', $schedule->end_time)
+                    ->where('end_time', '>', $schedule->start_time)
+                    ->where('schedule_id', '!=', $schedule->id)
+                    ->whereNotIn('status', ['CANCELLED'])
+                    ->whereHas('enrollment.package', fn ($q) => $q->where('class_type', '!=', 'DUO'))
+                    ->first();
+
+                if ($roomConflict) {
+                    return $roomConflict;
+                }
+            }
+
             return null;
         }
 
