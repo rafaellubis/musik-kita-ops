@@ -45,31 +45,75 @@ class ScheduleController extends Controller
                 'Murid belum punya enrollment aktif. Jadikan murid Aktif dulu lewat lifecycle action.');
         }
 
-        // Validasi konflik guru
+        $package = $enrollment->package;
+        $isDuo   = $package?->isDuo() ?? false;
+
+        // Validasi konflik guru — DUO boleh berbagi slot jika partner juga DUO (maks 2)
         $teacherClashes = $this->conflictDetector->findTeacherConflicts(
             teacherId: $enrollment->teacher_id,
             dayOfWeek: $data['day_of_week'],
             startTime: $data['start_time'],
             endTime:   $data['end_time'],
         );
-        if ($teacherClashes->isNotEmpty()) {
-            $names = $teacherClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
-                                    ->implode(', ');
-            return back()->withInput()->with('error',
-                "Bentrok jadwal guru di slot tsb. Sudah dipakai untuk: {$names}.");
+
+        if ($isDuo) {
+            $nonDuoClashes = $teacherClashes->filter(
+                fn ($s) => $s->enrollment?->package?->class_type !== 'DUO'
+            );
+            $duoClashes = $teacherClashes->filter(
+                fn ($s) => $s->enrollment?->package?->class_type === 'DUO'
+            );
+
+            if ($nonDuoClashes->isNotEmpty()) {
+                $names = $nonDuoClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
+                                       ->implode(', ');
+                return back()->withInput()->with('error',
+                    "Bentrok jadwal guru di slot tsb. Sudah dipakai untuk: {$names}.");
+            }
+            if ($duoClashes->count() >= 2) {
+                return back()->withInput()->with('error',
+                    'Slot DUO sudah penuh (maksimal 2 murid per slot).');
+            }
+        } else {
+            if ($teacherClashes->isNotEmpty()) {
+                $names = $teacherClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
+                                        ->implode(', ');
+                return back()->withInput()->with('error',
+                    "Bentrok jadwal guru di slot tsb. Sudah dipakai untuk: {$names}.");
+            }
         }
 
-        // Validasi kapasitas ruangan (kalau room dipilih)
+        // Validasi kapasitas ruangan — DUO boleh berbagi ruang dengan partner DUO (maks 2)
         if (!empty($data['room_id'])) {
-            $isFull = $this->conflictDetector->isRoomFull(
-                roomId:    (int) $data['room_id'],
-                dayOfWeek: $data['day_of_week'],
-                startTime: $data['start_time'],
-                endTime:   $data['end_time'],
-            );
-            if ($isFull) {
-                return back()->withInput()->with('error',
-                    'Kapasitas ruangan sudah penuh di slot ini.');
+            if ($isDuo) {
+                $roomConflicts = $this->conflictDetector->findRoomConflicts(
+                    roomId:    (int) $data['room_id'],
+                    dayOfWeek: $data['day_of_week'],
+                    startTime: $data['start_time'],
+                    endTime:   $data['end_time'],
+                );
+                $nonDuoRoom = $roomConflicts->filter(
+                    fn ($s) => $s->enrollment?->package?->class_type !== 'DUO'
+                );
+                $duoRoom = $roomConflicts->filter(
+                    fn ($s) => $s->enrollment?->package?->class_type === 'DUO'
+                );
+
+                if ($nonDuoRoom->isNotEmpty() || $duoRoom->count() >= 2) {
+                    return back()->withInput()->with('error',
+                        'Ruangan tidak tersedia di slot ini untuk DUO.');
+                }
+            } else {
+                $isFull = $this->conflictDetector->isRoomFull(
+                    roomId:    (int) $data['room_id'],
+                    dayOfWeek: $data['day_of_week'],
+                    startTime: $data['start_time'],
+                    endTime:   $data['end_time'],
+                );
+                if ($isFull) {
+                    return back()->withInput()->with('error',
+                        'Kapasitas ruangan sudah penuh di slot ini.');
+                }
             }
         }
 
@@ -110,8 +154,11 @@ class ScheduleController extends Controller
         ]);
 
         $teacherId = $schedule->enrollment->teacher_id;
+        $package   = $schedule->enrollment?->package;
+        $isDuo     = $package?->isDuo() ?? false;
 
-        // Validasi konflik guru, kecualikan schedule ini sendiri
+        // Validasi konflik guru — DUO boleh berbagi slot jika partner juga DUO (maks 2)
+        // Kecualikan schedule ini sendiri (saat update)
         $teacherClashes = $this->conflictDetector->findTeacherConflicts(
             teacherId: $teacherId,
             dayOfWeek: $data['day_of_week'],
@@ -119,24 +166,66 @@ class ScheduleController extends Controller
             endTime:   $data['end_time'],
             excludeScheduleId: $schedule->id,
         );
-        if ($teacherClashes->isNotEmpty()) {
-            $names = $teacherClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
-                                    ->implode(', ');
-            return back()->withInput()->with('error',
-                "Bentrok jadwal guru di slot tsb. Sudah dipakai untuk: {$names}.");
+
+        if ($isDuo) {
+            $nonDuoClashes = $teacherClashes->filter(
+                fn ($s) => $s->enrollment?->package?->class_type !== 'DUO'
+            );
+            $duoClashes = $teacherClashes->filter(
+                fn ($s) => $s->enrollment?->package?->class_type === 'DUO'
+            );
+
+            if ($nonDuoClashes->isNotEmpty()) {
+                $names = $nonDuoClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
+                                       ->implode(', ');
+                return back()->withInput()->with('error',
+                    "Bentrok jadwal guru di slot tsb. Sudah dipakai untuk: {$names}.");
+            }
+            if ($duoClashes->count() >= 2) {
+                return back()->withInput()->with('error',
+                    'Slot DUO sudah penuh (maksimal 2 murid per slot).');
+            }
+        } else {
+            if ($teacherClashes->isNotEmpty()) {
+                $names = $teacherClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
+                                        ->implode(', ');
+                return back()->withInput()->with('error',
+                    "Bentrok jadwal guru di slot tsb. Sudah dipakai untuk: {$names}.");
+            }
         }
 
         if (!empty($data['room_id'])) {
-            $isFull = $this->conflictDetector->isRoomFull(
-                roomId:    (int) $data['room_id'],
-                dayOfWeek: $data['day_of_week'],
-                startTime: $data['start_time'],
-                endTime:   $data['end_time'],
-                excludeScheduleId: $schedule->id,
-            );
-            if ($isFull) {
-                return back()->withInput()->with('error',
-                    'Kapasitas ruangan sudah penuh di slot ini.');
+            if ($isDuo) {
+                $roomConflicts = $this->conflictDetector->findRoomConflicts(
+                    roomId:    (int) $data['room_id'],
+                    dayOfWeek: $data['day_of_week'],
+                    startTime: $data['start_time'],
+                    endTime:   $data['end_time'],
+                    excludeScheduleId: $schedule->id,
+                );
+                $nonDuoRoom = $roomConflicts->filter(
+                    fn ($s) => $s->enrollment?->package?->class_type !== 'DUO'
+                );
+                $duoRoom = $roomConflicts->filter(
+                    fn ($s) => $s->enrollment?->package?->class_type === 'DUO'
+                );
+
+                if ($nonDuoRoom->isNotEmpty() || $duoRoom->count() >= 2) {
+                    return back()->withInput()->with('error',
+                        'Ruangan tidak tersedia di slot ini untuk DUO.');
+                }
+            } else {
+                $isFull = $this->conflictDetector->isRoomFull(
+                    roomId:    (int) $data['room_id'],
+                    dayOfWeek: $data['day_of_week'],
+                    startTime: $data['start_time'],
+                    endTime:   $data['end_time'],
+                    excludeScheduleId: $schedule->id,
+                );
+                if ($isFull) {
+                    return back()->withInput()->with('error',
+                        'Kapasitas ruangan sudah penuh di slot ini.');
+                }
             }
         }
 
