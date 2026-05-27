@@ -547,6 +547,8 @@ class StudentImportService
         // mengajar beberapa murid di jam yang sama. Kapasitas ruang (isRoomFull) yang jadi
         // batasan, bukan konflik guru. Skip teacher conflict check untuk tipe ini.
         $isKidsClass = in_array($package->class_type, ['KIDS_CLASS', 'KIDS_CLASS_BUNDLE']);
+        // DUO: dua murid boleh berbagi slot yang sama dengan satu guru — pasangan DUO saja (maks 2).
+        $isDuo = $package->class_type === 'DUO';
 
         if (!$isKidsClass) {
             // Cek konflik guru — blocking agar DB tidak punya dua schedule privat bentrok.
@@ -558,12 +560,32 @@ class StudentImportService
             );
 
             if ($clash->isNotEmpty()) {
-                \Illuminate\Support\Facades\Log::warning(
-                    "[Import] Schedule tidak dibuat untuk murid #{$student->id} ({$student->full_name}): " .
-                    "guru #{$data['assigned_teacher_id']} sudah punya jadwal di {$data['preferred_day']} {$startStr}–{$endStr}. " .
-                    "Admin perlu atur ulang jadwal murid ini secara manual."
-                );
-                return;
+                if ($isDuo) {
+                    // DUO boleh satu slot dengan tepat satu pasangan DUO.
+                    $nonDuoClash = $clash->filter(
+                        fn ($s) => $s->enrollment?->package?->class_type !== 'DUO'
+                    );
+                    $duoClash = $clash->filter(
+                        fn ($s) => $s->enrollment?->package?->class_type === 'DUO'
+                    );
+
+                    if ($nonDuoClash->isNotEmpty() || $duoClash->count() >= 2) {
+                        \Illuminate\Support\Facades\Log::warning(
+                            "[Import] Schedule tidak dibuat untuk murid #{$student->id} ({$student->full_name}): " .
+                            "guru #{$data['assigned_teacher_id']} sudah punya jadwal di {$data['preferred_day']} {$startStr}–{$endStr}. " .
+                            "Admin perlu atur ulang jadwal murid ini secara manual."
+                        );
+                        return;
+                    }
+                    // Tepat 1 clash DUO = pasangan valid, lanjut buat schedule.
+                } else {
+                    \Illuminate\Support\Facades\Log::warning(
+                        "[Import] Schedule tidak dibuat untuk murid #{$student->id} ({$student->full_name}): " .
+                        "guru #{$data['assigned_teacher_id']} sudah punya jadwal di {$data['preferred_day']} {$startStr}–{$endStr}. " .
+                        "Admin perlu atur ulang jadwal murid ini secara manual."
+                    );
+                    return;
+                }
             }
         }
 
