@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ClassSession;
+use App\Models\PayrollConfig;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -191,6 +192,23 @@ class AttendanceService
                 return ['code' => 'TRIAL_NS', 'amount' => 0];
             }
             return ['code' => 'H_KIDS', 'amount' => self::KIDS_HONOR_PER_STUDENT];
+        }
+
+        // DUO: honor per murid dari PayrollConfig H_DUO (bukan formula % harga paket)
+        if ($package && $package->isDuo()) {
+            $honorPerMusid = (int) (PayrollConfig::where('scenario_code', 'H_DUO')
+                ->value('value_or_formula') ?? 40000);
+
+            $code = match ($status) {
+                'HADIR', 'HADIR_TERLAMBAT' => 'H_DUO',
+                'IZIN_VIDEO'               => 'H_DUO',
+                'HANGUS'                   => 'H_DUO',
+                'LIBUR'                    => 'H_DUO',
+                'DIGANTI'                  => 'H_PENG',
+                default                    => null,
+            };
+
+            return ['code' => $code, 'amount' => $code ? $honorPerMusid : 0];
         }
 
         // Reguler/Hobby: honor = harga_paket * 50% / 4

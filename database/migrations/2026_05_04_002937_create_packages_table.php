@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('instrument_id')
                   ->constrained('instruments')
                   ->onDelete('restrict');
-            $table->enum('class_type', ['REGULER', 'HOBBY', 'KIDS_CLASS', 'KIDS_CLASS_BUNDLE']);
+            $table->enum('class_type', ['REGULER', 'HOBBY', 'DUO', 'KIDS_CLASS', 'KIDS_CLASS_BUNDLE']);
             $table->string('grade', 10)->nullable();
             $table->integer('duration_min');
             $table->integer('price_per_month');
