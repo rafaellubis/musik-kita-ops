@@ -58,9 +58,8 @@ class PackageSeeder extends Seeder
             'duration_min' => 45, 'price_per_month' => 2180000, 'is_active' => true, 'sort_order' => $sort++,
         ]);
 
-        // Paket DUO — 6 instrumen reguler (Rp 320.000/bulan, honor guru Rp 40.000/murid/sesi)
-        $duoInstruments = ['PIANO', 'GITAR', 'DRUM', 'VOCAL', 'BASS', 'VIOLIN'];
-        foreach ($duoInstruments as $instr) {
+        // Paket DUO — instrumen reguler (ikut $regular agar sinkron otomatis)
+        foreach ($regular as $instr) {
             Package::firstOrCreate(
                 ['code' => "DUO_{$instr}_30"],
                 [
