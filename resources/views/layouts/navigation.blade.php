@@ -63,16 +63,20 @@
         :active="request()->routeIs('teachers.*')" />
     <x-sidebar-item route="instruments.index" icon="🎸" label="Instrumen"
         :active="request()->routeIs('instruments.*')" />
+    @role('Owner|Auditor')
     <x-sidebar-item route="packages.index" icon="📦" label="Paket"
         :active="request()->routeIs('packages.*')" />
+    @endrole
     <x-sidebar-item route="rooms.index" icon="🚪" label="Ruangan"
         :active="request()->routeIs('rooms.*')" />
     <x-sidebar-item route="holidays.index" icon="📅" label="Hari Libur"
         :active="request()->routeIs('holidays.*')" />
+    @role('Owner|Auditor')
     <x-sidebar-item route="invoice-components.index" icon="🧾" label="Komponen Invoice"
         :active="request()->routeIs('invoice-components.*')" />
     <x-sidebar-item route="payroll-configs.index" icon="⚙️" label="Config Honor"
         :active="request()->routeIs('payroll-configs.*')" />
+    @endrole
 
 </nav>
 

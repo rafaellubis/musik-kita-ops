@@ -72,10 +72,13 @@
 
         {{-- ===== STATS ===== --}}
         @php
-            $totalAll  = $stats->sum('sum_total');
-            $totalPaid = $stats->get('PAID')?->sum_total ?? 0;
-            $totalCalc = $stats->get('CALCULATED')?->sum_total ?? 0;
+            $totalAll       = $stats->sum('sum_total');
+            $totalPaid      = $stats->get('PAID')?->sum_total ?? 0;
+            $totalCalc      = $stats->get('CALCULATED')?->sum_total ?? 0;
+            $cntPaid        = $stats->get('PAID')?->cnt ?? 0;
+            $cntBelumBayar  = ($stats->get('CALCULATED')?->cnt ?? 0) + ($stats->get('DRAFT')?->cnt ?? 0);
         @endphp
+        @if($isOwner)
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div class="bg-mk-card shadow-sm sm:rounded-lg p-4">
                 <div class="text-xs text-mk-dim">Total Honor Bulan Ini</div>
@@ -84,7 +87,7 @@
             <div class="bg-mk-card shadow-sm sm:rounded-lg p-4">
                 <div class="text-xs text-mk-dim">Sudah Dibayarkan</div>
                 <div class="text-xl font-bold mt-1 text-green-600">Rp {{ number_format($totalPaid, 0, ',', '.') }}</div>
-                <div class="text-xs text-mk-dim">{{ $stats->get('PAID')?->cnt ?? 0 }} slip</div>
+                <div class="text-xs text-mk-dim">{{ $cntPaid }} slip</div>
             </div>
             <div class="bg-mk-card shadow-sm sm:rounded-lg p-4">
                 <div class="text-xs text-mk-dim">Belum Dibayar (Terhitung)</div>
@@ -98,6 +101,20 @@
                 </div>
             </div>
         </div>
+        @else
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-mk-card shadow-sm sm:rounded-lg p-4">
+                <div class="text-xs text-mk-dim">Sudah Dibayarkan</div>
+                <div class="text-2xl font-bold mt-1 text-green-600">{{ $cntPaid }}</div>
+                <div class="text-xs text-mk-dim">guru</div>
+            </div>
+            <div class="bg-mk-card shadow-sm sm:rounded-lg p-4">
+                <div class="text-xs text-mk-dim">Belum Dibayar</div>
+                <div class="text-2xl font-bold mt-1 text-blue-600">{{ $cntBelumBayar }}</div>
+                <div class="text-xs text-mk-dim">guru</div>
+            </div>
+        </div>
+        @endif
 
         {{-- ===== KALKULASI HONOR (Owner) ===== --}}
         @if($isOwner)
@@ -136,17 +153,24 @@
                 </div>
             @else
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
+                    <table class="w-full text-sm table-fixed">
                         <thead class="bg-mk-surface">
                             <tr class="border-b text-left text-xs text-mk-dim uppercase">
-                                <th class="px-4 py-3">No. Slip</th>
-                                <th class="px-4 py-3">Guru</th>
-                                <th class="px-4 py-3 text-right">Honor Pokok</th>
-                                <th class="px-4 py-3 text-right">Transport</th>
-                                <th class="px-4 py-3 text-right">Lain-lain</th>
-                                <th class="px-4 py-3 text-right font-bold">Total</th>
-                                <th class="px-4 py-3 text-center">Status</th>
-                                <th class="px-4 py-3 text-right">Aksi</th>
+                                @if($isOwner)
+                                <th class="px-4 py-3 w-[20%]">No. Slip</th>
+                                <th class="px-4 py-3 w-[20%]">Guru</th>
+                                <th class="px-4 py-3 w-[13%] text-right">Honor Pokok</th>
+                                <th class="px-4 py-3 w-[12%] text-right">Transport</th>
+                                <th class="px-4 py-3 w-[12%] text-right">Lain-lain</th>
+                                <th class="px-4 py-3 w-[13%] text-right font-bold">Total</th>
+                                <th class="px-4 py-3 w-[6%] text-center">Status</th>
+                                <th class="px-4 py-3 w-[4%] text-right">Aksi</th>
+                                @else
+                                <th class="px-4 py-3 w-[28%]">No. Slip</th>
+                                <th class="px-4 py-3 w-[40%]">Guru</th>
+                                <th class="px-4 py-3 w-[18%] text-center">Status</th>
+                                <th class="px-4 py-3 w-[14%] text-right">Aksi</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -154,6 +178,7 @@
                                 <tr class="border-b hover:bg-mk-surface">
                                     <td class="px-4 py-3 font-mono text-xs text-mk-dim">{{ $slip->slip_number }}</td>
                                     <td class="px-4 py-3 font-medium">{{ $slip->teacher->name ?? '?' }}</td>
+                                    @if($isOwner)
                                     <td class="px-4 py-3 text-right">
                                         Rp {{ number_format($slip->base_honor, 0, ',', '.') }}
                                     </td>
@@ -170,6 +195,7 @@
                                     <td class="px-4 py-3 text-right font-bold">
                                         Rp {{ number_format($slip->total_honor, 0, ',', '.') }}
                                     </td>
+                                    @endif
                                     <td class="px-4 py-3 text-center">
                                         <span class="px-2 py-0.5 rounded text-xs border {{ $statusColors[$slip->status] }}">
                                             {{ $statusLabels[$slip->status] }}
@@ -193,6 +219,7 @@
                         <tfoot class="bg-mk-surface">
                             <tr>
                                 <td colspan="2" class="px-4 py-2 text-xs text-mk-dim">{{ $slips->total() }} slip</td>
+                                @if($isOwner)
                                 <td class="px-4 py-2 text-right text-sm font-medium">
                                     Rp {{ number_format($slips->sum('base_honor'), 0, ',', '.') }}
                                 </td>
@@ -206,6 +233,9 @@
                                     Rp {{ number_format($slips->sum('total_honor'), 0, ',', '.') }}
                                 </td>
                                 <td colspan="2"></td>
+                                @else
+                                <td colspan="2"></td>
+                                @endif
                             </tr>
                         </tfoot>
                     </table>

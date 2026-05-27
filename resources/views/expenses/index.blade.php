@@ -16,7 +16,11 @@
         </div>
     </x-slot>
 
-    @php $isOwner = auth()->user()?->hasRole('Owner'); @endphp
+    @php
+        $isOwner = auth()->user()?->hasRole('Owner');
+        // Admin tidak melihat ringkasan kas masuk tunai & saldo harian (hanya Owner/Auditor).
+        $isAdmin = auth()->user()?->hasRole('Admin');
+    @endphp
 
     <div class="py-6 px-4 lg:px-8 space-y-4">
 
@@ -86,7 +90,8 @@
         {{-- ===== PETTY CASH HARI INI ===== --}}
         <div class="bg-mk-card shadow-sm sm:rounded-lg p-5">
             <h3 class="text-sm font-semibold text-mk-muted mb-3">Petty Cash Hari Ini ({{ now()->format('d M Y') }})</h3>
-            <div class="grid grid-cols-3 gap-4 text-sm">
+            <div class="grid gap-4 text-sm {{ $isAdmin ? 'grid-cols-1 sm:max-w-md' : 'grid-cols-3' }}">
+                @if(! $isAdmin)
                 <div class="bg-green-50 rounded-lg p-3 border border-green-100">
                     <div class="text-xs text-mk-dim">Kas Masuk (Tunai)</div>
                     <div class="text-lg font-bold text-green-700 mt-1">
@@ -94,6 +99,7 @@
                     </div>
                     <div class="text-xs text-mk-dim">Pembayaran SPP tunai hari ini</div>
                 </div>
+                @endif
                 <div class="bg-red-50 rounded-lg p-3 border border-red-100">
                     <div class="text-xs text-mk-dim">Kas Keluar (Tunai)</div>
                     <div class="text-lg font-bold text-red-700 mt-1">
@@ -101,6 +107,7 @@
                     </div>
                     <div class="text-xs text-mk-dim">Pengeluaran CASH hari ini</div>
                 </div>
+                @if(! $isAdmin)
                 <div class="bg-blue-50 rounded-lg p-3 border border-blue-100">
                     <div class="text-xs text-mk-dim">Saldo Kas Hari Ini</div>
                     @php $saldoHariIni = $kasmasukHariIni - $kaskeluarHariIni; @endphp
@@ -109,16 +116,20 @@
                     </div>
                     <div class="text-xs text-mk-dim">Masuk - Keluar</div>
                 </div>
+                @endif
             </div>
-            <div class="mt-3 pt-3 border-t grid grid-cols-3 gap-4 text-sm">
+            <div class="mt-3 pt-3 border-t grid {{ $isAdmin ? 'grid-cols-1 sm:max-w-xs' : 'grid-cols-3' }} gap-4 text-sm">
+                @if(! $isAdmin)
                 <div>
                     <div class="text-xs text-mk-dim">Kas Masuk Bulan Ini</div>
                     <div class="font-semibold text-green-700">Rp {{ number_format($kasmasukBulan, 0, ',', '.') }}</div>
                 </div>
+                @endif
                 <div>
                     <div class="text-xs text-mk-dim">Total Pengeluaran CASH</div>
                     <div class="font-semibold text-red-700">Rp {{ number_format($kaskeluarBulan, 0, ',', '.') }}</div>
                 </div>
+                @if(! $isAdmin)
                 <div>
                     <div class="text-xs text-mk-dim">Saldo Kas Bulan Ini</div>
                     @php $saldoBulan = $kasmasukBulan - $kaskeluarBulan; @endphp
@@ -126,6 +137,7 @@
                         Rp {{ number_format($saldoBulan, 0, ',', '.') }}
                     </div>
                 </div>
+                @endif
             </div>
         </div>
 

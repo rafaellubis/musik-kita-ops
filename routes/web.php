@@ -28,8 +28,14 @@ use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\KalenderController;
 use Illuminate\Support\Facades\Route;
 
+/*
+untuk otomatis ke homepage
 Route::get('/', function () {
     return view('welcome');
+});
+*/
+Route::get('/', function () {
+    return redirect()->route('login');
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -192,6 +198,10 @@ Route::middleware('auth')->group(function () {
             [InvoiceController::class, 'generateBundle']
         )->name('invoices.generate-bundle');
 
+        // ===== M07: Pengeluaran — create/edit oleh Owner dan Admin =====
+        Route::resource('expenses', ExpenseController::class)
+            ->except(['index', 'show', 'destroy']);
+
     });
 
     /* ======================================================================
@@ -234,10 +244,6 @@ Route::middleware('auth')->group(function () {
             [PaymentController::class, 'void']
         )->name('payments.void');
 
-        // ===== M07: Pengeluaran — Owner bisa hapus, Admin bisa create/edit =====
-        // Hapus expense + CRUD kategori di group Owner-only di bawah.
-        Route::resource('expenses', ExpenseController::class)
-            ->except(['index', 'show', 'destroy']);
 
         // ===== M06: Honor Guru — aksi sensitif (Owner only) =====
         // Kalkulasi, edit komponen manual, dan tandai dibayar.

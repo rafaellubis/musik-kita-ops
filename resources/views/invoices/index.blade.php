@@ -43,7 +43,9 @@
                 <div class="p-3 rounded-lg {{ $statusColors[$st] }}">
                     <div class="text-xs uppercase font-semibold">{{ $st }}</div>
                     <div class="text-2xl font-bold">{{ $cnt }}</div>
-                    <div class="text-xs">Rp {{ number_format($sum, 0, ',', '.') }}</div>
+                    @if(auth()->user()?->hasRole('Owner'))
+                        <div class="text-xs">Rp {{ number_format($sum, 0, ',', '.') }}</div>
+                    @endif
                 </div>
             @endforeach
             <div class="p-3 rounded-lg bg-orange-100 text-orange-800">
@@ -157,6 +159,7 @@
                         @foreach(['UNPAID', 'PARTIAL', 'PAID', 'VOID'] as $st)
                             <option value="{{ $st }}" {{ request('status') == $st ? 'selected' : '' }}>{{ $st }}</option>
                         @endforeach
+                        <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
                     </select>
                     <select name="student_id" class="border-mk-border rounded text-sm">
                         <option value="">Semua Murid</option>

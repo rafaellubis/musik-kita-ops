@@ -29,7 +29,12 @@ class InvoiceController extends Controller
             ->forMonth($year, $month);
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            if ($request->status === 'overdue') {
+                $query->whereIn('status', ['UNPAID', 'PARTIAL'])
+                      ->whereDate('due_date', '<', now());
+            } else {
+                $query->where('status', $request->status);
+            }
         }
         if ($request->filled('student_id')) {
             $query->where('student_id', $request->student_id);
