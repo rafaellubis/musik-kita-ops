@@ -50,13 +50,13 @@ class ReportController extends Controller
             ->whereMonth('payment_date', $month)
             ->sum('amount');
 
-        // Breakdown cash vs transfer
-        $revenueCash     = Payment::whereNull('voided_at')
-            ->where('method', 'CASH')
+        // Breakdown per metode bayar (CASH, TRANSFER, QRIS, DEBIT)
+        $revenueByMethod = Payment::whereNull('voided_at')
             ->whereYear('payment_date', $year)
             ->whereMonth('payment_date', $month)
-            ->sum('amount');
-        $revenueTransfer = $totalRevenue - $revenueCash;
+            ->selectRaw('method, SUM(amount) as total')
+            ->groupBy('method')
+            ->pluck('total', 'method');
 
         // ===== HONOR GURU =====
         $honorSlips = HonorSlip::where('year', $year)
@@ -102,7 +102,7 @@ class ReportController extends Controller
 
         return view('reports.finance', compact(
             'year', 'month', 'monthName',
-            'revenueByType', 'totalRevenue', 'revenueCash', 'revenueTransfer',
+            'revenueByType', 'totalRevenue', 'revenueByMethod',
             'honorSlips', 'totalHonor', 'honorPaid',
             'expenseByCategory', 'totalPengeluaran',
             'labaBersih',

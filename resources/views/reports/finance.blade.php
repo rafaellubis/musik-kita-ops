@@ -99,11 +99,19 @@
             <div class="p-4 space-y-1 text-sm">
                 <div class="flex justify-between">
                     <span class="text-mk-muted">Cash</span>
-                    <span class="font-mono">Rp {{ number_format($revenueCash, 0, ',', '.') }}</span>
+                    <span class="font-mono">Rp {{ number_format($revenueByMethod['CASH'] ?? 0, 0, ',', '.') }}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-mk-muted">Transfer</span>
-                    <span class="font-mono">Rp {{ number_format($revenueTransfer, 0, ',', '.') }}</span>
+                    <span class="font-mono">Rp {{ number_format($revenueByMethod['TRANSFER'] ?? 0, 0, ',', '.') }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-mk-muted">QRIS</span>
+                    <span class="font-mono">Rp {{ number_format($revenueByMethod['QRIS'] ?? 0, 0, ',', '.') }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-mk-muted">Debit</span>
+                    <span class="font-mono">Rp {{ number_format($revenueByMethod['DEBIT'] ?? 0, 0, ',', '.') }}</span>
                 </div>
 
                 @if($revenueByType->count() > 0)

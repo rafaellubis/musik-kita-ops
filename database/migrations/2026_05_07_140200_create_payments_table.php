@@ -27,7 +27,9 @@ return new class extends Migration
                   ->restrictOnDelete();
 
             $table->integer('amount');
-            $table->enum('method', ['CASH', 'TRANSFER']);
+            // Empat metode valid (BR-5.19). Migrasi alter enum terpisah
+            // hanya berlaku di MySQL — SQLite pakai definisi ini langsung.
+            $table->enum('method', ['CASH', 'TRANSFER', 'QRIS', 'DEBIT']);
             $table->date('payment_date');
 
             // Path file upload bukti (storage/app/public/payments/...)
