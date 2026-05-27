@@ -5,18 +5,11 @@ namespace Tests\Feature;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class GuruModelRelationTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        Role::firstOrCreate(['name' => 'Guru', 'guard_name' => 'web']);
-    }
 
     public function test_teacher_dapat_terhubung_ke_user(): void
     {
@@ -42,6 +35,8 @@ class GuruModelRelationTest extends TestCase
 
     public function test_role_guru_ada(): void
     {
-        $this->assertDatabaseHas('roles', ['name' => 'Guru']);
+        // Test seeder secara eksplisit — setUp() tidak membuat role ini
+        $this->seed(\Database\Seeders\RoleSeeder::class);
+        $this->assertDatabaseHas('roles', ['name' => 'Guru', 'guard_name' => 'web']);
     }
 }

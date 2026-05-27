@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::table('teachers', function (Blueprint $table) {
             $table->foreignId('user_id')
                   ->nullable()
+                  ->unique()         // Satu user hanya bisa terhubung ke satu guru (NULL diperbolehkan ganda)
                   ->after('notes')
                   ->constrained('users')
                   ->nullOnDelete();
