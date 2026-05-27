@@ -196,8 +196,15 @@ class AttendanceService
 
         // DUO: honor per murid dari PayrollConfig H_DUO (bukan formula % harga paket)
         if ($package && $package->isDuo()) {
-            $honorPerMusid = (int) (PayrollConfig::where('scenario_code', 'H_DUO')
+            $honorPerMurid = (int) (PayrollConfig::where('scenario_code', 'H_DUO')
                 ->value('value_or_formula') ?? 40000);
+
+            // Trial DUO: sama dengan BR-1.4 — no-show dapat TRIAL_NS Rp 0
+            if ($isTrial) {
+                return $status === 'HANGUS'
+                    ? ['code' => 'TRIAL_NS', 'amount' => 0]
+                    : ['code' => 'H_TRIAL', 'amount' => $honorPerMurid];
+            }
 
             $code = match ($status) {
                 'HADIR', 'HADIR_TERLAMBAT' => 'H_DUO',
@@ -208,7 +215,7 @@ class AttendanceService
                 default                    => null,
             };
 
-            return ['code' => $code, 'amount' => $code ? $honorPerMusid : 0];
+            return ['code' => $code, 'amount' => $code ? $honorPerMurid : 0];
         }
 
         // Reguler/Hobby: honor = harga_paket * 50% / 4

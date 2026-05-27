@@ -113,4 +113,70 @@ class DuoClassHonorTest extends TestCase
         $this->assertSame('H_DUO', $result->honor_code);
         $this->assertSame(50000, $result->honor_amount);
     }
+
+    /** @test */
+    public function sesi_duo_trial_hangus_menghasilkan_TRIAL_NS_nol(): void
+    {
+        $teacher    = Teacher::factory()->create(['is_active' => true]);
+        $student    = Student::factory()->create(['status' => 'Trial']);
+        $room       = Room::factory()->create();
+        $enrollment = Enrollment::factory()->create([
+            'student_id' => $student->id,
+            'package_id' => $this->duoPackage->id,
+            'teacher_id' => $teacher->id,
+            'status'     => 'TRIAL',
+        ]);
+        $schedule = Schedule::factory()->create([
+            'enrollment_id' => $enrollment->id,
+            'room_id'       => $room->id,
+        ]);
+        $session = ClassSession::factory()->create([
+            'schedule_id'   => $schedule->id,
+            'enrollment_id' => $enrollment->id,
+            'student_id'    => $student->id,
+            'teacher_id'    => $teacher->id,
+            'room_id'       => $room->id,
+            'status'        => 'SCHEDULED',
+        ]);
+
+        $result = $this->service->recordAttendance($session, ['status' => 'HANGUS']);
+
+        $this->assertSame('TRIAL_NS', $result->honor_code);
+        $this->assertSame(0, $result->honor_amount);
+    }
+
+    /** @test */
+    public function sesi_duo_diganti_menghasilkan_H_PENG_dengan_rate_duo(): void
+    {
+        $teacher    = Teacher::factory()->create(['is_active' => true]);
+        $substitute = Teacher::factory()->create(['is_active' => true]);
+        $student    = Student::factory()->create(['status' => 'Aktif']);
+        $room       = Room::factory()->create();
+        $enrollment = Enrollment::factory()->create([
+            'student_id' => $student->id,
+            'package_id' => $this->duoPackage->id,
+            'teacher_id' => $teacher->id,
+            'status'     => 'ACTIVE',
+        ]);
+        $schedule = Schedule::factory()->create([
+            'enrollment_id' => $enrollment->id,
+            'room_id'       => $room->id,
+        ]);
+        $session = ClassSession::factory()->create([
+            'schedule_id'   => $schedule->id,
+            'enrollment_id' => $enrollment->id,
+            'student_id'    => $student->id,
+            'teacher_id'    => $teacher->id,
+            'room_id'       => $room->id,
+            'status'        => 'SCHEDULED',
+        ]);
+
+        $result = $this->service->recordAttendance($session, [
+            'status'                => 'DIGANTI',
+            'substitute_teacher_id' => $substitute->id,
+        ]);
+
+        $this->assertSame('H_PENG', $result->honor_code);
+        $this->assertSame(40000, $result->honor_amount);
+    }
 }
