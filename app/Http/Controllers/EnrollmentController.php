@@ -54,29 +54,73 @@ class EnrollmentController extends Controller
             ->addMinutes($package->duration_min)
             ->format('H:i');
 
-        // Cek konflik guru — 1 guru tidak boleh punya 2 jadwal di hari dan jam yang sama
+        $isDuo = $package->isDuo();
+
+        // Cek konflik guru — DUO boleh berbagi slot jika partner juga DUO (maks 2)
         $teacherConflicts = $this->conflictDetector->findTeacherConflicts(
             teacherId: $data['teacher_id'],
             dayOfWeek: $data['day_of_week'],
             startTime: $startTime,
             endTime:   $endTime,
         );
-        if ($teacherConflicts->isNotEmpty()) {
-            return back()
-                ->withErrors(['teacher_id' => 'Guru sudah punya jadwal di hari dan jam tersebut.'])
-                ->withInput();
+
+        if ($isDuo) {
+            $nonDuoConflicts = $teacherConflicts->filter(
+                fn ($s) => $s->enrollment?->package?->class_type !== 'DUO'
+            );
+            $duoConflicts = $teacherConflicts->filter(
+                fn ($s) => $s->enrollment?->package?->class_type === 'DUO'
+            );
+
+            if ($nonDuoConflicts->isNotEmpty()) {
+                return back()
+                    ->withErrors(['teacher_id' => 'Guru sudah punya jadwal non-DUO di hari dan jam tersebut.'])
+                    ->withInput();
+            }
+            if ($duoConflicts->count() >= 2) {
+                return back()
+                    ->withErrors(['teacher_id' => 'Slot DUO sudah penuh (maksimal 2 murid per slot).'])
+                    ->withInput();
+            }
+        } else {
+            if ($teacherConflicts->isNotEmpty()) {
+                return back()
+                    ->withErrors(['teacher_id' => 'Guru sudah punya jadwal di hari dan jam tersebut.'])
+                    ->withInput();
+            }
         }
 
-        // Cek konflik ruang — kapasitas ruang tidak boleh terlampaui
-        if ($this->conflictDetector->isRoomFull(
-            roomId:    $data['room_id'],
-            dayOfWeek: $data['day_of_week'],
-            startTime: $startTime,
-            endTime:   $endTime,
-        )) {
-            return back()
-                ->withErrors(['room_id' => 'Ruangan sudah penuh di hari dan jam tersebut.'])
-                ->withInput();
+        // Cek konflik ruang — DUO boleh berbagi ruang dengan partner DUO (maks 2)
+        if ($isDuo) {
+            $roomConflicts = $this->conflictDetector->findRoomConflicts(
+                roomId:    $data['room_id'],
+                dayOfWeek: $data['day_of_week'],
+                startTime: $startTime,
+                endTime:   $endTime,
+            );
+            $nonDuoRoom = $roomConflicts->filter(
+                fn ($s) => $s->enrollment?->package?->class_type !== 'DUO'
+            );
+            $duoRoom = $roomConflicts->filter(
+                fn ($s) => $s->enrollment?->package?->class_type === 'DUO'
+            );
+
+            if ($nonDuoRoom->isNotEmpty() || $duoRoom->count() >= 2) {
+                return back()
+                    ->withErrors(['room_id' => 'Ruangan tidak tersedia di slot ini untuk DUO.'])
+                    ->withInput();
+            }
+        } else {
+            if ($this->conflictDetector->isRoomFull(
+                roomId:    $data['room_id'],
+                dayOfWeek: $data['day_of_week'],
+                startTime: $startTime,
+                endTime:   $endTime,
+            )) {
+                return back()
+                    ->withErrors(['room_id' => 'Ruangan sudah penuh di hari dan jam tersebut.'])
+                    ->withInput();
+            }
         }
 
         DB::transaction(function () use ($student, $data, $startTime, $endTime) {
