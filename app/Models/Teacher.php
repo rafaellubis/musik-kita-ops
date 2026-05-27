@@ -2,6 +2,7 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -11,7 +12,7 @@ class Teacher extends Model
 
     protected $fillable = [
         'code', 'name', 'email', 'phone', 'bank_name', 'bank_account',
-        'bank_account_holder', 'joined_date', 'is_active', 'notes',
+        'bank_account_holder', 'joined_date', 'is_active', 'notes', 'user_id',
     ];
 
     protected $casts = [
@@ -38,5 +39,14 @@ class Teacher extends Model
     public function classSessions(): HasMany
     {
         return $this->hasMany(ClassSession::class);
+    }
+
+    /**
+     * Relasi ke akun User — dipakai saat guru login ke sistem.
+     * Nullable: guru lama / guru tanpa akun tidak punya user_id.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }
