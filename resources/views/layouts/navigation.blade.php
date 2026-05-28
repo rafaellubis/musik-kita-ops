@@ -79,6 +79,10 @@
     <x-sidebar-item route="payroll-configs.index" icon="⚙️" label="Config Honor"
         :active="request()->routeIs('payroll-configs.*')" />
     @endrole
+    @role('Owner')
+    <x-sidebar-item route="users.index" icon="👤" label="Pengguna"
+        :active="request()->routeIs('users.*')" />
+    @endrole
 
 </nav>
 
