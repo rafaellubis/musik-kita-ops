@@ -208,4 +208,13 @@ class InvoiceController extends Controller
 
         return view('invoices.print', compact('invoice'));
     }
+
+    /**
+     * Generate invoice Final Project Kids Class (KIDS_FP).
+     * Hanya untuk murid KIDS_CLASS yang belum punya invoice KIDS_FP.
+     */
+    public function generateKidsFp(Student $student): RedirectResponse
+    {
+        abort(501); // TODO: implementasi Task 3
+    }
 }

@@ -212,6 +212,11 @@ Route::middleware('auth')->group(function () {
             [InvoiceController::class, 'generateBundle']
         )->name('invoices.generate-bundle');
 
+        // M05: Generate invoice Final Project Kids Class (KIDS_FP)
+        Route::post('students/{student}/generate-kids-fp',
+            [InvoiceController::class, 'generateKidsFp']
+        )->name('invoices.generate-kids-fp');
+
         // ===== M07: Pengeluaran — create/edit oleh Owner dan Admin =====
         Route::resource('expenses', ExpenseController::class)
             ->except(['index', 'show', 'destroy']);
