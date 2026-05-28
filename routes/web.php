@@ -430,6 +430,7 @@ Route::middleware(['auth', 'verified', 'role:Guru'])
         Route::get('/honor',                         [GuruController::class, 'honor'])->name('honor');
         Route::get('/honor/{honorSlip}',             [GuruController::class, 'honorShow'])->name('honor.show');
         Route::patch('/sesi/{classSession}/absensi', [GuruController::class, 'updateAbsensi'])->name('absensi.update');
+        Route::get('/profil',                        [GuruController::class, 'profil'])->name('profil');
     });
 
 require __DIR__.'/auth.php';

@@ -155,6 +155,14 @@ class GuruController extends Controller
      * - Hanya sesi hari ini (tidak boleh update sesi lampau/mendatang)
      * - Status dibatasi ke HADIR/HADIR_TERLAMBAT (Admin set status lain via AbsensiController)
      */
+    public function profil()
+    {
+        $teacher = auth()->user()->teacher;
+        abort_if(!$teacher, 403);
+
+        return view('guru.profil');
+    }
+
     public function updateAbsensi(Request $request, ClassSession $classSession)
     {
         $teacher = auth()->user()->teacher;
