@@ -279,19 +279,6 @@ class StudentLifecycleService
             );
         }
 
-        // Guard: blok cuti jika ada SPP yang belum lunas (bulan apapun).
-        // Sengaja tidak filter per-bulan agar murid menyelesaikan semua tunggakan sebelum cuti.
-        $hasUnpaidSpp = $student->invoices()
-            ->whereIn('status', ['UNPAID', 'PARTIAL'])
-            ->whereHas('items', fn ($q) => $q->where('item_code', 'SPP'))
-            ->exists();
-
-        if ($hasUnpaidSpp) {
-            throw new InvalidArgumentException(
-                'Selesaikan tagihan SPP bulan berjalan sebelum mengajukan cuti.'
-            );
-        }
-
         $isExtension = $student->status === 'Cuti';
 
         // Validasi perpanjang cuti

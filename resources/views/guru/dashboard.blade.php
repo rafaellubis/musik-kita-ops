@@ -31,14 +31,14 @@
                             @csrf @method('PATCH')
                             <input type="hidden" name="status" value="HADIR">
                             <button type="submit"
-                                    class="w-full py-3 rounded-xl bg-green-500 hover:bg-green-600 active:scale-[0.98]
-                                           text-white font-semibold text-sm transition-all">
+                                    class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors appearance-none"
+                                    style="background-color:#22c55e;color:#ffffff;">
                                 ✓ Hadir
                             </button>
                         </form>
                         <button @click="showLate = !showLate"
-                                class="flex-1 py-3 rounded-xl border-2 border-yellow-400 text-yellow-600
-                                       font-semibold text-sm hover:bg-yellow-50 active:scale-[0.98] transition-all">
+                                class="flex-1 py-2.5 rounded-xl border-2 border-yellow-400 text-yellow-600
+                                       font-semibold text-sm hover:bg-yellow-50 transition-colors appearance-none">
                             ⏱ Terlambat
                         </button>
                     </div>
@@ -54,16 +54,26 @@
                                               focus:outline-none focus:ring-2 focus:ring-yellow-300">
                             </div>
                             <button type="submit"
-                                    class="px-5 py-2.5 rounded-xl bg-yellow-400 hover:bg-yellow-500
-                                           text-white font-semibold text-sm transition-colors">
+                                    class="px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors appearance-none"
+                                    style="background-color:#eab308;color:#ffffff;">
                                 Simpan
                             </button>
                         </form>
                     </div>
                 </div>
             @else
-                <div class="px-4 py-3 text-xs text-mk-muted italic">
-                    Absensi sudah tercatat.
+                {{-- Tampilkan status yang sudah tercatat agar guru tahu mengapa tombol tidak muncul --}}
+                <div class="px-4 py-3 flex items-center gap-2">
+                    @include('guru._badge-status', ['status' => $sesi->status])
+                    <span class="text-xs text-mk-muted italic">
+                        @if($sesi->status === 'LIBUR')
+                            Sesi libur — tidak perlu absensi.
+                        @elseif(in_array($sesi->status, ['HADIR', 'HADIR_TERLAMBAT']))
+                            Absensi sudah tercatat.
+                        @else
+                            Status: {{ $sesi->status }}
+                        @endif
+                    </span>
                 </div>
             @endif
 

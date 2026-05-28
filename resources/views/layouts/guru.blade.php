@@ -112,6 +112,19 @@
         Honor
     </a>
 
+    {{-- Tombol Keluar --}}
+    <form method="POST" action="{{ route('logout') }}" class="flex-1">
+        @csrf
+        <button type="submit"
+                class="w-full h-full flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium text-white/45 hover:text-red-400 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            Keluar
+        </button>
+    </form>
+
 </nav>
 
 </body>
