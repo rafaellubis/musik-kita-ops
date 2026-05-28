@@ -42,6 +42,8 @@ class UpdateUserRequest extends FormRequest
     {
         return [
             'name.required'          => 'Nama wajib diisi.',
+            'name.min'               => 'Nama minimal 2 karakter.',
+            'name.max'               => 'Nama maksimal 100 karakter.',
             'email.required'         => 'Email wajib diisi.',
             'email.unique'           => 'Email sudah digunakan oleh user lain.',
             'role.required'          => 'Role wajib dipilih.',
