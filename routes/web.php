@@ -170,6 +170,18 @@ Route::middleware('auth')->group(function () {
             [SessionController::class, 'destroy']
         )->name('sessions.destroy');
 
+        // ===== M04: Open Slot Board — sesi IZIN_PENDING tanpa replacement =====
+        // PENTING: route statis /absensi/open-slots harus SEBELUM wildcard /absensi/{classSession}
+        Route::get('/absensi/open-slots',
+            [AbsensiController::class, 'openSlotBoard']
+        )->name('absensi.open-slots');
+        Route::post('/absensi/open-slots/{session}/assign',
+            [AbsensiController::class, 'assignOpenSlot']
+        )->name('absensi.open-slots.assign');
+        Route::post('/absensi/open-slots/{session}/schedule',
+            [AbsensiController::class, 'scheduleReplacement']
+        )->name('absensi.open-slots.schedule');
+
         // ===== M04: Absensi Harian — update inline per sesi via AJAX =====
         Route::patch('/absensi/{classSession}',
             [AbsensiController::class, 'update']

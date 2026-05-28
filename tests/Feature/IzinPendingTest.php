@@ -129,4 +129,38 @@ class IzinPendingTest extends TestCase
         $this->assertNotNull($slip, 'Slip honor harus terbuat setelah kalkulasi.');
         $this->assertEquals(50000, $slip->base_honor);
     }
+
+    /** @test */
+    public function open_slot_board_hanya_tampilkan_izin_pending_tanpa_replacement(): void
+    {
+        $admin = \App\Models\User::factory()->create();
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $admin->assignRole('Admin');
+
+        $sessionPending  = $this->makeSession([
+            'status' => 'IZIN_PENDING', 'honor_code' => 'H_IZIN', 'honor_amount' => 0,
+        ]);
+        $sessionSudahAda = $this->makeSession([
+            'status' => 'IZIN_PENDING', 'honor_code' => 'H_IZIN', 'honor_amount' => 0,
+        ]);
+
+        // sessionSudahAda sudah punya replacement → tidak muncul di board
+        \App\Models\ClassSession::factory()->create([
+            'origin_session_id' => $sessionSudahAda->id,
+            'status'            => 'SCHEDULED',
+            'teacher_id'        => $sessionSudahAda->teacher_id,
+            'student_id'        => $sessionSudahAda->student_id,
+            'enrollment_id'     => $sessionSudahAda->enrollment_id,
+            'session_date'      => today()->addDays(3)->toDateString(),
+            'start_time'        => '09:00',
+            'end_time'          => '09:30',
+        ]);
+
+        $response = $this->actingAs($admin)->getJson(route('absensi.open-slots'));
+
+        $response->assertOk();
+        $ids = collect($response->json('slots'))->pluck('id');
+        $this->assertTrue($ids->contains($sessionPending->id));
+        $this->assertFalse($ids->contains($sessionSudahAda->id));
+    }
 }

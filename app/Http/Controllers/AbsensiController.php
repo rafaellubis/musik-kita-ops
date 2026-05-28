@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreSplitPartRequest;
 use App\Http\Requests\UpdateAbsensiRequest;
 use App\Models\ClassSession;
+use App\Models\Enrollment;
 use App\Models\Room;
 use App\Models\Teacher;
 use App\Services\AttendanceService;
@@ -254,6 +255,103 @@ class AbsensiController extends Controller
             'session_date'  => $newSession->session_date,
             'session_label' => $newSession->getSessionLabel(),
         ]);
+    }
+
+    /**
+     * Open Slot Board — daftar sesi IZIN_PENDING yang belum punya replacement.
+     * Menampilkan view HTML biasa, atau JSON jika request mengharapkan JSON (untuk test).
+     */
+    public function openSlotBoard(Request $request): View|JsonResponse
+    {
+        // Kumpulkan ID sesi asli yang sudah punya replacement reguler (bukan split)
+        $sessionIdsWithReplacement = ClassSession::whereNotNull('origin_session_id')
+            ->whereNull('split_part')
+            ->pluck('origin_session_id');
+
+        // Ambil semua sesi IZIN_PENDING yang belum punya replacement
+        $slots = ClassSession::with(['student', 'teacher', 'room', 'enrollment.package'])
+            ->where('status', ClassSession::STATUS_IZIN_PENDING)
+            ->whereNotIn('id', $sessionIdsWithReplacement)
+            ->orderBy('session_date')
+            ->get();
+
+        $teachers = Teacher::where('is_active', true)->orderBy('name')->get();
+        $rooms    = Room::where('is_active', true)->orderBy('code')->get();
+
+        // Kembalikan JSON jika dipanggil via AJAX/test, HTML jika akses browser biasa
+        if ($request->wantsJson()) {
+            return response()->json(['slots' => $slots]);
+        }
+
+        return view('absensi.open-slots', compact('slots', 'teachers', 'rooms'));
+    }
+
+    /**
+     * Isi slot dengan murid lain — buat sesi baru untuk enrollment murid pilihan.
+     *
+     * Sesi IZIN_PENDING asli tetap pending (hutang ke murid asli belum selesai).
+     * Aksi ini berguna saat slot kosong dan ada murid lain yang butuh sesi extra.
+     */
+    public function assignOpenSlot(Request $request, ClassSession $session): JsonResponse
+    {
+        $request->validate([
+            'enrollment_id' => ['required', 'exists:enrollments,id'],
+            'room_id'       => ['nullable', 'exists:rooms,id'],
+        ]);
+
+        abort_if($session->status !== ClassSession::STATUS_IZIN_PENDING, 422, 'Sesi bukan IZIN_PENDING.');
+
+        $enrollment = Enrollment::with('package', 'student')->findOrFail($request->enrollment_id);
+
+        try {
+            DB::transaction(function () use ($session, $enrollment, $request) {
+                $this->rescheduleService->createReplacement(
+                    $session,
+                    $session->session_date,
+                    Carbon::parse($session->start_time)->format('H:i'),
+                    $request->room_id ?? $session->room_id,
+                    $enrollment,
+                );
+            });
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Slot berhasil diisi.']);
+    }
+
+    /**
+     * Jadwalkan pengganti untuk murid asli — selesaikan IZIN_PENDING.
+     *
+     * Membuat sesi pengganti baru dan mengubah status sesi asli ke IZIN_RESCHEDULE
+     * (artinya pengganti sudah terjadwal, bukan lagi pending).
+     */
+    public function scheduleReplacement(Request $request, ClassSession $session): JsonResponse
+    {
+        $request->validate([
+            'replacement_date' => ['required', 'date', 'date_format:Y-m-d'],
+            'replacement_time' => ['required', 'date_format:H:i'],
+            'room_id'          => ['nullable', 'exists:rooms,id'],
+        ]);
+
+        abort_if($session->status !== ClassSession::STATUS_IZIN_PENDING, 422, 'Sesi bukan IZIN_PENDING.');
+
+        try {
+            DB::transaction(function () use ($request, $session) {
+                $this->rescheduleService->createReplacement(
+                    $session,
+                    $request->replacement_date,
+                    $request->replacement_time,
+                    $request->room_id,
+                );
+                // Tandai sesi asli sebagai IZIN_RESCHEDULE — pengganti sudah dijadwalkan
+                $session->update(['status' => ClassSession::STATUS_IZIN_RESCHEDULE]);
+            });
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Sesi pengganti berhasil dijadwalkan.']);
     }
 
     /**

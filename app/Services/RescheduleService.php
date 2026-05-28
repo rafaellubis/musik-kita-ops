@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ClassSession;
+use App\Models\Enrollment;
 use App\Models\PayrollConfig;
 use App\Models\Room;
 use Carbon\Carbon;
@@ -19,10 +20,13 @@ class RescheduleService
     /**
      * Buat sesi pengganti untuk sesi yang di-reschedule.
      *
-     * @param  ClassSession  $original   Sesi asli (status sudah IZIN_RESCHEDULE)
-     * @param  string        $date       Format Y-m-d (tanggal pengganti)
-     * @param  string        $startTime  Format H:i (jam mulai pengganti)
-     * @param  int|null      $roomId     ID ruangan pengganti, null = tanpa ruangan
+     * @param  ClassSession   $original            Sesi asli (status sudah IZIN_RESCHEDULE)
+     * @param  string         $date                Format Y-m-d (tanggal pengganti)
+     * @param  string         $startTime           Format H:i (jam mulai pengganti)
+     * @param  int|null       $roomId              ID ruangan pengganti, null = tanpa ruangan
+     * @param  Enrollment|null $overrideEnrollment Jika diisi, sesi dibuat untuk murid/enrollment ini
+     *                                             (dipakai Open Slot Board — "isi slot" dengan murid lain)
+     *                                             Guru tetap dari sesi asli.
      *
      * @throws InvalidArgumentException Jika ada konflik guru atau ruangan
      */
@@ -30,17 +34,31 @@ class RescheduleService
         ClassSession $original,
         string $date,
         string $startTime,
-        ?int $roomId
+        ?int $roomId,
+        ?Enrollment $overrideEnrollment = null,
     ): ClassSession {
         // Hitung jam selesai berdasarkan durasi paket enrollment
-        $original->loadMissing(['enrollment.package', 'teacher']);
+        // Jika ada override enrollment, gunakan paket dari enrollment override
+        if ($overrideEnrollment !== null) {
+            $overrideEnrollment->loadMissing('package');
+            $durationMin = $overrideEnrollment->package->duration_min;
+        } else {
+            $original->loadMissing(['enrollment.package', 'teacher']);
+            $durationMin = $original->enrollment->package->duration_min;
+        }
 
-        $durationMin = $original->enrollment->package->duration_min;
         $endTime = Carbon::createFromFormat('H:i', $startTime)
             ->addMinutes($durationMin)
             ->format('H:i:s');
 
         $startTimeFull = $startTime . ':00';
+
+        // Tentukan student_id dan enrollment_id yang dipakai di sesi pengganti
+        $enrollmentId = $overrideEnrollment?->id ?? $original->enrollment_id;
+        $studentId    = $overrideEnrollment?->student_id ?? $original->student_id;
+
+        // Guru selalu dari sesi asli (guru tidak berubah meski murid di-override)
+        $original->loadMissing('teacher');
 
         // Cek konflik guru — satu guru tidak boleh dua sesi overlap waktu
         $teacherConflict = ClassSession::where('teacher_id', $original->teacher_id)
@@ -83,8 +101,8 @@ class RescheduleService
         // Buat sesi pengganti (ad-hoc — schedule_id null)
         $replacement = ClassSession::create([
             'schedule_id'           => null,
-            'enrollment_id'         => $original->enrollment_id,
-            'student_id'            => $original->student_id,
+            'enrollment_id'         => $enrollmentId,
+            'student_id'            => $studentId,
             'teacher_id'            => $original->teacher_id,
             'substitute_teacher_id' => null,
             'session_date'          => $date,
@@ -100,9 +118,12 @@ class RescheduleService
         ]);
 
         // Update notes sesi asli dengan referensi tanggal pengganti
-        $original->update([
-            'notes' => "Sesi pengganti: {$date} " . substr($startTime, 0, 5),
-        ]);
+        // (hanya untuk pengganti murid asli — override tidak mengubah notes sesi asli)
+        if ($overrideEnrollment === null) {
+            $original->update([
+                'notes' => "Sesi pengganti: {$date} " . substr($startTime, 0, 5),
+            ]);
+        }
 
         return $replacement;
     }
