@@ -208,6 +208,7 @@
                         'bg-orange-100 text-orange-700 border-orange-200': status === 'HADIR_TERLAMBAT',
                         'bg-red-100 text-red-700 border-red-200':          status === 'HANGUS',
                         'bg-yellow-100 text-yellow-700 border-yellow-200': status === 'IZIN_RESCHEDULE',
+                        'bg-amber-100 text-amber-700 border-amber-200':    status === 'IZIN_PENDING',
                         'bg-blue-100 text-blue-700 border-blue-200':       status === 'IZIN_VIDEO',
                         'bg-purple-100 text-purple-700 border-purple-200': status === 'DIGANTI',
                         'bg-mk-surface text-mk-dim border-mk-border':       status === 'CANCELLED',
@@ -217,6 +218,7 @@
                         status === 'HADIR_TERLAMBAT'  ? '⏱ +' + lateMinutes + ' mnt' :
                         status === 'HANGUS'            ? '✕ HANGUS' :
                         status === 'IZIN_RESCHEDULE'   ? '📅 ' + (replacementLabel || 'IZIN') :
+                        status === 'IZIN_PENDING'      ? '⏳ PENDING' :
                         status === 'IZIN_VIDEO'        ? '📹 VIDEO' :
                         status === 'DIGANTI'           ? '↔ ' + substituteLabel :
                         status === 'CANCELLED'         ? '✕ BATAL' : status
@@ -249,11 +251,15 @@
                     class="border border-red-300 text-red-600 hover:bg-red-50 rounded px-3 py-1.5 text-xs">
                     HANGUS
                 </button>
-                {{-- IZIN → buka mini-modal. Jika sudah ada pengganti, pengganti lama di-cancel
-                     oleh RescheduleService sebelum yang baru dibuat. --}}
+                {{-- IZIN → buka mini-modal dengan tanggal pengganti. --}}
                 <button @click="showModal = 'reschedule'"
                     class="border border-yellow-300 text-yellow-700 hover:bg-yellow-50 rounded px-3 py-1.5 text-xs">
                     IZIN
+                </button>
+                {{-- IZIN PENDING → izin tanpa tanggal, jadwal menyusul (Open Slot Board). --}}
+                <button @click="save('IZIN_PENDING')"
+                    class="border border-amber-300 text-amber-700 hover:bg-amber-50 rounded px-3 py-1.5 text-xs">
+                    PENDING
                 </button>
                 <button @click="save('IZIN_VIDEO')"
                     class="border border-blue-300 text-blue-600 hover:bg-blue-50 rounded px-3 py-1.5 text-xs">
