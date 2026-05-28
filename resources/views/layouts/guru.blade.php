@@ -22,6 +22,13 @@
                  class="h-10 w-full object-contain object-left" style="max-width:160px">
         </div>
 
+        @php
+            $guruPendingCount = (auth()->check() && auth()->user()->teacher)
+                ? \App\Models\ClassSession::where('teacher_id', auth()->user()->teacher->id)
+                    ->where('status', \App\Models\ClassSession::STATUS_IZIN_PENDING)
+                    ->count()
+                : 0;
+        @endphp
         <nav class="flex-1 overflow-y-auto py-3 px-2 space-y-0.5 text-[13px]">
             <div class="px-2 pt-1 pb-1.5 text-[10px] font-semibold tracking-widest text-white/40 uppercase">Menu Guru</div>
 
@@ -30,7 +37,8 @@
             <x-sidebar-item route="guru.jadwal" icon="📅" label="Jadwal Saya"
                 :active="request()->routeIs('guru.jadwal')" />
             <x-sidebar-item route="guru.sesi-pending.index" icon="📋" label="Sesi Pending"
-                :active="request()->routeIs('guru.sesi-pending*')" />
+                :active="request()->routeIs('guru.sesi-pending*')"
+                :badge="$guruPendingCount ?: null" />
             <x-sidebar-item route="guru.honor" icon="💰" label="Slip Honor"
                 :active="request()->routeIs('guru.honor*')" />
         </nav>
@@ -105,12 +113,20 @@
     </a>
 
     <a href="{{ route('guru.sesi-pending.index') }}"
-       class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors
+       class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors relative
               {{ request()->routeIs('guru.sesi-pending*') ? 'text-mk-accent' : 'text-white/45 hover:text-white/75' }}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-        </svg>
+        <div class="relative">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            @if($guruPendingCount > 0)
+            <span class="absolute -top-1 -right-1.5 bg-red-500 text-white text-[9px] font-bold
+                         min-w-[14px] h-[14px] rounded-full flex items-center justify-center leading-none px-0.5">
+                {{ $guruPendingCount }}
+            </span>
+            @endif
+        </div>
         Sesi Pending
     </a>
 
