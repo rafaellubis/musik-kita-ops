@@ -1,0 +1,2789 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "Musik KITA Ops",
+    "languages": [
+      "PHP",
+      "JavaScript",
+      "CSS",
+      "SQL",
+      "Blade"
+    ],
+    "frameworks": [
+      "Laravel 11",
+      "Spatie Permission",
+      "Alpine.js",
+      "Tailwind CSS",
+      "Maatwebsite Excel",
+      "PHPUnit",
+      "Vite"
+    ],
+    "description": "Sistem administrasi dan keuangan internal untuk studio musik Musik KITA. Mengelola lifecycle murid (~300 aktif), penjadwalan sesi privat dan Kids Class, penagihan SPP, kalkulasi honor 18 guru, event Mini Concert & Ujian Grade, serta laporan P&L — berjalan penuh offline di LAN studio.",
+    "analyzedAt": "2026-05-27T00:00:00.000Z",
+    "gitCommitHash": "1486ff7daaf301b4af6c1484a3f8cdcddf67bda7"
+  },
+  "nodes": [
+    {
+      "id": "domain:manajemen-murid",
+      "type": "domain",
+      "name": "Manajemen Murid",
+      "summary": "Mengelola seluruh lifecycle murid dari pendaftaran awal (Calon) hingga lulus atau mundur, termasuk trial kelas, konversi ke aktif, cuti berbayar, dan multi-enrollment. State machine 6 status dikendalikan oleh StudentLifecycleService dengan audit trail lengkap.",
+      "tags": [
+        "student",
+        "lifecycle",
+        "enrollment",
+        "trial",
+        "cuti",
+        "state-machine"
+      ],
+      "complexity": "complex",
+      "domainMeta": {
+        "entities": [
+          "Student",
+          "Enrollment",
+          "StudentStatusHistory",
+          "Package",
+          "Teacher"
+        ],
+        "businessRules": [
+          "Trial gratis 1 sesi, durasi 30 menit untuk semua tipe paket",
+          "Honor guru trial: hadir = bayar penuh, no-show = Rp 0 (TRIAL_NS)",
+          "Registrasi Rp 250.000 wajib saat konversi ke aktif",
+          "Murid bisa punya lebih dari satu enrollment aktif bersamaan (multi-kelas)",
+          "Satu primary enrollment per murid untuk invoice SPP otomatis",
+          "Cuti berbayar Rp 100.000, maksimal 2 bulan total",
+          "Status murid: Calon → Trial → Aktif → Cuti → Mundur / Selesai"
+        ],
+        "crossDomainInteractions": [
+          "Trigger pembuatan jadwal mingguan (domain Penjadwalan) saat enrollment aktif dibuat",
+          "Trigger pembuatan invoice registrasi + SPP pertama (domain Keuangan Murid) saat konversi aktif",
+          "Enrollment sebagai acuan kalkulasi honor (domain Honor Guru)"
+        ]
+      }
+    },
+    {
+      "id": "domain:penjadwalan-sesi",
+      "type": "domain",
+      "name": "Penjadwalan & Sesi",
+      "summary": "Mengelola jadwal mingguan tetap per enrollment dan menghasilkan sesi kelas konkret bulanan. SessionGeneratorService berjalan otomatis tanggal 25 untuk bulan berikutnya, menangani hari libur nasional, sesi pengganti, dan batas 4 sesi per murid per bulan. AbsensiController mencatat 9 status kehadiran dan AttendanceService menghitung honor_code secara real-time.",
+      "tags": [
+        "schedule",
+        "session",
+        "absensi",
+        "reschedule",
+        "holiday",
+        "generator"
+      ],
+      "complexity": "complex",
+      "domainMeta": {
+        "entities": [
+          "Schedule",
+          "ClassSession",
+          "Holiday",
+          "Room",
+          "Enrollment"
+        ],
+        "businessRules": [
+          "Maksimal 4 sesi reguler per murid per bulan",
+          "Minggu ke-5 hanya dipakai sebagai replacement session (di luar counter 4)",
+          "Libur nasional dengan replacement_date: buat sesi LIBUR + sesi pengganti",
+          "Holiday tipe Internal (Konser KITA): honor guru Rp 0, tidak boleh punya replacement_date",
+          "Izin reschedule: info >= 5 jam + izin pertama di bulan tersebut",
+          "Conflict detection: 1 guru & 1 ruang tidak boleh 2 sesi bersamaan",
+          "Cut-off kalkulasi honor: H-2 sebelum akhir bulan"
+        ],
+        "crossDomainInteractions": [
+          "Membaca enrollment aktif dari domain Manajemen Murid",
+          "honor_code + honor_amount per sesi dipakai domain Honor Guru untuk slip bulanan",
+          "Hari libur Internal terkait Event (domain Event & Ujian)"
+        ]
+      }
+    },
+    {
+      "id": "domain:keuangan-murid",
+      "type": "domain",
+      "name": "Keuangan Murid",
+      "summary": "Mengelola seluruh siklus tagihan dan pembayaran murid: invoice SPP otomatis tanggal 1, denda keterlambatan Rp 5.000/hari mulai tanggal 11, cicilan 3 termin untuk Kids Class Bundle, diskon per item, serta pencatatan pembayaran CASH/TRANSFER/QRIS/DEBIT dengan nomor kuitansi KW/YYYY/MM/NNNN.",
+      "tags": [
+        "invoice",
+        "payment",
+        "spp",
+        "denda",
+        "diskon",
+        "kuitansi",
+        "billing"
+      ],
+      "complexity": "complex",
+      "domainMeta": {
+        "entities": [
+          "Invoice",
+          "InvoiceItem",
+          "Payment",
+          "InvoiceComponent"
+        ],
+        "businessRules": [
+          "Invoice SPP auto-generate tanggal 1 setiap bulan untuk primary enrollment",
+          "Denda Rp 5.000/hari mulai tanggal 11 (cron harian)",
+          "Cicilan 3 termin hanya untuk KIDS_CLASS_BUNDLE",
+          "Diskon wajib punya parent_item_id + discount_reason",
+          "Void payment hanya Owner",
+          "Metode bayar valid: CASH, TRANSFER, QRIS, DEBIT",
+          "Nomor invoice: INV/YYYY/MM/NNNN, reset per bulan"
+        ],
+        "crossDomainInteractions": [
+          "Mengambil data enrollment dari domain Manajemen Murid untuk generate SPP",
+          "Invoice pendaftaran event dibuat oleh domain Event & Ujian",
+          "Piutang menunggak ditampilkan di domain Laporan & Dashboard"
+        ]
+      }
+    },
+    {
+      "id": "domain:honor-guru",
+      "type": "domain",
+      "name": "Honor Guru",
+      "summary": "Menghitung dan mendistribusikan honor bulanan untuk 18 guru aktif berdasarkan 10 skenario honor_code (H_REG, H_LIBUR, H_KIDS, H_PENG, dll). HonorCalculationService mengagregasi sesi bulanan dengan cut-off H-2, menghasilkan slip honor SLIP/YYYY/MM/NNNN yang mencakup honor pokok, honor event, transport, dan lain-lain.",
+      "tags": [
+        "honor",
+        "slip-honor",
+        "payroll",
+        "guru",
+        "kalkulasi"
+      ],
+      "complexity": "complex",
+      "domainMeta": {
+        "entities": [
+          "HonorSlip",
+          "ClassSession",
+          "Teacher",
+          "PayrollConfig"
+        ],
+        "businessRules": [
+          "10 skenario honor_code: H_REG, H_TRIAL, TRIAL_NS, H_VIDEO, H_LIBUR, H_HANGUS, H_PENG, H_KIDS, H_UJIAN, H_IZIN",
+          "Formula dasar: harga_paket × 50% / 4",
+          "H_KIDS: murid_terdaftar × Rp 42.500 per sesi",
+          "Cut-off H-2 sebelum akhir bulan",
+          "Slip terkunci (PAID) tidak bisa diedit",
+          "Honor transport + lain-lain wajib input manual"
+        ],
+        "crossDomainInteractions": [
+          "Membaca honor_code + honor_amount dari sesi (domain Penjadwalan & Sesi)",
+          "Honor event pendamping disuntikkan oleh domain Event & Ujian via EventHonorService",
+          "Slip honor PAID mempengaruhi laporan pengeluaran (domain Laporan & Dashboard)"
+        ]
+      }
+    },
+    {
+      "id": "domain:event-ujian",
+      "type": "domain",
+      "name": "Event & Ujian",
+      "summary": "Mengelola siklus hidup Mini Concert dan Ujian Grade (2x/tahun): pembuatan event, pendaftaran peserta dengan invoice otomatis, pencatatan hasil ujian dengan kenaikan grade, dan penyelesaian event yang menyuntikkan honor pendamping ke slip honor guru.",
+      "tags": [
+        "event",
+        "mini-concert",
+        "ujian",
+        "grade",
+        "peserta",
+        "honor-pendamping"
+      ],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entities": [
+          "Event",
+          "EventParticipant",
+          "Enrollment",
+          "HonorSlip"
+        ],
+        "businessRules": [
+          "Tipe event: Mini Concert (Rp 295.000) atau Ujian + Tampil (Rp 395.000)",
+          "Grade naik otomatis jika hasil ujian Lulus",
+          "Honor pengawas ujian Rp 250.000 flat per ujian (H_UJIAN)",
+          "Guru pendamping per peserta Konser KITA: assign via dropdown, NULL = tidak mendampingi",
+          "Perubahan guru pendamping hanya saat event masih DRAFT",
+          "Honor pendamping (H_PENDAMPING) disuntikkan ke slip honor bulanan saat event COMPLETED"
+        ],
+        "crossDomainInteractions": [
+          "Invoice event dibuat melalui domain Keuangan Murid",
+          "Honor pendamping disuntikkan ke slip honor via domain Honor Guru",
+          "Event Internal (Konser KITA) menjadi hari libur is_honor_paid=false di domain Penjadwalan"
+        ]
+      }
+    },
+    {
+      "id": "domain:master-data",
+      "type": "domain",
+      "name": "Master Data & Konfigurasi",
+      "summary": "Fondasi seluruh sistem: mengelola instrumen musik, paket kelas, guru beserta matriks instrumen, ruangan studio, hari libur akademik, formula honor (PayrollConfig), dan katalog komponen tagihan. Sebagian besar data ini hanya bisa diubah oleh Owner.",
+      "tags": [
+        "master-data",
+        "paket",
+        "guru",
+        "ruangan",
+        "instrumen",
+        "holiday",
+        "payroll-config"
+      ],
+      "complexity": "simple",
+      "domainMeta": {
+        "entities": [
+          "Instrument",
+          "Package",
+          "Teacher",
+          "Room",
+          "Holiday",
+          "PayrollConfig",
+          "InvoiceComponent"
+        ],
+        "businessRules": [
+          "Hanya Owner yang boleh ubah harga paket",
+          "Hapus guru dengan sesi historis ditolak — gunakan nonaktifkan",
+          "Instrumen Saxophone otomatis nonaktif jika tidak ada guru aktif",
+          "supported_instruments room disimpan sebagai JSON array",
+          "Holiday Internal tidak boleh memiliki replacement_date",
+          "replacement_date wajib dalam bulan yang sama dengan tanggal libur"
+        ],
+        "crossDomainInteractions": [
+          "Paket + harga digunakan oleh domain Keuangan Murid untuk generate invoice",
+          "Guru + instrumen digunakan oleh domain Manajemen Murid saat enrollment",
+          "Hari libur digunakan oleh domain Penjadwalan untuk generator sesi",
+          "PayrollConfig digunakan oleh domain Honor Guru untuk formula kalkulasi"
+        ]
+      }
+    },
+    {
+      "id": "domain:laporan-dashboard",
+      "type": "domain",
+      "name": "Laporan & Dashboard",
+      "summary": "Menyajikan ringkasan operasional real-time dan laporan keuangan: dashboard P&L bulanan, piutang menunggak, slip honor pending, grafik penerimaan 6 bulan, laporan honor guru, pengeluaran kas studio per kategori, dan audit log. ReportController mendukung export Excel.",
+      "tags": [
+        "dashboard",
+        "laporan",
+        "p&l",
+        "audit-log",
+        "pengeluaran",
+        "export"
+      ],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entities": [
+          "AuditLog",
+          "Expense",
+          "ExpenseCategory",
+          "Invoice",
+          "HonorSlip"
+        ],
+        "businessRules": [
+          "Audit Log Viewer hanya dapat diakses Owner",
+          "Pengeluaran kas dicatat per kategori (Sewa, Listrik, Gaji Staff, dll)",
+          "Nomor pengeluaran: EXP/YYYY/MM/NNNN",
+          "Laporan P&L mencakup revenue SPP + pengeluaran + honor guru",
+          "Notifikasi tunggakan: cron harian CheckOverdueStudents, idempoten per bulan"
+        ],
+        "crossDomainInteractions": [
+          "Mengagregasi data invoice + pembayaran dari domain Keuangan Murid",
+          "Mengagregasi slip honor dari domain Honor Guru",
+          "Notifikasi auto-mundur warning berasal dari state machine domain Manajemen Murid"
+        ]
+      }
+    },
+    {
+      "id": "domain:autentikasi-akses",
+      "type": "domain",
+      "name": "Autentikasi & Kontrol Akses",
+      "summary": "Mengelola login, sesi pengguna, dan hak akses berbasis peran (RBAC) via Spatie Permission. Tiga peran: Owner (akses penuh), Admin (operasional harian), dan Auditor (read-only). Seluruh action sensitif diproteksi middleware role.",
+      "tags": [
+        "auth",
+        "rbac",
+        "owner",
+        "admin",
+        "auditor",
+        "spatie-permission"
+      ],
+      "complexity": "simple",
+      "domainMeta": {
+        "entities": [
+          "User",
+          "Role",
+          "Permission"
+        ],
+        "businessRules": [
+          "Tiga role: Owner, Admin, Auditor",
+          "Tidak ada role Guru di Fase 1",
+          "Void payment, hapus master data, ubah harga: Owner only",
+          "Operasional harian (absensi, invoice, pembayaran): Owner + Admin",
+          "Audit Log Viewer: Owner only"
+        ],
+        "crossDomainInteractions": [
+          "Middleware role dipakai seluruh domain untuk proteksi route sensitif",
+          "AuditLog mencatat user_id untuk setiap action di semua domain"
+        ]
+      }
+    },
+    {
+      "id": "flow:pendaftaran-murid-baru",
+      "type": "flow",
+      "name": "Pendaftaran Murid Baru",
+      "summary": "Proses mendaftarkan calon murid baru ke sistem: input data identitas, penentuan paket dan guru, lalu murid masuk status Calon siap dijadwalkan trial.",
+      "tags": [
+        "pendaftaran",
+        "calon",
+        "student-create"
+      ],
+      "complexity": "simple",
+      "domainMeta": {
+        "entryPoint": "POST /students",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:trial-class",
+      "type": "flow",
+      "name": "Trial Class",
+      "summary": "Alur murid Calon mengikuti sesi percobaan gratis: penjadwalan trial, pelaksanaan 30 menit, pencatatan kehadiran, dan kalkulasi honor guru (hadir = penuh, no-show = Rp 0).",
+      "tags": [
+        "trial",
+        "calon",
+        "honor-trial"
+      ],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "POST /students/{id}/mulai-trial",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:konversi-aktif",
+      "type": "flow",
+      "name": "Konversi Murid ke Aktif",
+      "summary": "Konversi murid dari Trial atau Calon (skip trial) menjadi Aktif: validasi alasan, pembuatan enrollment, generate invoice registrasi + SPP bulan pertama, dan pembuatan jadwal mingguan.",
+      "tags": [
+        "aktivasi",
+        "enrollment",
+        "invoice-reg",
+        "skip-trial"
+      ],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "POST /students/{id}/konversi-aktif",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:cuti-murid",
+      "type": "flow",
+      "name": "Cuti Murid",
+      "summary": "Proses pengajuan cuti murid aktif: input periode cuti, pembayaran Rp 100.000, enrollment berubah ke ON_LEAVE, sesi tidak di-generate selama cuti, dan kembali aktif setelah periode berakhir.",
+      "tags": [
+        "cuti",
+        "on-leave",
+        "enrollment-status"
+      ],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "POST /students/{id}/cuti",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:multi-enrollment",
+      "type": "flow",
+      "name": "Tambah Kelas (Multi-Enrollment)",
+      "summary": "Murid aktif mendaftarkan diri ke kelas tambahan (instrumen berbeda): conflict detection jadwal, pembuatan enrollment non-primary, dan opsional pengaturan primary enrollment.",
+      "tags": [
+        "multi-kelas",
+        "enrollment",
+        "conflict-detection"
+      ],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "POST /students/{id}/enrollments",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:import-data-murid",
+      "type": "flow",
+      "name": "Import Data Murid dari Excel",
+      "summary": "Import massal data murid dari file Excel (migrasi dari sistem lama): preview validasi, konfirmasi commit, normalisasi data, pembuatan enrollment + jadwal untuk ratusan murid sekaligus.",
+      "tags": [
+        "import",
+        "excel",
+        "migrasi",
+        "bulk"
+      ],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "POST /imports/students",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:generate-sesi-bulanan",
+      "type": "flow",
+      "name": "Generate Sesi Bulanan Otomatis",
+      "summary": "SessionGeneratorService membuat sesi konkret bulan berikutnya secara otomatis tanggal 25: iterasi jadwal mingguan aktif, cek libur nasional, terapkan batas 4 sesi, buat sesi pengganti untuk libur dengan replacement_date.",
+      "tags": [
+        "session-generator",
+        "cron",
+        "libur",
+        "replacement"
+      ],
+      "complexity": "complex",
+      "domainMeta": {
+        "entryPoint": "schedule:run (GenerateMonthlySessions, tanggal 25)",
+        "entryType": "cron"
+      }
+    },
+    {
+      "id": "flow:absensi-harian",
+      "type": "flow",
+      "name": "Absensi Harian",
+      "summary": "Admin mencatat kehadiran sesi harian: memilih status (HADIR/IZIN/HANGUS/dll), AttendanceService menghitung honor_code + honor_amount otomatis, dan update last_session_at murid.",
+      "tags": [
+        "absensi",
+        "kehadiran",
+        "honor-code",
+        "attendance"
+      ],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "GET /absensi (AJAX PUT /absensi/{session}/status)",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:reschedule-sesi",
+      "type": "flow",
+      "name": "Reschedule Sesi Izin",
+      "summary": "Alur sesi yang di-reschedule: validasi syarat (info >= 5 jam, izin pertama di bulan ini), Admin memilih tanggal/jam/ruang pengganti via mini-modal, RescheduleService membuat sesi pengganti dengan conflict detection.",
+      "tags": [
+        "reschedule",
+        "izin",
+        "conflict-detection",
+        "replacement-session"
+      ],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "POST /absensi/{session}/reschedule",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:manajemen-jadwal-mingguan",
+      "type": "flow",
+      "name": "Manajemen Jadwal Mingguan",
+      "summary": "Owner/Admin mengelola jadwal tetap per enrollment: tambah jadwal baru, ubah hari/jam/ruang dalam bulan yang sama, nonaktifkan jadwal, dengan conflict detection guru dan ruangan via ScheduleConflictDetector.",
+      "tags": [
+        "jadwal",
+        "schedule",
+        "conflict-detection",
+        "enrollment"
+      ],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "POST /enrollments/{id}/schedules",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:generate-spp-bulanan",
+      "type": "flow",
+      "name": "Generate SPP Bulanan",
+      "summary": "Invoice SPP dibuat otomatis tanggal 1 setiap bulan untuk semua enrollment aktif (primary): InvoiceService menentukan nominal dari harga paket, membuat invoice dengan nomor INV/YYYY/MM/NNNN, dan set due date tanggal 10.",
+      "tags": [
+        "spp",
+        "invoice",
+        "auto-generate",
+        "cron"
+      ],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "schedule:run (GenerateMonthlySpp, tanggal 1)",
+        "entryType": "cron"
+      }
+    },
+    {
+      "id": "flow:pencatatan-pembayaran",
+      "type": "flow",
+      "name": "Pencatatan Pembayaran",
+      "summary": "Admin mencatat pembayaran invoice murid: input nominal + metode (CASH/TRANSFER/QRIS/DEBIT), opsional upload bukti transfer, sistem generate nomor kuitansi KW/YYYY/MM/NNNN dan recalculate status invoice.",
+      "tags": [
+        "pembayaran",
+        "kuitansi",
+        "payment",
+        "receipt"
+      ],
+      "complexity": "simple",
+      "domainMeta": {
+        "entryPoint": "POST /invoices/{id}/payments",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:penerapan-denda",
+      "type": "flow",
+      "name": "Penerapan Denda Keterlambatan",
+      "summary": "Cron job harian ApplyLateFines menambah item DENDA Rp 5.000/hari ke invoice yang masih UNPAID/PARTIAL setelah tanggal 10 setiap bulan, dan recalculate total invoice.",
+      "tags": [
+        "denda",
+        "keterlambatan",
+        "cron",
+        "late-fine"
+      ],
+      "complexity": "simple",
+      "domainMeta": {
+        "entryPoint": "schedule:run (ApplyLateFines, harian mulai tanggal 11)",
+        "entryType": "cron"
+      }
+    },
+    {
+      "id": "flow:diskon-invoice",
+      "type": "flow",
+      "name": "Pemberian Diskon Invoice",
+      "summary": "Owner atau Admin menambahkan diskon (NOMINAL atau PERCENT) ke item invoice yang masih UNPAID/PARTIAL: pilih item yang didiskon, isi nominal/persentase, wajib isi alasan diskon, DiscountService validasi dan terapkan.",
+      "tags": [
+        "diskon",
+        "invoice-item",
+        "discount",
+        "billing"
+      ],
+      "complexity": "simple",
+      "domainMeta": {
+        "entryPoint": "POST /invoices/{id}/discounts",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:kalkulasi-honor-bulanan",
+      "type": "flow",
+      "name": "Kalkulasi Honor Bulanan",
+      "summary": "HonorCalculationService mengagregasi semua sesi dalam bulan berjalan (cut-off H-2), menerapkan 10 skenario honor_code, dan menghasilkan draft slip honor per guru dengan breakdown per murid.",
+      "tags": [
+        "honor",
+        "kalkulasi",
+        "slip-honor",
+        "cut-off"
+      ],
+      "complexity": "complex",
+      "domainMeta": {
+        "entryPoint": "POST /honors/calculate (atau Artisan CalculateHonor)",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:review-dan-bayar-slip-honor",
+      "type": "flow",
+      "name": "Review & Bayar Slip Honor",
+      "summary": "Owner mereview slip honor yang sudah dikalkulasi: tambah/edit komponen manual (honor event, transport, lain-lain + keterangan), cetak slip dengan info bank guru di header, dan tandai sebagai PAID untuk mengunci slip.",
+      "tags": [
+        "slip-honor",
+        "review",
+        "bayar",
+        "cetak",
+        "bank-guru"
+      ],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "GET /honors/{slip}/edit (PUT /honors/{slip}/pay)",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:manajemen-event",
+      "type": "flow",
+      "name": "Buat & Kelola Event",
+      "summary": "Owner/Admin membuat event Mini Concert atau Ujian Grade, mendaftarkan peserta dengan invoice otomatis, mengassign guru pendamping per peserta, dan menyelesaikan event yang memicu kenaikan grade dan injeksi honor pendamping.",
+      "tags": [
+        "event",
+        "mini-concert",
+        "ujian",
+        "peserta",
+        "grade"
+      ],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "POST /events",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:pencatatan-hasil-ujian",
+      "type": "flow",
+      "name": "Pencatatan Hasil Ujian",
+      "summary": "Setelah ujian berlangsung, Admin mencatat hasil per peserta (Lulus/Tidak Lulus), sistem otomatis menaikkan grade enrollment murid yang lulus, dan event ditandai COMPLETED.",
+      "tags": [
+        "ujian",
+        "hasil-ujian",
+        "grade-naik",
+        "event-completed"
+      ],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "POST /events/{id}/results",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:kelola-master-paket",
+      "type": "flow",
+      "name": "Kelola Master Paket Kelas",
+      "summary": "Owner mengelola katalog paket kursus: tambah/edit paket per instrumen dan tipe (REGULER/HOBBY/KIDS_CLASS), ubah harga bulanan, dan aktifkan/nonaktifkan paket termasuk otomatisasi paket Saxophone.",
+      "tags": [
+        "paket",
+        "harga",
+        "master-data",
+        "instrumen"
+      ],
+      "complexity": "simple",
+      "domainMeta": {
+        "entryPoint": "GET /packages (POST/PUT hanya Owner)",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:kelola-guru",
+      "type": "flow",
+      "name": "Kelola Data Guru",
+      "summary": "Owner/Admin mengelola data guru: tambah/edit data beserta matriks instrumen yang dikuasai, info bank untuk slip honor, dan deaktivasi guru secara aman via TeacherService yang memvalidasi tidak ada murid aktif.",
+      "tags": [
+        "guru",
+        "instrumen-guru",
+        "bank",
+        "deaktivasi"
+      ],
+      "complexity": "simple",
+      "domainMeta": {
+        "entryPoint": "GET /teachers (POST/PUT/DELETE Owner|Admin)",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:kelola-hari-libur",
+      "type": "flow",
+      "name": "Kelola Kalender Hari Libur",
+      "summary": "Owner mengatur kalender akademik hari libur: tambah libur Nasional/Cuti Bersama/Internal, isi replacement_date untuk sesi pengganti (Alpine.js auto-suggest minggu ke-5), dan atur is_honor_paid untuk event Internal.",
+      "tags": [
+        "holiday",
+        "kalender-akademik",
+        "replacement-date",
+        "is-honor-paid"
+      ],
+      "complexity": "simple",
+      "domainMeta": {
+        "entryPoint": "GET /holidays (POST/PUT Owner)",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:dashboard-operasional",
+      "type": "flow",
+      "name": "Dashboard Operasional",
+      "summary": "DashboardController mengagregasi data operasional harian: status murid, sesi hari ini, piutang menunggak, slip honor pending, dan grafik penerimaan 6 bulan untuk tampilan ringkasan Owner/Admin.",
+      "tags": [
+        "dashboard",
+        "p&l",
+        "piutang",
+        "monitoring"
+      ],
+      "complexity": "simple",
+      "domainMeta": {
+        "entryPoint": "GET /dashboard",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:laporan-keuangan",
+      "type": "flow",
+      "name": "Laporan Keuangan & Honor",
+      "summary": "ReportController menyajikan laporan P&L bulanan, rekapitulasi honor guru, dan ringkasan penerimaan SPP dengan opsi export Excel via Maatwebsite Excel.",
+      "tags": [
+        "laporan",
+        "p&l",
+        "honor-rekap",
+        "export-excel"
+      ],
+      "complexity": "moderate",
+      "domainMeta": {
+        "entryPoint": "GET /reports",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:pencatatan-pengeluaran-kas",
+      "type": "flow",
+      "name": "Pencatatan Pengeluaran Kas",
+      "summary": "Admin/Owner mencatat pengeluaran operasional studio per kategori (Sewa, Listrik, Gaji Staff, Peralatan, dll) dengan nomor EXP/YYYY/MM/NNNN, saldo kas harian, dan opsional foto struk.",
+      "tags": [
+        "pengeluaran",
+        "kas",
+        "kategori",
+        "expense"
+      ],
+      "complexity": "simple",
+      "domainMeta": {
+        "entryPoint": "POST /expenses",
+        "entryType": "http"
+      }
+    },
+    {
+      "id": "flow:notifikasi-tunggakan",
+      "type": "flow",
+      "name": "Notifikasi Murid Tunggakan",
+      "summary": "Artisan command CheckOverdueStudents berjalan harian: mengidentifikasi murid aktif dengan tunggakan SPP > 1 bulan dan mengirim notifikasi Laravel Database ke semua Admin dan Owner, dengan logika idempoten per bulan.",
+      "tags": [
+        "notifikasi",
+        "tunggakan",
+        "overdue",
+        "cron"
+      ],
+      "complexity": "simple",
+      "domainMeta": {
+        "entryPoint": "schedule:run (CheckOverdueStudents, harian)",
+        "entryType": "cron"
+      }
+    },
+    {
+      "id": "step:pendaftaran-murid-baru:input-data-identitas",
+      "type": "step",
+      "name": "Input Data Identitas Murid",
+      "summary": "Admin mengisi form pendaftaran: nama lengkap, tanggal lahir, gender, kontak, data orang tua, dan opsional email. StudentController memvalidasi via Form Request dengan pesan Bahasa Indonesia.",
+      "tags": [
+        "form",
+        "validasi",
+        "identitas"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/StudentController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:pendaftaran-murid-baru:buat-student-record",
+      "type": "step",
+      "name": "Buat Record Student",
+      "summary": "Sistem membuat record student baru dengan kode unik M-YYYY-NNNN, status awal 'Calon', dan menyimpan student_status_histories entry pertama.",
+      "tags": [
+        "student-code",
+        "status-calon",
+        "audit-trail"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Models/Student.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:pendaftaran-murid-baru:catat-audit-log",
+      "type": "step",
+      "name": "Catat Audit Log Pendaftaran",
+      "summary": "AuditLog::record() mencatat action CREATE untuk entitas Student dengan user_id operator yang mendaftarkan.",
+      "tags": [
+        "audit-log",
+        "create"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Models/AuditLog.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:trial-class:jadwalkan-trial",
+      "type": "step",
+      "name": "Jadwalkan Sesi Trial",
+      "summary": "Admin menentukan tanggal, jam, guru, dan ruang untuk sesi trial 30 menit. StudentLifecycleService memanggil mulaiTrial(), membuat enrollment sementara (status TRIAL, is_primary=false) dan satu ClassSession dengan status SCHEDULED.",
+      "tags": [
+        "trial",
+        "jadwal",
+        "enrollment-trial"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Services/StudentLifecycleService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:trial-class:pelaksanaan-sesi-trial",
+      "type": "step",
+      "name": "Pelaksanaan Sesi Trial",
+      "summary": "Murid menghadiri sesi trial 30 menit di studio bersama guru yang ditentukan.",
+      "tags": [
+        "trial",
+        "sesi"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/AbsensiController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:trial-class:catat-kehadiran-trial",
+      "type": "step",
+      "name": "Catat Kehadiran Trial",
+      "summary": "Admin mencatat status kehadiran trial via AbsensiController: HADIR memicu honor_code H_TRIAL (penuh), tidak hadir memicu TRIAL_NS (honor Rp 0).",
+      "tags": [
+        "absensi",
+        "honor-trial",
+        "trial-ns"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Services/AttendanceService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:trial-class:update-status-ke-trial",
+      "type": "step",
+      "name": "Update Status Murid ke Trial",
+      "summary": "Status murid diperbarui dari Calon ke Trial, student_status_histories diisi, dan sistem menunggu keputusan konversi aktif atau mundur dari murid.",
+      "tags": [
+        "status-trial",
+        "state-machine"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Services/StudentLifecycleService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:konversi-aktif:validasi-syarat-aktivasi",
+      "type": "step",
+      "name": "Validasi Syarat Aktivasi",
+      "summary": "Sistem memvalidasi: murid dalam status Trial atau Calon (skip trial), pilihan paket aktif, guru tersedia, dan untuk skip trial wajib ada reason (walk_in/migrasi/reaktivasi/lulus_kids).",
+      "tags": [
+        "validasi",
+        "skip-trial",
+        "reason"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Services/StudentLifecycleService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:konversi-aktif:buat-enrollment-aktif",
+      "type": "step",
+      "name": "Buat Enrollment Aktif",
+      "summary": "StudentLifecycleService membuat enrollment baru (status ACTIVE, is_primary=true) yang menghubungkan murid ke paket + guru yang dipilih, dengan effective_date hari ini.",
+      "tags": [
+        "enrollment",
+        "active",
+        "primary"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Services/StudentLifecycleService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:konversi-aktif:generate-invoice-aktivasi",
+      "type": "step",
+      "name": "Generate Invoice Registrasi + SPP",
+      "summary": "InvoiceService membuat dua invoice: REG Rp 250.000 (registrasi) dan SPP bulan berjalan sesuai harga paket. Untuk Kids Class Bundle, SPP dibuat dalam mode cicilan 3 termin.",
+      "tags": [
+        "invoice-reg",
+        "invoice-spp",
+        "cicilan"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Services/InvoiceService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:konversi-aktif:update-status-ke-aktif",
+      "type": "step",
+      "name": "Update Status Murid ke Aktif",
+      "summary": "Status murid berubah ke Aktif, active_since diisi, student_status_histories dicatat dengan metadata skipped_trial jika berlaku, dan primary_enrollment_id di-set.",
+      "tags": [
+        "status-aktif",
+        "active-since",
+        "primary-enrollment"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Services/StudentLifecycleService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:cuti-murid:ajukan-cuti",
+      "type": "step",
+      "name": "Pengajuan Cuti",
+      "summary": "Admin mengisi form cuti: periode cuti (from/until), maksimal 1 bulan, perpanjang 1x (total maks 2 bulan). InvoiceService membuat invoice CUTI Rp 100.000 yang wajib dibayar.",
+      "tags": [
+        "cuti",
+        "invoice-cuti",
+        "periode"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Services/StudentLifecycleService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:cuti-murid:set-enrollment-on-leave",
+      "type": "step",
+      "name": "Set Enrollment ke ON_LEAVE",
+      "summary": "Enrollment aktif murid berubah status ke ON_LEAVE, cuti_from dan cuti_until diisi di tabel students, dan sesi tidak akan di-generate selama periode cuti berlangsung.",
+      "tags": [
+        "on-leave",
+        "enrollment-status",
+        "sesi-pause"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Models/Enrollment.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:cuti-murid:kembali-aktif-dari-cuti",
+      "type": "step",
+      "name": "Kembali Aktif dari Cuti",
+      "summary": "Setelah periode cuti berakhir (otomatis atau manual), enrollment kembali ke ACTIVE, cuti_from/until di-clear, dan generator sesi mulai memasukkan murid ini kembali.",
+      "tags": [
+        "kembali-aktif",
+        "cuti-selesai"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Services/StudentLifecycleService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:multi-enrollment:pilih-paket-tambahan",
+      "type": "step",
+      "name": "Pilih Paket Kelas Tambahan",
+      "summary": "Admin membuka tab Kelas di halaman detail murid, memilih paket instrumen baru dan guru yang tersedia untuk enrollment tambahan.",
+      "tags": [
+        "paket",
+        "instrumen-baru",
+        "enrollment-tambahan"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/EnrollmentController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:multi-enrollment:conflict-detection-jadwal",
+      "type": "step",
+      "name": "Conflict Detection Jadwal",
+      "summary": "ScheduleConflictDetector memverifikasi bahwa tidak ada tumpang-tindih jadwal mingguan untuk guru maupun ruangan yang sama di hari dan jam yang dipilih.",
+      "tags": [
+        "conflict-detection",
+        "double-booking",
+        "jadwal"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Services/ScheduleConflictDetector.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:multi-enrollment:buat-enrollment-non-primary",
+      "type": "step",
+      "name": "Buat Enrollment Non-Primary",
+      "summary": "EnrollmentController membuat enrollment baru dengan is_primary=false. Invoice SPP untuk kelas tambahan ditagih manual jika diperlukan (tidak otomatis seperti primary enrollment).",
+      "tags": [
+        "enrollment",
+        "non-primary",
+        "is-primary-false"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/EnrollmentController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:import-data-murid:upload-file-excel",
+      "type": "step",
+      "name": "Upload File Excel",
+      "summary": "Admin mengupload file Excel dengan data murid. ImportController memvalidasi format file dan merender halaman preview sebelum commit.",
+      "tags": [
+        "upload",
+        "excel",
+        "preview"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/ImportController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:import-data-murid:preview-validasi",
+      "type": "step",
+      "name": "Preview & Validasi Data",
+      "summary": "StudentImportService memvalidasi setiap baris: deteksi duplikat, normalisasi status dan paket, cek referensi guru dan instrumen. Error ditampilkan per baris sebelum commit.",
+      "tags": [
+        "validasi",
+        "duplikat",
+        "normalisasi"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Services/StudentImportService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:import-data-murid:konfirmasi-dan-commit",
+      "type": "step",
+      "name": "Konfirmasi & Commit Import",
+      "summary": "Admin mengkonfirmasi import setelah preview bersih. StudentImportService membuat student, enrollment, dan jadwal dalam DB transaction. Dukungan upsert untuk data yang sudah ada.",
+      "tags": [
+        "commit",
+        "upsert",
+        "db-transaction"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Services/StudentImportService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:generate-sesi-bulanan:ambil-jadwal-aktif",
+      "type": "step",
+      "name": "Ambil Jadwal Mingguan Aktif",
+      "summary": "SessionGeneratorService mengambil semua schedules dengan is_active=true dan enrollment berstatus ACTIVE (bukan ON_LEAVE) untuk bulan yang akan di-generate.",
+      "tags": [
+        "schedule",
+        "active-enrollment"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Services/SessionGeneratorService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:generate-sesi-bulanan:iterasi-tanggal-bulan",
+      "type": "step",
+      "name": "Iterasi Tanggal dalam Bulan",
+      "summary": "Generator mengiterasi setiap tanggal dalam bulan target, mengidentifikasi tanggal yang cocok dengan day_of_week jadwal, dan mengecek apakah tanggal tersebut adalah hari libur nasional.",
+      "tags": [
+        "iterasi",
+        "day-of-week",
+        "libur-nasional"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Services/SessionGeneratorService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:generate-sesi-bulanan:terapkan-batas-4-sesi",
+      "type": "step",
+      "name": "Terapkan Batas 4 Sesi per Bulan",
+      "summary": "Counter sesi per enrollment memastikan maksimal 4 sesi reguler per bulan. Sesi di minggu ke-5 tidak dihitung kecuali sebagai replacement session yang berada di luar counter.",
+      "tags": [
+        "batas-sesi",
+        "counter",
+        "minggu-ke-5"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Services/SessionGeneratorService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:generate-sesi-bulanan:handle-hari-libur",
+      "type": "step",
+      "name": "Handle Hari Libur & Sesi Pengganti",
+      "summary": "Untuk tanggal yang bertepatan hari libur: buat sesi LIBUR dengan honor_code H_LIBUR (is_honor_paid=true) atau H_LIBUR Rp 0 (Internal). Jika libur punya replacement_date, buat sesi pengganti di tanggal tersebut dengan conflict detection.",
+      "tags": [
+        "libur",
+        "replacement-session",
+        "honor-libur",
+        "internal-holiday"
+      ],
+      "complexity": "complex",
+      "filePath": "app/Services/SessionGeneratorService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:generate-sesi-bulanan:simpan-sesi-ke-database",
+      "type": "step",
+      "name": "Simpan Sesi ke Database",
+      "summary": "ClassSession records dibuat untuk setiap sesi yang berhasil di-generate, dengan status SCHEDULED, honor_code + honor_amount yang sudah dihitung, dan idempotency check untuk mencegah duplikat.",
+      "tags": [
+        "class-session",
+        "scheduled",
+        "idempotency"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Services/SessionGeneratorService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:absensi-harian:tampilkan-daftar-sesi-hari-ini",
+      "type": "step",
+      "name": "Tampilkan Daftar Sesi Hari Ini",
+      "summary": "AbsensiController mengambil semua ClassSession untuk tanggal yang dipilih Admin, dikelompokkan per jam dan guru, ditampilkan dalam tabel absensi harian.",
+      "tags": [
+        "daftar-sesi",
+        "tanggal",
+        "tampilan"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/AbsensiController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:absensi-harian:input-status-kehadiran",
+      "type": "step",
+      "name": "Input Status Kehadiran (AJAX)",
+      "summary": "Admin memilih status kehadiran per sesi (HADIR/HADIR_TERLAMBAT/IZIN_RESCHEDULE/IZIN_VIDEO/HANGUS/LIBUR/DIGANTI/CANCELLED) via dropdown AJAX tanpa reload halaman.",
+      "tags": [
+        "status-kehadiran",
+        "ajax",
+        "9-status"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/AbsensiController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:absensi-harian:hitung-honor-otomatis",
+      "type": "step",
+      "name": "Hitung Honor Otomatis (AttendanceService)",
+      "summary": "AttendanceService menentukan honor_code dan honor_amount berdasarkan status yang dipilih: H_REG untuk HADIR, H_IZIN=Rp 0 untuk IZIN_RESCHEDULE, H_HANGUS=penuh untuk HANGUS, dll. Kids Class dikalkulasi berdasarkan jumlah murid terdaftar.",
+      "tags": [
+        "honor-code",
+        "honor-amount",
+        "attendance-service"
+      ],
+      "complexity": "complex",
+      "filePath": "app/Services/AttendanceService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:absensi-harian:update-last-session-at",
+      "type": "step",
+      "name": "Update Timestamp Sesi Terakhir",
+      "summary": "Setelah absensi dicatat, students.last_session_at diperbarui untuk murid yang hadir, digunakan sebagai indikator aktivitas murid di dashboard.",
+      "tags": [
+        "last-session-at",
+        "timestamp"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Services/AttendanceService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:reschedule-sesi:validasi-syarat-reschedule",
+      "type": "step",
+      "name": "Validasi Syarat Reschedule",
+      "summary": "Sistem memvalidasi: pemberitahuan >= 5 jam sebelum sesi, dan ini adalah izin pertama murid dalam bulan tersebut. Jika tidak memenuhi syarat: izin ke-2+ jadi H_VIDEO, info < 5 jam jadi H_HANGUS.",
+      "tags": [
+        "validasi",
+        "5-jam",
+        "izin-pertama"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Http/Controllers/AbsensiController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:reschedule-sesi:pilih-slot-pengganti",
+      "type": "step",
+      "name": "Pilih Slot Pengganti via Mini-Modal",
+      "summary": "Admin membuka mini-modal untuk memilih tanggal, jam, dan ruang sesi pengganti. Slot bisa dalam bulan berjalan atau rapel ke bulan depan.",
+      "tags": [
+        "mini-modal",
+        "slot-pengganti",
+        "tanggal-pengganti"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/AbsensiController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:reschedule-sesi:conflict-detection-dan-buat-sesi",
+      "type": "step",
+      "name": "Conflict Detection & Buat Sesi Pengganti",
+      "summary": "RescheduleService mengecek konflik guru dan ruang di slot yang dipilih (terhadap ClassSession konkret, bukan jadwal mingguan), lalu membuat ClassSession pengganti dengan origin_session_id yang benar dan set sesi asli ke IZIN_RESCHEDULE.",
+      "tags": [
+        "conflict-detection",
+        "replacement-session",
+        "origin-session-id"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Services/RescheduleService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:manajemen-jadwal-mingguan:tambah-jadwal",
+      "type": "step",
+      "name": "Tambah Jadwal Mingguan",
+      "summary": "Admin/Owner memilih hari, jam mulai-selesai, dan ruangan untuk jadwal tetap enrollment. ScheduleController memvalidasi format waktu dan memanggil ScheduleConflictDetector.",
+      "tags": [
+        "tambah-jadwal",
+        "hari",
+        "jam",
+        "ruangan"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/ScheduleController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:manajemen-jadwal-mingguan:cek-konflik-double-booking",
+      "type": "step",
+      "name": "Cek Konflik Double-Booking",
+      "summary": "ScheduleConflictDetector menjalankan time-overlap query untuk memastikan guru dan ruangan tidak memiliki jadwal mingguan lain yang bertabrakan di hari dan jam yang sama.",
+      "tags": [
+        "conflict-detection",
+        "double-booking",
+        "time-overlap"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Services/ScheduleConflictDetector.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:manajemen-jadwal-mingguan:simpan-jadwal",
+      "type": "step",
+      "name": "Simpan Jadwal Mingguan",
+      "summary": "Jadwal baru disimpan ke tabel schedules dengan is_active=true, siap dijadikan template oleh SessionGeneratorService untuk generate sesi bulan berikutnya.",
+      "tags": [
+        "simpan-jadwal",
+        "is-active"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/ScheduleController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:generate-spp-bulanan:trigger-cron-tanggal-1",
+      "type": "step",
+      "name": "Trigger Cron Tanggal 1",
+      "summary": "Laravel scheduler menjalankan command GenerateMonthlySpp setiap tanggal 1. Command mengambil semua enrollment ACTIVE dengan is_primary=true.",
+      "tags": [
+        "cron",
+        "tanggal-1",
+        "scheduler"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Console/Commands/GenerateMonthlySpp.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:generate-spp-bulanan:generate-invoice-per-enrollment",
+      "type": "step",
+      "name": "Generate Invoice SPP per Enrollment",
+      "summary": "InvoiceService membuat invoice SPP untuk setiap primary enrollment aktif: nominal dari harga paket, nomor INV/YYYY/MM/NNNN, due_date tanggal 10, status UNPAID.",
+      "tags": [
+        "invoice-spp",
+        "inv-number",
+        "due-date"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Services/InvoiceService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:generate-spp-bulanan:handle-kids-class-bundle",
+      "type": "step",
+      "name": "Handle Kids Class Bundle (Cicilan)",
+      "summary": "Untuk paket KIDS_CLASS_BUNDLE, InvoiceService membuat 3 invoice cicilan dengan installment_number 1/2/3 yang diikat installment_group_id (UUID), dengan nominal 1/3 dari harga bundle.",
+      "tags": [
+        "kids-bundle",
+        "cicilan",
+        "installment-group"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Services/InvoiceService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:pencatatan-pembayaran:input-detail-pembayaran",
+      "type": "step",
+      "name": "Input Detail Pembayaran",
+      "summary": "Admin mengisi form pembayaran: nominal, metode (CASH/TRANSFER/QRIS/DEBIT), tanggal bayar, dan opsional foto bukti transfer.",
+      "tags": [
+        "form-bayar",
+        "metode",
+        "bukti-transfer"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/PaymentController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:pencatatan-pembayaran:generate-nomor-kuitansi",
+      "type": "step",
+      "name": "Generate Nomor Kuitansi",
+      "summary": "PaymentService membuat record pembayaran dengan nomor kuitansi otomatis KW/YYYY/MM/NNNN dalam DB transaction, lalu recalculate status invoice (UNPAID/PARTIAL/PAID).",
+      "tags": [
+        "kuitansi",
+        "kw-number",
+        "recalc-status"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Services/PaymentService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:pencatatan-pembayaran:cetak-kuitansi",
+      "type": "step",
+      "name": "Cetak Kuitansi Pembayaran",
+      "summary": "PaymentController menyajikan halaman cetak kuitansi A4 untuk pembayaran yang sudah dicatat, menampilkan detail murid, rincian tagihan, dan cap lunas.",
+      "tags": [
+        "cetak",
+        "kuitansi",
+        "print"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/PaymentController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:penerapan-denda:cek-invoice-jatuh-tempo",
+      "type": "step",
+      "name": "Cek Invoice Jatuh Tempo",
+      "summary": "ApplyLateFines command mengidentifikasi semua invoice UNPAID/PARTIAL dengan bulan/tahun saat ini yang sudah melewati due_date (tanggal 10).",
+      "tags": [
+        "jatuh-tempo",
+        "overdue",
+        "due-date"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Console/Commands/ApplyLateFines.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:penerapan-denda:tambah-item-denda",
+      "type": "step",
+      "name": "Tambah Item DENDA ke Invoice",
+      "summary": "InvoiceService::applyLateFines() menambah InvoiceItem baru dengan item_code DENDA, amount Rp 5.000 × jumlah hari terlambat (>10), dan recalculate total invoice.",
+      "tags": [
+        "denda",
+        "invoice-item",
+        "rp-5000"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Services/InvoiceService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:diskon-invoice:pilih-item-yang-didiskon",
+      "type": "step",
+      "name": "Pilih Item yang Didiskon",
+      "summary": "Admin/Owner memilih item invoice yang akan didiskon. DiscountController memvalidasi invoice masih UNPAID atau PARTIAL, tidak boleh pada invoice PAID.",
+      "tags": [
+        "parent-item",
+        "invoice-unpaid"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/DiscountController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:diskon-invoice:isi-diskon-dan-alasan",
+      "type": "step",
+      "name": "Isi Nilai Diskon & Alasan",
+      "summary": "Admin/Owner mengisi tipe diskon (NOMINAL flat Rp atau PERCENT %), nilai diskon, dan alasan diskon yang wajib diisi (discount_reason). Validasi: diskon non-DENDA maks 90%, diskon DENDA maks 100%.",
+      "tags": [
+        "nominal",
+        "percent",
+        "discount-reason",
+        "validasi"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Services/DiscountService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:diskon-invoice:terapkan-dan-recalc",
+      "type": "step",
+      "name": "Terapkan Diskon & Recalculate Invoice",
+      "summary": "DiscountService membuat InvoiceItem DISKON dengan parent_item_id dalam DB transaction, menghitung amount diskon dari nilai/persentase parent item, dan recalculate total invoice.",
+      "tags": [
+        "diskon",
+        "parent-item-id",
+        "recalc"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Services/DiscountService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:kalkulasi-honor-bulanan:ambil-sesi-bulan-berjalan",
+      "type": "step",
+      "name": "Ambil Sesi dalam Periode Cut-off",
+      "summary": "HonorCalculationService mengambil semua ClassSession untuk bulan target dengan tanggal sampai H-2 sebelum akhir bulan, difilter per guru aktif.",
+      "tags": [
+        "cut-off",
+        "h-2",
+        "class-session"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Services/HonorCalculationService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:kalkulasi-honor-bulanan:terapkan-10-skenario",
+      "type": "step",
+      "name": "Terapkan 10 Skenario Honor Code",
+      "summary": "Untuk setiap sesi, HonorCalculationService menentukan honor berdasarkan honor_code: H_REG = harga×50%/4, H_KIDS = murid×Rp42.500, H_UJIAN = Rp250.000, TRIAL_NS = Rp0, H_IZIN = Rp0, dll.",
+      "tags": [
+        "honor-code",
+        "10-skenario",
+        "formula"
+      ],
+      "complexity": "complex",
+      "filePath": "app/Services/HonorCalculationService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:kalkulasi-honor-bulanan:generate-slip-honor-draft",
+      "type": "step",
+      "name": "Generate Slip Honor Draft",
+      "summary": "Untuk setiap guru, sistem membuat atau memperbarui record HonorSlip dengan status DRAFT/CALCULATED: base_honor (dari sesi), slip_number SLIP/YYYY/MM/NNNN, dan breakdown per murid.",
+      "tags": [
+        "slip-draft",
+        "slip-number",
+        "base-honor"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Services/HonorCalculationService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:review-dan-bayar-slip-honor:edit-komponen-manual",
+      "type": "step",
+      "name": "Edit Komponen Honor Manual",
+      "summary": "Owner membuka form edit slip honor untuk menambah/mengubah honor event (dari kegiatan event), honor transport, dan honor lain-lain dengan keterangan wajib isi. HonorController recalcTotal().",
+      "tags": [
+        "honor-event",
+        "transport",
+        "lain-lain",
+        "manual"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/HonorController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:review-dan-bayar-slip-honor:cetak-slip-honor",
+      "type": "step",
+      "name": "Cetak Slip Honor",
+      "summary": "HonorController menyajikan halaman cetak slip honor yang menampilkan header dengan info bank guru (bank_name, bank_account, bank_account_holder), rincian sesi per murid, dan total honor.",
+      "tags": [
+        "cetak-slip",
+        "info-bank",
+        "rincian-sesi"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/HonorController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:review-dan-bayar-slip-honor:tandai-dibayar",
+      "type": "step",
+      "name": "Tandai Slip Honor Dibayar",
+      "summary": "Owner menandai slip sebagai PAID: status berubah ke PAID, paid_at dan paid_by diisi, dan slip terkunci dari perubahan lebih lanjut (isLocked() = true).",
+      "tags": [
+        "paid",
+        "terkunci",
+        "is-locked"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/HonorController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:manajemen-event:buat-event",
+      "type": "step",
+      "name": "Buat Event Baru",
+      "summary": "Owner/Admin membuat event baru: isi nama, tanggal, tipe (Mini Concert / Ujian Grade), dan status awal DRAFT. EventController membuat Event record.",
+      "tags": [
+        "event-create",
+        "draft",
+        "event-type"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/EventController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:manajemen-event:daftarkan-peserta",
+      "type": "step",
+      "name": "Daftarkan Peserta Event",
+      "summary": "Admin memilih murid aktif untuk didaftarkan ke event: tentukan tipe partisipasi (UJIAN_TAMPIL Rp395.000 atau TAMPIL_SAJA Rp295.000), InvoiceService otomatis membuat invoice tagihan event.",
+      "tags": [
+        "peserta",
+        "partisipasi",
+        "invoice-event"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Http/Controllers/EventController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:manajemen-event:assign-guru-pendamping",
+      "type": "step",
+      "name": "Assign Guru Pendamping",
+      "summary": "Owner/Admin mengassign guru pendamping (accompanying_teacher_id) per peserta Konser KITA via dropdown. Hanya bisa diubah selama event masih DRAFT. NULL berarti guru tidak mendampingi.",
+      "tags": [
+        "guru-pendamping",
+        "accompanying-teacher",
+        "draft"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/EventController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:manajemen-event:selesaikan-event",
+      "type": "step",
+      "name": "Selesaikan Event & Inject Honor",
+      "summary": "Owner menandai event COMPLETED. EventController memanggil EventHonorService yang menyuntikkan honor pendamping H_PENDAMPING ke slip honor bulanan setiap guru pendamping yang terdaftar.",
+      "tags": [
+        "event-completed",
+        "event-honor-service",
+        "honor-pendamping"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Services/EventHonorService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:pencatatan-hasil-ujian:input-hasil-per-peserta",
+      "type": "step",
+      "name": "Input Hasil Ujian per Peserta",
+      "summary": "Admin mengisi hasil ujian (Lulus/Tidak Lulus) beserta catatan untuk setiap peserta yang terdaftar tipe UJIAN_TAMPIL.",
+      "tags": [
+        "hasil-ujian",
+        "lulus",
+        "catatan"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/EventController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:pencatatan-hasil-ujian:naik-grade-otomatis",
+      "type": "step",
+      "name": "Kenaikan Grade Otomatis",
+      "summary": "Untuk peserta yang Lulus, sistem mengupdate grade enrollment dari grade_before ke grade_after secara otomatis (mis. Basic → Level 1). grade_before dan grade_after dicatat di event_participants.",
+      "tags": [
+        "grade-naik",
+        "grade-before",
+        "grade-after",
+        "lulus"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Http/Controllers/EventController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:kelola-master-paket:crud-paket",
+      "type": "step",
+      "name": "CRUD Paket Kelas",
+      "summary": "Owner membuat/mengedit paket: pilih instrumen, tipe class (REGULER/HOBBY/KIDS_CLASS), grade (untuk Reguler), durasi (30/45 menit), dan harga per bulan. Admin hanya bisa melihat.",
+      "tags": [
+        "paket-crud",
+        "harga",
+        "owner-only"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/PackageController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:kelola-master-paket:toggle-aktif-paket",
+      "type": "step",
+      "name": "Aktifkan/Nonaktifkan Paket",
+      "summary": "Owner mengubah is_active paket. Paket Saxophone otomatis dinonaktifkan jika tidak ada guru Saxophone aktif. Paket nonaktif tidak muncul di dropdown enrollment baru.",
+      "tags": [
+        "toggle-aktif",
+        "saxophone",
+        "auto-disable"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/PackageController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:kelola-guru:crud-data-guru",
+      "type": "step",
+      "name": "CRUD Data Guru",
+      "summary": "Owner/Admin membuat dan mengedit data guru: nama, kode, kontak, data bank (bank_name, bank_account, bank_account_holder), dan tanggal bergabung.",
+      "tags": [
+        "guru-crud",
+        "data-bank"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/TeacherController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:kelola-guru:set-matriks-instrumen",
+      "type": "step",
+      "name": "Set Matriks Instrumen Guru",
+      "summary": "Admin/Owner mengatur instrumen yang dikuasai guru via checkbox matriks, disimpan ke tabel pivot teacher_instruments. Digunakan untuk filter guru yang tersedia saat enrollment.",
+      "tags": [
+        "instrumen-guru",
+        "pivot",
+        "many-to-many"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/TeacherController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:kelola-guru:deaktivasi-guru",
+      "type": "step",
+      "name": "Deaktivasi Guru",
+      "summary": "TeacherService::deactivate() memvalidasi tidak ada murid aktif yang di-handle guru ini, mengupdate sesi terjadwal ke depan menjadi CANCELLED, lalu set is_active=false. Guru dengan historis tidak bisa dihapus.",
+      "tags": [
+        "deaktivasi",
+        "is-active-false",
+        "teacher-service"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Services/TeacherService.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:kelola-hari-libur:tambah-hari-libur",
+      "type": "step",
+      "name": "Tambah Hari Libur",
+      "summary": "Owner mengisi form hari libur: tanggal, nama, tipe (Nasional/Cuti Bersama/Internal). Untuk Internal, is_honor_paid otomatis false dan field replacement_date dinonaktifkan.",
+      "tags": [
+        "tambah-libur",
+        "tipe",
+        "internal",
+        "is-honor-paid"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/HolidayController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:kelola-hari-libur:set-replacement-date",
+      "type": "step",
+      "name": "Set Tanggal Pengganti (replacement_date)",
+      "summary": "Untuk libur Nasional/Cuti Bersama, Owner opsional mengisi replacement_date. Alpine.js auto-suggest tanggal minggu ke-5 di bulan yang sama. Validasi: replacement_date harus dalam bulan yang sama dan tidak konflik dengan libur lain.",
+      "tags": [
+        "replacement-date",
+        "minggu-ke-5",
+        "alpine-js",
+        "validasi"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/HolidayController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:dashboard-operasional:agregat-data-keuangan",
+      "type": "step",
+      "name": "Agregat Data Keuangan Bulanan",
+      "summary": "DashboardController menghitung total penerimaan SPP bulan ini, total pengeluaran, dan grafik penerimaan 6 bulan terakhir dari tabel invoices + payments + expenses.",
+      "tags": [
+        "agregasi",
+        "p&l",
+        "grafik-6-bulan"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Http/Controllers/DashboardController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:dashboard-operasional:tampilkan-peringatan-aktif",
+      "type": "step",
+      "name": "Tampilkan Peringatan Aktif",
+      "summary": "Dashboard menampilkan: daftar piutang menunggak > 1 bulan, slip honor yang belum dibayar, dan sesi hari ini — sebagai item tindakan prioritas untuk Admin/Owner.",
+      "tags": [
+        "piutang",
+        "slip-pending",
+        "sesi-hari-ini"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/DashboardController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:laporan-keuangan:tampilkan-laporan-pl",
+      "type": "step",
+      "name": "Tampilkan Laporan P&L Bulanan",
+      "summary": "ReportController mengagregasi revenue (SPP + event) dan pengeluaran (kas + honor guru) per bulan yang dipilih, disajikan dalam format P&L dengan breakdown per kategori.",
+      "tags": [
+        "p&l",
+        "revenue",
+        "pengeluaran",
+        "laporan"
+      ],
+      "complexity": "moderate",
+      "filePath": "app/Http/Controllers/ReportController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:laporan-keuangan:export-excel",
+      "type": "step",
+      "name": "Export Laporan ke Excel",
+      "summary": "ReportController menggunakan Maatwebsite Excel untuk men-download laporan (honor guru, penerimaan, P&L) dalam format .xlsx.",
+      "tags": [
+        "export",
+        "excel",
+        "maatwebsite",
+        "download"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/ReportController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:pencatatan-pengeluaran-kas:input-pengeluaran",
+      "type": "step",
+      "name": "Input Pengeluaran Studio",
+      "summary": "Admin/Owner mengisi form pengeluaran: kategori (Sewa/Listrik/Gaji Staff/Peralatan/dll), nominal, tanggal, metode (CASH/TRANSFER), keterangan, dan opsional foto struk. Nomor EXP/YYYY/MM/NNNN di-generate otomatis.",
+      "tags": [
+        "pengeluaran",
+        "kategori",
+        "exp-number"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/ExpenseController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:pencatatan-pengeluaran-kas:ringkasan-saldo-kas",
+      "type": "step",
+      "name": "Ringkasan Saldo Kas Harian",
+      "summary": "ExpenseController menyajikan saldo kas berjalan: total pemasukan (pembayaran murid) dikurangi total pengeluaran, per hari dan per bulan, untuk monitoring arus kas harian.",
+      "tags": [
+        "saldo-kas",
+        "arus-kas",
+        "harian"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Http/Controllers/ExpenseController.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:notifikasi-tunggakan:cek-murid-tunggak",
+      "type": "step",
+      "name": "Identifikasi Murid Tunggak",
+      "summary": "CheckOverdueStudents mengambil semua murid Aktif yang memiliki invoice UNPAID/PARTIAL lebih dari 1 bulan lalu, tidak termasuk yang sudah ada notifikasi di bulan ini.",
+      "tags": [
+        "tunggak",
+        "overdue",
+        "idempoten"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Console/Commands/CheckOverdueStudents.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "step:notifikasi-tunggakan:kirim-notifikasi-database",
+      "type": "step",
+      "name": "Kirim Notifikasi Database ke Admin/Owner",
+      "summary": "Untuk setiap murid tunggak, sistem mengirim Laravel Database Notification ke semua user berperan Admin atau Owner, dengan logika idempoten untuk mencegah notifikasi duplikat dalam satu bulan.",
+      "tags": [
+        "notifikasi",
+        "laravel-notification",
+        "admin",
+        "owner"
+      ],
+      "complexity": "simple",
+      "filePath": "app/Console/Commands/CheckOverdueStudents.php",
+      "lineRange": [
+        0,
+        0
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "domain:manajemen-murid",
+      "target": "flow:pendaftaran-murid-baru",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:manajemen-murid",
+      "target": "flow:trial-class",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:manajemen-murid",
+      "target": "flow:konversi-aktif",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:manajemen-murid",
+      "target": "flow:cuti-murid",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:manajemen-murid",
+      "target": "flow:multi-enrollment",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:manajemen-murid",
+      "target": "flow:import-data-murid",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:penjadwalan-sesi",
+      "target": "flow:generate-sesi-bulanan",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:penjadwalan-sesi",
+      "target": "flow:absensi-harian",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:penjadwalan-sesi",
+      "target": "flow:reschedule-sesi",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:penjadwalan-sesi",
+      "target": "flow:manajemen-jadwal-mingguan",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:keuangan-murid",
+      "target": "flow:generate-spp-bulanan",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:keuangan-murid",
+      "target": "flow:pencatatan-pembayaran",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:keuangan-murid",
+      "target": "flow:penerapan-denda",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:keuangan-murid",
+      "target": "flow:diskon-invoice",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:honor-guru",
+      "target": "flow:kalkulasi-honor-bulanan",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:honor-guru",
+      "target": "flow:review-dan-bayar-slip-honor",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:event-ujian",
+      "target": "flow:manajemen-event",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:event-ujian",
+      "target": "flow:pencatatan-hasil-ujian",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:master-data",
+      "target": "flow:kelola-master-paket",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:master-data",
+      "target": "flow:kelola-guru",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:master-data",
+      "target": "flow:kelola-hari-libur",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:laporan-dashboard",
+      "target": "flow:dashboard-operasional",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:laporan-dashboard",
+      "target": "flow:laporan-keuangan",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:laporan-dashboard",
+      "target": "flow:pencatatan-pengeluaran-kas",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "domain:laporan-dashboard",
+      "target": "flow:notifikasi-tunggakan",
+      "type": "contains_flow",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "flow:pendaftaran-murid-baru",
+      "target": "step:pendaftaran-murid-baru:input-data-identitas",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:pendaftaran-murid-baru",
+      "target": "step:pendaftaran-murid-baru:buat-student-record",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "flow:pendaftaran-murid-baru",
+      "target": "step:pendaftaran-murid-baru:catat-audit-log",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "flow:trial-class",
+      "target": "step:trial-class:jadwalkan-trial",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:trial-class",
+      "target": "step:trial-class:pelaksanaan-sesi-trial",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:trial-class",
+      "target": "step:trial-class:catat-kehadiran-trial",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "flow:trial-class",
+      "target": "step:trial-class:update-status-ke-trial",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "flow:konversi-aktif",
+      "target": "step:konversi-aktif:validasi-syarat-aktivasi",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:konversi-aktif",
+      "target": "step:konversi-aktif:buat-enrollment-aktif",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:konversi-aktif",
+      "target": "step:konversi-aktif:generate-invoice-aktivasi",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "flow:konversi-aktif",
+      "target": "step:konversi-aktif:update-status-ke-aktif",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "flow:cuti-murid",
+      "target": "step:cuti-murid:ajukan-cuti",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:cuti-murid",
+      "target": "step:cuti-murid:set-enrollment-on-leave",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "flow:cuti-murid",
+      "target": "step:cuti-murid:kembali-aktif-dari-cuti",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "flow:multi-enrollment",
+      "target": "step:multi-enrollment:pilih-paket-tambahan",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:multi-enrollment",
+      "target": "step:multi-enrollment:conflict-detection-jadwal",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "flow:multi-enrollment",
+      "target": "step:multi-enrollment:buat-enrollment-non-primary",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "flow:import-data-murid",
+      "target": "step:import-data-murid:upload-file-excel",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:import-data-murid",
+      "target": "step:import-data-murid:preview-validasi",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "flow:import-data-murid",
+      "target": "step:import-data-murid:konfirmasi-dan-commit",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "flow:generate-sesi-bulanan",
+      "target": "step:generate-sesi-bulanan:ambil-jadwal-aktif",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:generate-sesi-bulanan",
+      "target": "step:generate-sesi-bulanan:iterasi-tanggal-bulan",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:generate-sesi-bulanan",
+      "target": "step:generate-sesi-bulanan:terapkan-batas-4-sesi",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "flow:generate-sesi-bulanan",
+      "target": "step:generate-sesi-bulanan:handle-hari-libur",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "flow:generate-sesi-bulanan",
+      "target": "step:generate-sesi-bulanan:simpan-sesi-ke-database",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "flow:absensi-harian",
+      "target": "step:absensi-harian:tampilkan-daftar-sesi-hari-ini",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:absensi-harian",
+      "target": "step:absensi-harian:input-status-kehadiran",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:absensi-harian",
+      "target": "step:absensi-harian:hitung-honor-otomatis",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "flow:absensi-harian",
+      "target": "step:absensi-harian:update-last-session-at",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "flow:reschedule-sesi",
+      "target": "step:reschedule-sesi:validasi-syarat-reschedule",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:reschedule-sesi",
+      "target": "step:reschedule-sesi:pilih-slot-pengganti",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "flow:reschedule-sesi",
+      "target": "step:reschedule-sesi:conflict-detection-dan-buat-sesi",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "flow:manajemen-jadwal-mingguan",
+      "target": "step:manajemen-jadwal-mingguan:tambah-jadwal",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:manajemen-jadwal-mingguan",
+      "target": "step:manajemen-jadwal-mingguan:cek-konflik-double-booking",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "flow:manajemen-jadwal-mingguan",
+      "target": "step:manajemen-jadwal-mingguan:simpan-jadwal",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "flow:generate-spp-bulanan",
+      "target": "step:generate-spp-bulanan:trigger-cron-tanggal-1",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:generate-spp-bulanan",
+      "target": "step:generate-spp-bulanan:generate-invoice-per-enrollment",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "flow:generate-spp-bulanan",
+      "target": "step:generate-spp-bulanan:handle-kids-class-bundle",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "flow:pencatatan-pembayaran",
+      "target": "step:pencatatan-pembayaran:input-detail-pembayaran",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:pencatatan-pembayaran",
+      "target": "step:pencatatan-pembayaran:generate-nomor-kuitansi",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "flow:pencatatan-pembayaran",
+      "target": "step:pencatatan-pembayaran:cetak-kuitansi",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "flow:penerapan-denda",
+      "target": "step:penerapan-denda:cek-invoice-jatuh-tempo",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:penerapan-denda",
+      "target": "step:penerapan-denda:tambah-item-denda",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "flow:diskon-invoice",
+      "target": "step:diskon-invoice:pilih-item-yang-didiskon",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:diskon-invoice",
+      "target": "step:diskon-invoice:isi-diskon-dan-alasan",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "flow:diskon-invoice",
+      "target": "step:diskon-invoice:terapkan-dan-recalc",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "flow:kalkulasi-honor-bulanan",
+      "target": "step:kalkulasi-honor-bulanan:ambil-sesi-bulan-berjalan",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:kalkulasi-honor-bulanan",
+      "target": "step:kalkulasi-honor-bulanan:terapkan-10-skenario",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "flow:kalkulasi-honor-bulanan",
+      "target": "step:kalkulasi-honor-bulanan:generate-slip-honor-draft",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "flow:review-dan-bayar-slip-honor",
+      "target": "step:review-dan-bayar-slip-honor:edit-komponen-manual",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:review-dan-bayar-slip-honor",
+      "target": "step:review-dan-bayar-slip-honor:cetak-slip-honor",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "flow:review-dan-bayar-slip-honor",
+      "target": "step:review-dan-bayar-slip-honor:tandai-dibayar",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "flow:manajemen-event",
+      "target": "step:manajemen-event:buat-event",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.2
+    },
+    {
+      "source": "flow:manajemen-event",
+      "target": "step:manajemen-event:daftarkan-peserta",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:manajemen-event",
+      "target": "step:manajemen-event:assign-guru-pendamping",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "flow:manajemen-event",
+      "target": "step:manajemen-event:selesaikan-event",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "flow:pencatatan-hasil-ujian",
+      "target": "step:pencatatan-hasil-ujian:input-hasil-per-peserta",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:pencatatan-hasil-ujian",
+      "target": "step:pencatatan-hasil-ujian:naik-grade-otomatis",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "flow:kelola-master-paket",
+      "target": "step:kelola-master-paket:crud-paket",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:kelola-master-paket",
+      "target": "step:kelola-master-paket:toggle-aktif-paket",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "flow:kelola-guru",
+      "target": "step:kelola-guru:crud-data-guru",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.3
+    },
+    {
+      "source": "flow:kelola-guru",
+      "target": "step:kelola-guru:set-matriks-instrumen",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "flow:kelola-guru",
+      "target": "step:kelola-guru:deaktivasi-guru",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "flow:kelola-hari-libur",
+      "target": "step:kelola-hari-libur:tambah-hari-libur",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:kelola-hari-libur",
+      "target": "step:kelola-hari-libur:set-replacement-date",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "flow:dashboard-operasional",
+      "target": "step:dashboard-operasional:agregat-data-keuangan",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:dashboard-operasional",
+      "target": "step:dashboard-operasional:tampilkan-peringatan-aktif",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "flow:laporan-keuangan",
+      "target": "step:laporan-keuangan:tampilkan-laporan-pl",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:laporan-keuangan",
+      "target": "step:laporan-keuangan:export-excel",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "flow:pencatatan-pengeluaran-kas",
+      "target": "step:pencatatan-pengeluaran-kas:input-pengeluaran",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:pencatatan-pengeluaran-kas",
+      "target": "step:pencatatan-pengeluaran-kas:ringkasan-saldo-kas",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "flow:notifikasi-tunggakan",
+      "target": "step:notifikasi-tunggakan:cek-murid-tunggak",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.4
+    },
+    {
+      "source": "flow:notifikasi-tunggakan",
+      "target": "step:notifikasi-tunggakan:kirim-notifikasi-database",
+      "type": "flow_step",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "domain:manajemen-murid",
+      "target": "domain:penjadwalan-sesi",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Enrollment aktif dibaca oleh SessionGeneratorService untuk membuat sesi bulanan; enrollment ON_LEAVE skip generate sesi",
+      "weight": 0.8
+    },
+    {
+      "source": "domain:manajemen-murid",
+      "target": "domain:keuangan-murid",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Konversi murid ke Aktif memicu pembuatan invoice REG + SPP; cuti memicu invoice CUTI",
+      "weight": 0.9
+    },
+    {
+      "source": "domain:penjadwalan-sesi",
+      "target": "domain:honor-guru",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "honor_code dan honor_amount per ClassSession dikonsumsi HonorCalculationService untuk kalkulasi slip honor bulanan guru",
+      "weight": 0.9
+    },
+    {
+      "source": "domain:master-data",
+      "target": "domain:manajemen-murid",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Paket, guru, dan instrumen dari master data digunakan saat pembuatan enrollment murid baru",
+      "weight": 0.8
+    },
+    {
+      "source": "domain:master-data",
+      "target": "domain:penjadwalan-sesi",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Hari libur (Holiday) dari master data dipakai SessionGeneratorService; ruangan (Room) dipakai untuk conflict detection jadwal",
+      "weight": 0.8
+    },
+    {
+      "source": "domain:master-data",
+      "target": "domain:keuangan-murid",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Harga paket (price_per_month) dibaca live oleh InvoiceService saat generate SPP; katalog InvoiceComponent sebagai template item tagihan manual",
+      "weight": 0.7
+    },
+    {
+      "source": "domain:master-data",
+      "target": "domain:honor-guru",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "PayrollConfig (formula honor) dibaca oleh HonorCalculationService dan EventHonorService untuk menentukan nilai honor per skenario",
+      "weight": 0.7
+    },
+    {
+      "source": "domain:event-ujian",
+      "target": "domain:keuangan-murid",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Pendaftaran peserta event otomatis membuat invoice UJI (Rp395.000) atau MC (Rp295.000) via InvoiceService",
+      "weight": 0.8
+    },
+    {
+      "source": "domain:event-ujian",
+      "target": "domain:honor-guru",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Penyelesaian event menyuntikkan honor pendamping (H_PENDAMPING) ke slip honor bulanan guru via EventHonorService",
+      "weight": 0.8
+    },
+    {
+      "source": "domain:keuangan-murid",
+      "target": "domain:laporan-dashboard",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Data invoice dan pembayaran diakumulasi untuk laporan P&L, piutang menunggak, dan grafik penerimaan 6 bulan di dashboard",
+      "weight": 0.7
+    },
+    {
+      "source": "domain:honor-guru",
+      "target": "domain:laporan-dashboard",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Slip honor yang belum dibayar (status CALCULATED) ditampilkan sebagai peringatan di dashboard; honor menjadi komponen pengeluaran di laporan P&L",
+      "weight": 0.6
+    },
+    {
+      "source": "domain:autentikasi-akses",
+      "target": "domain:manajemen-murid",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Middleware role Owner|Admin melindungi semua route write operasional murid; Auditor hanya bisa read",
+      "weight": 0.5
+    },
+    {
+      "source": "domain:autentikasi-akses",
+      "target": "domain:keuangan-murid",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Void payment hanya Owner; tambah diskon bisa Owner/Admin; cetak kuitansi Owner/Admin/Auditor",
+      "weight": 0.5
+    },
+    {
+      "source": "domain:manajemen-murid",
+      "target": "domain:event-ujian",
+      "type": "cross_domain",
+      "direction": "forward",
+      "description": "Enrollment aktif murid diperlukan sebagai syarat pendaftaran ke event; hasil ujian Lulus mengupdate grade di enrollment",
+      "weight": 0.6
+    }
+  ],
+  "layers": [],
+  "tour": []
+}

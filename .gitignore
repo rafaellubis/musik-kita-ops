@@ -21,7 +21,8 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
-
+.understanding-anything/
+memory/
 .superpowers/
 .claude/worktrees/
 

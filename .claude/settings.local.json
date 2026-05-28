@@ -25,7 +25,8 @@
       "Bash(mysql -u root mk_operasional -e \"DESCRIBE rooms;\")",
       "Bash(python3 *)",
       "Bash(claude plugin *)",
-      "PowerShell(mysql *)"
+      "PowerShell(mysql *)",
+      "Bash(pnpm install *)"
     ]
   }
 }
