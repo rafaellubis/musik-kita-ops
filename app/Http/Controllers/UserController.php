@@ -85,21 +85,121 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user)
     {
-        abort(501); // TODO: implementasi Task 7
+        $oldRole   = $user->getRoleNames()->first();
+        $oldValues = ['name' => $user->name, 'email' => $user->email, 'role' => $oldRole];
+
+        // Jika role berubah dari Guru → lepas link Teacher lama
+        if ($oldRole === 'Guru' && $request->role !== 'Guru') {
+            Teacher::where('user_id', $user->id)->update(['user_id' => null]);
+        }
+
+        $user->update([
+            'name'  => $request->name,
+            'email' => $request->email,
+        ]);
+
+        $user->syncRoles([$request->role]);
+
+        // Perbarui link Teacher jika masih Guru
+        if ($request->role === 'Guru' && $request->teacher_id) {
+            // Lepas teacher lama jika beda
+            Teacher::where('user_id', $user->id)
+                   ->whereNot('id', $request->teacher_id)
+                   ->update(['user_id' => null]);
+            Teacher::where('id', $request->teacher_id)->update(['user_id' => $user->id]);
+        }
+
+        AuditLog::record(
+            AuditLog::ACTION_UPDATE,
+            $user,
+            $user->name,
+            $oldValues,
+            ['name' => $user->name, 'email' => $user->email, 'role' => $request->role],
+        );
+
+        return redirect()->route('users.index')
+            ->with('success', "User {$user->name} berhasil diperbarui.");
     }
 
     public function resetPassword(ResetPasswordRequest $request, User $user)
     {
-        abort(501); // TODO: implementasi Task 7
+        $user->update(['password' => Hash::make($request->password)]);
+
+        AuditLog::record(
+            AuditLog::ACTION_UPDATE,
+            $user,
+            $user->name,
+            null,
+            ['password_reset' => true],
+            'Reset password oleh Owner',
+        );
+
+        return redirect()->route('users.index')
+            ->with('success', "Password {$user->name} berhasil direset.");
     }
 
     public function toggleActive(User $user)
     {
-        abort(501); // TODO: implementasi Task 7
+        // Tidak boleh mengubah status akun sendiri
+        if ($user->id === auth()->id()) {
+            return redirect()->route('users.index')
+                ->with('error', 'Tidak dapat mengubah status akun Anda sendiri.');
+        }
+
+        $wasActive = $user->is_active;
+        $user->update(['is_active' => !$wasActive]);
+
+        AuditLog::record(
+            AuditLog::ACTION_UPDATE,
+            $user,
+            $user->name,
+            ['is_active' => $wasActive],
+            ['is_active' => !$wasActive],
+        );
+
+        $status = $user->is_active ? 'diaktifkan' : 'dinonaktifkan';
+        return redirect()->route('users.index')
+            ->with('success', "User {$user->name} berhasil {$status}.");
     }
 
     public function destroy(User $user)
     {
-        abort(501); // TODO: implementasi Task 7
+        // Tidak boleh hapus akun sendiri
+        if ($user->id === auth()->id()) {
+            return redirect()->route('users.index')
+                ->with('error', 'Tidak dapat menghapus akun Anda sendiri.');
+        }
+
+        // Hanya boleh hapus yang sudah nonaktif
+        if ($user->is_active) {
+            return redirect()->route('users.index')
+                ->with('error', "User harus dinonaktifkan terlebih dahulu sebelum dihapus.");
+        }
+
+        // Cek audit log — user dengan riwayat tidak bisa dihapus
+        if (AuditLog::where('user_id', $user->id)->exists()) {
+            return redirect()->route('users.index')
+                ->with('error', "User {$user->name} memiliki riwayat aktivitas dan tidak dapat dihapus.");
+        }
+
+        // Lepas link Teacher jika Guru
+        Teacher::where('user_id', $user->id)->update(['user_id' => null]);
+
+        $userName  = $user->name;
+        $userEmail = $user->email;
+        $userRole  = $user->getRoleNames()->first();
+
+        $user->delete();
+
+        AuditLog::record(
+            AuditLog::ACTION_DELETE,
+            null,
+            $userName,
+            ['name' => $userName, 'email' => $userEmail, 'role' => $userRole],
+            null,
+        );
+
+        return redirect()->route('users.index')
+            ->with('success', "User {$userName} berhasil dihapus dari sistem.");
     }
 }
