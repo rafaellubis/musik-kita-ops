@@ -25,6 +25,7 @@ use App\Http\Controllers\SessionController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\EnrollmentController;
+use App\Http\Controllers\GuruController;
 use App\Http\Controllers\KalenderController;
 use Illuminate\Support\Facades\Route;
 
@@ -418,5 +419,17 @@ Route::middleware('auth')->group(function () {
         )->name('audit-logs.index');
     });
 });
+
+// ===== GURU ROUTES =====
+Route::middleware(['auth', 'verified', 'role:Guru'])
+    ->prefix('guru')
+    ->name('guru.')
+    ->group(function () {
+        Route::get('/dashboard',                     [GuruController::class, 'dashboard'])->name('dashboard');
+        Route::get('/jadwal',                        [GuruController::class, 'jadwal'])->name('jadwal');
+        Route::get('/honor',                         [GuruController::class, 'honor'])->name('honor');
+        Route::get('/honor/{honorSlip}',             [GuruController::class, 'honorShow'])->name('honor.show');
+        Route::patch('/sesi/{classSession}/absensi', [GuruController::class, 'updateAbsensi'])->name('absensi.update');
+    });
 
 require __DIR__.'/auth.php';
