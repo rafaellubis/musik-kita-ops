@@ -56,7 +56,31 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request)
     {
-        abort(501); // TODO: implementasi Task 6
+        $user = User::create([
+            'name'              => $request->name,
+            'email'             => $request->email,
+            'password'          => Hash::make($request->password),
+            'is_active'         => true,
+            'email_verified_at' => now(),
+        ]);
+
+        $user->syncRoles([$request->role]);
+
+        // Hubungkan ke Teacher jika role Guru
+        if ($request->role === 'Guru' && $request->teacher_id) {
+            Teacher::where('id', $request->teacher_id)->update(['user_id' => $user->id]);
+        }
+
+        AuditLog::record(
+            AuditLog::ACTION_CREATE,
+            $user,
+            $user->name,
+            null,
+            ['name' => $user->name, 'email' => $user->email, 'role' => $request->role],
+        );
+
+        return redirect()->route('users.index')
+            ->with('success', "User {$user->name} berhasil dibuat.");
     }
 
     public function update(UpdateUserRequest $request, User $user)
