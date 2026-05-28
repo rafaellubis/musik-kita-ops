@@ -6,6 +6,7 @@ use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use App\Models\AuditLog;
 use App\Models\Instrument;
+use App\Models\InvoiceItem;
 use App\Models\Package;
 use App\Models\Room;
 use App\Models\Schedule;
@@ -191,6 +192,13 @@ class StudentController extends Controller
             ->orderBy('code')
             ->get();
 
+        // Cek apakah tombol Generate Final Project perlu ditampilkan
+        // Hanya untuk murid KIDS_CLASS yang belum punya invoice KIDS_FP
+        $tampilKidsFpButton = $student->primaryEnrollment?->package?->class_type === 'KIDS_CLASS'
+            && ! InvoiceItem::whereHas('invoice', fn ($q) =>
+                $q->where('student_id', $student->id)
+            )->where('item_code', 'KIDS_FP')->exists();
+
         return view('students.show', compact(
             'student', 'packages', 'teachers', 'rooms',
             'roomsForFilter', 'bookedSchedules',
@@ -199,6 +207,7 @@ class StudentController extends Controller
             'activeEnrollments', 'historyEnrollments',
             'allPackages', 'allTeachers', 'allRooms',
             'kidsInstallments',
+            'tampilKidsFpButton',
         ));
     }
 

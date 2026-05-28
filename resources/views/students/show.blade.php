@@ -1237,6 +1237,67 @@
                  x-transition:enter-end="opacity-100 translate-y-0"
                  class="space-y-4">
 
+                {{-- ===== KIDS_FP: Badge + Tombol + Modal ===== --}}
+                @if($tampilKidsFpButton)
+                <div class="mb-5" x-data="{ showKidsFpModal: false }">
+
+                    {{-- Badge + Tombol --}}
+                    <div class="flex items-center justify-between p-3 rounded-lg mb-1"
+                         style="background:rgba(212,168,83,0.06);border:1px solid rgba(212,168,83,0.18)">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs" style="color:#D4A853">🎓</span>
+                            <span class="text-sm font-medium" style="color:#D4A853">Final Project belum ditagih</span>
+                            <span class="text-xs" style="color:#8A6848">· Kids Class Program 6 Bulan</span>
+                        </div>
+                        <button @click="showKidsFpModal = true"
+                                class="px-3 py-1.5 text-xs font-semibold rounded-lg btn-mk-primary">
+                            Generate Invoice Final Project
+                        </button>
+                    </div>
+
+                    {{-- Modal Konfirmasi --}}
+                    <div x-show="showKidsFpModal" x-cloak
+                         class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                         style="background:rgba(0,0,0,0.6)">
+                        <div @click.stop class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-1">🎓 Generate Invoice Final Project</h3>
+                            <p class="text-sm text-gray-500 mb-5">Kids Class · Program 6 Bulan</p>
+
+                            <div class="bg-gray-50 rounded-lg p-4 mb-5 text-sm">
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-gray-500">Murid</span>
+                                    <span class="font-medium text-gray-800">{{ $student->full_name }}</span>
+                                </div>
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-gray-500">Item</span>
+                                    <span class="text-gray-700">Final Project Kids Class</span>
+                                </div>
+                                <div class="flex justify-between pt-2 border-t border-gray-200">
+                                    <span class="font-semibold" style="color:#D4A853">Total Invoice</span>
+                                    <span class="font-bold text-base" style="color:#D4A853">Rp 140.000</span>
+                                </div>
+                            </div>
+
+                            <form method="POST"
+                                  action="{{ route('invoices.generate-kids-fp', $student) }}">
+                                @csrf
+                                <div class="flex justify-end gap-3">
+                                    <button type="button" @click="showKidsFpModal = false"
+                                            class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+                                        Batal
+                                    </button>
+                                    <button type="submit"
+                                            class="px-4 py-2 text-sm font-semibold rounded-lg btn-mk-primary">
+                                        Buat Invoice
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+                @endif
+
                 {{-- Ringkasan saldo --}}
                 <div class="grid grid-cols-3 gap-4">
                     <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-4">
