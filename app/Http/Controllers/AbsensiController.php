@@ -278,12 +278,19 @@ class AbsensiController extends Controller
         $teachers = Teacher::where('is_active', true)->orderBy('name')->get();
         $rooms    = Room::where('is_active', true)->orderBy('code')->get();
 
+        // Semua enrollment ACTIVE untuk dropdown "Isi Slot" — di-load sekali di sini
+        // agar tidak ada query di dalam loop @foreach di view (mencegah N+1 query).
+        $enrollments = Enrollment::with(['student', 'package.instrument'])
+            ->where('status', 'ACTIVE')
+            ->orderBy('student_id')
+            ->get();
+
         // Kembalikan JSON jika dipanggil via AJAX/test, HTML jika akses browser biasa
         if ($request->wantsJson()) {
             return response()->json(['slots' => $slots]);
         }
 
-        return view('absensi.open-slots', compact('slots', 'teachers', 'rooms'));
+        return view('absensi.open-slots', compact('slots', 'teachers', 'rooms', 'enrollments'));
     }
 
     /**

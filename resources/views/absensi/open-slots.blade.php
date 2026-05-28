@@ -165,10 +165,8 @@
                                             <select x-model="isiEnrollmentId"
                                                 class="border border-gray-300 rounded text-sm px-3 py-1.5 min-w-[200px]">
                                                 <option value="">— Pilih murid —</option>
-                                                @foreach(\App\Models\Enrollment::with(['student', 'package'])
-                                                    ->where('status', 'ACTIVE')
-                                                    ->orderBy('student_id')
-                                                    ->get() as $enr)
+                                                {{-- $enrollments sudah di-load di controller — tidak ada query di sini --}}
+                                                @foreach($enrollments as $enr)
                                                     <option value="{{ $enr->id }}">
                                                         {{ $enr->student->full_name ?? '?' }} — {{ $enr->package->code ?? '?' }}
                                                     </option>

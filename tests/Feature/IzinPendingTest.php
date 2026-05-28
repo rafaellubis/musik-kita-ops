@@ -187,6 +187,56 @@ class IzinPendingTest extends TestCase
     }
 
     /** @test */
+    public function admin_dapat_isi_slot_dengan_murid_lain(): void
+    {
+        Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $admin = \App\Models\User::factory()->create();
+        $admin->assignRole('Admin');
+
+        // Sesi IZIN_PENDING milik Budi
+        $sessionBudi = $this->makeSession([
+            'status'       => 'IZIN_PENDING',
+            'honor_code'   => 'H_IZIN',
+            'honor_amount' => 0,
+            'session_date' => today()->toDateString(),
+            'start_time'   => '09:00',
+            'end_time'     => '09:30',
+        ]);
+
+        // Enrollment murid lain (Cici) yang akan mengisi slot
+        $studentCici = \App\Models\Student::factory()->create(['status' => 'Aktif']);
+        $package     = \App\Models\Package::factory()->create(['price_per_month' => 400000, 'class_type' => 'REGULER']);
+        $enrollmentCici = \App\Models\Enrollment::factory()->create([
+            'student_id' => $studentCici->id,
+            'teacher_id' => $sessionBudi->teacher_id, // guru yang sama
+            'package_id' => $package->id,
+            'status'     => 'ACTIVE',
+        ]);
+
+        $response = $this->actingAs($admin)->postJson(
+            route('absensi.open-slots.assign', $sessionBudi),
+            ['enrollment_id' => $enrollmentCici->id]
+        );
+
+        $response->assertOk()->assertJson(['success' => true]);
+
+        // Sesi Budi masih IZIN_PENDING (belum selesai)
+        $this->assertDatabaseHas('class_sessions', [
+            'id'     => $sessionBudi->id,
+            'status' => 'IZIN_PENDING',
+        ]);
+
+        // Sesi baru untuk Cici dibuat di slot yang sama
+        $this->assertDatabaseHas('class_sessions', [
+            'student_id'    => $studentCici->id,
+            'enrollment_id' => $enrollmentCici->id,
+            'teacher_id'    => $sessionBudi->teacher_id,
+            'session_date'  => today()->toDateString(),
+            'start_time'    => '09:00:00',
+        ]);
+    }
+
+    /** @test */
     public function open_slot_board_hanya_tampilkan_izin_pending_tanpa_replacement(): void
     {
         $admin = \App\Models\User::factory()->create();
