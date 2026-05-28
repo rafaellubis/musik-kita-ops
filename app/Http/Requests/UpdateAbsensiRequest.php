@@ -35,6 +35,7 @@ class UpdateAbsensiRequest extends FormRequest
                     ClassSession::STATUS_HADIR_TERLAMBAT,
                     ClassSession::STATUS_HANGUS,
                     ClassSession::STATUS_IZIN_RESCHEDULE,
+                    ClassSession::STATUS_IZIN_PENDING,    // Izin belum ada tanggal pengganti
                     ClassSession::STATUS_IZIN_VIDEO,
                     ClassSession::STATUS_DIGANTI,
                     ClassSession::STATUS_CANCELLED,

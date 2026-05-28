@@ -54,6 +54,32 @@ class IzinPendingTest extends TestCase
     }
 
     /** @test */
+    public function admin_dapat_set_izin_pending_tanpa_isi_tanggal_pengganti(): void
+    {
+        // Buat role dulu agar assignRole tidak lempar RoleDoesNotExist
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+
+        $admin = \App\Models\User::factory()->create();
+        $admin->assignRole('Admin');
+        $session = $this->makeSession();
+
+        $response = $this->actingAs($admin)->patchJson(
+            route('absensi.update', $session),
+            ['status' => 'IZIN_PENDING']
+        );
+
+        $response->assertOk()->assertJson(['success' => true]);
+        $this->assertDatabaseHas('class_sessions', [
+            'id'           => $session->id,
+            'status'       => 'IZIN_PENDING',
+            'honor_code'   => 'H_IZIN',
+            'honor_amount' => 0,
+        ]);
+        // Tidak ada sesi pengganti yang dibuat — masih 1 sesi di DB
+        $this->assertDatabaseCount('class_sessions', 1);
+    }
+
+    /** @test */
     public function honor_calculation_excludes_izin_pending_sessions(): void
     {
         // Buat user agar FK created_by di teacher_honor_slips tidak error

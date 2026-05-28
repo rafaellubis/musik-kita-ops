@@ -121,10 +121,13 @@ class AbsensiController extends Controller
             ], 422);
         }
 
-        // Guard: sesi split (bagian 1 atau 2) tidak bisa di-reschedule ulang.
+        // Guard: sesi split (bagian 1 atau 2) tidak bisa di-reschedule atau di-pending ulang.
         // Murid hanya boleh izin pada sesi original — split adalah sesi pengganti.
         if ($classSession->split_part !== null
-            && $request->status === ClassSession::STATUS_IZIN_RESCHEDULE) {
+            && in_array($request->status, [
+                ClassSession::STATUS_IZIN_RESCHEDULE,
+                ClassSession::STATUS_IZIN_PENDING,
+            ], true)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sesi split tidak bisa di-reschedule. Hubungi admin untuk pengaturan manual.',
