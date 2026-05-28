@@ -27,6 +27,7 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\GuruController;
 use App\Http\Controllers\KalenderController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -225,6 +226,14 @@ Route::middleware('auth')->group(function () {
      | - Import murid dari Excel (sekali pakai, migrasi data)
      |====================================================================== */
     Route::middleware('role:Owner')->group(function () {
+
+        // ===== User Management — kelola akun login Owner/Admin/Auditor/Guru =====
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::post('users', [UserController::class, 'store'])->name('users.store');
+        Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
+        Route::post('users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
+        Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 
         // Import murid dari Excel (Fase 1 — migrasi data, akses dari halaman profil)
         Route::get('/import',            [ImportController::class, 'index'])->name('import.index');
