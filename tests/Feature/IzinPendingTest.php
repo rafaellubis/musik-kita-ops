@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\AttendanceService;
 use App\Services\HonorCalculationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class IzinPendingTest extends TestCase
@@ -128,6 +129,61 @@ class IzinPendingTest extends TestCase
             ->first();
         $this->assertNotNull($slip, 'Slip honor harus terbuat setelah kalkulasi.');
         $this->assertEquals(50000, $slip->base_honor);
+    }
+
+    /** @test */
+    public function guru_hanya_lihat_sesi_pending_miliknya(): void
+    {
+        Role::firstOrCreate(['name' => 'Guru', 'guard_name' => 'web']);
+        $guruUser = \App\Models\User::factory()->create(['email_verified_at' => now()]);
+        $guruUser->assignRole('Guru');
+        // Relasi User hasOne Teacher via teacher_id di tabel teachers
+        $teacher = Teacher::factory()->create(['user_id' => $guruUser->id]);
+
+        $teacher2 = Teacher::factory()->create();
+
+        $milik = $this->makeSession([
+            'status' => 'IZIN_PENDING', 'honor_code' => 'H_IZIN', 'honor_amount' => 0,
+            'teacher_id' => $teacher->id,
+        ]);
+        $bukan = $this->makeSession([
+            'status' => 'IZIN_PENDING', 'honor_code' => 'H_IZIN', 'honor_amount' => 0,
+            'teacher_id' => $teacher2->id,
+        ]);
+
+        $response = $this->actingAs($guruUser)->get(route('guru.sesi-pending.index'));
+
+        $response->assertOk()
+                 ->assertSee($milik->student->full_name)
+                 ->assertDontSee($bukan->student->full_name);
+    }
+
+    /** @test */
+    public function guru_bisa_suggest_tanggal(): void
+    {
+        Role::firstOrCreate(['name' => 'Guru', 'guard_name' => 'web']);
+        $guruUser = \App\Models\User::factory()->create(['email_verified_at' => now()]);
+        $guruUser->assignRole('Guru');
+        // Relasi User hasOne Teacher via teacher_id di tabel teachers
+        $teacher = Teacher::factory()->create(['user_id' => $guruUser->id]);
+
+        $session = $this->makeSession([
+            'status'       => 'IZIN_PENDING',
+            'honor_code'   => 'H_IZIN',
+            'honor_amount' => 0,
+            'teacher_id'   => $teacher->id,
+        ]);
+
+        $response = $this->actingAs($guruUser)->postJson(
+            route('guru.sesi-pending.suggest', $session),
+            ['tanggal' => '2026-06-10', 'jam' => '09:00', 'catatan' => 'Murid bilang bisa Rabu']
+        );
+
+        $response->assertOk()->assertJson(['success' => true]);
+        $this->assertStringContainsString(
+            '[SARAN GURU: 2026-06-10 09:00',
+            \App\Models\ClassSession::find($session->id)->notes
+        );
     }
 
     /** @test */

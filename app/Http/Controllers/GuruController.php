@@ -148,6 +148,51 @@ class GuruController extends Controller
     }
 
     /**
+     * Daftar sesi IZIN_PENDING milik guru yang login.
+     * Diurutkan dari yang paling lama pending (terlama di atas).
+     */
+    public function sesiPending()
+    {
+        $teacher = auth()->user()->teacher;
+        abort_if(!$teacher, 403, 'Akun ini tidak terhubung ke data guru.');
+
+        $sesiPending = ClassSession::where('teacher_id', $teacher->id)
+            ->where('status', ClassSession::STATUS_IZIN_PENDING)
+            ->with(['student', 'enrollment.package'])
+            ->orderBy('session_date')
+            ->get();
+
+        return view('guru.sesi-pending', compact('teacher', 'sesiPending'));
+    }
+
+    /**
+     * Guru submit saran tanggal pengganti untuk sesi IZIN_PENDING miliknya.
+     * Saran disimpan ke kolom notes dengan prefix [SARAN GURU: tgl jam — catatan].
+     * Admin yang akan konfirmasi dan buat sesi penggantinya.
+     */
+    public function suggestDate(Request $request, ClassSession $session)
+    {
+        $teacher = auth()->user()->teacher;
+        abort_if(!$teacher, 403);
+        abort_if($session->teacher_id !== $teacher->id, 403, 'Bukan sesi Anda.');
+        abort_if($session->status !== ClassSession::STATUS_IZIN_PENDING, 422, 'Sesi bukan IZIN_PENDING.');
+
+        $request->validate([
+            'tanggal' => ['required', 'date', 'date_format:Y-m-d', 'after_or_equal:today'],
+            'jam'     => ['required', 'date_format:H:i'],
+            'catatan' => ['nullable', 'string', 'max:200'],
+        ]);
+
+        $saran = "[SARAN GURU: {$request->tanggal} {$request->jam}" .
+                 ($request->catatan ? " — {$request->catatan}" : '') . ']';
+        $notes = $session->notes ? $session->notes . "\n" . $saran : $saran;
+
+        $session->update(['notes' => $notes]);
+
+        return response()->json(['success' => true, 'message' => 'Saran terkirim ke Admin.']);
+    }
+
+    /**
      * Guru update status absensi sesi miliknya — hanya HADIR atau HADIR_TERLAMBAT.
      *
      * Batasan:
