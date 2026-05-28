@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\Student;
 use App\Services\InvoiceService;
 use Carbon\Carbon;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\DB;
  */
 class InvoiceController extends Controller
 {
+    public function __construct(private readonly InvoiceService $invoiceService) {}
+
     public function index(Request $request)
     {
         $year = (int) $request->get('year', now()->year);
@@ -215,6 +218,43 @@ class InvoiceController extends Controller
      */
     public function generateKidsFp(Student $student): RedirectResponse
     {
-        abort(501); // TODO: implementasi Task 3
+        // Guard 1: hanya untuk murid KIDS_CLASS
+        $enrollment = $student->primaryEnrollment;
+        if (! $enrollment || $enrollment->package->class_type !== 'KIDS_CLASS') {
+            abort(403, 'Fitur ini hanya untuk murid Kids Class.');
+        }
+
+        // Guard 2: cegah double generate
+        $sudahAda = InvoiceItem::whereHas('invoice', fn ($q) =>
+            $q->where('student_id', $student->id)
+        )->where('item_code', 'KIDS_FP')->exists();
+
+        if ($sudahAda) {
+            return redirect()->route('students.show', $student)
+                ->with('error', 'Invoice Final Project untuk murid ini sudah pernah dibuat.');
+        }
+
+        // Generate invoice via InvoiceService
+        $invoice = $this->invoiceService->createOneOff(
+            student:      $student,
+            items:        [[
+                'code'        => 'KIDS_FP',
+                'description' => 'Final Project Kids Class',
+                'amount'      => InvoiceService::FEE_KIDS_FP,
+            ]],
+            classType:    'KIDS_CLASS',
+            enrollmentId: $enrollment->id,
+        );
+
+        AuditLog::record(
+            AuditLog::ACTION_CREATE,
+            $invoice,
+            "Invoice KIDS_FP — {$student->full_name}",
+            null,
+            ['student_id' => $student->id, 'amount' => InvoiceService::FEE_KIDS_FP],
+        );
+
+        return redirect()->route('invoices.show', $invoice)
+            ->with('success', "Invoice Final Project {$student->full_name} berhasil dibuat.");
     }
 }
