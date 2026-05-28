@@ -19,11 +19,13 @@
                 </div>
             </div>
 
+            @unlessrole('Guru')
             <div class="p-4 sm:p-8 bg-mk-card shadow sm:rounded-lg">
                 <div class="max-w-xl">
                     @include('profile.partials.delete-user-form')
                 </div>
             </div>
+            @endunlessrole
 
             @role('Owner')
             <div class="p-4 sm:p-8 bg-mk-card shadow sm:rounded-lg">
