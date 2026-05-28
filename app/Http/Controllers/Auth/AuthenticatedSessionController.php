@@ -28,6 +28,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Guru diarahkan ke portal guru mereka sendiri
+        if (auth()->user()->hasRole('Guru')) {
+            return redirect()->intended(route('guru.dashboard', absolute: false));
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
