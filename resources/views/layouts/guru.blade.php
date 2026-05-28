@@ -35,6 +35,10 @@
 
         <div class="shrink-0 px-3 py-3 border-t border-white/[0.06]">
             <div class="text-[11px] text-white/40 mb-2 truncate">{{ auth()->user()->name }}</div>
+            <a href="{{ route('profile.edit') }}"
+               class="block w-full text-left text-[12px] text-white/50 hover:text-white/80 px-2 py-1 rounded transition-colors mb-0.5">
+                🔑 Ganti Password
+            </a>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit"
@@ -51,7 +55,10 @@
         {{-- Topbar --}}
         <div class="relative z-20 shrink-0 h-14 bg-mk-sidebar border-b border-white/[0.06] flex items-center px-4 lg:px-6 gap-3">
             <span class="text-white/90 font-semibold text-sm lg:text-base flex-1">{{ $title }}</span>
-            <span class="lg:hidden text-[11px] text-white/50 truncate max-w-[140px]">{{ auth()->user()->name }}</span>
+            <a href="{{ route('profile.edit') }}"
+               class="lg:hidden text-[11px] text-white/50 hover:text-white/70 truncate max-w-[140px] transition-colors">
+                {{ auth()->user()->name }} 🔑
+            </a>
         </div>
 
         {{-- Konten --}}
