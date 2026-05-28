@@ -86,6 +86,7 @@ class HonorCalculationService
             ->whereNotIn('status', [
                 ClassSession::STATUS_SCHEDULED,
                 ClassSession::STATUS_IZIN_RESCHEDULE,
+                ClassSession::STATUS_IZIN_PENDING,
                 ClassSession::STATUS_CANCELLED,
             ])
             ->get(['id', 'honor_code', 'honor_amount', 'session_date', 'status',
@@ -153,6 +154,7 @@ class HonorCalculationService
             ->whereNotIn('status', [
                 ClassSession::STATUS_SCHEDULED,
                 ClassSession::STATUS_IZIN_RESCHEDULE,
+                ClassSession::STATUS_IZIN_PENDING,
                 ClassSession::STATUS_CANCELLED,
             ])
             ->orderBy('session_date')

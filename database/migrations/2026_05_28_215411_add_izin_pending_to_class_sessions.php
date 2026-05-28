@@ -100,6 +100,9 @@ return new class extends Migration
             notes TEXT NULL,
             honor_code VARCHAR(20) NULL,
             honor_amount INTEGER NULL,
+            session_sequence TINYINT UNSIGNED NULL,
+            origin_session_id INTEGER NULL REFERENCES class_sessions(id) ON DELETE SET NULL,
+            split_part TINYINT UNSIGNED NULL,
             created_at DATETIME NULL,
             updated_at DATETIME NULL
         )");

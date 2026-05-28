@@ -42,6 +42,7 @@ class AttendanceService
         'HADIR',
         'HADIR_TERLAMBAT',
         'IZIN_RESCHEDULE',
+        'IZIN_PENDING',
         'IZIN_VIDEO',
         'HANGUS',
         'LIBUR',
@@ -156,6 +157,12 @@ class AttendanceService
         // IZIN_RESCHEDULE: sesi tidak terjadi, honor di sesi pengganti.
         if ($status === 'IZIN_RESCHEDULE') {
             return ['code' => null, 'amount' => 0];
+        }
+
+        // IZIN_PENDING: murid izin tanpa tanggal pengganti yang sudah ditentukan,
+        // honor nol karena status masih menunggu konfirmasi reschedule.
+        if ($status === 'IZIN_PENDING') {
+            return ['code' => 'H_IZIN', 'amount' => 0];
         }
 
         // SCHEDULED: belum ada absensi, jangan kalkulasi.

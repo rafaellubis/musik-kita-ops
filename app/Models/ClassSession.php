@@ -52,6 +52,7 @@ class ClassSession extends Model
     public const STATUS_HADIR            = 'HADIR';
     public const STATUS_HADIR_TERLAMBAT  = 'HADIR_TERLAMBAT';
     public const STATUS_IZIN_RESCHEDULE  = 'IZIN_RESCHEDULE';
+    public const STATUS_IZIN_PENDING     = 'IZIN_PENDING';
     public const STATUS_IZIN_VIDEO       = 'IZIN_VIDEO';
     public const STATUS_HANGUS           = 'HANGUS';
     public const STATUS_LIBUR            = 'LIBUR';
