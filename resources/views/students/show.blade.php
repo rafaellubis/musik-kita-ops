@@ -583,7 +583,7 @@
         </div>
 
         {{-- ===== TAB NAVIGASI ===== --}}
-        <div x-data="{ activeTab: 'info', openSchedule: null }" class="space-y-0">
+        <div x-data="{ activeTab: 'info', openSchedule: null, editSchedule: null }" class="space-y-0">
 
             {{-- Tab pills --}}
             <div class="flex gap-1 p-1 bg-mk-card rounded-xl border border-mk-borderLight shadow-sm mb-5 fade-in-up"
@@ -891,6 +891,17 @@
                                     @endif
                                 </td>
                                 <td class="py-2 text-right space-x-2 whitespace-nowrap">
+                                    <button type="button"
+                                            @click="editSchedule = {
+                                                id: {{ $sch->id }},
+                                                url: '{{ route('schedules.update', $sch->id) }}',
+                                                day_of_week: {{ $sch->day_of_week }},
+                                                start_time: '{{ substr($sch->start_time, 0, 5) }}',
+                                                end_time: '{{ substr($sch->end_time, 0, 5) }}',
+                                                room_id: {{ $sch->room_id ?? 'null' }},
+                                                notes: @js($sch->notes ?? '')
+                                            }"
+                                            class="text-xs hover:underline" style="color:#5DB890">Edit</button>
                                     <form method="POST" action="{{ route('schedules.toggle-active', $sch->id) }}" class="inline">
                                         @csrf
                                         <button type="submit" class="text-xs hover:underline" style="color:#FBBF24">
@@ -913,6 +924,123 @@
                     @endif
                 </div>
                 @endif
+
+                {{-- Modal Edit Jadwal --}}
+                <div x-show="editSchedule !== null"
+                     x-cloak
+                     class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                     style="background:rgba(0,0,0,0.6)"
+                     @click.self="editSchedule = null">
+
+                    <div x-show="editSchedule !== null"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         class="w-full max-w-lg rounded-xl shadow-2xl p-5"
+                         style="background:#241608;border:1px solid rgba(212,168,83,0.15)"
+                         x-data="{
+                             get selDay()    { return editSchedule ? String(editSchedule.day_of_week) : '' },
+                             get selStart()  { return editSchedule ? editSchedule.start_time : '' },
+                             get selEnd()    { return editSchedule ? editSchedule.end_time : '' },
+                             rooms: {{ Js::from($roomsForFilter) }},
+                             booked: {{ Js::from($bookedSchedules) }},
+                             instrument: {{ Js::from($studentInstrument) }},
+                             get availableRooms() {
+                                 return this.rooms.filter(room => {
+                                     if (this.instrument &&
+                                         !room.supported_instruments.includes(this.instrument)) {
+                                         return false;
+                                     }
+                                     if (!this.selDay || !this.selStart || !this.selEnd) return true;
+                                     const occupants = this.booked.filter(s =>
+                                         s.room_id === room.id &&
+                                         s.day_of_week === parseInt(this.selDay) &&
+                                         s.start_time.slice(0,5) < this.selEnd &&
+                                         s.end_time.slice(0,5) > this.selStart &&
+                                         s.id !== (editSchedule ? editSchedule.id : null)
+                                     ).length;
+                                     return occupants < room.capacity;
+                                 });
+                             }
+                         }">
+
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-semibold text-mk-text">Edit Jadwal Mingguan</h3>
+                            <button type="button" @click="editSchedule = null"
+                                    class="text-mk-muted hover:text-mk-text transition-colors text-xl leading-none">×</button>
+                        </div>
+
+                        <template x-if="editSchedule !== null">
+                            <form method="POST" :action="editSchedule.url">
+                                @csrf
+                                @method('PATCH')
+
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs text-mk-dim mb-1">Hari <span class="text-red-400">*</span></label>
+                                        <select name="day_of_week" x-model="editSchedule.day_of_week" required
+                                                class="block w-full rounded-lg text-sm px-2 py-1.5">
+                                            @foreach(\App\Models\Schedule::DAY_NAMES as $val => $label)
+                                            <option value="{{ $val }}">{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div>{{-- spacer --}}</div>
+
+                                    <div>
+                                        <label class="block text-xs text-mk-dim mb-1">Mulai <span class="text-red-400">*</span></label>
+                                        <input type="time" name="start_time"
+                                               x-model="editSchedule.start_time" required
+                                               class="block w-full rounded-lg text-sm px-2 py-1.5">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-mk-dim mb-1">Selesai <span class="text-red-400">*</span></label>
+                                        <input type="time" name="end_time"
+                                               x-model="editSchedule.end_time" required
+                                               class="block w-full rounded-lg text-sm px-2 py-1.5">
+                                    </div>
+
+                                    <div class="col-span-2">
+                                        <label class="block text-xs text-mk-dim mb-1">Ruangan</label>
+                                        <select name="room_id" class="block w-full rounded-lg text-sm px-2 py-1.5">
+                                            <option value="">— Tanpa Ruangan —</option>
+                                            <template x-for="r in availableRooms" :key="r.id">
+                                                <option :value="r.id"
+                                                        :selected="editSchedule && r.id === editSchedule.room_id"
+                                                        x-text="`[${r.code}] ${r.name} (kap. ${r.capacity})`">
+                                                </option>
+                                            </template>
+                                        </select>
+                                        <p class="text-xs mt-1" style="color:#F87171"
+                                           x-show="instrument && availableRooms.length === 0">
+                                            Tidak ada ruangan tersedia untuk slot &amp; instrumen ini.
+                                        </p>
+                                    </div>
+
+                                    <div class="col-span-2">
+                                        <label class="block text-xs text-mk-dim mb-1">Catatan</label>
+                                        <input type="text" name="notes" maxlength="500"
+                                               x-model="editSchedule.notes"
+                                               class="block w-full rounded-lg text-sm px-2 py-1.5">
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-2 mt-4">
+                                    <button type="submit"
+                                            class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                                            style="background:rgba(93,184,144,0.2);color:#5DB890">
+                                        Simpan Perubahan
+                                    </button>
+                                    <button type="button" @click="editSchedule = null"
+                                            class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                                            style="background:rgba(255,255,255,0.05);color:#8A6848">
+                                        Batal
+                                    </button>
+                                </div>
+                            </form>
+                        </template>
+                    </div>
+                </div>
 
                 {{-- Sesi Mendatang --}}
                 <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5"
