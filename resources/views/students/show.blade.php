@@ -1274,7 +1274,7 @@
                                 </div>
                                 <div class="flex justify-between pt-2 border-t border-gray-200">
                                     <span class="font-semibold" style="color:#D4A853">Total Invoice</span>
-                                    <span class="font-bold text-base" style="color:#D4A853">Rp 140.000</span>
+                                    <span class="font-bold text-base" style="color:#D4A853">Rp {{ number_format($kidsFpFee, 0, ',', '.') }}</span>
                                 </div>
                             </div>
 

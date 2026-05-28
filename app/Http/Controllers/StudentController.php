@@ -12,6 +12,7 @@ use App\Models\Room;
 use App\Models\Schedule;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Services\InvoiceService;
 use App\Services\StudentLifecycleService;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
@@ -199,6 +200,9 @@ class StudentController extends Controller
                 $q->where('student_id', $student->id)
             )->where('item_code', 'KIDS_FP')->exists();
 
+        // Ambil fee KIDS_FP dari konstanta InvoiceService (BR: Rp 140.000)
+        $kidsFpFee = InvoiceService::FEE_KIDS_FP;
+
         return view('students.show', compact(
             'student', 'packages', 'teachers', 'rooms',
             'roomsForFilter', 'bookedSchedules',
@@ -207,7 +211,7 @@ class StudentController extends Controller
             'activeEnrollments', 'historyEnrollments',
             'allPackages', 'allTeachers', 'allRooms',
             'kidsInstallments',
-            'tampilKidsFpButton',
+            'tampilKidsFpButton', 'kidsFpFee',
         ));
     }
 

@@ -178,4 +178,20 @@ class KidsFpInvoiceTest extends TestCase
         $invoice = Invoice::where('student_id', $student->id)->first();
         $response->assertRedirect(route('invoices.show', $invoice));
     }
+
+    public function test_generate_gagal_jika_kids_class_bundle(): void
+    {
+        $student    = Student::factory()->create(['status' => 'Aktif']);
+        $package    = Package::factory()->create(['class_type' => 'KIDS_CLASS_BUNDLE']);
+        $enrollment = Enrollment::factory()->for($student)->create([
+            'package_id' => $package->id,
+            'status'     => 'ACTIVE',
+            'is_primary' => true,
+        ]);
+        $student->update(['primary_enrollment_id' => $enrollment->id]);
+
+        $this->actingAs($this->admin())
+            ->post(route('invoices.generate-kids-fp', $student))
+            ->assertForbidden();
+    }
 }
