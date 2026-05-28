@@ -50,6 +50,15 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Tolak login jika akun dinonaktifkan oleh Owner
+        if (! auth()->user()->is_active) {
+            Auth::guard('web')->logout();
+            RateLimiter::hit($this->throttleKey());
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda telah dinonaktifkan. Hubungi Owner studio.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

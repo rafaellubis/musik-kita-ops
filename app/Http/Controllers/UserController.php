@@ -37,9 +37,16 @@ class UserController extends Controller
             $query->where('is_active', false);
         }
 
-        $users = $query->get()->map(function ($user) {
+        // Ambil satu kali semua user_id yang punya audit log (hindari N+1)
+        $userIdsWithLogs = AuditLog::select('user_id')
+            ->whereNotNull('user_id')
+            ->distinct()
+            ->pluck('user_id')
+            ->flip();
+
+        $users = $query->get()->map(function ($user) use ($userIdsWithLogs) {
             // Tandai apakah user bisa dihapus (tidak ada audit log)
-            $user->can_delete = !AuditLog::where('user_id', $user->id)->exists();
+            $user->can_delete = ! isset($userIdsWithLogs[$user->id]);
             return $user;
         });
 
