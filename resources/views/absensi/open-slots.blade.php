@@ -41,7 +41,7 @@
                     {{-- Tiap slot pakai <tbody x-data> sendiri agar expand rows masuk scope Alpine --}}
                     @foreach($slots as $slot)
                     @php
-                        $hariLalu = \Carbon\Carbon::parse($slot->session_date)->diffInDays(now(), false);
+                        $hariLalu = (int) \Carbon\Carbon::parse($slot->session_date)->diffInDays(today());
                         // Cari saran guru dari kolom notes
                         $saranGuru = null;
                         if ($slot->notes && preg_match('/\[SARAN GURU: (.+?)\]/', $slot->notes, $m)) {
