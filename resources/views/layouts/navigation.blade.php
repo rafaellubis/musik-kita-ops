@@ -28,7 +28,9 @@
         :active="request()->routeIs('kalender.*')" />
     @hasanyrole('Owner|Admin')
     <x-sidebar-item route="absensi.index" icon="✅" label="Absensi"
-        :active="request()->routeIs('absensi.*')" />
+        :active="request()->routeIs('absensi.index') || request()->routeIs('absensi.update')" />
+    <x-sidebar-item route="absensi.open-slots" icon="📋" label="Open Slots"
+        :active="request()->routeIs('absensi.open-slots*')" />
     @endhasanyrole
 
     {{-- Grup: KEUANGAN --}}

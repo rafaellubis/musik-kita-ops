@@ -7,6 +7,18 @@
 
     <div class="py-6 px-4 lg:px-8">
 
+            {{-- Link ke Open Slot Board --}}
+            @php $jumlahPending = \App\Models\ClassSession::where('status','IZIN_PENDING')->count(); @endphp
+            @if($jumlahPending > 0)
+            <a href="{{ route('absensi.open-slots') }}"
+               class="flex items-center gap-2 mb-4 px-4 py-2.5 bg-amber-50 border border-amber-200
+                      text-amber-700 rounded-xl text-sm font-medium hover:bg-amber-100 transition-colors">
+                <span>📋</span>
+                <span>{{ $jumlahPending }} slot terbuka di Open Slot Board</span>
+                <span class="ml-auto text-amber-400">›</span>
+            </a>
+            @endif
+
             {{-- Tanggal + progress --}}
             <div class="flex items-center gap-3 mb-4 flex-wrap">
                 <span class="text-mk-dim text-sm">
