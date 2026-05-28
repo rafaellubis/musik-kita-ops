@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ClassSession;
 use App\Models\HonorSlip;
+use App\Services\AttendanceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -23,6 +24,14 @@ use Illuminate\Validation\Rule;
  */
 class GuruController extends Controller
 {
+    /**
+     * AttendanceService diinjeksi via constructor agar honor_code dan
+     * honor_amount ikut terset saat guru submit absensi (Issue 1 fix).
+     */
+    public function __construct(
+        private readonly AttendanceService $attendanceService,
+    ) {}
+
     /**
      * Dashboard guru: sesi hari ini + ringkasan bulan berjalan.
      */
@@ -166,16 +175,39 @@ class GuruController extends Controller
             'Hanya sesi hari ini yang bisa diupdate.'
         );
 
+        // Issue 3: sesi libur tidak bisa diubah oleh guru
+        abort_if(
+            $classSession->status === 'LIBUR',
+            403,
+            'Sesi libur tidak bisa diupdate.'
+        );
+
+        // Issue 2: absensi yang sudah tercatat tidak bisa disubmit ulang — minta koreksi via Admin
+        abort_if(
+            in_array($classSession->status, ['HADIR', 'HADIR_TERLAMBAT'], true),
+            403,
+            'Absensi sudah dicatat. Hubungi admin untuk koreksi.'
+        );
+
         $validated = $request->validate([
             'status'       => ['required', Rule::in(['HADIR', 'HADIR_TERLAMBAT'])],
-            'late_minutes' => ['nullable', 'integer', 'min:1', 'max:60'],
+            // Issue 5: late_minutes wajib diisi jika status HADIR_TERLAMBAT
+            'late_minutes' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:60',
+                Rule::requiredIf(fn () => $request->input('status') === 'HADIR_TERLAMBAT'),
+            ],
         ], [
-            'status.required'      => 'Status wajib diisi.',
-            'status.in'            => 'Status hanya boleh HADIR atau HADIR TERLAMBAT.',
-            'late_minutes.integer' => 'Menit keterlambatan harus berupa angka.',
+            'status.required'          => 'Status wajib diisi.',
+            'status.in'                => 'Status hanya boleh HADIR atau HADIR TERLAMBAT.',
+            'late_minutes.integer'     => 'Menit keterlambatan harus berupa angka.',
+            'late_minutes.required'    => 'Menit keterlambatan wajib diisi jika terlambat.',
         ]);
 
-        $classSession->update([
+        // Issue 1: gunakan AttendanceService agar honor_code dan honor_amount ikut terset
+        $this->attendanceService->recordAttendance($classSession, [
             'status'       => $validated['status'],
             // late_minutes hanya relevan jika terlambat; kosongkan jika status HADIR biasa
             'late_minutes' => $validated['status'] === 'HADIR_TERLAMBAT'
