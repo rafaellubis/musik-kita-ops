@@ -5,6 +5,22 @@
     <p class="text-sm text-mk-muted">{{ \Carbon\Carbon::today()->locale('id')->isoFormat('dddd, D MMMM Y') }}</p>
 </div>
 
+{{-- ===== BANNER SESI PENDING (tampil hanya jika ada) ===== --}}
+@if($jumlahPending > 0)
+<div class="mx-4 mb-2">
+    <a href="{{ route('guru.sesi-pending.index') }}"
+       class="flex items-start gap-3 bg-mk-card border border-mk-accent/20 border-l-4
+              border-l-mk-accent rounded-xl px-4 py-3 hover:bg-mk-cardHover transition-colors">
+        <span class="text-xl shrink-0">📋</span>
+        <div class="flex-1 min-w-0">
+            <div class="font-semibold text-mk-accent text-sm">{{ $jumlahPending }} Sesi Pending</div>
+            <div class="text-xs text-mk-muted mt-0.5">Murid izin, belum ada jadwal pengganti — tap untuk detail</div>
+        </div>
+        <span class="text-mk-muted self-center text-lg">›</span>
+    </a>
+</div>
+@endif
+
 {{-- ===== SESI HARI INI ===== --}}
 <div class="px-4 py-3">
     <h2 class="text-xs font-semibold tracking-widest text-mk-muted uppercase mb-3">Sesi Hari Ini</h2>
@@ -91,7 +107,7 @@
     <h2 class="text-xs font-semibold tracking-widest text-mk-muted uppercase mb-3">
         {{ \Carbon\Carbon::now()->locale('id')->isoFormat('MMMM Y') }}
     </h2>
-    <div class="grid grid-cols-2 gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div class="bg-white rounded-xl border border-gray-100 px-4 py-4 shadow-sm">
             <div class="text-2xl font-bold text-mk-text">{{ $totalSesiBulan }}</div>
             <div class="text-xs text-mk-muted mt-0.5">Sesi Terlaksana</div>
@@ -109,6 +125,14 @@
                 <div class="text-xs text-mk-muted mt-0.5">Honor (belum dihitung)</div>
             @endif
         </div>
+        {{-- Kartu Sesi Pending — hanya tampil jika ada pending --}}
+        @if($jumlahPending > 0)
+        <a href="{{ route('guru.sesi-pending.index') }}"
+           class="bg-white rounded-xl border border-gray-100 px-4 py-4 shadow-sm hover:bg-gray-50 transition-colors">
+            <div class="text-2xl font-bold text-red-500">{{ $jumlahPending }}</div>
+            <div class="text-xs text-mk-muted mt-0.5">Sesi Pending</div>
+        </a>
+        @endif
     </div>
 </div>
 

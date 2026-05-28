@@ -29,6 +29,8 @@
                 :active="request()->routeIs('guru.dashboard')" />
             <x-sidebar-item route="guru.jadwal" icon="📅" label="Jadwal Saya"
                 :active="request()->routeIs('guru.jadwal')" />
+            <x-sidebar-item route="guru.sesi-pending.index" icon="📋" label="Sesi Pending"
+                :active="request()->routeIs('guru.sesi-pending*')" />
             <x-sidebar-item route="guru.honor" icon="💰" label="Slip Honor"
                 :active="request()->routeIs('guru.honor*')" />
         </nav>
@@ -100,6 +102,16 @@
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
         Jadwal
+    </a>
+
+    <a href="{{ route('guru.sesi-pending.index') }}"
+       class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors
+              {{ request()->routeIs('guru.sesi-pending*') ? 'text-mk-accent' : 'text-white/45 hover:text-white/75' }}">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        Sesi Pending
     </a>
 
     <a href="{{ route('guru.honor') }}"

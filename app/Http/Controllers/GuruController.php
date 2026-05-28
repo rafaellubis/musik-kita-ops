@@ -72,7 +72,14 @@ class GuruController extends Controller
             ->where('year', now()->year)
             ->first();
 
-        return view('guru.dashboard', compact('teacher', 'sesiHariIni', 'totalSesiBulan', 'slipBulanIni'));
+        // Jumlah sesi IZIN_PENDING milik guru ini — untuk banner + counter di dashboard
+        $jumlahPending = ClassSession::where('teacher_id', $teacher->id)
+            ->where('status', ClassSession::STATUS_IZIN_PENDING)
+            ->count();
+
+        return view('guru.dashboard', compact(
+            'teacher', 'sesiHariIni', 'totalSesiBulan', 'slipBulanIni', 'jumlahPending'
+        ));
     }
 
     /**
