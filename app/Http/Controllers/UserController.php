@@ -8,8 +8,10 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Models\AuditLog;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Services\UserUsernameService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -17,10 +19,11 @@ class UserController extends Controller
     {
         $query = User::with(['roles', 'teacher'])->orderBy('name');
 
-        // Filter: search nama atau email
+        // Filter: search nama, username, atau email
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('username', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
             });
         }
@@ -63,8 +66,13 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request)
     {
+        $username = $request->filled('username')
+            ? Str::lower($request->username)
+            : UserUsernameService::generateUnique(null, $request->name);
+
         $user = User::create([
             'name'              => $request->name,
+            'username'          => $username,
             'email'             => $request->email,
             'password'          => Hash::make($request->password),
             'is_active'         => true,
@@ -83,7 +91,7 @@ class UserController extends Controller
             $user,
             $user->name,
             null,
-            ['name' => $user->name, 'email' => $user->email, 'role' => $request->role],
+            ['name' => $user->name, 'username' => $user->username, 'email' => $user->email, 'role' => $request->role],
         );
 
         return redirect()->route('users.index')
@@ -93,7 +101,12 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, User $user)
     {
         $oldRole   = $user->getRoleNames()->first();
-        $oldValues = ['name' => $user->name, 'email' => $user->email, 'role' => $oldRole];
+        $oldValues = [
+            'name'     => $user->name,
+            'username' => $user->username,
+            'email'    => $user->email,
+            'role'     => $oldRole,
+        ];
 
         // Jika role berubah dari Guru → lepas link Teacher lama
         if ($oldRole === 'Guru' && $request->role !== 'Guru') {
@@ -101,8 +114,9 @@ class UserController extends Controller
         }
 
         $user->update([
-            'name'  => $request->name,
-            'email' => $request->email,
+            'name'     => $request->name,
+            'username' => Str::lower($request->username),
+            'email'    => $request->email,
         ]);
 
         $user->syncRoles([$request->role]);
@@ -121,7 +135,7 @@ class UserController extends Controller
             $user,
             $user->name,
             $oldValues,
-            ['name' => $user->name, 'email' => $user->email, 'role' => $request->role],
+            ['name' => $user->name, 'username' => $user->username, 'email' => $user->email, 'role' => $request->role],
         );
 
         return redirect()->route('users.index')

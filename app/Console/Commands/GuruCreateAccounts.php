@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Teacher;
 use App\Models\User;
+use App\Services\UserUsernameService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -54,8 +55,12 @@ class GuruCreateAccounts extends Command
             // Password awal = nama guru lowercase tanpa spasi
             $password = $namaSlug;
 
+            // Username unik — sama format dengan password awal, bisa diedit Owner nanti
+            $username = UserUsernameService::generateUnique($namaSlug, $teacher->name);
+
             $user = User::create([
                 'name'              => $teacher->name,
+                'username'          => $username,
                 'email'             => $email,
                 'password'          => Hash::make($password),
                 'email_verified_at' => now(), // wajib agar bisa login (middleware verified)
@@ -67,10 +72,10 @@ class GuruCreateAccounts extends Command
             // Tautkan user ke teacher
             $teacher->update(['user_id' => $user->id]);
 
-            $rows[] = [$teacher->name, $email, $password];
+            $rows[] = [$teacher->name, $username, $email, $password];
         }
 
-        $this->table(['Nama Guru', 'Email Login', 'Password Awal'], $rows);
+        $this->table(['Nama Guru', 'Username', 'Email Login', 'Password Awal'], $rows);
         $this->info(count($rows) . ' akun berhasil dibuat.');
         $this->warn('PENTING: Simpan daftar di atas dan bagikan ke masing-masing guru.');
 

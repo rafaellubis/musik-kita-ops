@@ -4,15 +4,9 @@
 --}}
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <div>
-                <h2 class="font-semibold text-xl text-mk-text">Manajemen User</h2>
-                <div class="text-xs text-mk-muted mt-0.5">Kelola akun login Owner, Admin, Auditor, dan Guru</div>
-            </div>
-            <button @click="openCreate()"
-                    class="px-4 py-2 rounded-lg text-sm font-bold transition-colors btn-mk-primary">
-                + Tambah User
-            </button>
+        <div>
+            <h2 class="font-semibold text-xl text-mk-text">Manajemen User</h2>
+            <div class="text-xs text-mk-muted mt-0.5">Kelola akun login Owner, Admin, Auditor, dan Guru</div>
         </div>
     </x-slot>
 
@@ -61,6 +55,14 @@
             },
          }">
 
+        {{-- Tombol tambah — harus di dalam x-data agar openCreate() tersedia --}}
+        <div class="flex justify-end mb-4">
+            <button type="button" @click="openCreate()"
+                    class="px-4 py-2 rounded-lg text-sm font-bold transition-colors btn-mk-primary">
+                + Tambah User
+            </button>
+        </div>
+
         {{-- Flash messages --}}
         @if(session('success'))
         <div class="mb-5 p-3 rounded-lg text-sm"
@@ -80,7 +82,7 @@
         <form method="GET" action="{{ route('users.index') }}"
               class="mb-5 flex flex-wrap gap-3 items-center">
             <input type="text" name="search" value="{{ request('search') }}"
-                   placeholder="Cari nama atau email..."
+                   placeholder="Cari nama, username, atau email..."
                    class="bg-white border border-gray-200 text-gray-900 text-sm rounded-lg px-3 py-2 w-56">
 
             <select name="role" class="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg px-3 py-2">
@@ -112,6 +114,7 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Nama</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Username</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Role</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Info</th>
@@ -128,6 +131,7 @@
                         $userData = [
                             'id'         => $user->id,
                             'name'       => $user->name,
+                            'username'   => $user->username,
                             'email'      => $user->email,
                             'role'       => $role,
                             'teacher_id' => $user->teacher?->id,
@@ -158,6 +162,7 @@
                                 </div>
                             </div>
                         </td>
+                        <td class="px-4 py-3 text-sm font-mono text-gray-700">{{ $user->username ?? '—' }}</td>
                         <td class="px-4 py-3 text-sm text-gray-600">{{ $user->email }}</td>
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
@@ -227,7 +232,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-400">
+                        <td colspan="7" class="px-4 py-8 text-center text-sm text-gray-400">
                             Tidak ada user yang ditemukan.
                         </td>
                     </tr>
@@ -275,7 +280,7 @@
                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Edit User</h3>
                 <p class="text-sm text-gray-500 mb-5" x-text="'Mengubah akun: ' + editUser.name"></p>
 
-                <form method="POST" :action="`/users/${editUser.id}`">
+                <form method="POST" x-bind:action="`{{ url('/users') }}/${editUser.id}`">
                     @csrf
                     @method('PUT')
                     @include('users._form_fields', ['mode' => 'edit'])
@@ -302,7 +307,7 @@
                 <p class="text-sm text-gray-500 mb-5">
                     untuk: <strong x-text="resetUser.name"></strong>
                 </p>
-                <form method="POST" :action="`/users/${resetUser.id}/reset-password`">
+                <form method="POST" x-bind:action="`{{ url('/users') }}/${resetUser.id}/reset-password`">
                     @csrf
                     <div class="mb-4">
                         <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
@@ -346,7 +351,7 @@
                     <div class="font-medium text-gray-800 text-sm" x-text="deactivateUser.name"></div>
                     <div class="text-xs text-gray-500" x-text="deactivateUser.email + ' · ' + deactivateUser.role"></div>
                 </div>
-                <form method="POST" :action="`/users/${deactivateUser.id}/toggle-active`">
+                <form method="POST" x-bind:action="`{{ url('/users') }}/${deactivateUser.id}/toggle-active`">
                     @csrf
                     <div class="flex justify-end gap-3">
                         <button type="button" @click="closeModal()"
@@ -379,7 +384,7 @@
                      style="background:rgba(212,168,83,0.08)">
                     ✅ User ini tidak memiliki audit log — aman untuk dihapus permanen.
                 </div>
-                <form method="POST" :action="`/users/${deleteUser.id}`">
+                <form method="POST" x-bind:action="`{{ url('/users') }}/${deleteUser.id}`">
                     @csrf
                     @method('DELETE')
                     <div class="flex justify-end gap-3">

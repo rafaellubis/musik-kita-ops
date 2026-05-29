@@ -21,6 +21,31 @@
     @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
 </div>
 
+{{-- Username --}}
+<div class="mb-4">
+    <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+        Username
+        @if($mode === 'create')
+            <span class="text-gray-400 font-normal normal-case">(opsional)</span>
+        @else
+            <span class="text-red-500">*</span>
+        @endif
+    </label>
+    @if($mode === 'create')
+        <input type="text" name="username" value="{{ old('username') }}"
+               minlength="3" maxlength="30" pattern="[a-z0-9._-]+"
+               placeholder="Otomatis dari nama jika dikosongkan"
+               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900">
+        <p class="text-xs text-gray-400 mt-1">Huruf kecil, angka, titik, strip, underscore. Min. 3 karakter.</p>
+    @else
+        <input type="text" name="username" :value="editUser.username" required
+               minlength="3" maxlength="30" pattern="[a-z0-9._-]+"
+               placeholder="cth: thomas"
+               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900">
+    @endif
+    @error('username') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+</div>
+
 {{-- Email --}}
 <div class="mb-4">
     <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">

@@ -97,6 +97,7 @@ label {
 }
 
 input[type="email"],
+input[type="text"].login-field,
 input[type="password"] {
     width: 100%;
     background: #FFFFFF;
@@ -209,12 +210,18 @@ button[type="submit"]:hover {
         @csrf
 
         <div class="field-wrap">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email"
-                   value="{{ old('email') }}"
-                   placeholder="nama@musikkita.local"
-                   required autofocus autocomplete="username">
-            @error('email')
+            <label for="login">Email atau Username</label>
+            <input type="text" id="login" name="login"
+                   class="login-field"
+                   value="{{ old('login') }}"
+                   placeholder="thomas atau nama@musikkita.local"
+                   required autofocus
+                   autocomplete="username"
+                   autocapitalize="off"
+                   autocorrect="off"
+                   spellcheck="false"
+                   inputmode="text">
+            @error('login')
                 <div class="field-error">{{ $message }}</div>
             @enderror
         </div>

@@ -23,6 +23,7 @@ class GuruLoginRedirectTest extends TestCase
     public function test_guru_redirect_ke_guru_dashboard(): void
     {
         $user = User::factory()->create([
+            'username'          => 'gurutest',
             'email'             => 'guru@test.com',
             'password'          => bcrypt('password'),
             'email_verified_at' => now(),
@@ -30,7 +31,12 @@ class GuruLoginRedirectTest extends TestCase
         $user->assignRole('Guru');
         Teacher::factory()->create(['user_id' => $user->id]);
 
-        $this->post('/login', ['email' => 'guru@test.com', 'password' => 'password'])
+        $this->post('/login', ['login' => 'guru@test.com', 'password' => 'password'])
+             ->assertRedirect('/guru/dashboard');
+
+        $this->post('/logout');
+
+        $this->post('/login', ['login' => 'gurutest', 'password' => 'password'])
              ->assertRedirect('/guru/dashboard');
     }
 
@@ -43,7 +49,7 @@ class GuruLoginRedirectTest extends TestCase
         ]);
         $user->assignRole('Owner');
 
-        $this->post('/login', ['email' => 'owner@test.com', 'password' => 'password'])
+        $this->post('/login', ['login' => 'owner@test.com', 'password' => 'password'])
              ->assertRedirect('/dashboard');
     }
 
@@ -56,7 +62,7 @@ class GuruLoginRedirectTest extends TestCase
         ]);
         $user->assignRole('Admin');
 
-        $this->post('/login', ['email' => 'admin@test.com', 'password' => 'password'])
+        $this->post('/login', ['login' => 'admin@test.com', 'password' => 'password'])
              ->assertRedirect('/dashboard');
     }
 }

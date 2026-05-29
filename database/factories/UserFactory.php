@@ -5,6 +5,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use App\Services\UserUsernameService;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
@@ -23,8 +24,11 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $name = fake()->name();
+
         return [
-            'name' => fake()->name(),
+            'name' => $name,
+            'username' => UserUsernameService::generateUnique(null, $name . Str::random(4)),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),

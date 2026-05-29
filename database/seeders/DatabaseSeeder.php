@@ -52,6 +52,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'owner@musikkita.local'],
             [
                 'name' => 'Owner Studio',
+                'username' => 'owner',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ]
@@ -69,6 +70,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'admin@musikkita.local'],
             [
                 'name' => 'Admin Studio',
+                'username' => 'admin',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ]
@@ -81,6 +83,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'auditor@musikkita.local'],
             [
                 'name' => 'Auditor Studio',
+                'username' => 'auditor',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ]

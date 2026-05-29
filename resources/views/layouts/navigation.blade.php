@@ -29,7 +29,7 @@
     @hasanyrole('Owner|Admin')
     <x-sidebar-item route="absensi.index" icon="✅" label="Absensi"
         :active="request()->routeIs('absensi.index') || request()->routeIs('absensi.update')" />
-    <x-sidebar-item route="absensi.open-slots" icon="📋" label="Open Slots"
+    <x-sidebar-item route="absensi.open-slots" icon="📋" label="Sesi Pending"
         :active="request()->routeIs('absensi.open-slots*')" />
     @endhasanyrole
 
@@ -66,12 +66,12 @@
     <x-sidebar-item route="instruments.index" icon="🎸" label="Instrumen"
         :active="request()->routeIs('instruments.*')" />
     @role('Owner|Auditor')
-    <x-sidebar-item route="packages.index" icon="📦" label="Paket"
+    <x-sidebar-item route="packages.index" icon="📦" label="Packages Class"
         :active="request()->routeIs('packages.*')" />
     @endrole
-    <x-sidebar-item route="rooms.index" icon="🚪" label="Ruangan"
+    <x-sidebar-item route="rooms.index" icon="🚪" label="Rooms"
         :active="request()->routeIs('rooms.*')" />
-    <x-sidebar-item route="holidays.index" icon="📅" label="Hari Libur"
+    <x-sidebar-item route="holidays.index" icon="📅" label="Kalender Akademik"
         :active="request()->routeIs('holidays.*')" />
     @role('Owner|Auditor')
     <x-sidebar-item route="invoice-components.index" icon="🧾" label="Komponen Invoice"
@@ -80,7 +80,7 @@
         :active="request()->routeIs('payroll-configs.*')" />
     @endrole
     @role('Owner')
-    <x-sidebar-item route="users.index" icon="👤" label="Pengguna"
+    <x-sidebar-item route="users.index" icon="👤" label="Manage User"
         :active="request()->routeIs('users.*')" />
     @endrole
 

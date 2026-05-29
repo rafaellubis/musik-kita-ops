@@ -116,12 +116,27 @@ class UserManagementTest extends TestCase
         $target->assignRole('Admin');
 
         $this->actingAs($this->owner())->put(route('users.update', $target), [
-            'name'  => 'Nama Baru',
-            'email' => 'baru@musikkita.local',
-            'role'  => 'Admin',
+            'name'     => 'Nama Baru',
+            'username' => $target->username,
+            'email'    => 'baru@musikkita.local',
+            'role'     => 'Admin',
         ])->assertRedirect(route('users.index'));
 
         $this->assertDatabaseHas('users', ['id' => $target->id, 'name' => 'Nama Baru']);
+    }
+
+    public function test_owner_bisa_buat_user_tanpa_username_auto_generate(): void
+    {
+        $this->actingAs($this->owner())->post(route('users.store'), [
+            'name'     => 'Thomas Login',
+            'email'    => 'thomas.bar@musikkita.local',
+            'role'     => 'Admin',
+            'password' => 'password123',
+        ])->assertRedirect(route('users.index'));
+
+        $user = User::where('email', 'thomas.bar@musikkita.local')->first();
+        $this->assertNotNull($user);
+        $this->assertEquals('thomaslogin', $user->username);
     }
 
     public function test_edit_ganti_role_guru_ke_admin_melepas_teacher(): void
@@ -132,9 +147,10 @@ class UserManagementTest extends TestCase
         $teacher->update(['user_id' => $guru->id]);
 
         $this->actingAs($this->owner())->put(route('users.update', $guru), [
-            'name'  => $guru->name,
-            'email' => $guru->email,
-            'role'  => 'Admin',
+            'name'     => $guru->name,
+            'username' => $guru->username,
+            'email'    => $guru->email,
+            'role'     => 'Admin',
         ])->assertRedirect(route('users.index'));
 
         $this->assertDatabaseHas('teachers', ['id' => $teacher->id, 'user_id' => null]);
