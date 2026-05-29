@@ -3,7 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClassSession;
+use App\Models\Enrollment;
 use App\Models\HonorSlip;
+use App\Models\ProgressReport;
+use App\Models\ProgressReportItem;
+use App\Models\ProgressReportSection;
+use App\Models\ProgressReportSessionNote;
+use App\Models\ReportTemplate;
 use App\Services\AttendanceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -213,6 +219,193 @@ class GuruController extends Controller
         abort_if(!$teacher, 403);
 
         return view('guru.profil');
+    }
+
+    /**
+     * Daftar laporan progres milik guru yang login.
+     */
+    public function laporan()
+    {
+        $teacher = auth()->user()->teacher;
+        abort_if(!$teacher, 403, 'Akun ini tidak terhubung ke data guru.');
+
+        $enrollments = Enrollment::where('teacher_id', $teacher->id)
+            ->whereIn('status', ['ACTIVE', 'ON_LEAVE'])
+            ->with(['student', 'package.instrument'])
+            ->get();
+
+        $laporan = ProgressReport::where('teacher_id', $teacher->id)
+            ->with(['student', 'enrollment.package'])
+            ->orderByDesc('year')
+            ->orderByDesc('month')
+            ->get();
+
+        $templates = ReportTemplate::where('is_active', true)
+            ->with('instrument')
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('guru.laporan', compact('teacher', 'laporan', 'enrollments', 'templates'));
+    }
+
+    /**
+     * Simpan laporan baru (DRAFT).
+     */
+    public function laporanStore(Request $request)
+    {
+        $teacher = auth()->user()->teacher;
+        abort_if(!$teacher, 403);
+
+        $validated = $request->validate([
+            'enrollment_id'      => 'required|exists:enrollments,id',
+            'report_template_id' => 'required|exists:report_templates,id',
+            'month'              => 'required|integer|min:1|max:12',
+            'year'               => 'required|integer|min:2024|max:2030',
+        ], [
+            'enrollment_id.required'      => 'Kelas wajib dipilih.',
+            'report_template_id.required' => 'Template laporan wajib dipilih.',
+            'month.required'              => 'Bulan wajib diisi.',
+            'year.required'               => 'Tahun wajib diisi.',
+        ]);
+
+        $enrollment = Enrollment::findOrFail($validated['enrollment_id']);
+        abort_if($enrollment->teacher_id !== $teacher->id, 403, 'Bukan enrollment Anda.');
+
+        $sudahAda = ProgressReport::where('enrollment_id', $enrollment->id)
+            ->where('month', $validated['month'])
+            ->where('year', $validated['year'])
+            ->exists();
+
+        if ($sudahAda) {
+            return back()->with('error', 'Laporan untuk kelas dan bulan ini sudah ada.');
+        }
+
+        $template = ReportTemplate::with('sections.items')->findOrFail($validated['report_template_id']);
+
+        $report = ProgressReport::create([
+            'enrollment_id'      => $enrollment->id,
+            'student_id'         => $enrollment->student_id,
+            'teacher_id'         => $teacher->id,
+            'report_template_id' => $template->id,
+            'month'              => $validated['month'],
+            'year'               => $validated['year'],
+            'status'             => ProgressReport::STATUS_DRAFT,
+        ]);
+
+        foreach ($template->sections as $section) {
+            ProgressReportSection::create([
+                'progress_report_id'         => $report->id,
+                'report_template_section_id' => $section->id,
+                'summary'                    => null,
+            ]);
+            foreach ($section->items as $item) {
+                ProgressReportItem::create([
+                    'progress_report_id'      => $report->id,
+                    'report_template_item_id' => $item->id,
+                    'is_checked'              => false,
+                ]);
+            }
+        }
+
+        return redirect()->route('guru.laporan.edit', $report)
+            ->with('success', 'Laporan baru dibuat. Silakan isi dan submit.');
+    }
+
+    /**
+     * Form edit laporan (hanya DRAFT).
+     */
+    public function laporanEdit(ProgressReport $progressReport)
+    {
+        $teacher = auth()->user()->teacher;
+        abort_if(!$teacher, 403);
+        abort_if($progressReport->teacher_id !== $teacher->id, 403, 'Bukan laporan Anda.');
+        abort_if($progressReport->status === ProgressReport::STATUS_SUBMITTED, 403, 'Laporan sudah disubmit.');
+
+        $progressReport->load([
+            'template.sections.items',
+            'sections.templateSection',
+            'items.templateItem',
+            'sessionNotes',
+            'student',
+            'enrollment.package',
+        ]);
+
+        return view('guru.laporan-form', compact('progressReport'));
+    }
+
+    /**
+     * Update isi laporan. Jika request.submit = '1', status jadi SUBMITTED.
+     */
+    public function laporanUpdate(Request $request, ProgressReport $progressReport)
+    {
+        $teacher = auth()->user()->teacher;
+        abort_if(!$teacher, 403);
+        abort_if($progressReport->teacher_id !== $teacher->id, 403, 'Bukan laporan Anda.');
+        abort_if($progressReport->status === ProgressReport::STATUS_SUBMITTED, 403, 'Laporan sudah disubmit.');
+
+        $validated = $request->validate([
+            'highlight'            => 'nullable|string|max:3000',
+            'summary_notes'        => 'nullable|string|max:2000',
+            'target_notes'         => 'nullable|string|max:2000',
+            'repertoire'           => 'nullable|array',
+            'repertoire.*'         => 'string|max:200',
+            'section_summary'      => 'nullable|array',
+            'section_summary.*'    => 'nullable|string|max:500',
+            'checked_items'        => 'nullable|array',
+            'checked_items.*'      => 'integer|exists:report_template_items,id',
+            'session_dates'        => 'nullable|array',
+            'session_dates.*'      => 'nullable|date',
+            'session_notes_text'   => 'nullable|array',
+            'session_notes_text.*' => 'nullable|string|max:2000',
+        ]);
+
+        $progressReport->update([
+            'highlight'     => $validated['highlight'] ?? null,
+            'summary_notes' => $validated['summary_notes'] ?? null,
+            'target_notes'  => $validated['target_notes'] ?? null,
+            'repertoire'    => array_filter($validated['repertoire'] ?? []),
+        ]);
+
+        if (!empty($validated['section_summary'])) {
+            foreach ($validated['section_summary'] as $sectionId => $summary) {
+                ProgressReportSection::where('progress_report_id', $progressReport->id)
+                    ->where('report_template_section_id', $sectionId)
+                    ->update(['summary' => $summary ?: null]);
+            }
+        }
+
+        $checkedIds = $validated['checked_items'] ?? [];
+        ProgressReportItem::where('progress_report_id', $progressReport->id)->update(['is_checked' => false]);
+        if (!empty($checkedIds)) {
+            ProgressReportItem::where('progress_report_id', $progressReport->id)
+                ->whereIn('report_template_item_id', $checkedIds)
+                ->update(['is_checked' => true]);
+        }
+
+        $progressReport->sessionNotes()->delete();
+        $dates = $validated['session_dates'] ?? [];
+        $notes = $validated['session_notes_text'] ?? [];
+        foreach ($dates as $i => $date) {
+            if (!empty($date) && !empty($notes[$i])) {
+                ProgressReportSessionNote::create([
+                    'progress_report_id' => $progressReport->id,
+                    'session_date'       => $date,
+                    'notes'              => $notes[$i],
+                    'sort_order'         => $i,
+                ]);
+            }
+        }
+
+        if ($request->input('submit') === '1') {
+            $progressReport->update([
+                'status'       => ProgressReport::STATUS_SUBMITTED,
+                'submitted_at' => now(),
+            ]);
+            return redirect()->route('guru.laporan.index')
+                ->with('success', 'Laporan berhasil disubmit.');
+        }
+
+        return back()->with('success', 'Draft laporan tersimpan.');
     }
 
     public function updateAbsensi(Request $request, ClassSession $classSession)

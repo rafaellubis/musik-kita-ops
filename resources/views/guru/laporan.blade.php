@@ -1,0 +1,94 @@
+<x-guru-layout title="Laporan Progres">
+
+<div class="px-4 pt-5 pb-2">
+    <h1 class="text-lg font-semibold text-mk-text">Laporan Progres</h1>
+    <p class="text-sm text-mk-muted">Laporan perkembangan murid bulanan</p>
+</div>
+
+@if(session('success'))
+    <div class="mx-4 mb-3 p-3 rounded-xl text-sm" style="background:rgba(52,211,153,0.1);color:#34D399;border:1px solid rgba(52,211,153,0.2)">
+        {{ session('success') }}
+    </div>
+@endif
+@if(session('error'))
+    <div class="mx-4 mb-3 p-3 rounded-xl text-sm" style="background:rgba(248,113,113,0.1);color:#F87171;border:1px solid rgba(248,113,113,0.2)">
+        {{ session('error') }}
+    </div>
+@endif
+
+{{-- Form buat laporan baru --}}
+<div class="mx-4 mb-4">
+    <details class="bg-mk-card border border-mk-border rounded-xl">
+        <summary class="px-4 py-3 font-semibold text-sm text-mk-text cursor-pointer">+ Buat Laporan Baru</summary>
+        <div class="px-4 pb-4 pt-2 border-t border-mk-border">
+            <form method="POST" action="{{ route('guru.laporan.store') }}">
+                @csrf
+                <div class="mb-3">
+                    <label class="block text-xs text-mk-muted mb-1">Kelas / Murid</label>
+                    <select name="enrollment_id" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm" required>
+                        <option value="">-- Pilih murid --</option>
+                        @foreach($enrollments as $e)
+                            <option value="{{ $e->id }}">{{ $e->student->full_name }} — {{ $e->package->code }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="block text-xs text-mk-muted mb-1">Template Laporan</label>
+                    <select name="report_template_id" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm" required>
+                        <option value="">-- Pilih template --</option>
+                        @foreach($templates as $t)
+                            <option value="{{ $t->id }}">{{ $t->name }} ({{ $t->instrument->name }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex gap-2 mb-3">
+                    <div class="flex-1">
+                        <label class="block text-xs text-mk-muted mb-1">Bulan</label>
+                        <select name="month" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm" required>
+                            @foreach(range(1,12) as $m)
+                                <option value="{{ $m }}" {{ $m == now()->month ? 'selected' : '' }}>
+                                    {{ \Carbon\Carbon::create()->month($m)->locale('id')->isoFormat('MMMM') }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="w-24">
+                        <label class="block text-xs text-mk-muted mb-1">Tahun</label>
+                        <input type="number" name="year" value="{{ now()->year }}" min="2024" max="2030"
+                               class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-2.5 rounded-xl font-semibold text-sm btn-mk-primary">Buat Laporan</button>
+            </form>
+        </div>
+    </details>
+</div>
+
+{{-- Daftar laporan --}}
+<div class="px-4 space-y-3 pb-24">
+    <h2 class="text-xs font-semibold tracking-widest text-mk-muted uppercase">Laporan Saya</h2>
+
+    @forelse($laporan as $r)
+        <div class="bg-mk-card border border-mk-border rounded-xl px-4 py-3">
+            <div class="flex justify-between items-start">
+                <div>
+                    <div class="font-semibold text-mk-text text-sm">{{ $r->student->full_name }}</div>
+                    <div class="text-xs text-mk-muted mt-0.5">{{ $r->enrollment->package->code }} · {{ $r->namaBulan() }}</div>
+                </div>
+                <span class="text-xs px-2 py-1 rounded-full font-medium {{ $r->status === 'SUBMITTED' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700' }}">
+                    {{ $r->status === 'SUBMITTED' ? 'Submitted' : 'Draft' }}
+                </span>
+            </div>
+            @if($r->status === 'DRAFT')
+                <a href="{{ route('guru.laporan.edit', $r) }}"
+                   class="mt-3 block text-center py-2 rounded-lg text-sm font-semibold border border-mk-accent/40 text-mk-accent hover:bg-mk-accent/10">
+                    Lanjut Isi →
+                </a>
+            @endif
+        </div>
+    @empty
+        <div class="text-center py-8 text-mk-muted text-sm">Belum ada laporan.</div>
+    @endforelse
+</div>
+
+</x-guru-layout>

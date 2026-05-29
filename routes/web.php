@@ -487,6 +487,12 @@ Route::middleware(['auth', 'verified', 'role:Guru'])
         Route::get('/profil',                        [GuruController::class, 'profil'])->name('profil');
         Route::get('/sesi-pending',                  [GuruController::class, 'sesiPending'])->name('sesi-pending.index');
         Route::post('/sesi-pending/{session}/suggest', [GuruController::class, 'suggestDate'])->name('sesi-pending.suggest');
+
+        // ===== Laporan Progres Murid =====
+        Route::get('/laporan',                       [GuruController::class, 'laporan'])->name('laporan.index');
+        Route::post('/laporan',                      [GuruController::class, 'laporanStore'])->name('laporan.store');
+        Route::get('/laporan/{progressReport}/edit', [GuruController::class, 'laporanEdit'])->name('laporan.edit');
+        Route::put('/laporan/{progressReport}',      [GuruController::class, 'laporanUpdate'])->name('laporan.update');
     });
 
 require __DIR__.'/auth.php';
