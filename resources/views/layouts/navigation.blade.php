@@ -48,6 +48,9 @@
     {{-- Grup: LAPORAN --}}
     <div class="px-2 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-white/40 uppercase">Laporan</div>
 
+    <x-sidebar-item route="progress-reports.index" icon="📝" label="Laporan Progres"
+        :active="request()->routeIs('progress-reports.*')" />
+
     @if(auth()->user()->hasRole('Owner'))
         <x-sidebar-item route="reports.finance" icon="📈" label="Laporan"
             :active="request()->routeIs('reports.*')" />
@@ -73,6 +76,10 @@
         :active="request()->routeIs('rooms.*')" />
     <x-sidebar-item route="holidays.index" icon="📅" label="Kalender Akademik"
         :active="request()->routeIs('holidays.*')" />
+    @role('Owner')
+    <x-sidebar-item route="report-templates.index" icon="📋" label="Template Laporan"
+        :active="request()->routeIs('report-templates.*')" />
+    @endrole
     @role('Owner|Auditor')
     <x-sidebar-item route="invoice-components.index" icon="🧾" label="Komponen Invoice"
         :active="request()->routeIs('invoice-components.*')" />
