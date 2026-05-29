@@ -67,7 +67,7 @@
                                 @role('Owner')
                                 <a href="{{ route('report-templates.edit', $t) }}" class="text-indigo-600 hover:underline text-xs mr-2">Edit</a>
                                 <form action="{{ route('report-templates.destroy', $t) }}" method="POST" class="inline"
-                                      onsubmit="return confirm('Hapus template {{ $t->name }}?')">
+                                      onsubmit="return confirm('Hapus template ' + {{ Js::from($t->name) }} + '?')">
                                     @csrf @method('DELETE')
                                     <button class="text-red-500 hover:underline text-xs">Hapus</button>
                                 </form>
