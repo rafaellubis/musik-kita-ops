@@ -27,6 +27,7 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\GuruController;
 use App\Http\Controllers\KalenderController;
+use App\Http\Controllers\ProgressReportController;
 use App\Http\Controllers\ReportTemplateController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -448,6 +449,12 @@ Route::middleware('auth')->group(function () {
         Route::resource('report-templates', ReportTemplateController::class)
             ->parameters(['report-templates' => 'reportTemplate'])
             ->only(['index', 'show']);
+
+        // ===== Laporan Progres Murid — Admin/Owner/Auditor view laporan yang disubmit guru =====
+        // /pdf HARUS sebelum /{progressReport} agar tidak ditangkap wildcard show.
+        Route::get('progress-reports', [ProgressReportController::class, 'index'])->name('progress-reports.index');
+        Route::get('progress-reports/{progressReport}/pdf', [ProgressReportController::class, 'pdf'])->name('progress-reports.pdf');
+        Route::get('progress-reports/{progressReport}', [ProgressReportController::class, 'show'])->name('progress-reports.show');
 
         // ===== M09: Laporan statistik murid (read-only, semua role) =====
         Route::get('reports/students',
