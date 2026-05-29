@@ -38,4 +38,13 @@ class Instrument extends Model
                     ->withPivot('is_primary')
                     ->withTimestamps();
     }
+
+    /**
+     * Satu instrumen punya banyak template laporan progres.
+     * Dipakai untuk memilih template saat guru membuat laporan per murid.
+     */
+    public function reportTemplates(): HasMany
+    {
+        return $this->hasMany(ReportTemplate::class)->orderBy('sort_order');
+    }
 }

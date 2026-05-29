@@ -60,6 +60,11 @@ class Enrollment extends Model
         return $this->hasMany(ClassSession::class);
     }
 
+    public function progressReports(): HasMany
+    {
+        return $this->hasMany(ProgressReport::class)->orderByDesc('year')->orderByDesc('month');
+    }
+
     // ============= SCOPES =============
 
     public function scopeActive($query)
