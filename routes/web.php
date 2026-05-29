@@ -27,6 +27,7 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\GuruController;
 use App\Http\Controllers\KalenderController;
+use App\Http\Controllers\ReportTemplateController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -271,6 +272,28 @@ Route::middleware('auth')->group(function () {
             [PaymentController::class, 'void']
         )->name('payments.void');
 
+        // ===== Laporan Progres — Template Master Data (Owner only) =====
+        // index + show didaftarkan juga di group read-only di bawah.
+        Route::resource('report-templates', ReportTemplateController::class)
+            ->parameters(['report-templates' => 'reportTemplate'])
+            ->except(['index', 'show']);
+
+        Route::post('report-templates/{reportTemplate}/sections',
+            [ReportTemplateController::class, 'storeSection'])
+            ->name('report-templates.sections.store');
+
+        Route::delete('report-templates/{reportTemplate}/sections/{section}',
+            [ReportTemplateController::class, 'destroySection'])
+            ->name('report-templates.sections.destroy');
+
+        Route::post('report-templates/{reportTemplate}/sections/{section}/items',
+            [ReportTemplateController::class, 'storeItem'])
+            ->name('report-templates.items.store');
+
+        Route::delete('report-templates/{reportTemplate}/sections/{section}/items/{item}',
+            [ReportTemplateController::class, 'destroyItem'])
+            ->name('report-templates.items.destroy');
+
 
         // ===== M06: Honor Guru — aksi sensitif (Owner only) =====
         // Kalkulasi, edit komponen manual, dan tandai dibayar.
@@ -420,6 +443,11 @@ Route::middleware('auth')->group(function () {
 
         // ===== M08: Event — read-only =====
         Route::resource('events', EventController::class)->only(['index', 'show']);
+
+        // ===== Laporan Progres — Template read-only (Owner + Admin + Auditor) =====
+        Route::resource('report-templates', ReportTemplateController::class)
+            ->parameters(['report-templates' => 'reportTemplate'])
+            ->only(['index', 'show']);
 
         // ===== M09: Laporan statistik murid (read-only, semua role) =====
         Route::get('reports/students',
