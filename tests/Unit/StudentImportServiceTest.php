@@ -483,6 +483,75 @@ class StudentImportServiceTest extends TestCase
         $this->assertEquals('Ibu', $result['parent_relationship']);
     }
 
+    public function test_validate_row_menerima_tanggal_serial_excel(): void
+    {
+        // Serial dengan pecahan jam (40312.7) — pola umum saat Excel menyimpan date+time dalam satu sel
+        $excelBirth = \PhpOffice\PhpSpreadsheet\Shared\Date::formattedPHPToExcel(2010, 5, 15) - 0.3;
+
+        $result = $this->service->validateRow(2, [
+            'full_name'  => 'Anak Excel',
+            'gender'     => 'L',
+            'status'     => 'Aktif',
+            'birth_date' => $excelBirth,
+        ]);
+
+        $this->assertIsArray($result);
+        $this->assertEquals('2010-05-15', $result['birth_date']);
+    }
+
+    public function test_confirm_menerima_preferred_time_serial_dari_session(): void
+    {
+        $piano   = Instrument::create(['name' => 'Piano', 'code' => 'PIANO', 'is_active' => true, 'sort_order' => 1]);
+        $package = Package::create([
+            'code' => 'REG-PIANO-2', 'instrument_id' => $piano->id,
+            'class_type' => 'REGULER', 'grade' => 'Basic',
+            'duration_min' => 30, 'price_per_month' => 340000,
+            'is_active' => true, 'sort_order' => 2,
+        ]);
+        $teacher = Teacher::create(['code' => 'TCH-SERIAL', 'name' => 'Guru Serial', 'phone' => '081', 'is_active' => true]);
+
+        // Simulasi data session lama: preferred_time masih float serial Excel
+        $this->service->confirm([[
+            'row'  => 2,
+            'data' => [
+                'full_name'           => 'Murid Serial Time',
+                'gender'              => 'L',
+                'status'              => 'Aktif',
+                'package_id'          => $package->id,
+                'assigned_teacher_id' => $teacher->id,
+                'preferred_day'       => 'Rabu',
+                'preferred_time'      => 15.5 / 24,
+                'active_since'        => null,
+                '_has_warning'        => false,
+                '_warning_message'    => null,
+                'nickname' => null, 'birth_date' => null, 'phone' => '+6281777770001',
+                'email' => null, 'address' => null, 'notes' => null,
+                'parent_name' => null, 'parent_phone' => null, 'parent_email' => null,
+                'parent_relationship' => null,
+            ],
+        ]], []);
+
+        $this->assertDatabaseHas('schedules', [
+            'start_time' => '15:30:00',
+            'end_time'   => '16:00:00',
+        ]);
+    }
+
+    public function test_validate_row_menerima_jam_serial_excel(): void
+    {
+        $excelTime = 15.5 / 24; // 15:30
+
+        $result = $this->service->validateRow(2, [
+            'full_name'      => 'Murid Jam',
+            'gender'         => 'L',
+            'status'         => 'Aktif',
+            'preferred_time' => $excelTime,
+        ]);
+
+        $this->assertIsArray($result);
+        $this->assertEquals('15:30', $result['preferred_time']);
+    }
+
     public function test_end_time_dihitung_dari_duration_min(): void
     {
         $piano   = Instrument::create(['name' => 'Piano', 'code' => 'PIANO', 'is_active' => true, 'sort_order' => 1]);

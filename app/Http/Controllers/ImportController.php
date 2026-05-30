@@ -106,9 +106,19 @@ class ImportController extends Controller
         try {
             $result = $this->service->confirm($preview['valid'], $preview['overwrite']);
         } catch (\Throwable $e) {
+            \Log::error('ImportController::confirm gagal', [
+                'message' => $e->getMessage(),
+                'class'   => get_class($e),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ]);
+
             session()->forget('import_preview');
+
+            $detail = $this->formatConfirmError($e);
+
             return redirect()->route('import.index')
-                ->with('error', 'Terjadi kesalahan saat menyimpan data. Import dibatalkan, tidak ada data yang tersimpan.');
+                ->with('error', "Terjadi kesalahan saat menyimpan data. Import dibatalkan, tidak ada data yang tersimpan. {$detail}");
         }
 
         session()->forget('import_preview');
@@ -132,6 +142,30 @@ class ImportController extends Controller
         session()->forget('import_preview');
         return redirect()->route('import.index')
             ->with('info', 'Import dibatalkan. Silakan upload ulang file jika ingin mencoba lagi.');
+    }
+
+    /**
+     * Ubah exception teknis menjadi petunjuk yang bisa ditindaklanjuti admin.
+     */
+    private function formatConfirmError(\Throwable $e): string
+    {
+        $msg = $e->getMessage();
+
+        if ($e instanceof \Carbon\Exceptions\InvalidFormatException
+            || str_contains($msg, 'Trailing data')
+            || str_contains($msg, 'H:i')) {
+            return 'Penyebab: format jam/tanggal di Excel tidak terbaca — upload ulang file, klik Validasi lagi, lalu Konfirmasi.';
+        }
+
+        if (str_contains($msg, 'nickname') || str_contains($msg, 'students_nickname_unique')) {
+            return 'Penyebab: nama panggilan (nickname) duplikat — pastikan setiap nickname unik atau dikosongkan.';
+        }
+
+        if (str_contains($msg, 'Duplicate entry')) {
+            return 'Penyebab: data duplikat di database — periksa nama panggilan atau nomor HP yang sama.';
+        }
+
+        return 'Detail: ' . $msg;
     }
 
     // ============= PRIVATE: DATA UNTUK TEMPLATE =============

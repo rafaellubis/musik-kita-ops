@@ -219,6 +219,8 @@ class StudentImportService
         array $packageDurationMap = [],
         array $packageClassTypeMap = []
     ): array|string {
+        $row = $this->normalizeExcelDateFields($row);
+
         $errors = [];
 
         // ---------- KOLOM WAJIB ----------
@@ -450,6 +452,84 @@ class StudentImportService
     // ============= PRIVATE HELPERS =============
 
     /**
+     * Konversi nilai tanggal/jam dari sel Excel (sering berupa angka serial) ke format string standar.
+     */
+    private function normalizeExcelDateFields(array $data): array
+    {
+        foreach (['birth_date', 'active_since', 'cuti_until'] as $field) {
+            if (!empty($data[$field])) {
+                $data[$field] = $this->normalizeDateValue($data[$field]);
+            }
+        }
+
+        if (!empty($data['preferred_time'])) {
+            $data['preferred_time'] = $this->normalizeTimeValue($data['preferred_time']);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Serial Excel (mis. 45321) → YYYY-MM-DD. String yang sudah benar dibiarkan.
+     */
+    private function normalizeDateValue(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            $serial = (float) $value;
+            // Ambang ~1970-01-02 dalam serial Excel; hindari salah artikan angka kecil sebagai tanggal
+            if ($serial >= 25569) {
+                // round: sel Excel date+time (40312.7) tetap jadi tanggal yang benar (2010-05-15)
+                return Carbon::create(1899, 12, 30, 0, 0, 0, 'UTC')
+                    ->addDays((int) round($serial))
+                    ->format('Y-m-d');
+            }
+        }
+
+        return is_string($value) ? trim($value) : (string) $value;
+    }
+
+    /**
+     * Serial Excel untuk jam (0–1 = pecahan hari) → HH:MM. Juga terima H:i:s dari Excel.
+     */
+    private function normalizeTimeValue(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            $n = (float) $value;
+
+            // Jam murni: 15:30 = 15.5/24 ≈ 0.645833...
+            if ($n >= 0 && $n < 1) {
+                $totalMinutes = (int) round($n * 24 * 60);
+
+                return sprintf('%02d:%02d', intdiv($totalMinutes, 60), $totalMinutes % 60);
+            }
+
+            // Datetime serial — ambil bagian jam saja (pecahan desimal = menit dalam hari)
+            if ($n >= 25569) {
+                $fraction = $n - floor($n);
+                $totalMinutes = (int) round($fraction * 24 * 60);
+
+                return sprintf('%02d:%02d', intdiv($totalMinutes, 60), $totalMinutes % 60);
+            }
+        }
+
+        $text = trim((string) $value);
+
+        if (preg_match('/^\d{1,2}:\d{2}:\d{2}$/', $text)) {
+            return substr($text, 0, 5);
+        }
+
+        return $text;
+    }
+
+    /**
      * Normalisasi nomor HP ke format +62 (08xxx → +628xxx, 8xxx → +628xxx).
      */
     private function normalizePhone(string $phone): string
@@ -606,25 +686,51 @@ class StudentImportService
      */
     private function upsertStudent(array $data): Student
     {
-        // Pisahkan key internal dari data DB
         $existingId = $data['_existing_id'] ?? null;
         $roomId     = $data['room_id'] ?? null;
 
-        // Hapus semua key internal sebelum simpan ke DB
-        unset($data['_existing_id'], $data['_has_warning'], $data['_warning_message'], $data['_conflict_warning'], $data['room_id'], $data['_room_code'], $data['_duration_min']);
+        // Normalisasi ulang — data dari session bisa masih berupa serial Excel (float)
+        $data = $this->normalizeExcelDateFields($data);
+
+        // Payload jadwal/enrollment — tidak masuk kolom tabel students (sudah multi-kelas)
+        $schedulePayload = [
+            'package_id'          => $data['package_id'] ?? null,
+            'assigned_teacher_id' => $data['assigned_teacher_id'] ?? null,
+            'preferred_day'       => $data['preferred_day'] ?? null,
+            'preferred_time'      => $data['preferred_time'] ?? null,
+            'active_since'        => $data['active_since'] ?? null,
+            'room_id'             => $roomId,
+        ];
+
+        unset(
+            $data['_existing_id'],
+            $data['_has_warning'],
+            $data['_warning_message'],
+            $data['_conflict_warning'],
+            $data['room_id'],
+            $data['_room_code'],
+            $data['_duration_min'],
+            $data['_class_type'],
+            $data['package_id'],
+            $data['assigned_teacher_id'],
+            $data['preferred_day'],
+            $data['preferred_time'],
+        );
+
+        // Murid Cuti dari Excel: isi cuti_from jika hanya cuti_until yang ada
+        if (($data['status'] ?? '') === 'Cuti' && empty($data['cuti_from']) && !empty($data['cuti_until'])) {
+            $data['cuti_from'] = today()->toDateString();
+        }
 
         if ($existingId) {
-            // Mode update: murid sudah ada di DB
             $student = Student::findOrFail($existingId);
             $student->update($data);
         } else {
-            // Mode insert: murid baru — generate kode unik
             $data['student_code'] = Student::generateCode();
             $student = Student::create($data);
         }
 
-        // Buat enrollment, schedule, dan status history untuk murid Aktif
-        $this->createEnrollmentAndSchedule($student, array_merge($data, ['room_id' => $roomId]));
+        $this->createEnrollmentAndSchedule($student, array_merge($data, $schedulePayload));
 
         return $student;
     }
