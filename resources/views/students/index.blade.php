@@ -121,7 +121,10 @@
                     </thead>
                     <tbody>
                         @forelse($students as $s)
-                        @php $cfg = $statusCfg[$s->status] ?? $statusCfg['Calon']; @endphp
+                        @php
+                            $cfg = $statusCfg[$s->status] ?? $statusCfg['Calon'];
+                            $hariMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+                        @endphp
                         <tr class="border-b border-mk-borderLight hover:bg-mk-surface transition-colors cursor-pointer"
                             onclick="window.location='{{ route('students.show', $s->id) }}'">
                             <td class="px-4 py-3 font-mono text-xs font-semibold" style="color:#5DB890">
@@ -135,23 +138,34 @@
                             </td>
                             <td class="px-4 py-3 text-center text-sm text-mk-dim">{{ $s->gender }}</td>
                             <td class="px-4 py-3 text-center text-sm text-mk-muted">{{ $s->age ?? '—' }}</td>
-                            <td class="px-4 py-3 text-xs text-mk-dim max-w-[130px] truncate">
-                                {{ $s->package?->code ?? '—' }}
+                            <td class="px-4 py-3 text-xs text-mk-dim">
+                                @forelse($s->activeEnrollments as $enr)
+                                <div @class(['font-mono', 'mt-1' => !$loop->first])>{{ $enr->package?->code ?? '—' }}</div>
+                                @empty
+                                <span>—</span>
+                                @endforelse
                             </td>
                             <td class="px-4 py-3 text-sm text-mk-muted">
-                                {{ $s->assignedTeacher?->name ?? '—' }}
+                                @forelse($s->activeEnrollments as $enr)
+                                <div @class(['mt-1' => !$loop->first])>{{ $enr->teacher?->name ?? '—' }}</div>
+                                @empty
+                                <span>—</span>
+                                @endforelse
                             </td>
                             <td class="px-4 py-3 text-center">
-                                @php
-                                    $sch = $s->primaryEnrollment?->schedules->where('is_active', true)->first();
-                                    $hariMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-                                @endphp
-                                @if($sch)
-                                <div class="text-xs text-mk-muted">{{ $hariMap[$sch->day_of_week] ?? '—' }}</div>
-                                <div class="text-xs text-mk-dim">{{ \Carbon\Carbon::parse($sch->start_time)->format('H:i') }}</div>
-                                @else
+                                @forelse($s->activeEnrollments as $enr)
+                                @php $sch = $enr->schedules->first(); @endphp
+                                <div @class(['mt-1' => !$loop->first])>
+                                    @if($sch)
+                                    <div class="text-xs text-mk-muted">{{ $hariMap[$sch->day_of_week] ?? '—' }}</div>
+                                    <div class="text-xs text-mk-dim">{{ \Carbon\Carbon::parse($sch->start_time)->format('H:i') }}</div>
+                                    @else
+                                    <span class="text-xs text-mk-dim">—</span>
+                                    @endif
+                                </div>
+                                @empty
                                 <span class="text-xs text-mk-dim">—</span>
-                                @endif
+                                @endforelse
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"

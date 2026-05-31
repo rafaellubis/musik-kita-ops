@@ -28,9 +28,9 @@ class StudentController extends Controller
         // Build query bertahap berdasarkan filter
         $query = Student::query()
             ->with([
-                'primaryEnrollment.package.instrument',
-                'primaryEnrollment.teacher',
-                'primaryEnrollment.schedules' => fn ($q) => $q->where('is_active', true),
+                'activeEnrollments.package.instrument',
+                'activeEnrollments.teacher',
+                'activeEnrollments.schedules' => fn ($q) => $q->where('is_active', true),
             ]);
 
         // Filter status

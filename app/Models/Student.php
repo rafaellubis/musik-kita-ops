@@ -67,6 +67,17 @@ class Student extends Model
     }
 
     /**
+     * Enrollment berjalan untuk tampilan list/detail — ACTIVE + TRIAL (murid Trial).
+     * Primary selalu urut pertama (is_primary DESC).
+     */
+    public function activeEnrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class)
+            ->whereIn('status', [Enrollment::STATUS_ACTIVE, Enrollment::STATUS_TRIAL])
+            ->orderByDesc('is_primary');
+    }
+
+    /**
      * Sesi yang ter-generate untuk murid ini (lewat enrollment-nya).
      */
     public function classSessions(): HasMany
