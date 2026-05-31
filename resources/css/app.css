@@ -100,6 +100,36 @@
 /* Dropdown option */
 .mk-content select option { background-color: #ffffff; color: #3A2015; }
 
+/* Searchable select — trigger pakai button, perlu border sama seperti select */
+.mk-content .mk-searchable-select-trigger {
+    border-width: 1.5px !important;
+    border-style: solid !important;
+    border-color: rgba(93,184,144,0.70) !important;
+    color: #3A2015 !important;
+    background-color: #ffffff !important;
+}
+.mk-content .mk-searchable-select-trigger:hover {
+    background-color: rgba(93,184,144,0.04) !important;
+}
+.mk-content .mk-searchable-select-trigger:focus,
+.mk-content .mk-searchable-select-trigger:focus-visible {
+    border-color: #5DB890 !important;
+    box-shadow: 0 0 0 3px rgba(93,184,144,0.18) !important;
+    outline: none !important;
+}
+.mk-content .mk-searchable-select-panel {
+    border-width: 1.5px !important;
+    border-style: solid !important;
+    border-color: rgba(93,184,144,0.70) !important;
+    background-color: #ffffff !important;
+}
+.mk-content .mk-searchable-select-panel-header {
+    border-bottom-width: 1px !important;
+    border-bottom-style: solid !important;
+    border-bottom-color: rgba(93,184,144,0.22) !important;
+    background-color: rgba(93,184,144,0.06) !important;
+}
+
 /* Checkbox checked → mint */
 .mk-content input[type="checkbox"] { background-color: #ffffff !important; }
 .mk-content input[type="checkbox"]:checked {

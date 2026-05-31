@@ -45,19 +45,22 @@
                 <input type="hidden" name="week" value="{{ $weekStart->format('Y-m-d') }}">
 
                 <div class="flex flex-wrap gap-3 items-end">
+                    @php
+                        $teacherFilterOptions = $teachers->map(fn ($t) => [
+                            'value' => $t->id,
+                            'label' => $t->name,
+                        ])->values()->all();
+                    @endphp
                     <div>
-                        <label class="block text-xs font-medium text-mk-muted mb-1">Guru</label>
-                        <select name="teacher_id"
-                                class="border border-mk-border rounded px-2 py-1.5 text-sm"
-                                @change="$el.form.submit()">
-                            <option value="">Semua Guru</option>
-                            @foreach($teachers as $t)
-                                <option value="{{ $t->id }}"
-                                    {{ request('teacher_id') == $t->id ? 'selected' : '' }}>
-                                    {{ $t->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select
+                            name="teacher_id"
+                            label="Guru"
+                            placeholder="Semua Guru"
+                            :selected="request('teacher_id')"
+                            :options="$teacherFilterOptions"
+                            :autoSubmit="true"
+                            inputClass="mk-searchable-select-trigger rounded px-2 py-1.5 text-sm min-w-[180px]"
+                        />
                     </div>
 
                     <div>

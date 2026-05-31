@@ -149,17 +149,24 @@
                             @endfor
                         </select>
                     </div>
+                    @php
+                        $teacherFilterOptions = $teachers->map(fn ($t) => [
+                            'value' => $t->id,
+                            'label' => '['.$t->code.'] '.$t->name,
+                        ])->values()->all();
+                        $studentFilterOptions = $students->map(fn ($s) => [
+                            'value' => $s->id,
+                            'label' => $s->student_code.' - '.$s->full_name,
+                        ])->values()->all();
+                    @endphp
                     <div>
-                        <label class="block text-xs text-mk-dim mb-1">Guru</label>
-                        <select name="teacher_id" class="block w-full border-mk-border rounded text-sm">
-                            <option value="">Semua Guru</option>
-                            @foreach($teachers as $t)
-                                <option value="{{ $t->id }}"
-                                    {{ request('teacher_id') == $t->id ? 'selected' : '' }}>
-                                    [{{ $t->code }}] {{ $t->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select
+                            name="teacher_id"
+                            label="Guru"
+                            placeholder="Semua Guru"
+                            :selected="request('teacher_id')"
+                            :options="$teacherFilterOptions"
+                        />
                     </div>
                     <div>
                         <label class="block text-xs text-mk-dim mb-1">Ruang</label>
@@ -174,16 +181,13 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs text-mk-dim mb-1">Murid</label>
-                        <select name="student_id" class="block w-full border-mk-border rounded text-sm">
-                            <option value="">Semua Murid</option>
-                            @foreach($students as $s)
-                                <option value="{{ $s->id }}"
-                                    {{ request('student_id') == $s->id ? 'selected' : '' }}>
-                                    {{ $s->student_code }} - {{ $s->full_name }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select
+                            name="student_id"
+                            label="Murid"
+                            placeholder="Semua Murid"
+                            :selected="request('student_id')"
+                            :options="$studentFilterOptions"
+                        />
                     </div>
                     <div>
                         <label class="block text-xs text-mk-dim mb-1">Status</label>

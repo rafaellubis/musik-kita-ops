@@ -10,13 +10,20 @@
         @endif
 
         {{-- Filter --}}
-        <form method="GET" class="mb-5 flex flex-wrap gap-3 items-center">
-            <select name="teacher_id" class="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg px-3 py-2">
-                <option value="">Semua Guru</option>
-                @foreach($teachers as $t)
-                    <option value="{{ $t->id }}" {{ request('teacher_id') == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                @endforeach
-            </select>
+        @php
+            $teacherFilterOptions = $teachers->map(fn ($t) => [
+                'value' => $t->id,
+                'label' => $t->name,
+            ])->values()->all();
+        @endphp
+        <form method="GET" class="mb-5 flex flex-wrap gap-3 items-end">
+            <x-searchable-select
+                name="teacher_id"
+                placeholder="Semua Guru"
+                :selected="request('teacher_id')"
+                :options="$teacherFilterOptions"
+                inputClass="mk-searchable-select-trigger rounded-lg text-sm min-w-[180px]"
+            />
             <select name="status" class="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg px-3 py-2">
                 <option value="">Semua Status</option>
                 <option value="SUBMITTED" {{ request('status') === 'SUBMITTED' ? 'selected' : '' }}>Submitted</option>

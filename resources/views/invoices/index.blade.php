@@ -161,14 +161,18 @@
                         @endforeach
                         <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
                     </select>
-                    <select name="student_id" class="border-mk-border rounded text-sm">
-                        <option value="">Semua Murid</option>
-                        @foreach($students as $s)
-                            <option value="{{ $s->id }}" {{ request('student_id') == $s->id ? 'selected' : '' }}>
-                                {{ $s->student_code }} - {{ $s->full_name }}
-                            </option>
-                        @endforeach
-                    </select>
+                    @php
+                        $studentFilterOptions = $students->map(fn ($s) => [
+                            'value' => $s->id,
+                            'label' => $s->student_code.' - '.$s->full_name,
+                        ])->values()->all();
+                    @endphp
+                    <x-searchable-select
+                        name="student_id"
+                        placeholder="Semua Murid"
+                        :selected="request('student_id')"
+                        :options="$studentFilterOptions"
+                    />
                     <input type="text" name="search" value="{{ request('search') }}"
                            class="border-mk-border rounded text-sm"
                            placeholder="No. invoice / nama">
