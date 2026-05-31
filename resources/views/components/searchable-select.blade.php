@@ -131,7 +131,7 @@
             </template>
 
             <li x-show="filteredOptions.length === 0" class="px-3 py-2 text-mk-dim text-xs">
-                Tidak ada hasil.
+                Tidak Ada Hasil.
             </li>
         </ul>
     </div>

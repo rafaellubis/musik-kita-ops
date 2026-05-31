@@ -244,7 +244,7 @@ aside           { border-right-color:  rgba(93,184,144,0.30) !important; }
     z-index: 1;
 }
 
-/* Header hari/jam: background SOLID (bukan mk-surface transparan) */
+/* Header hari/jam: Background SOLID (bukan mk-surface transparan) */
 .kalender-grid-thead th.kalender-grid-th-sticky {
     position: sticky;
     top: 0;
