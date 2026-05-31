@@ -9,8 +9,8 @@ use App\Models\ProgressReport;
 use App\Models\ProgressReportItem;
 use App\Models\ProgressReportSection;
 use App\Models\ProgressReportSessionNote;
-use App\Models\ReportTemplate;
 use App\Services\AttendanceService;
+use App\Services\ReportTemplateResolverService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -36,6 +36,7 @@ class GuruController extends Controller
      */
     public function __construct(
         private readonly AttendanceService $attendanceService,
+        private readonly ReportTemplateResolverService $reportTemplateResolver,
     ) {}
 
     /**
@@ -240,12 +241,13 @@ class GuruController extends Controller
             ->orderByDesc('month')
             ->get();
 
-        $templates = ReportTemplate::where('is_active', true)
-            ->with('instrument')
-            ->orderBy('sort_order')
-            ->get();
+        $enrollmentTemplateMap = [];
+        foreach ($enrollments as $enrollment) {
+            $enrollmentTemplateMap[$enrollment->id] = $this->reportTemplateResolver
+                ->previewForEnrollment($enrollment);
+        }
 
-        return view('guru.laporan', compact('teacher', 'laporan', 'enrollments', 'templates'));
+        return view('guru.laporan', compact('teacher', 'laporan', 'enrollments', 'enrollmentTemplateMap'));
     }
 
     /**
@@ -257,19 +259,25 @@ class GuruController extends Controller
         abort_if(!$teacher, 403);
 
         $validated = $request->validate([
-            'enrollment_id'      => 'required|exists:enrollments,id',
-            'report_template_id' => 'required|exists:report_templates,id',
-            'month'              => 'required|integer|min:1|max:12',
-            'year'               => 'required|integer|min:2024|max:2030',
+            'enrollment_id' => 'required|exists:enrollments,id',
+            'month'         => 'required|integer|min:1|max:12',
+            'year'          => 'required|integer|min:2024|max:2030',
         ], [
-            'enrollment_id.required'      => 'Kelas wajib dipilih.',
-            'report_template_id.required' => 'Template laporan wajib dipilih.',
-            'month.required'              => 'Bulan wajib diisi.',
-            'year.required'               => 'Tahun wajib diisi.',
+            'enrollment_id.required' => 'Kelas wajib dipilih.',
+            'month.required'         => 'Bulan wajib diisi.',
+            'year.required'          => 'Tahun wajib diisi.',
         ]);
 
-        $enrollment = Enrollment::findOrFail($validated['enrollment_id']);
+        $enrollment = Enrollment::with('package')->findOrFail($validated['enrollment_id']);
         abort_if($enrollment->teacher_id !== $teacher->id, 403, 'Bukan enrollment Anda.');
+
+        $template = $this->reportTemplateResolver->resolveForEnrollment($enrollment);
+        if (! $template) {
+            return back()->with(
+                'error',
+                'Template laporan untuk paket ' . $enrollment->package->code . ' belum tersedia. Hubungi Owner.'
+            );
+        }
 
         $sudahAda = ProgressReport::where('enrollment_id', $enrollment->id)
             ->where('month', $validated['month'])
@@ -280,7 +288,7 @@ class GuruController extends Controller
             return back()->with('error', 'Laporan untuk kelas dan bulan ini sudah ada.');
         }
 
-        $template = ReportTemplate::with('sections.items')->findOrFail($validated['report_template_id']);
+        $template->load('sections.items');
 
         $report = ProgressReport::create([
             'enrollment_id'      => $enrollment->id,

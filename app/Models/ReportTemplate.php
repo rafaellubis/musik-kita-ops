@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ReportTemplate extends Model
 {
-    protected $fillable = ['instrument_id', 'name', 'description', 'is_active', 'sort_order'];
+    public const KIND_REGULER = 'REGULER';
+    public const KIND_HOBBY   = 'HOBBY';
+    public const KIND_KIDS    = 'KIDS';
+
+    protected $fillable = ['instrument_id', 'name', 'template_kind', 'description', 'is_active', 'sort_order'];
     protected $casts = ['is_active' => 'boolean'];
 
     public function instrument(): BelongsTo

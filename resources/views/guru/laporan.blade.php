@@ -16,37 +16,58 @@
     </div>
 @endif
 
-{{-- Form buat laporan baru --}}
+{{-- Form buat laporan baru — template otomatis dari paket enrollment --}}
 <div class="mx-4 mb-4">
     <details class="bg-mk-card border border-mk-border rounded-xl">
         <summary class="px-4 py-3 font-semibold text-sm text-mk-text cursor-pointer">+ Buat Laporan Baru</summary>
-        <div class="px-4 pb-4 pt-2 border-t border-mk-border">
+        <div class="px-4 pb-4 pt-2 border-t border-mk-border"
+             x-data="{
+                map: @js($enrollmentTemplateMap),
+                enrollmentId: '{{ old('enrollment_id', '') }}',
+                get preview() {
+                    return this.enrollmentId && this.map[this.enrollmentId]
+                        ? this.map[this.enrollmentId]
+                        : null;
+                },
+                get canSubmit() {
+                    return this.enrollmentId && this.preview && this.preview.ok;
+                }
+             }">
             <form method="POST" action="{{ route('guru.laporan.store') }}">
                 @csrf
                 <div class="mb-3">
                     <label class="block text-xs text-mk-muted mb-1">Kelas / Murid</label>
-                    <select name="enrollment_id" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm" required>
+                    <select name="enrollment_id" x-model="enrollmentId"
+                            class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm" required>
                         <option value="">-- Pilih murid --</option>
                         @foreach($enrollments as $e)
-                            <option value="{{ $e->id }}">{{ $e->student->full_name }} — {{ $e->package->code }}</option>
+                            <option value="{{ $e->id }}" @selected(old('enrollment_id') == $e->id)>
+                                {{ $e->student->full_name }} — {{ $e->package->code }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
-                <div class="mb-3">
-                    <label class="block text-xs text-mk-muted mb-1">Template Laporan</label>
-                    <select name="report_template_id" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm" required>
-                        <option value="">-- Pilih template --</option>
-                        @foreach($templates as $t)
-                            <option value="{{ $t->id }}">{{ $t->name }} ({{ $t->instrument->name }})</option>
-                        @endforeach
-                    </select>
+
+                {{-- Preview template otomatis --}}
+                <div class="mb-3 rounded-lg px-3 py-2 text-sm border border-mk-border bg-mk-sidebar/20"
+                     x-show="preview" x-cloak>
+                    <template x-if="preview && preview.ok">
+                        <div class="text-mk-text">
+                            <span class="text-xs text-mk-muted">Template otomatis:</span>
+                            <span class="font-semibold" x-text="preview.name"></span>
+                        </div>
+                    </template>
+                    <template x-if="preview && !preview.ok">
+                        <div class="text-red-400 text-xs" x-text="preview.error"></div>
+                    </template>
                 </div>
+
                 <div class="flex gap-2 mb-3">
                     <div class="flex-1">
                         <label class="block text-xs text-mk-muted mb-1">Bulan</label>
                         <select name="month" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm" required>
                             @foreach(range(1,12) as $m)
-                                <option value="{{ $m }}" {{ $m == now()->month ? 'selected' : '' }}>
+                                <option value="{{ $m }}" {{ (int) old('month', now()->month) === $m ? 'selected' : '' }}>
                                     {{ \Carbon\Carbon::create()->month($m)->locale('id')->isoFormat('MMMM') }}
                                 </option>
                             @endforeach
@@ -54,11 +75,15 @@
                     </div>
                     <div class="w-24">
                         <label class="block text-xs text-mk-muted mb-1">Tahun</label>
-                        <input type="number" name="year" value="{{ now()->year }}" min="2024" max="2030"
+                        <input type="number" name="year" value="{{ old('year', now()->year) }}" min="2024" max="2030"
                                class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm">
                     </div>
                 </div>
-                <button type="submit" class="w-full py-2.5 rounded-xl font-semibold text-sm btn-mk-primary">Buat Laporan</button>
+                <button type="submit"
+                        class="w-full py-2.5 rounded-xl font-semibold text-sm btn-mk-primary disabled:opacity-40"
+                        :disabled="!canSubmit">
+                    Buat Laporan
+                </button>
             </form>
         </div>
     </details>

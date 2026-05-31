@@ -14,9 +14,14 @@
 <form method="POST" action="{{ route('guru.laporan.update', $progressReport) }}">
     @csrf @method('PUT')
 
-    {{-- Checklist per seksi --}}
+    {{-- Checklist per seksi — seksi DUO hanya untuk paket DUO --}}
     @foreach($progressReport->template->sections as $section)
-        @php $sectionRecord = $progressReport->sections->firstWhere('report_template_section_id', $section->id); @endphp
+        @php
+            if (! $progressReport->enrollment->package->isDuo() && str_contains($section->title, 'Belajar Berduo')) {
+                continue;
+            }
+            $sectionRecord = $progressReport->sections->firstWhere('report_template_section_id', $section->id);
+        @endphp
         <div class="mx-4 mb-4 bg-mk-card border border-mk-border rounded-xl overflow-hidden">
             <div class="px-4 py-3 border-b border-mk-border bg-mk-sidebar/30">
                 <div class="font-semibold text-sm text-mk-text">{{ $section->title }}</div>

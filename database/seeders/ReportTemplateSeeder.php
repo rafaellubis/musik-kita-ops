@@ -10,7 +10,7 @@ use Illuminate\Database\Seeder;
 
 /**
  * Seed template laporan progres bulanan per instrumen & tipe paket.
- * Reguler + Hobby (6 instrumen) + Kids Class. DUO pakai template Reguler + seksi Berduo.
+ * Reguler + Hobby (7 instrumen incl. Saxophone) + Kids Class. DUO pakai template Reguler + seksi Berduo.
  */
 class ReportTemplateSeeder extends Seeder
 {
@@ -47,6 +47,7 @@ class ReportTemplateSeeder extends Seeder
             $this->seedTemplate(
                 instrumentId: $instruments[$code],
                 name: $this->instrumentLabel($code) . ' · Reguler',
+                templateKind: ReportTemplate::KIND_REGULER,
                 description: 'Checklist bulanan Reguler (Basic–L4). Centang item sesuai level murid. Paket DUO gunakan seksi Belajar Berduo.',
                 sortOrder: $sort++,
                 sections: array_merge($sections, [$this->duoSection(), $this->sikapSection()])
@@ -60,6 +61,7 @@ class ReportTemplateSeeder extends Seeder
             $this->seedTemplate(
                 instrumentId: $instruments[$code],
                 name: $this->instrumentLabel($code) . ' · Hobby',
+                templateKind: ReportTemplate::KIND_HOBBY,
                 description: 'Checklist bulanan Hobby — fokus lagu, ritme, dan enjoyment.',
                 sortOrder: $sort++,
                 sections: array_merge($sections, [$this->sikapSection()])
@@ -70,6 +72,7 @@ class ReportTemplateSeeder extends Seeder
             $this->seedTemplate(
                 instrumentId: $instruments['KIDS'],
                 name: 'Kids Class · Eksplorasi Bakat',
+                templateKind: ReportTemplate::KIND_KIDS,
                 description: 'Laporan bulanan anak usia 4–5 tahun — eksplorasi berbagai alat musik & vokal.',
                 sortOrder: $sort++,
                 sections: $this->kidsSections()
@@ -86,6 +89,7 @@ class ReportTemplateSeeder extends Seeder
             'VOCAL'  => 'Vocal',
             'BASS'   => 'Bass',
             'VIOLIN' => 'Violin',
+            'SAX'    => 'Saxophone',
             default  => $code,
         };
     }
@@ -109,6 +113,7 @@ class ReportTemplateSeeder extends Seeder
     private function seedTemplate(
         int $instrumentId,
         string $name,
+        string $templateKind,
         string $description,
         int $sortOrder,
         array $sections,
@@ -116,11 +121,19 @@ class ReportTemplateSeeder extends Seeder
         $template = ReportTemplate::firstOrCreate(
             ['instrument_id' => $instrumentId, 'name' => $name],
             [
-                'description' => $description,
-                'is_active'   => true,
-                'sort_order'  => $sortOrder,
+                'template_kind' => $templateKind,
+                'description'   => $description,
+                'is_active'     => true,
+                'sort_order'    => $sortOrder,
             ]
         );
+
+        $template->update([
+            'template_kind' => $templateKind,
+            'description'   => $description,
+            'is_active'     => true,
+            'sort_order'    => $sortOrder,
+        ]);
 
         $sectionOrder = 1;
         foreach ($sections as $sectionData) {
@@ -496,6 +509,35 @@ class ReportTemplateSeeder extends Seeder
                     'items' => [
                         'Ekspresi dinamika dasar',
                         'Semangat & enjoy belajar biola',
+                    ],
+                ],
+            ],
+            'SAX' => [
+                [
+                    'title' => 'Postur, Embouchure & Pernafasan',
+                    'items' => [
+                        'Postur duduk/berdiri & pegang saxophone benar',
+                        'Embouchure (cara meniup mouthpiece) mulai stabil',
+                        'Pernafasan perut saat meniup',
+                        'Suara/nada pertama jernih (minimal squawk)',
+                    ],
+                ],
+                [
+                    'title' => 'Teknik Jari & Ritme',
+                    'items' => [
+                        'Posisi jari dasar menghasilkan nada jernih',
+                        'Pergantian jari antar not mulai lancar',
+                        'Ikut ketukan/tempo dengan metronom',
+                        'Artikulasi tonguing dasar (tah-tah)',
+                    ],
+                ],
+                [
+                    'title' => 'Repertoar & Musikalitas',
+                    'items' => [
+                        'Minimal 1 lagu/melodi dikuasai',
+                        'Dinamika dasar (keras/lembut)',
+                        'Feel lagu (jazz, pop, ballad) mulai terasa',
+                        'Siap main iringan atau recording sederhana untuk orang tua',
                     ],
                 ],
             ],

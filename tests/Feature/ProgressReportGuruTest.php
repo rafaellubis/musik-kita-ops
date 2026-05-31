@@ -49,10 +49,11 @@ class ProgressReportGuruTest extends TestCase
         ]);
 
         $this->template = ReportTemplate::create([
-            'instrument_id' => $instrument->id,
-            'name'          => 'Template Vocal',
-            'is_active'     => true,
-            'sort_order'    => 1,
+            'instrument_id'  => $instrument->id,
+            'name'           => 'Vocal · Hobby',
+            'template_kind'  => ReportTemplate::KIND_HOBBY,
+            'is_active'      => true,
+            'sort_order'     => 1,
         ]);
         $section = ReportTemplateSection::create([
             'report_template_id' => $this->template->id,
@@ -69,22 +70,22 @@ class ProgressReportGuruTest extends TestCase
         $this->actingAs($this->guruUser)->get('/guru/laporan')->assertOk();
     }
 
-    public function test_guru_bisa_buat_laporan_baru(): void
+    public function test_guru_bisa_buat_laporan_baru_auto_template(): void
     {
         $this->actingAs($this->guruUser)
             ->post('/guru/laporan', [
-                'enrollment_id'      => $this->enrollment->id,
-                'report_template_id' => $this->template->id,
-                'month'              => 5,
-                'year'               => 2026,
+                'enrollment_id' => $this->enrollment->id,
+                'month'         => 5,
+                'year'          => 2026,
             ])
             ->assertRedirect();
 
         $this->assertDatabaseHas('progress_reports', [
-            'enrollment_id' => $this->enrollment->id,
-            'month'         => 5,
-            'year'          => 2026,
-            'status'        => 'DRAFT',
+            'enrollment_id'      => $this->enrollment->id,
+            'report_template_id' => $this->template->id,
+            'month'              => 5,
+            'year'               => 2026,
+            'status'             => 'DRAFT',
         ]);
     }
 
@@ -100,10 +101,9 @@ class ProgressReportGuruTest extends TestCase
 
         $this->actingAs($this->guruUser)
             ->post('/guru/laporan', [
-                'enrollment_id'      => $this->enrollment->id,
-                'report_template_id' => $this->template->id,
-                'month'              => 5,
-                'year'               => 2026,
+                'enrollment_id' => $this->enrollment->id,
+                'month'         => 5,
+                'year'          => 2026,
             ])
             ->assertRedirect()
             ->assertSessionHas('error');
@@ -154,5 +154,72 @@ class ProgressReportGuruTest extends TestCase
         ]);
 
         $this->actingAs($guruLain)->get("/guru/laporan/{$report->id}/edit")->assertForbidden();
+    }
+
+    public function test_duo_enrollment_memakai_template_reguler(): void
+    {
+        $instrument = Instrument::create(['code' => 'PIA', 'name' => 'Piano', 'is_active' => true, 'sort_order' => 2]);
+        $duoPackage = Package::create([
+            'code' => 'DUO_PIANO_30', 'instrument_id' => $instrument->id,
+            'class_type' => 'DUO', 'duration_min' => 30,
+            'price_per_month' => 320000, 'is_active' => true, 'sort_order' => 2,
+        ]);
+        $regulerTemplate = ReportTemplate::create([
+            'instrument_id' => $instrument->id,
+            'name'          => 'Piano · Reguler',
+            'template_kind' => ReportTemplate::KIND_REGULER,
+            'is_active'     => true,
+            'sort_order'    => 2,
+        ]);
+        $student = Student::factory()->create(['status' => 'Aktif']);
+        $enrollment = Enrollment::create([
+            'student_id' => $student->id, 'package_id' => $duoPackage->id,
+            'teacher_id' => $this->teacher->id, 'status' => 'ACTIVE',
+            'effective_date' => now()->toDateString(), 'is_primary' => true,
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->post('/guru/laporan', [
+                'enrollment_id' => $enrollment->id,
+                'month'         => 6,
+                'year'          => 2026,
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('progress_reports', [
+            'enrollment_id'      => $enrollment->id,
+            'report_template_id' => $regulerTemplate->id,
+        ]);
+    }
+
+    public function test_guru_gagal_buat_laporan_jika_template_tidak_ada(): void
+    {
+        $instrument = Instrument::create(['code' => 'SAX', 'name' => 'Saxophone', 'is_active' => true, 'sort_order' => 3]);
+        $package = Package::create([
+            'code' => 'SAX_HOBBY_30', 'instrument_id' => $instrument->id,
+            'class_type' => 'HOBBY', 'duration_min' => 30,
+            'price_per_month' => 420000, 'is_active' => true, 'sort_order' => 3,
+        ]);
+        $student = Student::factory()->create(['status' => 'Aktif']);
+        $enrollment = Enrollment::create([
+            'student_id' => $student->id, 'package_id' => $package->id,
+            'teacher_id' => $this->teacher->id, 'status' => 'ACTIVE',
+            'effective_date' => now()->toDateString(), 'is_primary' => false,
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->post('/guru/laporan', [
+                'enrollment_id' => $enrollment->id,
+                'month'         => 7,
+                'year'          => 2026,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseMissing('progress_reports', [
+            'enrollment_id' => $enrollment->id,
+            'month'         => 7,
+            'year'          => 2026,
+        ]);
     }
 }
