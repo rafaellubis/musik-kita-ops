@@ -164,10 +164,17 @@
                                                 $guruNama   = $session->teacher->name ?? '?';
                                                 $roomCode   = $session->room->code ?? '?';
 
-                                                // Data untuk popup Alpine (Task 5)
+                                                // Label singkat murid: nickname → kata pertama full_name
+                                                $studentLabel = $session->student->nickname
+                                                    ?: explode(' ', trim($session->student->full_name ?? ''))[0]
+                                                    ?: '?';
+
+                                                // Data untuk popup Alpine
                                                 $popupData = [
-                                                    'studentName'  => $session->student->full_name ?? '?',
-                                                    'studentCode'  => $session->student->student_code ?? '?',
+                                                    'studentName'     => $session->student->full_name ?? '?',
+                                                    'studentNickname' => $session->student->nickname,
+                                                    'studentLabel'    => $studentLabel,
+                                                    'studentCode'     => $session->student->student_code ?? '?',
                                                     'studentId'    => $session->student_id,
                                                     'teacherName'  => $guruNama,
                                                     'roomCode'     => $roomCode,
@@ -187,7 +194,9 @@
                                                     class="w-full text-left rounded px-1.5 py-1 mb-1 text-xs
                                                            {{ $colorClass }} hover:opacity-80 transition-opacity">
                                                 <div class="{{ $isCoretan ? 'line-through' : '' }} font-medium truncate">
-                                                    {{ $instrumen }} · {{ $guruNama }}
+                                                    <span class="font-semibold">{{ $studentLabel }}</span>
+                                                    · {{ $instrumen }} ·
+                                                    <span class="text-mk-accent font-semibold">{{ $guruNama }}</span>
                                                 </div>
                                                 <div class="text-xs opacity-70 truncate">
                                                     {{ $roomCode }} · {{ substr($session->start_time, 0, 5) }}
@@ -216,6 +225,10 @@
                         <div>
                             <h3 class="font-semibold text-mk-text" x-text="sesi.studentName"></h3>
                             <div class="text-xs text-mk-dim font-mono" x-text="sesi.studentCode"></div>
+                            <div x-show="sesi.studentNickname"
+                                 class="text-xs text-mk-muted mt-0.5">
+                                "<span x-text="sesi.studentNickname"></span>"
+                            </div>
                         </div>
                         <button type="button"
                                 @click="open = false"

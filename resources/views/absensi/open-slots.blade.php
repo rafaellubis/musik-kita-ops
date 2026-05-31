@@ -10,7 +10,7 @@
         {{-- Penjelasan singkat --}}
         <div class="mb-5 bg-mk-card border border-mk-border rounded-lg px-4 py-3 text-sm text-mk-muted">
             Daftar sesi <span class="font-semibold text-amber-600">IZIN PENDING</span>
-            yang belum ada sesi pengganti. <strong>Isi Slot</strong> untuk murid lain,
+            yang belum ada sesi pengganti. <strong>Sesi Pending</strong> untuk murid lain,
             atau <strong>Jadwalkan Pengganti</strong> untuk murid asli.
         </div>
 
@@ -20,7 +20,7 @@
         @if($slots->isEmpty())
             <div class="text-center py-12 bg-mk-card border border-mk-border rounded-lg shadow-sm">
                 <div class="text-3xl mb-2">✅</div>
-                <p class="text-gray-500 text-sm">Tidak ada slot terbuka saat ini.</p>
+                <p class="text-gray-500 text-sm">Tidak ada Sesi Pending  terbuka saat ini.</p>
             </div>
         @else
             <div class="bg-mk-card shadow-sm rounded-lg overflow-x-auto">

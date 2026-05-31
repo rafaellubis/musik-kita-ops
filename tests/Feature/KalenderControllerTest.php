@@ -176,4 +176,83 @@ class KalenderControllerTest extends TestCase
             return $totalSesi === 1;
         });
     }
+
+    /**
+     * Cell kalender menampilkan nickname murid agar multi-kelas mudah dikenali.
+     */
+    public function test_cell_menampilkan_nickname_murid(): void
+    {
+        $teacher    = Teacher::factory()->create(['name' => 'ADI', 'is_active' => true]);
+        $room       = Room::factory()->create(['code' => 'R2', 'is_active' => true]);
+        $instrument = Instrument::create(['name' => 'Piano', 'code' => 'PIANO3', 'is_active' => true, 'sort_order' => 3]);
+        $package    = Package::factory()->create(['instrument_id' => $instrument->id]);
+        $student    = Student::factory()->create([
+            'full_name' => 'Budi Santoso',
+            'nickname'  => 'Bud',
+        ]);
+        $enrollment = Enrollment::factory()->create([
+            'student_id' => $student->id,
+            'teacher_id' => $teacher->id,
+            'package_id' => $package->id,
+            'status'     => 'ACTIVE',
+        ]);
+
+        $senin = Carbon::now()->startOfWeek(Carbon::MONDAY);
+        ClassSession::factory()->create([
+            'enrollment_id' => $enrollment->id,
+            'student_id'    => $student->id,
+            'teacher_id'    => $teacher->id,
+            'room_id'       => $room->id,
+            'session_date'  => $senin,
+            'start_time'    => '09:00:00',
+            'end_time'      => '09:30:00',
+            'status'        => 'SCHEDULED',
+        ]);
+
+        $response = $this->actingAs($this->ownerUser())->get(route('kalender.index'));
+        $response->assertStatus(200);
+        $response->assertSee('Bud', false);
+        $response->assertSee('Piano ·', false);
+        $response->assertSee('text-mk-accent', false);
+        $response->assertSee('ADI', false);
+    }
+
+    /**
+     * Jika nickname kosong, cell pakai kata pertama full_name.
+     */
+    public function test_cell_fallback_kata_pertama_jika_nickname_kosong(): void
+    {
+        $teacher    = Teacher::factory()->create(['name' => 'NAEL', 'is_active' => true]);
+        $room       = Room::factory()->create(['code' => 'R4', 'is_active' => true]);
+        $instrument = Instrument::create(['name' => 'Gitar', 'code' => 'GITAR1', 'is_active' => true, 'sort_order' => 4]);
+        $package    = Package::factory()->create(['instrument_id' => $instrument->id]);
+        $student    = Student::factory()->create([
+            'full_name' => 'Sari Wijaya',
+            'nickname'  => null,
+        ]);
+        $enrollment = Enrollment::factory()->create([
+            'student_id' => $student->id,
+            'teacher_id' => $teacher->id,
+            'package_id' => $package->id,
+            'status'     => 'ACTIVE',
+        ]);
+
+        $senin = Carbon::now()->startOfWeek(Carbon::MONDAY);
+        ClassSession::factory()->create([
+            'enrollment_id' => $enrollment->id,
+            'student_id'    => $student->id,
+            'teacher_id'    => $teacher->id,
+            'room_id'       => $room->id,
+            'session_date'  => $senin,
+            'start_time'    => '10:00:00',
+            'end_time'      => '10:30:00',
+            'status'        => 'SCHEDULED',
+        ]);
+
+        $response = $this->actingAs($this->ownerUser())->get(route('kalender.index'));
+        $response->assertStatus(200);
+        $response->assertSee('Sari', false);
+        $response->assertSee('Gitar ·', false);
+        $response->assertSee('NAEL', false);
+    }
 }
