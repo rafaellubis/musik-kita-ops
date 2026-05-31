@@ -1,10 +1,12 @@
 # MUSIK KITA — Operations System (musik-kita-ops)
-## Briefing Document untuk Claude Code — v1.4
+## Briefing Document untuk Claude Code — v1.5
 
 > Dibuat berdasarkan: BRD-Final-Musik-KITA-v1.0.md + Revisi-BRD-SAD-v1.0-ke-v1.1.md
 > Update v1.2 (2026-05-07): sinkronisasi tech stack & schema dengan kondisi kode aktual.
 > Update v1.3 (2026-05-23): multi-kelas, diskon invoice, cuti, reschedule Fase 2, QRIS/DEBIT, slip honor unifikasi, ruangan fleksibel.
 > Update v1.4 (2026-05-23): jadwal otomatis dengan kalender akademik — replacement_date pada holidays, honor LIBUR logic, H_IZIN honor code, guru pendamping event.
+> Update v1.5 (2026-05-31): sinkronisasi BR-MK.4 — SPP auto-generate per enrollment ACTIVE (multi-kelas), bukan hanya primary.
+> **SRS kode aktual:** `docs/srs/SRS-musik-kita-ops-2026-05-31.md` + modul per `docs/srs/modules/` (prioritas saat prompt ke AI).
 > Tanggal: Mei 2026
 
 ---
@@ -129,8 +131,9 @@ AUDITOR
 -> Read-only seluruh data dan laporan
 -> TIDAK BOLEH edit/hapus apapun
 
-PENTING: TIDAK ADA role GURU di sistem ini untuk Fase 1
-Guru tidak login ke sistem -- absensi diinput oleh Admin
+PENTING (Fase 1 asli): tidak ada login Guru.
+UPDATE KODE (Mei 2026): role GURU + portal /guru/* sudah ada — lihat docs/srs/modules/M10-guru-portal.md.
+Admin tetap bisa input absensi penuh; Guru input terbatas sesi sendiri.
 ```
 
 ---
@@ -266,9 +269,10 @@ effective_date, end_date, notes,
 status (enum: ACTIVE|ON_LEAVE|INACTIVE|COMPLETED|TRIAL), timestamps
 ```
 CATATAN: `ON_LEAVE` diset saat murid mengajukan cuti; kembali ke `ACTIVE` saat cuti berakhir.
-`is_primary` menentukan enrollment yang dipakai untuk generate invoice SPP otomatis.
+`is_primary` menandai enrollment utama per murid (UI/display, primary_enrollment_id).
+BUKAN filter auto-generate SPP — SPP bulanan di-generate untuk semua enrollment ACTIVE.
 CATATAN: `TRIAL` diset saat mulaiTrial() — enrollment sementara yang membawa package_id
-agar honor guru bisa dihitung. is_primary=false (tidak trigger invoice SPP).
+agar honor guru bisa dihitung. Status TRIAL tidak masuk loop generate SPP (bukan ACTIVE).
 Enrollment TRIAL → COMPLETED saat murid konversiAktif() atau mundurkan().
 
 **schedules** (jadwal mingguan tetap)
@@ -528,8 +532,11 @@ BR-MK.1 : Murid BOLEH punya lebih dari satu enrollment ACTIVE bersamaan
            (contoh: Piano Regular + Gitar Hobby)
 BR-MK.2 : Setiap murid punya tepat satu primary enrollment (students.primary_enrollment_id)
 BR-MK.3 : enrollments.is_primary menandai enrollment utama per murid
-BR-MK.4 : Invoice SPP auto-generate hanya untuk primary enrollment
-           (enrollment non-primary ditagih manual jika diperlukan)
+BR-MK.4 : Invoice SPP auto-generate untuk SETIAP enrollment ACTIVE
+           (multi-kelas: 1 murid 2 kelas → 2 invoice SPP terpisah per bulan,
+           masing-masing terikat enrollment_id + harga paket sendiri)
+           Pengecualian: TRIAL, ON_LEAVE/INACTIVE/COMPLETED, KIDS_CLASS_BUNDLE
+BR-MK.4a: Denda dihitung per invoice secara independen
 BR-MK.5 : Murid bisa tambah kelas baru via tab 'Kelas' di halaman detail murid
 BR-MK.6 : Owner/Admin bisa ganti primary enrollment via EnrollmentController::setPrimary()
 BR-MK.7 : Hentikan enrollment non-primary via EnrollmentController::stop()
@@ -762,7 +769,7 @@ X php artisan migrate:fresh pada database utama (mk_operasional) TANPA konfirmas
 [ ] Role/permission check sudah ada (Spatie Permission)
 [ ] Akses relasi murid ↔ kelas via enrollment (bukan kolom students langsung)
 [ ] Gunakan $student->primaryEnrollment untuk akses paket/guru/ruang utama
-[ ] Invoice auto-generate mengikuti primary enrollment
+[ ] Invoice SPP auto-generate per enrollment ACTIVE (bukan hanya is_primary)
 [ ] Diskon invoice: wajib parent_item_id + discount_reason
 [ ] Metode bayar: CASH|TRANSFER|QRIS|DEBIT (bukan hanya CASH|TRANSFER)
 ```

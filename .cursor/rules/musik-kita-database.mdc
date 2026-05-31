@@ -1,0 +1,55 @@
+---
+description: Musik KITA — skema database, kolom, enum, dan relasi kritis
+globs: app/Models/**,app/Services/**,database/**,app/Http/Controllers/**
+alwaysApply: false
+---
+
+# Database Schema — Musik KITA
+
+## Nama Kolom yang Sering Salah
+
+| BENAR | SALAH |
+|-------|-------|
+| `packages.code` | `packages.name` |
+| `packages.duration_min` | `duration_minutes` |
+| `packages.price_per_month` | `packages.price` |
+| `students.full_name` | `students.name` |
+| `students.student_code` | `students.code` |
+| `$student->primaryEnrollment->package` | `$student->package` (accessor lama) |
+| `enrollments.is_primary` | `students.package_id` (kolom dihapus) |
+
+Honor per sesi **TIDAK** disimpan di `packages` — hitung via PayrollConfig: `package_price * 0.5 / 4`.
+
+## Enum class_type (5 nilai valid di MySQL)
+
+`REGULER` | `HOBBY` | `DUO` | `KIDS_CLASS` | `KIDS_CLASS_BUNDLE` — KAPITAL SEMUA.
+
+## Tabel Utama
+
+**packages:** id, code, instrument_id, class_type, grade (nullable REGULER), duration_min, price_per_month, is_active, sort_order
+
+**students:** id, student_code (M-YYYY-NNNN), full_name, nickname, gender (L|P), birth_date, phone, email, address, notes, parent_*, status (Title Case enum), primary_enrollment_id, cuti_from/until, trial_date, active_since, last_session_at
+
+**enrollments:** id, student_id, package_id, teacher_id, is_primary, effective_date, end_date, notes, status (`ACTIVE|ON_LEAVE|INACTIVE|COMPLETED|TRIAL`)
+
+**schedules:** id, enrollment_id, day_of_week (0=Minggu), start_time, end_time, room_id, is_active
+
+**sessions (ClassSession):** id, schedule_id, enrollment_id, student_id, teacher_id, session_date (**DATE raw string, NO cast** — pakai `Carbon::parse()`), status (`SCHEDULED|HADIR|HADIR_TERLAMBAT|IZIN_RESCHEDULE|IZIN_PENDING|IZIN_VIDEO|HANGUS|LIBUR|DIGANTI|CANCELLED`), substitute_teacher_id, late_minutes, notes, honor_code (VARCHAR: H_REG|H_TRIAL|TRIAL_NS|H_VIDEO|H_LIBUR|H_HANGUS|H_PENG|H_KIDS|H_UJIAN|H_IZIN|H_SPLIT), honor_amount
+
+**invoices:** id, invoice_number (INV/YYYY/MM/NNNN), student_id, enrollment_id, month, year, class_type snapshot, payment_mode (`FULL|INSTALLMENT` — INSTALLMENT hanya KIDS_CLASS_BUNDLE), installment_number (1|2|3), installment_group_id (UUID), total_amount, paid_amount, status, due_date
+
+**invoice_items:** id, invoice_id, parent_item_id (untuk DISKON), item_code (`REG|SPP|KIDS_FP|CUTI|UJI|MC|DENDA|DISKON`), description, amount, discount_type (NOMINAL|PERCENT), discount_value, discount_reason (wajib DISKON), metadata
+
+**payments:** id, receipt_number (KW/YYYY/MM/NNNN), invoice_id, amount, method (`CASH|TRANSFER|QRIS|DEBIT`), payment_date, proof_image, notes, created_by, voided_at/by/reason
+
+**teachers:** id, code, name, email, phone, bank_name/account/account_holder, joined_date, is_active, notes
+
+**rooms:** id, code, name, capacity, supported_instruments (JSON array), is_active — boolean has_piano/drum/amplifier **DIHAPUS**
+
+**teacher_honor_slips:** id, slip_number (SLIP/YYYY/MM/NNNN), teacher_id, month, year, base_honor, event_honor/note, transport_honor, other_honor/note, total_honor, status (`DRAFT|CALCULATED|PAID`), paid_at, paid_by, created_by
+
+**holidays:** id, date, name, type (`Nasional|Cuti Bersama|Internal`), replacement_date (nullable, unique, bulan sama), is_honor_paid (false untuk Internal), is_active, notes — Internal TIDAK boleh replacement_date
+
+**event_participants:** id, event_id, student_id, enrollment_id, accompanying_teacher_id (nullable), participation_type, fee_amount, invoice_id, invoice_item_id, exam_result, grade_before/after, exam_notes
+
+**audit_logs:** user_id, action (`CREATE|UPDATE|DELETE|LOGIN|LOGOUT|PRINT|VOID`), entity_type, entity_id, old_values, new_values

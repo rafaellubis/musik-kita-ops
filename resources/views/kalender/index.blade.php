@@ -130,16 +130,17 @@
                 </div>
             @else
 
-            {{-- Tabel grid --}}
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm border-collapse">
-                    {{-- Header: Jam + Senin–Sabtu --}}
-                    <thead>
-                        <tr class="border-b bg-mk-surface">
-                            <th class="py-2 px-3 text-left text-xs font-semibold text-mk-dim w-16">Jam</th>
+            {{-- Tabel grid — scroll vertikal di dalam card; baris hari sticky --}}
+            <div class="kalender-grid-scroll overflow-x-auto overflow-y-auto max-h-[min(70vh,calc(100vh-14rem))]">
+                <table class="w-full text-sm border-separate border-spacing-0">
+                    {{-- Header: Jam + Senin–Sabtu (sticky saat scroll) --}}
+                    <thead class="kalender-grid-thead">
+                        <tr class="border-b">
+                            <th class="kalender-grid-th-jam kalender-grid-th-sticky py-2 px-3 text-left text-xs font-semibold text-mk-dim w-16 min-w-[4rem] border-r border-b border-mk-border">Jam</th>
                             @foreach($days as $dow => $date)
-                                <th class="py-2 px-2 text-center text-xs font-semibold
-                                    {{ $date->isToday() ? 'text-mk-accent bg-mk-accentDim font-bold' : 'text-mk-muted' }}">
+                                <th class="kalender-grid-th-day kalender-grid-th-sticky py-2 px-2 text-center text-xs font-semibold border-r border-b border-mk-border
+                                    {{ $date->isToday() ? 'kalender-grid-th-today text-mk-accent font-bold' : 'text-mk-muted' }}
+                                    {{ $loop->last ? 'border-r-0' : '' }}">
                                     <div>{{ $date->locale('id')->translatedFormat('D') }}</div>
                                     <div class="font-normal text-mk-dim">{{ $date->format('d/m') }}</div>
                                 </th>
@@ -148,14 +149,14 @@
                     </thead>
                     <tbody>
                         @foreach($timeSlots as $time)
-                            <tr class="border-b">
+                            <tr>
                                 {{-- Label jam --}}
-                                <td class="py-2 px-3 text-xs text-mk-dim align-top whitespace-nowrap">
+                                <td class="kalender-grid-td kalender-grid-td-jam py-2 px-3 text-xs text-mk-dim align-top whitespace-nowrap border-r border-b border-mk-border">
                                     {{ substr($time, 0, 5) }}
                                 </td>
                                 {{-- Sel per hari --}}
                                 @foreach($days as $dow => $date)
-                                    <td class="py-1.5 px-1.5 align-top min-w-[110px]">
+                                    <td class="kalender-grid-td py-1.5 px-1.5 align-top min-w-[110px] border-r border-b border-mk-border {{ $loop->last ? 'border-r-0' : '' }}">
                                         @foreach($grid[$dow][$time] ?? [] as $session)
                                             @php
                                                 $colorClass = $statusColors[$session->status] ?? 'bg-gray-100 text-gray-600';

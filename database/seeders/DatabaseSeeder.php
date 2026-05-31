@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
             // 3. Master data dengan dependensi
             PackageSeeder::class,   // butuh instruments
             TeacherSeeder::class,   // butuh instruments
+            ReportTemplateSeeder::class, // M11: template laporan progres per instrumen
 
             // 4. Data operasional
             StudentSeeder::class,   // butuh packages + teachers

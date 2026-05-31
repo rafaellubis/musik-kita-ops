@@ -1,0 +1,74 @@
+---
+description: Musik KITA ops — tech stack, konvensi kode, larangan, dan checklist
+alwaysApply: true
+---
+
+# Musik KITA Operations System (musik-kita-ops)
+
+Sistem administrasi & keuangan internal studio musik **Musik KITA**. Menggantikan proses Excel.
+Solo developer pemula — **pilih approach paling mudah dipahami**, jelaskan alasannya.
+
+**Source of truth lengkap:** `CLAUDE.md` v1.4 (Mei 2026). Update rules ini jika CLAUDE.md berubah.
+
+## Tech Stack
+
+- Laravel 11, PHP 8.3, MySQL (Laragon), Blade + Tailwind 3 + Alpine.js (Breeze — **JANGAN Bootstrap**)
+- Vite, Spatie Permission v6 (RBAC), LAN lokal offline (Fase 1)
+- Path: `C:/laragon/www/musik-kita-ops`
+
+## Roles
+
+| Role | Akses |
+|------|-------|
+| **Owner** | Full access, ubah harga, hapus master, manage user, void payment, audit log, tandai honor dibayar |
+| **Admin** | Operasional harian — TIDAK boleh ubah harga, hapus master, manage user, void payment |
+| **Auditor** | Read-only |
+| **Guru** | Portal `/guru/*` — jadwal, absensi sesi sendiri, honor read-only, laporan progres (lihat `docs/srs/modules/M10-guru-portal.md`) |
+
+Route sensitif (harga, payroll, invoice-component) → `role:Owner`. Operasional → `role:Owner|Admin`. Read → `role:Owner|Admin|Auditor`.
+
+## Konvensi Kode
+
+- Komentar: **Bahasa Indonesia** | Variabel/method: English | UI & validasi: **Bahasa Indonesia**
+- Validasi di **Form Request**, bukan Controller
+- Spatie Permission + audit log untuk action penting
+- Controllers di root `App\Http\Controllers\` (TIDAK subfolder Admin/)
+- Business logic kompleks → `App\Services\`
+
+## Larangan Kritis
+
+- Instruksi ambigu → **TANYA dulu**, jangan asumsikan
+- Jangan hapus/pindah file tanpa konfirmasi
+- Jangan `migrate:fresh` tanpa konfirmasi eksplisit (hapus semua data!)
+- Jangan push `.env` ke Git
+- Schema: `packages.code` (bukan name), `duration_min`, `price_per_month`, `students.full_name`, `student_code`
+- `class_type`: `REGULER|HOBBY|DUO|KIDS_CLASS|KIDS_CLASS_BUNDLE` (KAPITAL)
+- Status murid: Title Case (`Calon`, `Trial`, `Aktif`, `Cuti`, `Selesai`, `Mengundurkan Diri`)
+- Kolom `students.package_id`, `assigned_teacher_id`, `assigned_room_id`, `preferred_day/time` **SUDAH DIHAPUS** — pakai `$student->primaryEnrollment`
+- Metode bayar: `CASH|TRANSFER|QRIS|DEBIT`
+- Invoice wajib punya `enrollment_id`
+- Trial = 30 menit semua tipe | Trial no-show honor = Rp 0
+- Honor cut-off H-2 sebelum akhir bulan | Transport honor = input manual
+- Void payment & hapus diskon → Owner saja
+- Kids Class usia 4 s/d <5 tahun
+- Bootstrap ❌ | TypeScript `any` ❌
+
+## Checklist Sebelum Generate Code
+
+- [ ] Kolom & enum benar (lihat rule database)
+- [ ] Tailwind CSS, bukan Bootstrap
+- [ ] Role check Spatie + audit log
+- [ ] Relasi murid via enrollment / primaryEnrollment
+- [ ] Diskon: parent_item_id + discount_reason wajib
+- [ ] Komentar ID, pesan UI ID
+
+## Git Commit Format
+
+```
+[Modul/Area] Deskripsi singkat
+```
+Contoh: `M02: Tambah form Trial Class dengan validasi`
+
+## Data Operasional
+
+~300 murid, **18 guru** (confirmed), ~1.200 sesi/bulan, 18 slip honor/bulan.
