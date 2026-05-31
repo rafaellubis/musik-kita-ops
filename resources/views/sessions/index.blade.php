@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <h2 class="font-semibold text-xl text-mk-text">Daftar Sesi</h2>
+            <h2 class="font-semibold text-xl text-mk-text">Daftar Jadwal</h2>
             <div class="text-xs text-mk-muted mt-0.5">
                 @php $monthName = \Carbon\Carbon::create($year, $month, 1)->format('F Y'); @endphp
                 {{ $monthName }} · {{ $sessions->total() }} sesi
