@@ -65,7 +65,7 @@ class RescheduleService
             ->whereDate('session_date', $date)
             ->where('start_time', '<', $endTime)
             ->where('end_time', '>', $startTimeFull)
-            ->where('status', '!=', ClassSession::STATUS_CANCELLED)
+            ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
             ->where('id', '!=', $original->id)
             ->first();
 
@@ -84,7 +84,7 @@ class RescheduleService
                 ->whereDate('session_date', $date)
                 ->where('start_time', '<', $endTime)
                 ->where('end_time', '>', $startTimeFull)
-                ->where('status', '!=', ClassSession::STATUS_CANCELLED)
+                ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
                 ->where('id', '!=', $original->id)
                 ->first();
 
@@ -161,7 +161,7 @@ class RescheduleService
             ->whereDate('session_date', $date)
             ->where('start_time', '<', $endTime)
             ->where('end_time', '>', $startTimeFull)
-            ->where('status', '!=', ClassSession::STATUS_CANCELLED)
+            ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
             ->where('id', '!=', $original->id)
             ->first();
 
@@ -180,7 +180,7 @@ class RescheduleService
                 ->whereDate('session_date', $date)
                 ->where('start_time', '<', $endTime)
                 ->where('end_time', '>', $startTimeFull)
-                ->where('status', '!=', ClassSession::STATUS_CANCELLED)
+                ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
                 ->where('id', '!=', $original->id)
                 ->first();
 

@@ -60,6 +60,20 @@ class ClassSession extends Model
     public const STATUS_CANCELLED        = 'CANCELLED';
 
     /**
+     * Status yang tidak memblok slot guru/ruang saat cek konflik jadwal.
+     * Murid dengan IZIN_RESCHEDULE sudah pindah ke sesi pengganti;
+     * IZIN_PENDING menunggu pengganti — slot asli dianggap kosong.
+     */
+    public static function statusesExcludedFromScheduleConflict(): array
+    {
+        return [
+            self::STATUS_CANCELLED,
+            self::STATUS_IZIN_RESCHEDULE,
+            self::STATUS_IZIN_PENDING,
+        ];
+    }
+
+    /**
      * Guru yang berhak honor untuk sesi ini.
      * Kalau ada substitute (DIGANTI), honor ke substitute (BR-4.9).
      * Selain itu honor ke guru asli.

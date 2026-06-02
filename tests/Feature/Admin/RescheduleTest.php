@@ -268,6 +268,85 @@ class RescheduleTest extends TestCase
     }
 
     /** @test */
+    public function slot_izin_reschedule_murid_lain_tidak_memblok_reschedule_ke_jam_itu(): void
+    {
+        // Skenario: murid A sudah reschedule dari 15:00 → 17:30 (sesi asli tetap IZIN_RESCHEDULE di 15:00)
+        // Murid B di 15:30 boleh reschedule ke 15:00 di slot yang sama
+        $teacher = Teacher::factory()->create(['is_active' => true]);
+        $room    = Room::factory()->create(['is_active' => true]);
+        $package = Package::factory()->create(['duration_min' => 30]);
+
+        $studentA = Student::factory()->create();
+        $enrollA  = Enrollment::factory()->create([
+            'student_id' => $studentA->id,
+            'teacher_id' => $teacher->id,
+            'package_id' => $package->id,
+            'status'     => 'ACTIVE',
+        ]);
+
+        $originalA = ClassSession::factory()->create([
+            'teacher_id'    => $teacher->id,
+            'student_id'    => $studentA->id,
+            'enrollment_id' => $enrollA->id,
+            'room_id'       => $room->id,
+            'session_date'  => '2026-06-02',
+            'start_time'    => '15:00:00',
+            'end_time'      => '15:30:00',
+            'status'        => ClassSession::STATUS_IZIN_RESCHEDULE,
+        ]);
+
+        ClassSession::factory()->create([
+            'origin_session_id' => $originalA->id,
+            'teacher_id'        => $teacher->id,
+            'student_id'        => $studentA->id,
+            'enrollment_id'     => $enrollA->id,
+            'room_id'           => $room->id,
+            'session_date'      => '2026-06-02',
+            'start_time'        => '17:30:00',
+            'end_time'          => '18:00:00',
+            'status'            => ClassSession::STATUS_SCHEDULED,
+        ]);
+
+        $studentB = Student::factory()->create();
+        $enrollB  = Enrollment::factory()->create([
+            'student_id' => $studentB->id,
+            'teacher_id' => $teacher->id,
+            'package_id' => $package->id,
+            'status'     => 'ACTIVE',
+        ]);
+
+        $sessionB = ClassSession::factory()->create([
+            'teacher_id'    => $teacher->id,
+            'student_id'    => $studentB->id,
+            'enrollment_id' => $enrollB->id,
+            'room_id'       => $room->id,
+            'session_date'  => '2026-06-02',
+            'start_time'    => '15:30:00',
+            'end_time'      => '16:00:00',
+            'status'        => ClassSession::STATUS_SCHEDULED,
+        ]);
+
+        $response = $this->actingAs($this->adminUser())->patchJson(
+            route('absensi.update', $sessionB),
+            [
+                'status'              => 'IZIN_RESCHEDULE',
+                'replacement_date'    => '2026-06-02',
+                'replacement_time'    => '15:00',
+                'replacement_room_id' => $room->id,
+            ]
+        );
+
+        $response->assertOk()->assertJson(['success' => true]);
+        $this->assertDatabaseHas('class_sessions', [
+            'student_id'        => $studentB->id,
+            'session_date'      => '2026-06-02',
+            'start_time'        => '15:00:00',
+            'origin_session_id' => $sessionB->id,
+            'status'            => 'SCHEDULED',
+        ]);
+    }
+
+    /** @test */
     public function sesi_pengganti_boleh_di_reschedule_lagi(): void
     {
         // Chain A → B → C diizinkan (replacement bisa di-reschedule)

@@ -125,7 +125,7 @@ class SessionController extends Controller
         // session_date tidak punya cast 'date' di model — raw string, aman untuk where() langsung
         $teacherConflict = ClassSession::where('session_date', $classSession->session_date)
             ->where('teacher_id', $data['teacher_id'])
-            ->where('status', '!=', 'CANCELLED')
+            ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
             ->where('id', '!=', $classSession->id)
             ->where('start_time', '<', $endTime)
             ->where('end_time', '>', $startTime)
@@ -141,7 +141,7 @@ class SessionController extends Controller
         if (!empty($data['room_id'])) {
             $roomConflict = ClassSession::where('session_date', $classSession->session_date)
                 ->where('room_id', $data['room_id'])
-                ->where('status', '!=', 'CANCELLED')
+                ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
                 ->where('id', '!=', $classSession->id)
                 ->where('start_time', '<', $endTime)
                 ->where('end_time', '>', $startTime)
