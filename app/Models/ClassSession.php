@@ -15,9 +15,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * sudah pakai nama itu. Tabel underlying: class_sessions.
  *
  * Lifecycle:
- *   1. Generator (M03) bikin row dengan status SCHEDULED atau LIBUR
- *   2. Admin input absensi (M04) -> status berubah ke HADIR/IZIN/HANGUS/dll
- *   3. Kalkulasi honor (M06) isi honor_code dan honor_amount
+ *   1. Generator (M03) bikin row SCHEDULED (honor null) atau LIBUR (honor H_LIBUR jika BR-4.10)
+ *   2. Admin input absensi (M04) -> status berubah + AttendanceService isi honor_code/amount
+ *   3. HonorCalculationService (M06) aggregate honor_amount per guru per bulan
  */
 class ClassSession extends Model
 {

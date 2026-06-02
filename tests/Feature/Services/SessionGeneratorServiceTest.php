@@ -217,6 +217,33 @@ class SessionGeneratorServiceTest extends TestCase
         $this->assertEquals(0, $libur->honor_amount);
     }
 
+    // Honor: sesi pengganti kalender → null sampai absensi (konsisten dengan RescheduleService)
+    public function test_replacement_session_honor_null_until_attendance(): void
+    {
+        $schedule = $this->createSchedule(Carbon::MONDAY);
+
+        Holiday::create([
+            'date'             => '2026-03-23',
+            'name'             => 'Idul Fitri',
+            'type'             => 'Nasional',
+            'is_active'        => true,
+            'is_honor_paid'    => true,
+            'replacement_date' => '2026-03-30',
+        ]);
+
+        $this->service->generateForMonth(2026, 3);
+
+        $replacement = ClassSession::where('schedule_id', $schedule->id)
+            ->where('session_date', '2026-03-30')
+            ->first();
+
+        $this->assertNotNull($replacement);
+        $this->assertSame('SCHEDULED', $replacement->status);
+        $this->assertNull($replacement->honor_code);
+        $this->assertNull($replacement->honor_amount);
+        $this->assertNotNull($replacement->origin_session_id);
+    }
+
     // Honor: Internal holiday (is_honor_paid=false) → honor Rp 0
     public function test_internal_holiday_sets_zero_honor(): void
     {

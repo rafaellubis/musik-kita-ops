@@ -48,7 +48,7 @@ Jadwal mingguan per enrollment, generate sesi bulanan, edit/hapus sesi, kalender
 | Konflik | 1 guru / 1 ruang tidak double-book (mingguan & sesi konkret) |
 | Internal holiday | Honor Rp 0, tanpa replacement |
 
-Generator set `honor_code` + `honor_amount` untuk sesi LIBUR sesuai `is_honor_paid`.
+Generator set `honor_code` + `honor_amount` untuk sesi **LIBUR** sesuai `is_honor_paid`. Sesi pengganti kalender (`replacement_date`) honor **null** sampai absensi — sama seperti `RescheduleService`.
 
 ## 5. File Scope
 

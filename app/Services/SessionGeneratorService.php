@@ -26,7 +26,8 @@ use Illuminate\Support\Facades\Log;
  *
  *   Honor LIBUR:
  *   - is_honor_paid=false (Konser KITA) → honor Rp 0
- *   - Ada replacement_date → honor Rp 0 (dibayar via sesi pengganti)
+ *   - Ada replacement_date → honor Rp 0 di sesi LIBUR; honor sesi pengganti
+ *     diisi saat absensi (AttendanceService), sama seperti RescheduleService
  *   - Libur nasional tanpa pengganti → H_LIBUR penuh (BR-4.10)
  *
  * Idempotent: aman dipanggil ulang. Tidak ada retroactive update jika holiday diubah
@@ -258,15 +259,8 @@ class SessionGeneratorService
                 continue;
             }
 
-            // Tentukan honor sesi pengganti: DUO pakai H_DUO dari config, lainnya H_REG
-            if ($enrollment->package?->isDuo()) {
-                $repHonorCode   = 'H_DUO';
-                $repHonorAmount = (int) (PayrollConfig::where('scenario_code', 'H_DUO')->value('value_or_formula') ?? 40000);
-            } else {
-                $repHonorCode   = 'H_REG';
-                $repHonorAmount = $this->calculateBaseHonor($enrollment);
-            }
-
+            // Honor sesi pengganti diisi saat absensi (AttendanceService) —
+            // konsisten dengan RescheduleService::createReplacement()
             ClassSession::create([
                 'schedule_id'      => $schedule->id,
                 'enrollment_id'    => $enrollment->id,
@@ -277,8 +271,8 @@ class SessionGeneratorService
                 'end_time'         => $schedule->end_time,
                 'room_id'          => $schedule->room_id,
                 'status'           => 'SCHEDULED',
-                'honor_code'       => $repHonorCode,
-                'honor_amount'     => $repHonorAmount,
+                'honor_code'       => null,
+                'honor_amount'     => null,
                 'notes'            => 'Sesi pengganti dari tanggal libur',
                 'session_sequence' => $repItem['reserved_slot'],    // mewarisi slot LIBUR
                 'origin_session_id'=> $repItem['libur_session_id'], // referensi ke sesi LIBUR
@@ -310,7 +304,7 @@ class SessionGeneratorService
             return [null, 0];
         }
 
-        // Ada tanggal pengganti → honor akan dibayar via sesi pengganti (H_REG)
+        // Ada tanggal pengganti → honor sesi LIBUR Rp 0; honor dibayar via sesi pengganti saat absensi
         if ($holiday->replacement_date) {
             return [null, 0];
         }
