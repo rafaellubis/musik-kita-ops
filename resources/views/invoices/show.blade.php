@@ -28,6 +28,10 @@
         $canEditItems = in_array($invoice->status, ['UNPAID', 'PARTIAL']);
         // Diskon: boleh selama UNPAID atau PARTIAL (sama dengan canEditItems)
         $canDiscount = $canEditItems;
+        // Void invoice: Owner only, belum VOID, tidak ada pembayaran aktif
+        $canVoidInvoice = $isOwner
+            && $invoice->status !== 'VOID'
+            && $invoice->payments->whereNull('voided_at')->isEmpty();
         // Semua invoice harus dibayar penuh — field amount selalu di-lock = saldo.
         // Untuk KIDS_CLASS_BUNDLE, "cicilan" berarti 3 invoice terpisah yang masing-masing lunas.
         $lockAmount = true;
@@ -82,6 +86,13 @@
                                 </span>
                             @endif
                         </span>
+                        @if($invoice->status === 'VOID')
+                            <div class="text-xs text-mk-dim mt-1">
+                                Void oleh {{ $invoice->voidedBy->name ?? '?' }}
+                                · {{ $invoice->voided_at?->format('d M Y H:i') }}
+                                · {{ $invoice->voided_reason }}
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -95,6 +106,13 @@
                                 class="px-4 py-2 rounded text-sm font-bold"
                                 style="background:#16A34A;color:#fff">
                             Catat Pembayaran
+                        </button>
+                    @endif
+                    @if($canVoidInvoice)
+                        <button type="button"
+                                onclick="document.getElementById('void-invoice-panel').style.display = 'block'"
+                                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm">
+                            Void Invoice
                         </button>
                     @endif
                 </div>
@@ -185,6 +203,36 @@
                     </div>
                     @endforeach
                 </div>
+            </div>
+            @endif
+
+            {{-- ===== Form Void Invoice (Owner only) ===== --}}
+            @if($canVoidInvoice)
+            <div id="void-invoice-panel" class="mt-4 pt-4 border-t border-red-200" style="display:none">
+                <form method="POST" action="{{ route('invoices.void', $invoice->id) }}"
+                      onsubmit="return confirm('Void invoice {{ $invoice->invoice_number }}? Tagihan dibatalkan permanen (audit trail).')">
+                    @csrf
+                    <div class="text-sm font-semibold text-red-700 mb-2">Void Invoice</div>
+                    <p class="text-xs text-mk-dim mb-2">
+                        Invoice tidak dihapus dari database — status berubah VOID dan tercatat di audit log.
+                        Hanya bisa jika belum ada pembayaran aktif.
+                    </p>
+                    <label class="block text-xs">Alasan Void <span class="text-red-500">*</span></label>
+                    <input type="text" name="reason" required minlength="3" maxlength="500"
+                           class="mt-1 block w-full border-mk-border rounded text-sm"
+                           placeholder="Mis: duplikat SPP generate, salah terbitkan">
+                    <div class="mt-2 flex gap-2">
+                        <button type="submit"
+                                class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs">
+                            Konfirmasi Void Invoice
+                        </button>
+                        <button type="button"
+                                onclick="document.getElementById('void-invoice-panel').style.display = 'none'"
+                                class="text-xs text-mk-muted">
+                            Batal
+                        </button>
+                    </div>
+                </form>
             </div>
             @endif
 
@@ -664,7 +712,7 @@
 
             @if(!$isOwner)
                 <p class="mt-3 text-xs text-mk-dim">
-                    Void pembayaran hanya bisa dilakukan oleh role Owner (BR-5.18).
+                    Void pembayaran dan void invoice hanya bisa dilakukan oleh role Owner.
                 </p>
             @endif
         </div>

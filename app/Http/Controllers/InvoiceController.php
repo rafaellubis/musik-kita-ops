@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\VoidInvoiceRequest;
 use App\Models\AuditLog;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
@@ -11,12 +12,13 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 /**
  * List & detail invoice (M05).
  *
- * Read-only — semua aksi tulis (catat pembayaran, void) lewat
- * PaymentController. Generator SPP lewat console / button di list.
+ * Read invoice + generator SPP/denda. Void invoice & catat pembayaran
+ * lewat method terpisah (void = Owner only).
  */
 class InvoiceController extends Controller
 {
@@ -88,6 +90,7 @@ class InvoiceController extends Controller
             'payments' => fn ($q) => $q->latest('payment_date'),
             'payments.createdBy',
             'payments.voidedBy',
+            'voidedBy',
         ]);
 
         // Sibling invoices untuk panel progress cicilan Kids Bundle (BR-10.10).
@@ -105,6 +108,46 @@ class InvoiceController extends Controller
             ->get(['id', 'code', 'name', 'default_price']);
 
         return view('invoices.show', compact('invoice', 'catalogItems', 'siblings'));
+    }
+
+    /**
+     * Void invoice. Hanya Owner — middleware role:Owner di route.
+     * Row tidak dihapus; status → VOID + audit log.
+     */
+    public function void(VoidInvoiceRequest $request, Invoice $invoice): RedirectResponse
+    {
+        $oldValues = $invoice->only([
+            'invoice_number', 'status', 'total_amount', 'student_id', 'enrollment_id',
+        ]);
+
+        try {
+            $invoice = $this->invoiceService->voidInvoice(
+                $invoice,
+                $request->user(),
+                $request->validated('reason'),
+            );
+        } catch (InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        AuditLog::record(
+            action: AuditLog::ACTION_VOID,
+            entity: $invoice,
+            entityLabel: $invoice->invoice_number,
+            oldValues: $oldValues,
+            newValues: [
+                'status'        => Invoice::STATUS_VOID,
+                'voided_at'     => $invoice->voided_at?->toDateTimeString(),
+                'voided_by'     => $invoice->voided_by,
+                'voided_reason' => $invoice->voided_reason,
+            ],
+            notes: 'Alasan: ' . $request->validated('reason'),
+        );
+
+        return back()->with('success', sprintf(
+            'Invoice %s berhasil di-void.',
+            $invoice->invoice_number,
+        ));
     }
 
     /**

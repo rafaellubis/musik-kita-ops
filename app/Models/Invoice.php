@@ -32,6 +32,7 @@ class Invoice extends Model
         'status',
         'due_date', 'issued_at',
         'notes',
+        'voided_at', 'voided_by', 'voided_reason',
         'class_type',
         'payment_mode',
         'installment_number',
@@ -41,6 +42,7 @@ class Invoice extends Model
     protected $casts = [
         'due_date'           => 'date',
         'issued_at'          => 'date',
+        'voided_at'          => 'datetime',
         'year'               => 'integer',
         'month'              => 'integer',
         'total_amount'       => 'integer',
@@ -108,6 +110,12 @@ class Invoice extends Model
         return 'Rp ' . number_format($this->balance, 0, ',', '.');
     }
 
+    /** Invoice sudah di-void? */
+    public function getIsVoidedAttribute(): bool
+    {
+        return $this->status === self::STATUS_VOID;
+    }
+
     // ============= RELATIONSHIPS =============
 
     public function student(): BelongsTo
@@ -136,6 +144,11 @@ class Invoice extends Model
     public function validPayments(): HasMany
     {
         return $this->hasMany(Payment::class)->whereNull('voided_at');
+    }
+
+    public function voidedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'voided_by');
     }
 
     // ============= SCOPES =============

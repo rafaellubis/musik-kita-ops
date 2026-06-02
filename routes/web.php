@@ -273,6 +273,11 @@ Route::middleware('auth')->group(function () {
             [PaymentController::class, 'void']
         )->name('payments.void');
 
+        // Void invoice — hanya Owner, row tidak dihapus (audit trail).
+        Route::post('invoices/{invoice}/void',
+            [InvoiceController::class, 'void']
+        )->name('invoices.void');
+
         // ===== Laporan Progres — Template Master Data (Owner only) =====
         // index + show didaftarkan juga di group read-only di bawah.
         Route::resource('report-templates', ReportTemplateController::class)

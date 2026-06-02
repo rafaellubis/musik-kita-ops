@@ -6,9 +6,11 @@ use App\Models\Enrollment;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Student;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 /**
  * Pusat logika invoice (M05).
@@ -241,15 +243,8 @@ class InvoiceService
                     continue;
                 }
 
-                // Idempotency: cek per (student, enrollment, year, month) + item SPP.
-                // Beda dari versi lama yang cek per (student, year, month) saja —
-                // versi baru memastikan setiap enrollment dapat invoice sendiri.
-                $exists = Invoice::where('student_id', $student->id)
-                    ->where('enrollment_id', $enrollment->id)
-                    ->where('year', $year)
-                    ->where('month', $month)
-                    ->whereHas('items', fn ($q) => $q->where('item_code', 'SPP'))
-                    ->exists();
+                // Idempotency: cek invoice SPP per enrollment (termasuk legacy aktivasi tanpa enrollment_id).
+                $exists = $this->sppInvoiceExistsForEnrollment($student, $enrollment, $year, $month);
 
                 if ($exists) {
                     $report['skipped']++;
@@ -284,6 +279,40 @@ class InvoiceService
         }
 
         return $report;
+    }
+
+    /**
+     * Void invoice — batalkan tagihan tanpa menghapus row (audit trail).
+     * Hanya Owner (middleware route). Invoice dengan pembayaran aktif harus
+     * di-void pembayarannya dulu.
+     *
+     * Idempotent guard: invoice sudah VOID → exception.
+     */
+    public function voidInvoice(Invoice $invoice, User $voidedBy, string $reason): Invoice
+    {
+        if ($invoice->status === Invoice::STATUS_VOID) {
+            throw new InvalidArgumentException(
+                'Invoice sudah di-void sebelumnya pada '
+                . $invoice->voided_at?->format('d M Y H:i')
+            );
+        }
+
+        if ($invoice->validPayments()->exists()) {
+            throw new InvalidArgumentException(
+                'Invoice masih punya pembayaran aktif. Void semua pembayaran terlebih dahulu.'
+            );
+        }
+
+        return DB::transaction(function () use ($invoice, $voidedBy, $reason) {
+            $invoice->update([
+                'status'        => Invoice::STATUS_VOID,
+                'voided_at'     => now(),
+                'voided_by'     => $voidedBy->id,
+                'voided_reason' => $reason,
+            ]);
+
+            return $invoice->fresh();
+        });
     }
 
     /**
@@ -395,5 +424,40 @@ class InvoiceService
     private function summarizeItems(array $items): string
     {
         return collect($items)->pluck('code')->unique()->implode(' + ');
+    }
+
+    /**
+     * Cek apakah murid sudah punya invoice SPP untuk enrollment di bulan target.
+     *
+     * Guard standar: invoice dengan enrollment_id yang sama.
+     * Guard legacy: invoice aktivasi (REG+SPP) tanpa enrollment_id tapi metadata package_id cocok —
+     * mencegah duplikat saat generate SPP bulanan setelah konversi/skip trial.
+     */
+    private function sppInvoiceExistsForEnrollment(
+        Student $student,
+        Enrollment $enrollment,
+        int $year,
+        int $month,
+    ): bool {
+        $hasSppItem = fn ($q) => $q->where('item_code', 'SPP');
+
+        $byEnrollment = Invoice::where('student_id', $student->id)
+            ->where('enrollment_id', $enrollment->id)
+            ->where('year', $year)
+            ->where('month', $month)
+            ->whereHas('items', $hasSppItem)
+            ->exists();
+
+        if ($byEnrollment) {
+            return true;
+        }
+
+        return Invoice::where('student_id', $student->id)
+            ->whereNull('enrollment_id')
+            ->where('year', $year)
+            ->where('month', $month)
+            ->whereHas('items', fn ($q) => $q->where('item_code', 'SPP')
+                ->whereJsonContains('metadata->package_id', $enrollment->package_id))
+            ->exists();
     }
 }

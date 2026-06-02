@@ -80,6 +80,50 @@ class MultiKelasInvoiceTest extends TestCase
         $this->assertEquals(1, $report['skipped']);
     }
 
+    public function test_generate_spp_skip_legacy_activation_invoice_tanpa_enrollment_id(): void
+    {
+        $student = Student::factory()->create(['status' => 'Aktif']);
+        $pkg     = Package::factory()->create(['class_type' => 'REGULER', 'price_per_month' => 340000]);
+        $e1      = Enrollment::factory()->for($student)->create([
+            'package_id' => $pkg->id, 'status' => 'ACTIVE', 'is_primary' => true,
+        ]);
+        $student->update(['primary_enrollment_id' => $e1->id]);
+
+        // Simulasi invoice aktivasi lama: REG+SPP Juni tanpa enrollment_id.
+        $legacy = Invoice::create([
+            'invoice_number' => 'INV/2026/06/0999',
+            'student_id'     => $student->id,
+            'enrollment_id'  => null,
+            'year'           => 2026,
+            'month'          => 6,
+            'description'    => 'Aktivasi murid (REG + SPP bulan ke-1)',
+            'total_amount'   => 590000,
+            'paid_amount'    => 0,
+            'status'         => Invoice::STATUS_UNPAID,
+            'due_date'       => '2026-06-10',
+            'issued_at'      => '2026-06-01',
+            'class_type'     => 'REGULER',
+            'payment_mode'   => Invoice::MODE_FULL,
+        ]);
+        $legacy->items()->create([
+            'item_code'   => 'REG',
+            'description' => 'Biaya Pendaftaran',
+            'amount'      => 250000,
+        ]);
+        $legacy->items()->create([
+            'item_code'   => 'SPP',
+            'description' => 'SPP test',
+            'amount'      => 340000,
+            'metadata'    => ['package_id' => $pkg->id],
+        ]);
+
+        $report = $this->service->generateMonthlySPP(2026, 6);
+
+        $this->assertEquals(0, $report['created']);
+        $this->assertEquals(1, $report['skipped']);
+        $this->assertCount(1, Invoice::where('student_id', $student->id)->get());
+    }
+
     public function test_enrollment_inactive_tidak_dapat_spp(): void
     {
         $student = Student::factory()->create(['status' => 'Aktif']);

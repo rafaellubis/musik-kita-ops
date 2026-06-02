@@ -713,7 +713,10 @@ class StudentLifecycleService
                 'code'        => 'SPP',
                 'description' => "SPP Kids Class Bundle " . now()->format('F Y') . " (Lunas)",
                 'amount'      => $package->price_per_month,
-                'metadata'    => ['package_id' => $package->id],
+                'metadata'    => [
+                    'package_id'    => $package->id,
+                    'enrollment_id' => $enrollment->id,
+                ],
             ];
 
             return $this->invoiceService->createOneOff(
@@ -722,6 +725,7 @@ class StudentLifecycleService
                 description: $includeReg ? 'Aktivasi Kids Bundle (REG + SPP Lunas)' : 'SPP Kids Class Bundle – Lunas',
                 classType: $package->class_type,
                 paymentMode: 'FULL',
+                enrollmentId: $enrollment->id,
             );
         }
 
@@ -740,7 +744,10 @@ class StudentLifecycleService
             'code'        => 'SPP',
             'description' => "SPP {$package->code} " . now()->format('F Y'),
             'amount'      => $package->price_per_month,
-            'metadata'    => ['package_id' => $package->id],
+            'metadata'    => [
+                'package_id'    => $package->id,
+                'enrollment_id' => $enrollment->id,
+            ],
         ];
 
         return $this->invoiceService->createOneOff(
@@ -748,6 +755,7 @@ class StudentLifecycleService
             items: $items,
             description: $includeReg ? 'Aktivasi murid (REG + SPP bulan ke-1)' : 'SPP bulan ke-1',
             classType: $package->class_type,
+            enrollmentId: $enrollment->id,
         );
     }
 
