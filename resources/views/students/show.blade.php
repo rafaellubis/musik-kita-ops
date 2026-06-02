@@ -52,28 +52,9 @@
 
     <div class="py-6 px-4 lg:px-8 max-w-4xl mx-auto space-y-5">
 
-        {{-- Flash messages --}}
-        @if(session('success'))
-        <div class="p-3 rounded-lg text-sm fade-in-up"
-             style="background:rgba(52,211,153,0.1);color:#34D399;border:1px solid rgba(52,211,153,0.2)">
-            {{ session('success') }}
-        </div>
-        @endif
-        @if(session('error'))
-        <div class="p-3 rounded-lg text-sm fade-in-up"
-             style="background:rgba(248,113,113,0.1);color:#F87171;border:1px solid rgba(248,113,113,0.2)">
-            {{ session('error') }}
-        </div>
-        @endif
-        @if(session('warning'))
-        <div class="p-3 rounded-lg text-sm fade-in-up"
-             style="background:rgba(251,191,36,0.1);color:#F59E0B;border:1px solid rgba(251,191,36,0.2)">
-            ⚠️ {{ session('warning') }}
-        </div>
-        @endif
         @if($errors->any())
-        <div class="p-3 rounded-lg text-sm fade-in-up"
-             style="background:rgba(248,113,113,0.1);color:#F87171;border:1px solid rgba(248,113,113,0.2)">
+        <div class="p-3 rounded-lg text-sm fade-in-up font-medium"
+             style="background:rgba(248,113,113,0.14);color:#FCA5A5;border:1px solid rgba(248,113,113,0.35)">
             <div class="font-semibold mb-1">Form aksi gagal divalidasi:</div>
             <ul class="list-disc pl-4 space-y-0.5">
                 @foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach

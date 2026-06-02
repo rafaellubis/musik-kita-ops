@@ -5,17 +5,6 @@
     <p class="text-sm text-mk-muted">Laporan perkembangan murid bulanan</p>
 </div>
 
-@if(session('success'))
-    <div class="mx-4 mb-3 p-3 rounded-xl text-sm" style="background:rgba(52,211,153,0.1);color:#34D399;border:1px solid rgba(52,211,153,0.2)">
-        {{ session('success') }}
-    </div>
-@endif
-@if(session('error'))
-    <div class="mx-4 mb-3 p-3 rounded-xl text-sm" style="background:rgba(248,113,113,0.1);color:#F87171;border:1px solid rgba(248,113,113,0.2)">
-        {{ session('error') }}
-    </div>
-@endif
-
 {{-- Form buat laporan baru — template otomatis dari paket enrollment --}}
 <div class="mx-4 mb-4">
     <details class="bg-mk-card border border-mk-border rounded-xl">

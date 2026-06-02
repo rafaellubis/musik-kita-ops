@@ -190,22 +190,23 @@
 
                 {{-- Konten Halaman --}}
                 <main class="mk-content flex-1 overflow-y-auto bg-mk-bg">
-                    {{-- Flash Messages --}}
-                    @if(session('success'))
-                    <div class="mx-4 lg:mx-8 mt-4 p-4 bg-green-900/30 border border-green-600/40 text-green-300 rounded-lg text-sm">
-                        {{ session('success') }}
+                    {{-- Flash Messages (satu sumber — kontras tinggi agar teks terbaca di dark/light) --}}
+                    @php
+                        $mkFlashStyles = [
+                            'success' => 'background:rgba(52,211,153,0.14);color:#6EE7B7;border:1px solid rgba(52,211,153,0.35)',
+                            'error'   => 'background:rgba(248,113,113,0.14);color:#FCA5A5;border:1px solid rgba(248,113,113,0.35)',
+                            'warning' => 'background:rgba(251,191,36,0.14);color:#FCD34D;border:1px solid rgba(251,191,36,0.35)',
+                            'info'    => 'background:rgba(96,165,250,0.14);color:#93C5FD;border:1px solid rgba(96,165,250,0.35)',
+                        ];
+                    @endphp
+                    @foreach($mkFlashStyles as $flashType => $flashStyle)
+                    @if(session($flashType))
+                    <div class="mx-4 lg:mx-8 mt-4 p-3 rounded-lg text-sm font-medium" style="{{ $flashStyle }}">
+                        @if($flashType === 'warning')<span class="mr-1" aria-hidden="true">⚠️</span>@endif
+                        {{ session($flashType) }}
                     </div>
                     @endif
-                    @if(session('error'))
-                    <div class="mx-4 lg:mx-8 mt-4 p-4 bg-red-900/30 border border-red-600/40 text-red-300 rounded-lg text-sm">
-                        {{ session('error') }}
-                    </div>
-                    @endif
-                    @if(session('warning'))
-                    <div class="mx-4 lg:mx-8 mt-4 p-4 bg-yellow-900/30 border border-yellow-600/40 text-yellow-300 rounded-lg text-sm">
-                        {{ session('warning') }}
-                    </div>
-                    @endif
+                    @endforeach
 
                     {{ $slot }}
                 </main>

@@ -64,20 +64,6 @@
         </div>
 
         {{-- Flash messages --}}
-        @if(session('success'))
-        <div class="mb-5 p-3 rounded-lg text-sm"
-             style="background:rgba(52,211,153,0.1);color:#34D399;border:1px solid rgba(52,211,153,0.2)">
-            {{ session('success') }}
-        </div>
-        @endif
-
-        @if(session('error'))
-        <div class="mb-5 p-3 rounded-lg text-sm"
-             style="background:rgba(176,58,46,0.12);color:#D07868;border:1px solid rgba(176,58,46,0.25)">
-            {{ session('error') }}
-        </div>
-        @endif
-
         {{-- Filter bar --}}
         <form method="GET" action="{{ route('users.index') }}"
               class="mb-5 flex flex-wrap gap-3 items-center">

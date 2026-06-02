@@ -41,6 +41,7 @@ class DatabaseSeeder extends Seeder
             PackageSeeder::class,   // butuh instruments
             TeacherSeeder::class,   // butuh instruments
             ReportTemplateSeeder::class, // M11: template laporan progres per instrumen
+            WhatsappMessageTemplateSeeder::class, // Template WA reminder tagihan
 
             // 4. Data operasional
             StudentSeeder::class,   // butuh packages + teachers

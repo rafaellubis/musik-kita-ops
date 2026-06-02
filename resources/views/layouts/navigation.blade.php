@@ -38,6 +38,10 @@
 
     <x-sidebar-item route="invoices.index" icon="💳" label="Tagihan"
         :active="request()->routeIs('invoices.*')" />
+    @hasanyrole('Owner|Admin')
+    <x-sidebar-item route="invoice-reminders.index" icon="💬" label="Reminder WA"
+        :active="request()->routeIs('invoice-reminders.*')" />
+    @endhasanyrole
     <x-sidebar-item route="honors.index" icon="💰" label="Slip Honor"
         :active="request()->routeIs('honors.*')" />
     <x-sidebar-item route="expenses.index" icon="📊" label="Pengeluaran"
@@ -79,6 +83,8 @@
     @role('Owner')
     <x-sidebar-item route="report-templates.index" icon="📋" label="Template Laporan"
         :active="request()->routeIs('report-templates.*')" />
+    <x-sidebar-item route="whatsapp-templates.index" icon="💬" label="Template WA"
+        :active="request()->routeIs('whatsapp-templates.*')" />
     @endrole
     @role('Owner|Auditor')
     <x-sidebar-item route="invoice-components.index" icon="🧾" label="Komponen Invoice"

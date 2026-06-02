@@ -14,19 +14,6 @@
 
     <div class="py-6 px-4 lg:px-8">
 
-        @if(session('error'))
-        <div class="mb-5 p-3 rounded-lg text-sm max-w-3xl"
-             style="background:rgba(239,68,68,0.1);color:#EF4444;border:1px solid rgba(239,68,68,0.2)">
-            {{ session('error') }}
-        </div>
-        @endif
-        @if(session('warning'))
-        <div class="mb-5 p-3 rounded-lg text-sm max-w-3xl"
-             style="background:rgba(251,191,36,0.1);color:#F59E0B;border:1px solid rgba(251,191,36,0.2)">
-            ⚠️ {{ session('warning') }}
-        </div>
-        @endif
-
         <div class="bg-mk-card shadow-sm sm:rounded-lg p-6 max-w-3xl">
             <form action="{{ route('teachers.update', $teacher->id) }}" method="POST">
                 @csrf @method('PUT')

@@ -12,23 +12,6 @@
 
     <div class="py-6 px-4 lg:px-8 max-w-5xl mx-auto">
 
-        {{-- Flash messages (semua tipe: success, error, info, warning) --}}
-        @foreach(['success','error','info','warning'] as $type)
-        @if(session($type))
-        @php
-            $flashColors = [
-                'success' => 'rgba(52,211,153,0.1);color:#34D399;border:1px solid rgba(52,211,153,0.2)',
-                'error'   => 'rgba(248,113,113,0.1);color:#F87171;border:1px solid rgba(248,113,113,0.2)',
-                'info'    => 'rgba(96,165,250,0.1);color:#60A5FA;border:1px solid rgba(96,165,250,0.2)',
-                'warning' => 'rgba(251,191,36,0.1);color:#F59E0B;border:1px solid rgba(251,191,36,0.2)',
-            ];
-        @endphp
-        <div class="mb-4 p-3 rounded-lg text-sm" style="background:{{ $flashColors[$type] }}">
-            {{ session($type) }}
-        </div>
-        @endif
-        @endforeach
-
         @if(!$preview)
         {{-- ===== STEP 1: UPLOAD ===== --}}
         <div class="rounded-xl p-6 mb-6" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)">

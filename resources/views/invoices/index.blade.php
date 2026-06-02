@@ -19,19 +19,6 @@
 
     <div class="py-6 px-4 lg:px-8 space-y-4">
 
-        @if(session('success'))
-        <div class="p-3 rounded-lg text-sm"
-             style="background:rgba(52,211,153,0.1);color:#34D399;border:1px solid rgba(52,211,153,0.2)">
-            {{ session('success') }}
-        </div>
-        @endif
-        @if(session('error'))
-        <div class="p-3 rounded-lg text-sm"
-             style="background:rgba(248,113,113,0.1);color:#F87171;border:1px solid rgba(248,113,113,0.2)">
-            {{ session('error') }}
-        </div>
-        @endif
-
         {{-- ===== STATS PER STATUS + AGING ===== --}}
         <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
             @foreach(['UNPAID', 'PARTIAL', 'PAID', 'VOID'] as $st)

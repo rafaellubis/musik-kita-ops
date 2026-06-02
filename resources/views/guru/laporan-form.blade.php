@@ -5,12 +5,6 @@
     <p class="text-sm text-mk-muted">{{ $progressReport->enrollment->package->code }} · {{ $progressReport->namaBulan() }}</p>
 </div>
 
-@if(session('success'))
-    <div class="mx-4 mb-3 p-3 rounded-xl text-sm" style="background:rgba(52,211,153,0.1);color:#34D399;border:1px solid rgba(52,211,153,0.2)">
-        {{ session('success') }}
-    </div>
-@endif
-
 <form method="POST" action="{{ route('guru.laporan.update', $progressReport) }}">
     @csrf @method('PUT')
 

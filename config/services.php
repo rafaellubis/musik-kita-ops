@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    /*
+    | Wablas — WhatsApp gateway (reminder tagihan ke ortu).
+    | Authorization header: {token}.{secret_key}
+    */
+    'wablas' => [
+        'token'      => env('WABLAS_TOKEN'),
+        'secret_key' => env('WABLAS_SECRET_KEY'),
+        'base_url'   => env('WABLAS_BASE_URL', 'https://solo.wablas.com'),
+    ],
+
 ];

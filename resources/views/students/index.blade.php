@@ -31,19 +31,6 @@
     <div class="py-6 px-4 lg:px-8 space-y-5">
 
         {{-- Flash messages --}}
-        @if(session('success'))
-        <div class="p-3 rounded-lg text-sm fade-in-up"
-             style="background:rgba(52,211,153,0.1);color:#34D399;border:1px solid rgba(52,211,153,0.2)">
-            {{ session('success') }}
-        </div>
-        @endif
-        @if(session('error'))
-        <div class="p-3 rounded-lg text-sm fade-in-up"
-             style="background:rgba(248,113,113,0.1);color:#F87171;border:1px solid rgba(248,113,113,0.2)">
-            {{ session('error') }}
-        </div>
-        @endif
-
         {{-- ===== STATUS FILTER CARDS ===== --}}
         <div class="flex flex-wrap gap-3 fade-in-up" style="animation-delay:0ms">
             @foreach($statusCfg as $st => $cfg)

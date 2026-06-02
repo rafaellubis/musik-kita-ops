@@ -29,6 +29,8 @@ use App\Http\Controllers\GuruController;
 use App\Http\Controllers\KalenderController;
 use App\Http\Controllers\ProgressReportController;
 use App\Http\Controllers\ReportTemplateController;
+use App\Http\Controllers\InvoiceReminderController;
+use App\Http\Controllers\WhatsappMessageTemplateController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -223,6 +225,12 @@ Route::middleware('auth')->group(function () {
         Route::resource('expenses', ExpenseController::class)
             ->except(['index', 'show', 'destroy']);
 
+        // ===== M05: Reminder tagihan via WhatsApp (Wablas) =====
+        Route::get('invoice-reminders', [InvoiceReminderController::class, 'index'])
+            ->name('invoice-reminders.index');
+        Route::post('invoice-reminders/send', [InvoiceReminderController::class, 'send'])
+            ->name('invoice-reminders.send');
+
     });
 
     /* ======================================================================
@@ -300,6 +308,10 @@ Route::middleware('auth')->group(function () {
             [ReportTemplateController::class, 'destroyItem'])
             ->name('report-templates.items.destroy');
 
+        // ===== Template pesan WhatsApp (Owner only write) =====
+        Route::resource('whatsapp-templates', WhatsappMessageTemplateController::class)
+            ->parameters(['whatsapp-templates' => 'whatsappMessageTemplate'])
+            ->except(['index', 'show']);
 
         // ===== M06: Honor Guru — aksi sensitif (Owner only) =====
         // Kalkulasi, edit komponen manual, dan tandai dibayar.
@@ -454,6 +466,10 @@ Route::middleware('auth')->group(function () {
         Route::resource('report-templates', ReportTemplateController::class)
             ->parameters(['report-templates' => 'reportTemplate'])
             ->only(['index', 'show']);
+
+        Route::resource('whatsapp-templates', WhatsappMessageTemplateController::class)
+            ->parameters(['whatsapp-templates' => 'whatsappMessageTemplate'])
+            ->only(['index']);
 
         // ===== Laporan Progres Murid — Admin/Owner/Auditor view laporan yang disubmit guru =====
         // /pdf HARUS sebelum /{progressReport} agar tidak ditangkap wildcard show.

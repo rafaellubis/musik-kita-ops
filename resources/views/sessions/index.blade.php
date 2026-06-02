@@ -31,21 +31,9 @@
 
     <div class="py-6 px-4 lg:px-8">
 
-        @if(session('success'))
-        <div class="mb-5 p-3 rounded-lg text-sm"
-             style="background:rgba(52,211,153,0.1);color:#34D399;border:1px solid rgba(52,211,153,0.2)">
-            {{ session('success') }}
-        </div>
-        @endif
-        @if(session('error'))
-        <div class="mb-5 p-3 rounded-lg text-sm"
-             style="background:rgba(248,113,113,0.1);color:#F87171;border:1px solid rgba(248,113,113,0.2)">
-            {{ session('error') }}
-        </div>
-        @endif
         @if(session('conflict_warnings'))
-        <div class="mb-5 p-3 rounded-lg text-sm"
-             style="background:rgba(251,191,36,0.1);color:#FBBF24;border:1px solid rgba(251,191,36,0.2)">
+        <div class="mb-5 p-3 rounded-lg text-sm font-medium"
+             style="background:rgba(251,191,36,0.14);color:#FCD34D;border:1px solid rgba(251,191,36,0.35)">
             <div class="font-semibold mb-1">⚠ {{ count(session('conflict_warnings')) }} sesi terskip karena konflik jadwal — atur ulang jadwal murid berikut secara manual:</div>
             <ul class="mt-1 space-y-0.5 list-disc list-inside">
                 @foreach(session('conflict_warnings') as $w)

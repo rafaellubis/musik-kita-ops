@@ -15,13 +15,6 @@
 
     <div class="py-6 px-4 lg:px-8">
 
-        @if(session('success'))
-        <div class="mb-5 p-3 rounded-lg text-sm"
-             style="background:rgba(52,211,153,0.1);color:#34D399;border:1px solid rgba(52,211,153,0.2)">
-            {{ session('success') }}
-        </div>
-        @endif
-
         <div class="bg-mk-card shadow-sm sm:rounded-lg overflow-hidden">
             <table class="min-w-full divide-y divide-mk-border">
                 <thead class="bg-mk-surface">
