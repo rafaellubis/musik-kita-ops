@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\ClassSession;
 use App\Models\Enrollment;
 use App\Models\Package;
 use App\Models\Room;
@@ -248,6 +249,47 @@ class EnrollmentControllerTest extends TestCase
         $this->assertEquals('INACTIVE', $e2->status);
         $this->student->refresh();
         $this->assertEquals($e1->id, $this->student->primary_enrollment_id);
+    }
+
+    public function test_hentikan_kelas_menghapus_sesi_future_orphan(): void
+    {
+        $enrollment = Enrollment::factory()->for($this->student)->create([
+            'is_primary' => true,
+            'status'     => 'ACTIVE',
+            'teacher_id' => $this->teacher->id,
+        ]);
+        $this->student->update(['primary_enrollment_id' => $enrollment->id]);
+
+        $schedule = Schedule::factory()->create([
+            'enrollment_id' => $enrollment->id,
+            'is_active'     => true,
+        ]);
+
+        $today = now()->toDateString();
+        $futureDate = now()->addDays(7)->toDateString();
+
+        $futureSession = ClassSession::factory()->create([
+            'schedule_id'   => $schedule->id,
+            'enrollment_id' => $enrollment->id,
+            'student_id'    => $this->student->id,
+            'teacher_id'    => $this->teacher->id,
+            'session_date'  => $futureDate,
+            'status'        => ClassSession::STATUS_SCHEDULED,
+        ]);
+        $todaySession = ClassSession::factory()->create([
+            'schedule_id'   => $schedule->id,
+            'enrollment_id' => $enrollment->id,
+            'student_id'    => $this->student->id,
+            'teacher_id'    => $this->teacher->id,
+            'session_date'  => $today,
+            'status'        => ClassSession::STATUS_SCHEDULED,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->delete(route('students.enrollments.destroy', [$this->student, $enrollment]));
+
+        $this->assertDatabaseMissing('class_sessions', ['id' => $futureSession->id]);
+        $this->assertDatabaseHas('class_sessions', ['id' => $todaySession->id]);
     }
 
     public function test_hentikan_kelas_utama_minta_konfirmasi_jika_ada_kelas_lain(): void

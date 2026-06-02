@@ -41,6 +41,7 @@ class StudentLifecycleService
 
     public function __construct(
         private readonly InvoiceService $invoiceService,
+        private readonly EnrollmentSessionCleanupService $sessionCleanup,
     ) {}
 
     /**
@@ -616,12 +617,23 @@ class StudentLifecycleService
      */
     private function closeActiveEnrollments(Student $student, string $status): void
     {
-        $student->enrollments()
+        $today = now()->toDateString();
+
+        $activeEnrollments = $student->enrollments()
             ->where('status', 'ACTIVE')
-            ->update([
+            ->get();
+
+        foreach ($activeEnrollments as $enrollment) {
+            $enrollment->update([
                 'status'   => $status,
-                'end_date' => now()->toDateString(),
+                'end_date' => $today,
             ]);
+
+            // Nonaktifkan jadwal mingguan — selaras dengan EnrollmentController::hentikanEnrollment
+            $enrollment->schedules()->update(['is_active' => false]);
+
+            $this->sessionCleanup->purgeFutureSessions($enrollment->fresh());
+        }
 
         // Hapus pointer ke enrollment yang sudah tidak aktif
         // agar accessor ->primaryEnrollment tidak mengembalikan data lama.

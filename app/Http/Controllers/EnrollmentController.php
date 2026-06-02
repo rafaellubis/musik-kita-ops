@@ -7,6 +7,7 @@ use App\Models\Enrollment;
 use App\Models\Package;
 use App\Models\Schedule;
 use App\Models\Student;
+use App\Services\EnrollmentSessionCleanupService;
 use App\Services\ScheduleConflictDetector;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -26,7 +27,10 @@ class EnrollmentController extends Controller
      * Inject ScheduleConflictDetector untuk cek konflik guru dan ruang
      * sebelum enrollment baru dibuat.
      */
-    public function __construct(private ScheduleConflictDetector $conflictDetector) {}
+    public function __construct(
+        private ScheduleConflictDetector $conflictDetector,
+        private EnrollmentSessionCleanupService $sessionCleanup,
+    ) {}
 
     /**
      * Tambah kelas baru ke murid yang sudah aktif.
@@ -280,5 +284,8 @@ class EnrollmentController extends Controller
 
         // Nonaktifkan semua jadwal mingguan yang terkait dengan enrollment ini
         $enrollment->schedules()->update(['is_active' => false]);
+
+        // Hapus sesi future orphan agar generator tidak bentrok dengan enrollment baru
+        $this->sessionCleanup->purgeFutureSessions($enrollment->fresh());
     }
 }
