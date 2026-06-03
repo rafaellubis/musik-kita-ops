@@ -23,26 +23,28 @@ class ScheduleController extends Controller
 
     /**
      * Bikin schedule baru untuk enrollment ACTIVE murid.
+     * enrollment_id wajib dikirim dari form agar multi-enrollment tertangani dengan benar.
      */
     public function store(Request $request, Student $student)
     {
         $data = $request->validate([
-            'day_of_week' => 'required|integer|min:0|max:6',
-            'start_time'  => 'required|date_format:H:i',
-            'end_time'    => 'required|date_format:H:i|after:start_time',
-            'room_id'     => 'nullable|exists:rooms,id',
-            'notes'       => 'nullable|string|max:500',
+            'enrollment_id' => 'required|integer|exists:enrollments,id',
+            'day_of_week'   => 'required|integer|min:0|max:6',
+            'start_time'    => 'required|date_format:H:i',
+            'end_time'      => 'required|date_format:H:i|after:start_time',
+            'room_id'       => 'nullable|exists:rooms,id',
+            'notes'         => 'nullable|string|max:500',
         ], [
-            'day_of_week.required' => 'Hari wajib dipilih.',
-            'start_time.required'  => 'Jam mulai wajib diisi.',
-            'end_time.after'       => 'Jam selesai harus setelah jam mulai.',
+            'enrollment_id.required' => 'Enrollment wajib dipilih.',
+            'day_of_week.required'   => 'Hari wajib dipilih.',
+            'start_time.required'    => 'Jam mulai wajib diisi.',
+            'end_time.after'         => 'Jam selesai harus setelah jam mulai.',
         ]);
 
-        // Cari enrollment ACTIVE murid
-        $enrollment = $student->enrollments()->active()->latest()->first();
+        // Cari enrollment dari request, pastikan milik student ini
+        $enrollment = $student->enrollments()->active()->find($data['enrollment_id']);
         if (!$enrollment) {
-            return back()->with('error',
-                'Murid belum punya enrollment aktif. Jadikan murid Aktif dulu lewat lifecycle action.');
+            abort(403, 'Enrollment ini tidak ditemukan atau bukan milik murid ini.');
         }
 
         $package = $enrollment->package;

@@ -168,7 +168,7 @@
         </div>
 
         <div>
-            <label class="block text-sm font-medium">No. HP Orang Tua</label>
+            <label class="block text-sm font-medium">No. HP Orang Tua/No. WhatsApp</label>
             <input type="text" name="parent_phone" maxlength="20"
                    value="{{ old('parent_phone', $student?->parent_phone) }}"
                    class="mt-1 block w-full border-mk-border rounded-md shadow-sm">

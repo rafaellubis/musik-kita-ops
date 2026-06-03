@@ -719,50 +719,70 @@
                  x-transition:enter-end="opacity-100 translate-y-0"
                  class="space-y-5">
 
-                {{-- Enrollment aktif --}}
+                {{-- Enrollment aktif — tampilkan semua kelas aktif (multi-enrollment) --}}
                 <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5">
-                    <div class="text-[10px] uppercase tracking-widest font-semibold mb-3" style="color:#5DB890">Enrollment Aktif</div>
-                    @if($activeEnrollment)
-                    <div class="rounded-lg p-3 text-sm"
-                         style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2)">
-                        <span class="text-mk-dim">Paket:</span>
-                        <span class="font-mono font-semibold text-mk-text ml-1">{{ $activeEnrollment->package->code ?? '?' }}</span>
-                        <span class="text-mk-dim ml-2">·</span>
-                        <span class="text-mk-muted ml-2">{{ $activeEnrollment->package->instrument->name ?? '?' }}</span>
-                        <span class="text-mk-dim ml-2">· Guru:</span>
-                        <span class="font-semibold text-mk-text ml-1">{{ $activeEnrollment->teacher->name ?? '?' }}</span>
-                        <span class="text-xs text-mk-dim ml-2">(sejak {{ $activeEnrollment->effective_date?->format('d M Y') }})</span>
-                    </div>
-                    @else
+                    <div class="text-[10px] uppercase tracking-widest font-semibold mb-3" style="color:#5DB890">Kelas Aktif</div>
+                    @if($activeEnrollments->isEmpty())
                     <div class="rounded-lg p-3 text-sm text-mk-dim"
                          style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07)">
                         Belum ada enrollment aktif. Ubah status murid ke Aktif lewat panel Lifecycle di atas.
                     </div>
+                    @else
+                    <div class="space-y-2">
+                    @foreach($activeEnrollments as $ae)
+                    <div class="rounded-lg p-3 text-sm"
+                         style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2)">
+                        @if($ae->is_primary)
+                        <span class="text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded mr-2"
+                              style="background:rgba(212,168,83,0.15);color:#D4A853">Utama</span>
+                        @endif
+                        <span class="text-mk-dim">Paket:</span>
+                        <span class="font-mono font-semibold text-mk-text ml-1">{{ $ae->package->code ?? '?' }}</span>
+                        <span class="text-mk-dim ml-2">·</span>
+                        <span class="text-mk-muted ml-2">{{ $ae->package->instrument->name ?? '?' }}</span>
+                        <span class="text-mk-dim ml-2">· Guru:</span>
+                        <span class="font-semibold text-mk-text ml-1">{{ $ae->teacher->name ?? '?' }}</span>
+                        <span class="text-xs text-mk-dim ml-2">(sejak {{ $ae->effective_date?->format('d M Y') }})</span>
+                    </div>
+                    @endforeach
+                    </div>
                     @endif
                 </div>
 
-                {{-- Jadwal Mingguan --}}
-                @if($activeEnrollment)
-                <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5">
+                {{-- Jadwal Mingguan — satu card per enrollment aktif (multi-enrollment) --}}
+                @if($activeEnrollments->isNotEmpty())
+                @foreach($activeEnrollments as $ae)
+                @php
+                    $aeInstrument = $ae->package?->instrument?->name;
+                    $aeLabel = ($ae->package->instrument->name ?? '?') . ' — ' . ($ae->package->code ?? '?');
+                    if ($ae->is_primary) { $aeLabel .= ' (Utama)'; }
+                @endphp
+                <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5"
+                     x-data="{ openCreate: false }">
                     <div class="flex justify-between items-center mb-3">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#5DB890">Jadwal Mingguan Tetap</div>
+                        <div>
+                            <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#5DB890">
+                                Jadwal — {{ $aeLabel }}
+                            </div>
+                            <div class="text-xs text-mk-dim mt-0.5">Guru: {{ $ae->teacher->name ?? '?' }}</div>
+                        </div>
                         <button type="button"
-                                @click="openSchedule = openSchedule === 'create' ? null : 'create'"
+                                @click="openCreate = !openCreate"
                                 class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
                                 style="background:rgba(93,184,144,0.15);color:#5DB890">
                             + Tambah Jadwal
                         </button>
                     </div>
 
-                    {{-- Form tambah jadwal --}}
-                    <div x-show="openSchedule === 'create'" x-cloak
+                    {{-- Form tambah jadwal untuk enrollment ini --}}
+                    <div x-show="openCreate" x-cloak
                          x-data="{
                              selectedDay: '',
                              startTime: '',
                              endTime: '',
                              rooms: {{ Js::from($roomsForFilter) }},
                              booked: {{ Js::from($bookedSchedules) }},
-                             instrument: {{ Js::from($studentInstrument) }},
+                             instrument: {{ Js::from($aeInstrument) }},
                              get availableRooms() {
                                  return this.rooms.filter(room => {
                                      if (this.instrument &&
@@ -786,6 +806,8 @@
                          style="background:rgba(93,184,144,0.06);border:1px solid rgba(93,184,144,0.2)">
                         <form method="POST" action="{{ route('schedules.store', $student->id) }}">
                             @csrf
+                            {{-- enrollment_id wajib agar store() tahu jadwal untuk enrollment mana --}}
+                            <input type="hidden" name="enrollment_id" value="{{ $ae->id }}">
                             <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
                                 <div>
                                     <label class="block text-xs text-mk-dim mb-1">Hari <span class="text-red-400">*</span></label>
@@ -825,7 +847,7 @@
                                     </p>
                                     <p class="text-xs mt-1" style="color:#FBBF24"
                                        x-show="!instrument">
-                                        Murid belum punya paket aktif — semua ruangan ditampilkan.
+                                        Paket belum punya instrumen — semua ruangan ditampilkan.
                                     </p>
                                 </div>
                                 <div class="col-span-2 md:col-span-5">
@@ -840,7 +862,7 @@
                         </form>
                     </div>
 
-                    @if($activeEnrollment->schedules->isEmpty())
+                    @if($ae->schedules->isEmpty())
                     <p class="text-sm text-mk-dim">Belum ada jadwal. Klik "+ Tambah Jadwal" di atas.</p>
                     @else
                     <table class="w-full text-xs">
@@ -854,7 +876,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($activeEnrollment->schedules as $sch)
+                            @foreach($ae->schedules as $sch)
                             <tr class="border-b border-mk-borderLight {{ $sch->is_active ? '' : 'opacity-50' }}">
                                 <td class="py-2 text-mk-muted">{{ $sch->day_name }}</td>
                                 <td class="py-2 font-mono text-mk-muted">
@@ -872,6 +894,7 @@
                                     @endif
                                 </td>
                                 <td class="py-2 text-right space-x-2 whitespace-nowrap">
+                                    {{-- instrument dikirim ke editSchedule agar modal filter ruangan sesuai instrumen --}}
                                     <button type="button"
                                             @click="editSchedule = {
                                                 id: {{ $sch->id }},
@@ -880,7 +903,8 @@
                                                 start_time: '{{ substr($sch->start_time, 0, 5) }}',
                                                 end_time: '{{ substr($sch->end_time, 0, 5) }}',
                                                 room_id: {{ $sch->room_id ?? 'null' }},
-                                                notes: @js($sch->notes ?? '')
+                                                notes: @js($sch->notes ?? ''),
+                                                instrument: @js($aeInstrument)
                                             }"
                                             class="text-xs hover:underline" style="color:#5DB890">Edit</button>
                                     <form method="POST" action="{{ route('schedules.toggle-active', $sch->id) }}" class="inline">
@@ -904,6 +928,7 @@
                     </p>
                     @endif
                 </div>
+                @endforeach
                 @endif
 
                 {{-- Modal Edit Jadwal --}}
@@ -920,16 +945,16 @@
                          class="w-full max-w-lg rounded-xl shadow-2xl p-5"
                          style="background:#241608;border:1px solid rgba(212,168,83,0.15)"
                          x-data="{
-                             get selDay()    { return editSchedule ? String(editSchedule.day_of_week) : '' },
-                             get selStart()  { return editSchedule ? editSchedule.start_time : '' },
-                             get selEnd()    { return editSchedule ? editSchedule.end_time : '' },
+                             get selDay()        { return editSchedule ? String(editSchedule.day_of_week) : '' },
+                             get selStart()      { return editSchedule ? editSchedule.start_time : '' },
+                             get selEnd()        { return editSchedule ? editSchedule.end_time : '' },
+                             get curInstrument() { return editSchedule ? editSchedule.instrument : null },
                              rooms: {{ Js::from($roomsForFilter) }},
                              booked: {{ Js::from($bookedSchedules) }},
-                             instrument: {{ Js::from($studentInstrument) }},
                              get availableRooms() {
                                  return this.rooms.filter(room => {
-                                     if (this.instrument &&
-                                         !room.supported_instruments.includes(this.instrument)) {
+                                     if (this.curInstrument &&
+                                         !room.supported_instruments.includes(this.curInstrument)) {
                                          return false;
                                      }
                                      if (!this.selDay || !this.selStart || !this.selEnd) return true;
@@ -993,7 +1018,7 @@
                                             </template>
                                         </select>
                                         <p class="text-xs mt-1" style="color:#F87171"
-                                           x-show="instrument && availableRooms.length === 0">
+                                           x-show="curInstrument && availableRooms.length === 0">
                                             Tidak ada ruangan tersedia untuk slot &amp; instrumen ini.
                                         </p>
                                     </div>

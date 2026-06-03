@@ -1,0 +1,54 @@
+---
+description: Musik KITA — data referensi guru, ruangan, dan komponen tagihan
+alwaysApply: true
+---
+
+# Domain Reference — Musik KITA
+
+## 18 Guru Aktif
+
+| Nama | Instrumen |
+|------|-----------|
+| THOMAS | Drum |
+| ADI, DEBORA, INDRI, DEDO, SAMUEL | Piano |
+| MAJOR, CHARLY | Drum |
+| YUAN | Bass, Piano, Gitar |
+| NAEL, DANIEL | Piano, Gitar |
+| ARYA | Piano, Drum |
+| T. HADI | Piano, Gitar, Vocal |
+| DEVI | Vocal |
+| PAULINE | Vocal, Piano |
+| RIBKA | Violin |
+| ICA | Kids Class |
+| FIDEL | Piano, Vocal |
+
+**Kritis:** Bass hanya YUAN | Violin hanya RIBKA | Saxophone tidak ada guru → paket nonaktif.
+
+## Komponen Tagihan (Invoice Items)
+
+| Kode | Nama | Nominal |
+|------|------|---------|
+| REG | Registrasi | Rp 250.000 |
+| SPP | SPP Bulanan | packages.price_per_month |
+| KIDS_FP | Final Project Kids | Rp 140.000/murid |
+| CUTI | Biaya Cuti | Rp 100.000 |
+| UJI | Ujian + Mini Concert | Rp 395.000 |
+| MC | Mini Concert saja | Rp 295.000 |
+| DENDA | Denda | Rp 5.000 × MAX(0, hari-10) |
+| DISKON | Diskon manual | NOMINAL atau PERCENT |
+
+## Modul Workflow (Ringkas)
+
+- **M01 Master Data:** CRUD instrumen/paket/ruang/guru/libur. Owner ubah harga. Nonaktifkan guru (jangan hapus jika ada historis).
+- **M02 Pendaftaran:** Calon→Trial→Aktif, honor trial by kehadiran.
+- **M03 Jadwal:** Mingguan per enrollment, generator sesi cron tgl 25, kalender akademik replacement_date.
+- **M04 Absensi:** 9 status sesi, RescheduleService, guru pengganti.
+- **M05 Keuangan:** Invoice SPP, denda cron, pembayaran, diskon, kuitansi PDF.
+- **M06 Honor:** Kalkulasi H-2, slip SLIP/YYYY/MM/NNNN, tandai dibayar Owner.
+- **M07 Pengeluaran & Kas:** Kategori expense, petty cash, P&L.
+- **M08 Event:** Mini Concert/Ujian, guru pendamping Konser KITA (DRAFT only).
+- **M09 Laporan:** Dashboard P&L, export, audit log Owner.
+
+## Services
+
+`HonorCalculationService`, `SessionGeneratorService`, `InvoiceGeneratorService`, `AutoMundurService`, `TrialManagementService`, `RescheduleService`

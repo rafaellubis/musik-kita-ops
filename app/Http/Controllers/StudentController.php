@@ -113,10 +113,11 @@ class StudentController extends Controller
             ->orderBy('code')
             ->get(['id', 'code', 'name', 'capacity', 'supported_instruments']);
 
-        // $bookedSchedules: jadwal aktif yang sudah ada room_id — untuk cek konflik client-side
+        // $bookedSchedules: jadwal aktif yang sudah ada room_id — untuk cek konflik client-side.
+        // Field 'id' wajib agar Alpine.js bisa exclude jadwal yang sedang diedit dari conflict check.
         $bookedSchedules = Schedule::active()
             ->whereNotNull('room_id')
-            ->get(['room_id', 'day_of_week', 'start_time', 'end_time']);
+            ->get(['id', 'room_id', 'day_of_week', 'start_time', 'end_time']);
 
         // M03: Sesi mendatang (5 terdekat dari hari ini)
         $upcomingSessions = $student->classSessions()

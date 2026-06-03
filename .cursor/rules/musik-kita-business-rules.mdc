@@ -1,0 +1,89 @@
+---
+description: Musik KITA — business rules kritis (trial, jadwal, absensi, tagihan, honor)
+alwaysApply: true
+---
+
+# Business Rules Kritis — Musik KITA
+
+## Pendaftaran & Trial
+
+- Trial gratis 1 sesi, durasi **30 menit semua tipe paket**
+- Trial HADIR → honor penuh | NO-SHOW → honor **Rp 0** (TRIAL_NS)
+- Registrasi Rp 250.000 wajib saat aktif | Murid aktif = registrasi + SPP bulan 1 lunas
+- Kids Class min 3 anak; kuota <3 → status menunggu, tidak kena SPP
+- Skip trial → langsung Aktif, **wajib reason** (walk_in|migrasi|reaktivasi|lulus_kids)
+
+## Penjadwalan
+
+- Generate sesi otomatis dari jadwal mingguan | Min 3, max 4 sesi/murid/bulan
+- Libur tanpa replacement_date → sesi LIBUR saja | Dengan replacement_date → LIBUR + pengganti
+- Minggu ke-5 tidak reguler (max 4 counter) kecuali replacement session
+- Murid bayar penuh meski hanya 3 sesi
+- Pindah jadwal mingguan tetap **boleh dalam bulan yang sama**
+- RescheduleService: cek konflik guru + ruang | Admin input via mini-modal absensi
+- Holiday Internal → honor Rp 0, replacement_date NULL
+
+## Absensi
+
+- Reschedule izin: info ≥5 jam + izin **pertama** bulan ini
+- Izin ke-2+ → video pengganti | Info <5 jam/tanpa info → HANGUS
+- Guru pengganti → honor ke substitute_teacher_id
+- Libur nasional → honor guru dibayar penuh (kecuali Internal is_honor_paid=false)
+
+## Tagihan & Denda
+
+- SPP auto-generate tgl 1 | Tempo 1-10 | Denda Rp 5.000/hari mulai tgl 11
+- Lunas = SPP + seluruh denda | Tunggakan >1 bulan → auto-mundur
+- INV/YYYY/MM/NNNN, KW/YYYY/MM/NNNN (reset per bulan)
+- Void payment → **Owner only** | Metode: CASH, TRANSFER, QRIS, DEBIT
+
+## Honor Guru
+
+Formula dasar: `harga_paket × 50% / 4`
+
+| Kode | Skenario | Honor |
+|------|----------|-------|
+| H_REG | Hadir/telat | formula dasar |
+| H_TRIAL | Trial hadir | sama H_REG |
+| TRIAL_NS | Trial no-show | Rp 0 |
+| H_VIDEO | Izin video | sama H_REG |
+| H_LIBUR | Libur nasional tanpa replacement | full pay |
+| H_HANGUS | No-show/hangus | full pay |
+| H_PENG | Guru pengganti | ke pengganti |
+| H_KIDS | Kids Class | murid × Rp 42.500 |
+| H_UJIAN | Pengawas ujian | Rp 250.000 flat |
+| H_IZIN | IZIN_RESCHEDULE original | Rp 0 (honor via sesi pengganti) |
+| H_SPLIT | Split reschedule | formula / 2 |
+
+Cut-off honor: **H-2 sebelum akhir bulan**. Slip event: honor event + transport (manual) + lain-lain (manual + keterangan).
+
+## Multi-Kelas
+
+- Murid boleh banyak enrollment ACTIVE bersamaan (contoh: Piano + Gitar)
+- `is_primary` = kelas utama (UI/display) — **bukan** filter SPP
+- SPP auto-generate tgl 1 untuk **setiap enrollment ACTIVE** (1 kelas = 1 invoice/bulan)
+- Multi-kelas: 2 enrollment ACTIVE → 2 invoice SPP terpisah; denda per invoice independen
+- Skip SPP: TRIAL, ON_LEAVE/INACTIVE/COMPLETED, paket KIDS_CLASS_BUNDLE (cicilan 3 termin)
+- Semua enrollment COMPLETED/INACTIVE → murid auto mundur
+
+## Cuti
+
+- cuti_from/until diisi | Enrollment → ON_LEAVE | Sesi tidak di-generate
+- Biaya Rp 100.000/pengajuan | Perpanjang max 1x (total 2 bulan)
+
+## Diskon Invoice
+
+- DISKON ke invoice UNPAID/PARTIAL | Wajib parent_item_id + discount_reason
+- NOMINAL atau PERCENT | Hapus diskon → Owner only
+
+## Status Murid (State Machine)
+
+`Calon → Trial → Aktif → Cuti/Selesai/Mengundurkan Diri`
+
+Transisi valid: Calon→Trial/Aktif(skip), Trial→Aktif/Mundur, Aktif→Cuti/Mundur/Selesai, Cuti→Aktif/perpanjang/Mundur, Selesai→Aktif(re-enroll), Mundur→Aktif(bayar registrasi).
+
+## Pricelist (1 Maret 2026)
+
+Reguler 30': Basic 340k, L1 370k, L2 400k, L3 430k, L4 460k. Hobby 30' 390k, 45' 450k.
+Kids: 340k/murid/bulan, final project 140k, total 6 bln 2.180k/murid.
+Registrasi 250k | Cuti 100k | Ujian+MC 395k | MC saja 295k | Denda 5k/hari.
