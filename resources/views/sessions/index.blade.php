@@ -31,6 +31,12 @@
 
     <div class="py-6 px-4 lg:px-8">
 
+        {{-- Info: halaman ini untuk edit sesi secara langsung (admin/owner).
+             Untuk input absensi harian (termasuk DIGANTI), gunakan halaman Absensi. --}}
+        <div class="mb-4 p-3 rounded-lg text-xs" style="background:rgba(212,168,83,0.06);color:#8A6848;border:1px solid rgba(212,168,83,0.12)">
+            <strong>ℹ Halaman ini:</strong> Edit data sesi secara langsung (koreksi). Untuk absensi harian dan penugasan guru DIGANTI, gunakan <a href="{{ route('absensi.index') }}" class="underline hover:text-mk-accent">halaman Absensi</a>.
+        </div>
+
         @if(session('conflict_warnings'))
         <div class="mb-5 p-3 rounded-lg text-sm font-medium"
              style="background:rgba(251,191,36,0.14);color:#FCD34D;border:1px solid rgba(251,191,36,0.35)">

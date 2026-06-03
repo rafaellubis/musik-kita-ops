@@ -145,8 +145,12 @@ class DuoClassHonorTest extends TestCase
         $this->assertSame(0, $result->honor_amount);
     }
 
-    /** @test */
-    public function sesi_duo_diganti_menghasilkan_H_PENG_dengan_rate_duo(): void
+    /**
+     * @test
+     * DIGANTI sekarang two-phase: honor pending (null) saat assign, H_PENG setelah dikonfirmasi.
+     * Test ini verifikasi bahwa recordAttendance set honor_code = null (pending).
+     */
+    public function sesi_duo_diganti_menghasilkan_honor_pending_sampai_dikonfirmasi(): void
     {
         $teacher    = Teacher::factory()->create(['is_active' => true]);
         $substitute = Teacher::factory()->create(['is_active' => true]);
@@ -171,12 +175,19 @@ class DuoClassHonorTest extends TestCase
             'status'        => 'SCHEDULED',
         ]);
 
+        // Phase 1: assign pengganti — honor pending (null) sampai dikonfirmasi
         $result = $this->service->recordAttendance($session, [
             'status'                => 'DIGANTI',
             'substitute_teacher_id' => $substitute->id,
         ]);
 
-        $this->assertSame('H_PENG', $result->honor_code);
-        $this->assertSame(40000, $result->honor_amount);
+        $this->assertNull($result->honor_code, 'DIGANTI honor_code harus null (pending konfirmasi)');
+        $this->assertSame(0, $result->honor_amount);
+
+        // Phase 2: konfirmasi hadir via calculateSubstituteHonor — harus H_PENG dengan rate DUO
+        $result->loadMissing(['enrollment.package']);
+        $honor = $this->service->calculateSubstituteHonor($result);
+        $this->assertSame('H_PENG', $honor['code']);
+        $this->assertSame(40000, $honor['amount']);
     }
 }

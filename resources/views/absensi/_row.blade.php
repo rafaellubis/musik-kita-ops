@@ -363,8 +363,12 @@
                     {{-- Mini-modal: DIGANTI (expanded — opsional jam + ruang pengganti) --}}
                     <div x-show="showModal === 'diganti'" @click.outside="showModal = null"
                         class="absolute right-0 top-8 z-20 bg-mk-card border border-mk-border rounded-lg shadow-lg w-72 p-4">
-                        <p class="text-mk-dim text-xs mb-3 truncate">
+                        <p class="text-mk-dim text-xs mb-2 truncate">
                             {{ $session->student->full_name }} · {{ $session->teacher->name }}
+                        </p>
+                        <p class="text-xs mb-3" style="color:#8A6848;background:rgba(212,168,83,0.06);padding:6px 8px;border-radius:6px;border:1px solid rgba(212,168,83,0.12)">
+                            Guru asli berhalangan. Tugaskan pengganti + opsional jam/ruang baru.<br>
+                            <span style="color:#6B4A2A">Konfirmasi kehadiran setelah sesi berlangsung (⏳).</span>
                         </p>
                         <label class="block text-mk-dim text-xs mb-1">Guru pengganti <span class="text-red-400">*</span></label>
                         <select x-model="substituteId"
