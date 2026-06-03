@@ -200,6 +200,12 @@ Route::middleware('auth')->group(function () {
             [AbsensiController::class, 'storeSplitPart']
         )->name('absensi.split')->where('part', '[12]');
 
+        // ===== M04: Konfirmasi kehadiran guru pengganti (DIGANTI two-phase) =====
+        // action=hadir → set honor H_PENG; action=batal → reset ke SCHEDULED
+        Route::post('/absensi/{classSession}/confirm-substitute',
+            [AbsensiController::class, 'confirmSubstitute']
+        )->name('absensi.confirm-substitute');
+
         // ===== M05: Catat Pembayaran =====
         // Void payment di-protect role:Owner di group sensitif di bawah.
         Route::post('invoices/{invoice}/payments',

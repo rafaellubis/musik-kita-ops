@@ -22,6 +22,7 @@
         substituteStartTime: '',
         substituteEndTime: '',
         substituteRoomId: null,
+        honorConfirmed: {{ ($session->status === 'DIGANTI' && $session->honor_code !== null) ? 'true' : 'false' }},
         replacementLabel: @js($replacementLabel),
         rescheduleDate: '',
         rescheduleTime: '',
@@ -126,6 +127,36 @@
             .catch(() => {
                 this.part2Error = 'Terjadi kesalahan. Coba lagi.';
             });
+        },
+        async confirmSubstitute(action) {
+            this.loading  = true;
+            this.errorMsg = '';
+            try {
+                const res = await fetch('{{ route('absensi.confirm-substitute', $session) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ action }),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (action === 'hadir') {
+                        this.honorConfirmed = true;
+                        this.$el.dataset.status = 'DIGANTI';
+                    } else {
+                        this.status = 'SCHEDULED';
+                        this.substituteId = null;
+                        this.substituteLabel = '';
+                        this.honorConfirmed = false;
+                        this.$el.dataset.status = 'SCHEDULED';
+                    }
+                } else {
+                    this.errorMsg = data.message || 'Gagal mengkonfirmasi.';
+                }
+            } finally { this.loading = false; }
         }
     }"
     :class="status !== 'SCHEDULED' ? 'opacity-60' : ''"
@@ -223,7 +254,7 @@
                         status === 'IZIN_RESCHEDULE'   ? '📅 ' + (replacementLabel || 'IZIN') :
                         status === 'IZIN_PENDING'      ? '⏳ PENDING' :
                         status === 'IZIN_VIDEO'        ? '📹 VIDEO' :
-                        status === 'DIGANTI'           ? '↔ ' + substituteLabel :
+                        status === 'DIGANTI'           ? '↔ ' + substituteLabel + (honorConfirmed ? ' ✓' : ' ⏳') :
                         status === 'CANCELLED'         ? '✕ BATAL' : status
                     ">
                 </span>
@@ -233,12 +264,28 @@
                     :disabled="loading"
                     class="text-red-500 hover:text-red-700 text-xs underline">batalkan</button>
                 {{-- Status lain (termasuk CANCELLED): bisa di-ubah ulang ke SCHEDULED.
-                     Disembunyikan jika sesi sudah punya replacement — tidak boleh reschedule ulang. --}}
+                     Disembunyikan jika sesi sudah punya replacement atau sedang menunggu konfirmasi DIGANTI. --}}
                 @if(!isset($sessionIdsWithReplacement[$session->id]))
-                <button x-show="status !== 'HADIR' && status !== 'HADIR_TERLAMBAT'"
+                <button x-show="status !== 'HADIR' && status !== 'HADIR_TERLAMBAT' && !(status === 'DIGANTI' && !honorConfirmed)"
                     @click="status = 'SCHEDULED'; errorMsg = ''"
                     class="text-mk-dim hover:text-mk-muted text-xs underline">ubah</button>
                 @endif
+                {{-- Tombol konfirmasi kehadiran pengganti — hanya tampil jika DIGANTI dan belum dikonfirmasi --}}
+                <div x-show="status === 'DIGANTI' && !honorConfirmed"
+                     class="flex items-center gap-1 mt-1">
+                    <button @click="confirmSubstitute('hadir')"
+                            :disabled="loading"
+                            class="rounded px-2 py-1 text-xs font-semibold disabled:opacity-40"
+                            style="background:rgba(52,211,153,0.15);color:#34D399">
+                        ✓ Hadir
+                    </button>
+                    <button @click="confirmSubstitute('batal')"
+                            :disabled="loading"
+                            class="rounded px-2 py-1 text-xs disabled:opacity-40"
+                            style="background:rgba(248,113,113,0.12);color:#F87171">
+                        ✗ Batalkan
+                    </button>
+                </div>
             </div>
 
             {{-- Tombol aksi (status belum diinput) --}}

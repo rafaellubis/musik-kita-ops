@@ -265,7 +265,7 @@ class AttendanceService
     }
 
     /**
-     * Hitung honor guru pengganti saat konfirmasi DIGANTI hadir.
+     * Hitung honor guru pengganti saat konfirmasi DIGANTI hadir (H_PENG).
      * Dipakai oleh AbsensiController::confirmSubstitute().
      *
      * @return array{code: string, amount: int}
@@ -273,11 +273,26 @@ class AttendanceService
     public function calculateSubstituteHonor(ClassSession $session): array
     {
         $session->loadMissing(['enrollment.package']);
-        $package   = $session->enrollment?->package;
-        $baseHonor = $package
-            ? (int) round($package->price_per_month * 0.5 / 4)
-            : 0;
+        $package = $session->enrollment?->package;
 
-        return ['code' => 'H_PENG', 'amount' => $baseHonor];
+        if (!$package) {
+            return ['code' => 'H_PENG', 'amount' => 0];
+        }
+
+        // Kids Class: flat per murid
+        if ($package->isKidsClass()) {
+            return ['code' => 'H_KIDS', 'amount' => self::KIDS_HONOR_PER_STUDENT];
+        }
+
+        // DUO: honor dari PayrollConfig H_DUO
+        if ($package->isDuo()) {
+            $honorPerMurid = (int) (PayrollConfig::where('scenario_code', 'H_DUO')
+                ->value('value_or_formula') ?? 40000);
+            return ['code' => 'H_PENG', 'amount' => $honorPerMurid];
+        }
+
+        // Reguler/Hobby: formula harga_paket * 50% / 4
+        $amount = (int) round($package->price_per_month * 0.5 / 4);
+        return ['code' => 'H_PENG', 'amount' => $amount];
     }
 }

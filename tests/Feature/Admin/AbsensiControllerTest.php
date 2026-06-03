@@ -304,6 +304,83 @@ class AbsensiControllerTest extends TestCase
         ]);
     }
 
+    // ----------------------------------------------------------------
+    // Task 5 (B2) — confirmSubstitute endpoint
+    // ----------------------------------------------------------------
+
+    /** confirmSubstitute hadir: set honor_code H_PENG + honor_amount */
+    public function test_confirm_substitute_hadir_sets_honor(): void
+    {
+        $session = $this->createTestSession([
+            'status'       => 'DIGANTI',
+            'honor_code'   => null,
+            'honor_amount' => 0,
+        ]);
+        $sub = Teacher::factory()->create(['is_active' => true]);
+        $session->update(['substitute_teacher_id' => $sub->id]);
+
+        $this->actingAs($this->admin)
+            ->postJson(route('absensi.confirm-substitute', $session), ['action' => 'hadir'])
+            ->assertJson(['success' => true, 'action' => 'hadir']);
+
+        $session->refresh();
+        $this->assertNotNull($session->honor_code);
+        $this->assertSame('H_PENG', $session->honor_code);
+        $this->assertGreaterThan(0, $session->honor_amount);
+    }
+
+    /** confirmSubstitute batal: reset ke SCHEDULED, restore jam/ruang dari schedule */
+    public function test_confirm_substitute_batal_resets_session(): void
+    {
+        $teacher    = Teacher::factory()->create(['is_active' => true]);
+        $student    = Student::factory()->create(['status' => 'Aktif']);
+        $instr      = \App\Models\Instrument::firstOrCreate(
+            ['code' => 'P'],
+            ['name' => 'Piano-B5', 'is_active' => true, 'sort_order' => 99]
+        );
+        $pkg = \App\Models\Package::create([
+            'code' => 'REG-P-B-T5', 'instrument_id' => $instr->id,
+            'class_type' => 'REGULER', 'grade' => 'Basic', 'duration_min' => 30,
+            'price_per_month' => 340000, 'is_active' => true, 'sort_order' => 99,
+        ]);
+        $enrollment = Enrollment::create([
+            'student_id' => $student->id, 'package_id' => $pkg->id,
+            'teacher_id' => $teacher->id, 'status' => 'ACTIVE',
+            'is_primary' => true, 'effective_date' => now()->toDateString(),
+        ]);
+        $schedule = \App\Models\Schedule::create([
+            'enrollment_id' => $enrollment->id, 'day_of_week' => 1,
+            'start_time' => '10:00:00', 'end_time' => '10:30:00',
+            'room_id' => null, 'is_active' => true,
+        ]);
+        $sub = Teacher::factory()->create(['is_active' => true]);
+        $session = ClassSession::create([
+            'schedule_id'           => $schedule->id,
+            'enrollment_id'         => $enrollment->id,
+            'student_id'            => $student->id,
+            'teacher_id'            => $teacher->id,
+            'substitute_teacher_id' => $sub->id,
+            'session_date'          => now()->toDateString(),
+            'start_time'            => '14:00:00',
+            'end_time'              => '14:30:00',
+            'status'                => 'DIGANTI',
+            'honor_code'            => null,
+            'honor_amount'          => 0,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->postJson(route('absensi.confirm-substitute', $session), ['action' => 'batal'])
+            ->assertJson(['success' => true, 'action' => 'batal']);
+
+        $session->refresh();
+        $this->assertSame('SCHEDULED', $session->status);
+        $this->assertNull($session->substitute_teacher_id);
+        $this->assertNull($session->honor_code);
+        // Jam harus dikembalikan ke jadwal asli (bukan 14:00)
+        $this->assertSame('10:00:00', $session->start_time);
+        $this->assertSame('10:30:00', $session->end_time);
+    }
+
     /** DIGANTI dengan jam pengganti harus update start_time/end_time sesi */
     public function test_diganti_updates_time_when_substitute_time_provided(): void
     {

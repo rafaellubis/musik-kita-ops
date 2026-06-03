@@ -438,4 +438,76 @@ class AbsensiController extends Controller
             }
         }
     }
+
+    /**
+     * Konfirmasi kehadiran guru pengganti (DIGANTI two-phase).
+     *
+     * action = hadir : hitung honor H_PENG ke pengganti, tandai final
+     * action = batal : reset ke SCHEDULED, restore jam/ruang dari jadwal mingguan asli
+     */
+    public function confirmSubstitute(Request $request, ClassSession $classSession): JsonResponse
+    {
+        $request->validate([
+            'action' => ['required', \Illuminate\Validation\Rule::in(['hadir', 'batal'])],
+        ], [
+            'action.required' => 'Aksi konfirmasi wajib diisi.',
+            'action.in'       => 'Aksi tidak valid. Pilih hadir atau batal.',
+        ]);
+
+        // Guard: hanya berlaku untuk sesi DIGANTI yang belum dikonfirmasi (honor_code = null)
+        if ($classSession->status !== ClassSession::STATUS_DIGANTI) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sesi bukan berstatus DIGANTI.',
+            ], 422);
+        }
+
+        if ($classSession->honor_code !== null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sesi sudah dikonfirmasi sebelumnya.',
+            ], 422);
+        }
+
+        if ($request->action === 'hadir') {
+            $classSession->loadMissing(['enrollment.package']);
+            $honor = $this->attendanceService->calculateSubstituteHonor($classSession);
+
+            $classSession->update([
+                'honor_code'   => $honor['code'],
+                'honor_amount' => $honor['amount'],
+            ]);
+
+            // Update last_session_at murid agar statistik akurat
+            $classSession->student?->update([
+                'last_session_at' => \Carbon\Carbon::parse($classSession->session_date)
+                    ->setTimeFromTimeString($classSession->start_time),
+            ]);
+
+            return response()->json([
+                'success'      => true,
+                'action'       => 'hadir',
+                'honor_code'   => $honor['code'],
+                'honor_amount' => $honor['amount'],
+            ]);
+        }
+
+        // action = batal: reset ke SCHEDULED, restore jam/ruang dari jadwal mingguan asli
+        $schedule = $classSession->schedule;
+
+        $classSession->update([
+            'status'                => ClassSession::STATUS_SCHEDULED,
+            'substitute_teacher_id' => null,
+            'honor_code'            => null,
+            'honor_amount'          => null,
+            'start_time'            => $schedule?->start_time ?? $classSession->start_time,
+            'end_time'              => $schedule?->end_time   ?? $classSession->end_time,
+            'room_id'               => $schedule?->room_id    ?? $classSession->room_id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'action'  => 'batal',
+        ]);
+    }
 }
