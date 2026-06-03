@@ -19,6 +19,9 @@
         lateMinutes: {{ $session->late_minutes ?? 15 }},
         substituteId: {{ $session->substitute_teacher_id ?? 'null' }},
         substituteLabel: @js($session->substituteTeacher?->name ?? ''),
+        substituteStartTime: '',
+        substituteEndTime: '',
+        substituteRoomId: null,
         replacementLabel: @js($replacementLabel),
         rescheduleDate: '',
         rescheduleTime: '',
@@ -310,23 +313,52 @@
                         </div>
                     </div>
 
-                    {{-- Mini-modal: DIGANTI --}}
+                    {{-- Mini-modal: DIGANTI (expanded — opsional jam + ruang pengganti) --}}
                     <div x-show="showModal === 'diganti'" @click.outside="showModal = null"
-                        class="absolute right-0 top-8 z-20 bg-mk-card border border-mk-border rounded-lg shadow-lg w-64 p-4">
+                        class="absolute right-0 top-8 z-20 bg-mk-card border border-mk-border rounded-lg shadow-lg w-72 p-4">
                         <p class="text-mk-dim text-xs mb-3 truncate">
                             {{ $session->student->full_name }} · {{ $session->teacher->name }}
                         </p>
-                        <label class="block text-mk-dim text-xs mb-1">Guru pengganti</label>
+                        <label class="block text-mk-dim text-xs mb-1">Guru pengganti <span class="text-red-400">*</span></label>
                         <select x-model="substituteId"
-                            class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-1">
+                            class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-3">
                             <option value="">— Pilih guru pengganti —</option>
                             @foreach($teachers as $t)
                                 <option value="{{ $t->id }}">{{ $t->name }}</option>
                             @endforeach
                         </select>
-                        <p class="text-mk-dim text-xs mb-3">Honor otomatis ke guru pengganti.</p>
+                        {{-- Jam pengganti (opsional — jika berbeda dari jadwal asli) --}}
+                        <div class="grid grid-cols-2 gap-2 mb-3">
+                            <div>
+                                <label class="block text-mk-dim text-xs mb-1">Jam Mulai <span class="text-mk-dim text-[10px]">(opsional)</span></label>
+                                <input type="time" x-model="substituteStartTime"
+                                    class="w-full border border-mk-border text-mk-muted rounded px-2 py-1.5 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-mk-dim text-xs mb-1">Jam Selesai</label>
+                                <input type="time" x-model="substituteEndTime"
+                                    class="w-full border border-mk-border text-mk-muted rounded px-2 py-1.5 text-sm">
+                            </div>
+                        </div>
+                        {{-- Ruangan pengganti (opsional) --}}
+                        <div class="mb-3">
+                            <label class="block text-mk-dim text-xs mb-1">Ruangan <span class="text-mk-dim text-[10px]">(opsional)</span></label>
+                            <select x-model="substituteRoomId"
+                                class="w-full border border-mk-border text-mk-muted rounded px-2 py-1.5 text-sm">
+                                <option value="">— Sama dengan ruangan asli —</option>
+                                @foreach($rooms as $room)
+                                    <option value="{{ $room->id }}">{{ $room->code }} — {{ $room->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <p class="text-mk-dim text-xs mb-3">Honor ke guru pengganti setelah dikonfirmasi hadir.</p>
                         <div class="flex gap-2">
-                            <button @click="if(substituteId) save('DIGANTI', { substitute_teacher_id: substituteId })"
+                            <button @click="if(substituteId) save('DIGANTI', {
+                                    substitute_teacher_id: substituteId,
+                                    substitute_start_time: substituteStartTime || null,
+                                    substitute_end_time: substituteEndTime || null,
+                                    substitute_room_id: substituteRoomId || null,
+                                })"
                                 :disabled="!substituteId"
                                 class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded btn-mk-primary">
                                 Simpan

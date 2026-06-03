@@ -277,4 +277,56 @@ class AbsensiControllerTest extends TestCase
             'late_minutes' => 20,
         ]);
     }
+
+    // ----------------------------------------------------------------
+    // Task 4 (B1) — DIGANTI two-phase: honor pending sampai konfirmasi
+    // ----------------------------------------------------------------
+
+    /** DIGANTI harus set honor_code = null (pending konfirmasi), bukan H_PENG langsung */
+    public function test_diganti_sets_honor_pending(): void
+    {
+        $session = $this->createTestSession(['status' => 'SCHEDULED']);
+        $sub     = Teacher::factory()->create(['is_active' => true]);
+
+        $this->actingAs($this->admin)
+            ->patchJson(route('absensi.update', $session), [
+                'status'                => 'DIGANTI',
+                'substitute_teacher_id' => $sub->id,
+            ])
+            ->assertJson(['success' => true]);
+
+        $this->assertDatabaseHas('class_sessions', [
+            'id'                    => $session->id,
+            'status'                => 'DIGANTI',
+            'substitute_teacher_id' => $sub->id,
+            'honor_code'            => null,   // pending — belum dikonfirmasi
+            'honor_amount'          => 0,
+        ]);
+    }
+
+    /** DIGANTI dengan jam pengganti harus update start_time/end_time sesi */
+    public function test_diganti_updates_time_when_substitute_time_provided(): void
+    {
+        $session = $this->createTestSession([
+            'status'     => 'SCHEDULED',
+            'start_time' => '10:00:00',
+            'end_time'   => '10:30:00',
+        ]);
+        $sub = Teacher::factory()->create(['is_active' => true]);
+
+        $this->actingAs($this->admin)
+            ->patchJson(route('absensi.update', $session), [
+                'status'                => 'DIGANTI',
+                'substitute_teacher_id' => $sub->id,
+                'substitute_start_time' => '14:00',
+                'substitute_end_time'   => '14:30',
+            ])
+            ->assertJson(['success' => true]);
+
+        $this->assertDatabaseHas('class_sessions', [
+            'id'         => $session->id,
+            'start_time' => '14:00:00',
+            'end_time'   => '14:30:00',
+        ]);
+    }
 }

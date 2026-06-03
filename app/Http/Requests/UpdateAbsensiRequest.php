@@ -62,8 +62,24 @@ class UpdateAbsensiRequest extends FormRequest
                 'required_if:status,' . ClassSession::STATUS_IZIN_RESCHEDULE,
                 'nullable', 'date_format:H:i',
             ],
-            // Ruangan pengganti — opsional
+            // Ruangan pengganti reschedule — opsional
             'replacement_room_id' => [
+                'nullable', 'exists:rooms,id',
+            ],
+            // Jam pengganti DIGANTI (opsional — saat guru pengganti masuk di jam berbeda)
+            'substitute_start_time' => [
+                'nullable',
+                'date_format:H:i',
+                'required_with:substitute_end_time',
+            ],
+            'substitute_end_time' => [
+                'nullable',
+                'date_format:H:i',
+                'after:substitute_start_time',
+                'required_with:substitute_start_time',
+            ],
+            // Ruangan pengganti DIGANTI (opsional — saat guru pengganti pakai ruang berbeda)
+            'substitute_room_id' => [
                 'nullable', 'exists:rooms,id',
             ],
         ];
@@ -72,18 +88,24 @@ class UpdateAbsensiRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'status.required'                   => 'Status absensi wajib diisi.',
-            'status.in'                         => 'Status tidak valid.',
-            'late_minutes.required_if'          => 'Jumlah menit terlambat wajib diisi.',
-            'late_minutes.min'                  => 'Minimal terlambat 1 menit.',
-            'late_minutes.max'                  => 'Maksimal 60 menit.',
-            'substitute_teacher_id.required_if' => 'Guru pengganti wajib dipilih.',
-            'substitute_teacher_id.exists'      => 'Guru pengganti tidak ditemukan.',
-            'replacement_date.required_if'      => 'Tanggal pengganti wajib diisi.',
-            'replacement_date.date_format'      => 'Format tanggal harus YYYY-MM-DD.',
-            'replacement_time.required_if'      => 'Jam mulai pengganti wajib diisi.',
-            'replacement_time.date_format'      => 'Format jam harus HH:MM.',
-            'replacement_room_id.exists'        => 'Ruangan tidak ditemukan.',
+            'status.required'                       => 'Status absensi wajib diisi.',
+            'status.in'                             => 'Status tidak valid.',
+            'late_minutes.required_if'              => 'Jumlah menit terlambat wajib diisi.',
+            'late_minutes.min'                      => 'Minimal terlambat 1 menit.',
+            'late_minutes.max'                      => 'Maksimal 60 menit.',
+            'substitute_teacher_id.required_if'     => 'Guru pengganti wajib dipilih.',
+            'substitute_teacher_id.exists'          => 'Guru pengganti tidak ditemukan.',
+            'replacement_date.required_if'          => 'Tanggal pengganti wajib diisi.',
+            'replacement_date.date_format'          => 'Format tanggal harus YYYY-MM-DD.',
+            'replacement_time.required_if'          => 'Jam mulai pengganti wajib diisi.',
+            'replacement_time.date_format'          => 'Format jam harus HH:MM.',
+            'replacement_room_id.exists'            => 'Ruangan tidak ditemukan.',
+            'substitute_start_time.date_format'     => 'Format jam mulai pengganti harus HH:MM.',
+            'substitute_start_time.required_with'   => 'Jam mulai pengganti wajib jika jam selesai diisi.',
+            'substitute_end_time.date_format'       => 'Format jam selesai pengganti harus HH:MM.',
+            'substitute_end_time.after'             => 'Jam selesai pengganti harus setelah jam mulai.',
+            'substitute_end_time.required_with'     => 'Jam selesai pengganti wajib jika jam mulai diisi.',
+            'substitute_room_id.exists'             => 'Ruangan pengganti tidak ditemukan.',
         ];
     }
 }

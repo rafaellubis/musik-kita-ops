@@ -137,11 +137,16 @@ class AbsensiController extends Controller
 
         try {
             DB::transaction(function () use ($request, $classSession) {
-                // AttendanceService menghitung honor_code + honor_amount berdasarkan status & paket
+                // AttendanceService menghitung honor_code + honor_amount berdasarkan status & paket.
+                // Untuk DIGANTI: substitute_start_time/end_time/room_id diteruskan agar sesi
+                // bisa di-update jam/ruangnya jika pengganti masuk berbeda tempat/waktu.
                 $this->attendanceService->recordAttendance($classSession, [
                     'status'                => $request->status,
                     'late_minutes'          => $request->late_minutes,
                     'substitute_teacher_id' => $request->substitute_teacher_id,
+                    'substitute_start_time' => $request->substitute_start_time,
+                    'substitute_end_time'   => $request->substitute_end_time,
+                    'substitute_room_id'    => $request->substitute_room_id,
                     'notes'                 => $request->notes,
                     '__session'             => $classSession,
                 ]);

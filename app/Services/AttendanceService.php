@@ -89,6 +89,18 @@ class AttendanceService
                 'notes'                 => $data['notes'] ?? $session->notes,
             ];
 
+            // Saat DIGANTI: update jam/ruang jika pengganti masuk di waktu/tempat berbeda.
+            // Honor TIDAK dihitung sekarang — pending sampai dikonfirmasi via confirmSubstitute().
+            if ($status === 'DIGANTI') {
+                if (!empty($data['substitute_start_time']) && !empty($data['substitute_end_time'])) {
+                    $update['start_time'] = $data['substitute_start_time'] . ':00';
+                    $update['end_time']   = $data['substitute_end_time'] . ':00';
+                }
+                if (!empty($data['substitute_room_id'])) {
+                    $update['room_id'] = (int) $data['substitute_room_id'];
+                }
+            }
+
             // Hitung honor & honor_code
             $session->fill($update);
             $honor = $this->calculateHonor($session);
@@ -218,7 +230,8 @@ class AttendanceService
                 'IZIN_VIDEO'               => 'H_DUO',
                 'HANGUS'                   => 'H_DUO',
                 'LIBUR'                    => 'H_DUO',
-                'DIGANTI'                  => 'H_PENG',
+                // DIGANTI: honor pending — akan di-set ke H_PENG saat confirmSubstitute()
+                'DIGANTI'                  => null,
                 default                    => null,
             };
 
@@ -243,10 +256,28 @@ class AttendanceService
             'IZIN_VIDEO'               => 'H_VIDEO',
             'HANGUS'                   => 'H_HANGUS',
             'LIBUR'                    => 'H_LIBUR',
-            'DIGANTI'                  => 'H_PENG',
+            // DIGANTI: honor pending — akan di-set ke H_PENG saat confirmSubstitute()
+            'DIGANTI'                  => null,
             default                    => null,
         };
 
         return ['code' => $code, 'amount' => $code ? $baseHonor : 0];
+    }
+
+    /**
+     * Hitung honor guru pengganti saat konfirmasi DIGANTI hadir.
+     * Dipakai oleh AbsensiController::confirmSubstitute().
+     *
+     * @return array{code: string, amount: int}
+     */
+    public function calculateSubstituteHonor(ClassSession $session): array
+    {
+        $session->loadMissing(['enrollment.package']);
+        $package   = $session->enrollment?->package;
+        $baseHonor = $package
+            ? (int) round($package->price_per_month * 0.5 / 4)
+            : 0;
+
+        return ['code' => 'H_PENG', 'amount' => $baseHonor];
     }
 }
