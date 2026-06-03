@@ -63,6 +63,79 @@ class GuruUpdateAbsensiTest extends TestCase
         ]);
     }
 
+    /**
+     * Guru pengganti (substitute_teacher_id) boleh konfirmasi hadir pada sesi DIGANTI.
+     */
+    public function test_guru_pengganti_bisa_konfirmasi_hadir_diganti(): void
+    {
+        $guruAsli = Teacher::factory()->create();
+        $instr    = Instrument::factory()->create(['name' => 'Vocal', 'code' => 'VOC']);
+        $package  = Package::factory()->create([
+            'class_type'    => 'REGULER',
+            'instrument_id' => $instr->id,
+            'duration_min'  => 30,
+            'price_per_month' => 400000,
+        ]);
+        $student = Student::factory()->create();
+        $enroll  = Enrollment::factory()->create([
+            'student_id' => $student->id,
+            'teacher_id' => $guruAsli->id,
+            'package_id' => $package->id,
+            'status'     => 'ACTIVE',
+        ]);
+        $sesi = ClassSession::factory()->create([
+            'enrollment_id'         => $enroll->id,
+            'student_id'            => $student->id,
+            'teacher_id'            => $guruAsli->id,
+            'substitute_teacher_id' => $this->teacher->id,
+            'session_date'          => today()->toDateString(),
+            'status'                => 'DIGANTI',
+            'honor_code'            => null,
+            'honor_amount'          => 0,
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->post(route('guru.absensi.confirm-substitute', $sesi), ['action' => 'hadir'])
+            ->assertRedirect();
+
+        $sesi->refresh();
+        $this->assertSame('H_PENG', $sesi->honor_code);
+        $this->assertGreaterThan(0, $sesi->honor_amount);
+        $this->assertSame('DIGANTI', $sesi->status);
+    }
+
+    /** Guru asli tidak boleh konfirmasi atas nama pengganti */
+    public function test_guru_asli_tidak_bisa_konfirmasi_diganti_milik_pengganti(): void
+    {
+        $pengganti = Teacher::factory()->create();
+        $instr     = Instrument::factory()->create(['name' => 'Drum', 'code' => 'DRM']);
+        $package   = Package::factory()->create([
+            'class_type'    => 'REGULER',
+            'instrument_id' => $instr->id,
+            'duration_min'  => 30,
+        ]);
+        $student = Student::factory()->create();
+        $enroll  = Enrollment::factory()->create([
+            'student_id' => $student->id,
+            'teacher_id' => $this->teacher->id,
+            'package_id' => $package->id,
+            'status'     => 'ACTIVE',
+        ]);
+        $sesi = ClassSession::factory()->create([
+            'enrollment_id'         => $enroll->id,
+            'student_id'            => $student->id,
+            'teacher_id'            => $this->teacher->id,
+            'substitute_teacher_id' => $pengganti->id,
+            'session_date'          => today()->toDateString(),
+            'status'                => 'DIGANTI',
+            'honor_code'            => null,
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->post(route('guru.absensi.confirm-substitute', $sesi), ['action' => 'hadir'])
+            ->assertStatus(403);
+    }
+
     public function test_guru_bisa_set_hadir(): void
     {
         $this->actingAs($this->guruUser)

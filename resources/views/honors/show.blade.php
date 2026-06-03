@@ -41,6 +41,18 @@
 
     <div class="py-6 px-4 lg:px-8 space-y-4">
 
+        @if(($pendingSubstituteCount ?? 0) > 0)
+        <div class="p-4 rounded-lg text-sm"
+             style="background:rgba(251,191,36,0.12);color:#FBBF24;border:1px solid rgba(251,191,36,0.35)">
+            <strong>⚠ {{ $pendingSubstituteCount }} sesi DIGANTI belum dikonfirmasi hadir</strong>
+            <p class="mt-1 text-xs" style="color:#8A6848">
+                Honor pengganti belum masuk slip ini. Konfirmasi kehadiran di
+                <a href="{{ route('absensi.index') }}" class="underline hover:text-mk-accent">halaman Absensi</a>
+                (tombol ✓ Hadir) sebelum menghitung ulang atau menandai slip sebagai PAID.
+            </p>
+        </div>
+        @endif
+
         {{-- ============= HEADER SLIP ============= --}}
         <div class="bg-mk-card shadow-sm sm:rounded-lg p-6">
             <div class="flex justify-between items-start">

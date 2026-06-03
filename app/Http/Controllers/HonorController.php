@@ -89,7 +89,12 @@ class HonorController extends Controller
 
         $monthName = Carbon::create($honor->year, $honor->month, 1)->format('F Y');
 
-        return view('honors.show', compact('honor', 'sessions', 'breakdown', 'monthName'));
+        // DIGANTI two-phase: peringatan jika masih ada penugasan pengganti belum dikonfirmasi
+        $pendingSubstituteCount = $this->service->countPendingSubstituteSessions($honor);
+
+        return view('honors.show', compact(
+            'honor', 'sessions', 'breakdown', 'monthName', 'pendingSubstituteCount'
+        ));
     }
 
     /**

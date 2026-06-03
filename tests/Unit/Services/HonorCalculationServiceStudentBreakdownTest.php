@@ -216,6 +216,87 @@ class HonorCalculationServiceStudentBreakdownTest extends TestCase
         $this->assertEquals('Zara', $result->last()['student_name']);
     }
 
+    /**
+     * DIGANTI two-phase: sesi pengganti belum dikonfirmasi (honor_code null)
+     * tidak boleh muncul di breakdown slip — menghindari baris "1 sesi Rp 0".
+     */
+    public function test_diganti_pending_tidak_masuk_breakdown(): void
+    {
+        $instrumen = Instrument::firstOrCreate(['name' => 'Piano', 'code' => 'PNO2']);
+        $package   = Package::firstOrCreate(
+            ['code' => 'PKG-PNO2'],
+            ['instrument_id' => $instrumen->id, 'class_type' => 'REGULER',
+             'duration_min' => 30, 'price_per_month' => 400000, 'is_active' => true, 'sort_order' => 1]
+        );
+        $guruAsli = Teacher::create(['code' => 'T-ASLI', 'name' => 'Guru Asli', 'is_active' => true]);
+        $student  = Student::create([
+            'student_code' => 'M-2026-8888', 'full_name' => 'Rina Pending',
+            'gender' => 'P', 'parent_relationship' => 'Ibu', 'status' => 'Aktif',
+        ]);
+        $enrollment = Enrollment::create([
+            'student_id' => $student->id, 'package_id' => $package->id,
+            'teacher_id' => $guruAsli->id, 'effective_date' => '2026-01-01', 'status' => 'ACTIVE',
+        ]);
+
+        // Sesi DIGANTI: honor ke substitute (Daniel) tapi belum dikonfirmasi
+        ClassSession::create([
+            'enrollment_id'         => $enrollment->id,
+            'student_id'            => $student->id,
+            'teacher_id'            => $guruAsli->id,
+            'substitute_teacher_id' => $this->teacher->id,
+            'session_date'          => Carbon::create(2026, 5, 10),
+            'start_time'            => '14:00:00',
+            'end_time'              => '14:30:00',
+            'status'                => 'DIGANTI',
+            'honor_code'            => null,
+            'honor_amount'          => 0,
+        ]);
+
+        $result = $this->service->getStudentBreakdown($this->slip);
+        $this->assertCount(0, $result);
+        // Masih ada di absensi, tapi belum masuk slip — untuk peringatan Owner
+        $this->assertSame(1, $this->service->countPendingSubstituteSessions($this->slip));
+    }
+
+    /** Setelah konfirmasi hadir, sesi DIGANTI masuk breakdown dengan H_PENG */
+    public function test_diganti_terkonfirmasi_masuk_breakdown(): void
+    {
+        $instrumen = Instrument::firstOrCreate(['name' => 'Gitar', 'code' => 'GIT2']);
+        $package   = Package::firstOrCreate(
+            ['code' => 'PKG-GIT2'],
+            ['instrument_id' => $instrumen->id, 'class_type' => 'REGULER',
+             'duration_min' => 30, 'price_per_month' => 400000, 'is_active' => true, 'sort_order' => 2]
+        );
+        $guruAsli = Teacher::create(['code' => 'T-ASLI2', 'name' => 'Guru Asli 2', 'is_active' => true]);
+        $student  = Student::create([
+            'student_code' => 'M-2026-7777', 'full_name' => 'Budi Konfirm',
+            'gender' => 'L', 'parent_relationship' => 'Ayah', 'status' => 'Aktif',
+        ]);
+        $enrollment = Enrollment::create([
+            'student_id' => $student->id, 'package_id' => $package->id,
+            'teacher_id' => $guruAsli->id, 'effective_date' => '2026-01-01', 'status' => 'ACTIVE',
+        ]);
+
+        ClassSession::create([
+            'enrollment_id'         => $enrollment->id,
+            'student_id'            => $student->id,
+            'teacher_id'            => $guruAsli->id,
+            'substitute_teacher_id' => $this->teacher->id,
+            'session_date'          => Carbon::create(2026, 5, 12),
+            'start_time'            => '15:00:00',
+            'end_time'              => '15:30:00',
+            'status'                => 'DIGANTI',
+            'honor_code'            => 'H_PENG',
+            'honor_amount'          => 50000,
+        ]);
+
+        $result = $this->service->getStudentBreakdown($this->slip);
+        $this->assertCount(1, $result);
+        $this->assertEquals('Budi Konfirm', $result->first()['student_name']);
+        $this->assertEquals(50000, $result->first()['total_amount']);
+        $this->assertSame(0, $this->service->countPendingSubstituteSessions($this->slip));
+    }
+
     /** T5: Sesi bulan lain tidak masuk ke breakdown */
     public function test_sesi_bulan_lain_tidak_masuk(): void
     {

@@ -53,58 +53,7 @@
                 @include('guru._badge-status', ['status' => $sesi->status])
             </div>
 
-            @if($sesi->status === 'SCHEDULED')
-                <div x-data="{ showLate: false }" class="px-4 py-3 space-y-2">
-                    <div class="flex gap-2">
-                        <form method="POST" action="{{ route('guru.absensi.update', $sesi) }}" class="flex-1">
-                            @csrf @method('PATCH')
-                            <input type="hidden" name="status" value="HADIR">
-                            <button type="submit"
-                                    class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors appearance-none"
-                                    style="background-color:#22c55e;color:#ffffff;">
-                                ✓ Hadir
-                            </button>
-                        </form>
-                        <button @click="showLate = !showLate"
-                                class="flex-1 py-2.5 rounded-xl border-2 border-yellow-400 text-yellow-600
-                                       font-semibold text-sm hover:bg-yellow-50 transition-colors appearance-none">
-                            ⏱ Terlambat
-                        </button>
-                    </div>
-
-                    <div x-show="showLate" x-transition class="pt-1">
-                        <form method="POST" action="{{ route('guru.absensi.update', $sesi) }}" class="flex gap-2">
-                            @csrf @method('PATCH')
-                            <input type="hidden" name="status" value="HADIR_TERLAMBAT">
-                            <div class="flex-1">
-                                <input type="number" name="late_minutes" min="1" max="60"
-                                       placeholder="Berapa menit terlambat?"
-                                       class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm
-                                              focus:outline-none focus:ring-2 focus:ring-yellow-300">
-                            </div>
-                            <button type="submit"
-                                    class="px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors appearance-none"
-                                    style="background-color:#eab308;color:#ffffff;">
-                                Simpan
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            @else
-                {{-- Tampilkan status yang sudah tercatat agar guru tahu mengapa tombol tidak muncul --}}
-                <div class="px-4 py-3 flex items-center gap-2">
-                    @include('guru._badge-status', ['status' => $sesi->status])
-                    <span class="text-xs text-mk-muted italic">
-                        @if($sesi->status === 'LIBUR')
-                            Sesi libur — tidak perlu absensi.
-                        @elseif(in_array($sesi->status, ['HADIR', 'HADIR_TERLAMBAT']))
-                            Absensi sudah tercatat.
-                        @else
-                            Status: {{ $sesi->status }}
-                        @endif
-                    </span>
-                </div>
-            @endif
+            @include('guru._sesi-absensi-actions', ['sesi' => $sesi, 'teacher' => $teacher])
 
         </div>
     @empty

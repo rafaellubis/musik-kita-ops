@@ -27,6 +27,8 @@ use Illuminate\Validation\Rule;
  * - abort_if(!$teacher) mencegah user tanpa data guru mengakses portal
  * - updateAbsensi membatasi status ke HADIR/HADIR_TERLAMBAT saja
  *   (Admin tetap bisa set status lain via AbsensiController)
+ * - confirmSubstitute: hanya guru pengganti (substitute_teacher_id) yang boleh
+ *   konfirmasi hadir/batal pada sesi DIGANTI (two-phase, sama seperti Admin)
  */
 class GuruController extends Controller
 {
@@ -56,7 +58,7 @@ class GuruController extends Controller
             })
             ->where('session_date', $today)
             ->whereNotIn('status', ['CANCELLED'])
-            ->with(['student', 'room', 'enrollment.package'])
+            ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher'])
             ->orderBy('start_time')
             ->get();
 
@@ -106,7 +108,7 @@ class GuruController extends Controller
                   ->orWhere('substitute_teacher_id', $teacher->id);
             })
             ->whereBetween('session_date', [$mulai, $akhir])
-            ->with(['student', 'room', 'enrollment.package'])
+            ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher'])
             ->orderBy('session_date')
             ->orderBy('start_time')
             ->get();
@@ -477,5 +479,68 @@ class GuruController extends Controller
         ]);
 
         return back()->with('success', 'Absensi berhasil disimpan.');
+    }
+
+    /**
+     * Guru pengganti konfirmasi kehadiran pada sesi DIGANTI (fase 2 two-phase).
+     * Hanya substitute_teacher_id yang cocok dengan guru login.
+     */
+    public function confirmSubstitute(Request $request, ClassSession $classSession)
+    {
+        $teacher = auth()->user()->teacher;
+        abort_if(!$teacher, 403);
+
+        abort_if(
+            (int) $classSession->substitute_teacher_id !== (int) $teacher->id,
+            403,
+            'Hanya guru pengganti yang ditugaskan yang boleh konfirmasi.'
+        );
+
+        $request->validate([
+            'action' => ['required', Rule::in(['hadir', 'batal'])],
+        ], [
+            'action.required' => 'Aksi konfirmasi wajib diisi.',
+            'action.in'       => 'Aksi tidak valid.',
+        ]);
+
+        if ($classSession->status !== ClassSession::STATUS_DIGANTI) {
+            return back()->with('error', 'Sesi bukan berstatus DIGANTI.');
+        }
+
+        if ($classSession->honor_code !== null) {
+            return back()->with('error', 'Sesi sudah dikonfirmasi sebelumnya.');
+        }
+
+        if ($request->action === 'hadir') {
+            $classSession->loadMissing(['enrollment.package']);
+            $honor = $this->attendanceService->calculateSubstituteHonor($classSession);
+
+            $classSession->update([
+                'honor_code'   => $honor['code'],
+                'honor_amount' => $honor['amount'],
+            ]);
+
+            $classSession->student?->update([
+                'last_session_at' => Carbon::parse($classSession->session_date)
+                    ->setTimeFromTimeString($classSession->start_time),
+            ]);
+
+            return back()->with('success', 'Kehadiran sebagai pengganti dikonfirmasi. Honor akan masuk slip bulan ini.');
+        }
+
+        // batal: kembalikan ke SCHEDULED, restore jam/ruang dari jadwal mingguan
+        $schedule = $classSession->schedule;
+
+        $classSession->update([
+            'status'                => ClassSession::STATUS_SCHEDULED,
+            'substitute_teacher_id' => null,
+            'honor_code'            => null,
+            'honor_amount'          => null,
+            'start_time'            => $schedule?->start_time ?? $classSession->start_time,
+            'end_time'              => $schedule?->end_time   ?? $classSession->end_time,
+            'room_id'               => $schedule?->room_id    ?? $classSession->room_id,
+        ]);
+
+        return back()->with('success', 'Penugasan pengganti dibatalkan. Admin perlu atur ulang jika masih diperlukan.');
     }
 }

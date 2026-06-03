@@ -39,35 +39,8 @@
                         @include('guru._badge-status', ['status' => $s->status])
                     </div>
 
-                    @if($tanggal === $today && $s->status === 'SCHEDULED')
-                        <div x-data="{ showLate: false }" class="px-4 pb-3 space-y-2">
-                            <div class="flex gap-2">
-                                <form method="POST" action="{{ route('guru.absensi.update', $s) }}" class="flex-1">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="status" value="HADIR">
-                                    <button type="submit"
-                                            class="w-full py-2.5 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold text-sm transition-all active:scale-[0.98]">
-                                        ✓ Hadir
-                                    </button>
-                                </form>
-                                <button @click="showLate = !showLate"
-                                        class="flex-1 py-2.5 rounded-xl border-2 border-yellow-400 text-yellow-600 font-semibold text-sm hover:bg-yellow-50 transition-all active:scale-[0.98]">
-                                    ⏱ Terlambat
-                                </button>
-                            </div>
-                            <div x-show="showLate" x-transition>
-                                <form method="POST" action="{{ route('guru.absensi.update', $s) }}" class="flex gap-2">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="status" value="HADIR_TERLAMBAT">
-                                    <input type="number" name="late_minutes" min="1" max="60" placeholder="Menit terlambat"
-                                           class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-300">
-                                    <button type="submit"
-                                            class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-white rounded-xl font-semibold text-sm">
-                                        Simpan
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+                    @if($tanggal === $today)
+                        @include('guru._sesi-absensi-actions', ['sesi' => $s, 'teacher' => $teacher])
                     @endif
                 </div>
             @endforeach
@@ -115,7 +88,25 @@
                         <td class="px-4 py-3 text-mk-muted">{{ $s->room?->name ?? '—' }}</td>
                         <td class="px-4 py-3">@include('guru._badge-status', ['status' => $s->status])</td>
                         <td class="px-4 py-3 text-right">
-                            @if($s->session_date === $today && $s->status === 'SCHEDULED')
+                            @if($s->session_date === $today
+                                && (int) $s->substitute_teacher_id === (int) $teacher->id
+                                && $s->status === 'DIGANTI'
+                                && $s->honor_code === null)
+                                <div class="flex flex-col gap-1 items-end">
+                                    <form method="POST" action="{{ route('guru.absensi.confirm-substitute', $s) }}" class="inline">
+                                        @csrf
+                                        <input type="hidden" name="action" value="hadir">
+                                        <button type="submit" class="text-xs px-2 py-1 rounded bg-green-500 text-white">✓ Hadir</button>
+                                    </form>
+                                    <form method="POST" action="{{ route('guru.absensi.confirm-substitute', $s) }}" class="inline"
+                                          onsubmit="return confirm('Batalkan penugasan?');">
+                                        @csrf
+                                        <input type="hidden" name="action" value="batal">
+                                        <button type="submit" class="text-xs px-2 py-1 rounded text-red-500">✗ Batal</button>
+                                    </form>
+                                </div>
+                            @elseif($s->session_date === $today && $s->status === 'SCHEDULED'
+                                && (int) $s->teacher_id === (int) $teacher->id && !$s->substitute_teacher_id)
                                 <div x-data="{ open: false }" class="relative inline-block">
                                     <button @click="open = !open"
                                             class="text-xs px-3 py-1.5 rounded-lg bg-mk-accent hover:bg-mk-accent/80 text-white font-medium transition-colors">

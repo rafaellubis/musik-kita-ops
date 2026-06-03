@@ -89,6 +89,8 @@ class HonorCalculationService
                 ClassSession::STATUS_IZIN_PENDING,
                 ClassSession::STATUS_CANCELLED,
             ])
+            // DIGANTI two-phase: honor belum dikonfirmasi (null) tidak dihitung
+            ->whereNotNull('honor_code')
             ->get(['id', 'honor_code', 'honor_amount', 'session_date', 'status',
                    'teacher_id', 'substitute_teacher_id', 'student_id', 'enrollment_id']);
 
@@ -157,10 +159,33 @@ class HonorCalculationService
                 ClassSession::STATUS_IZIN_PENDING,
                 ClassSession::STATUS_CANCELLED,
             ])
+            // DIGANTI two-phase: sesi pengganti belum dikonfirmasi tidak tampil di rincian slip
+            ->whereNotNull('honor_code')
             ->orderBy('session_date')
             ->get();
 
         return $sessions;
+    }
+
+    /**
+     * Jumlah sesi DIGANTI pengganti yang belum dikonfirmasi hadir (honor_code masih null).
+     * Dipakai untuk peringatan di halaman slip — Owner jangan tandai PAID dulu.
+     */
+    public function countPendingSubstituteSessions(HonorSlip $slip): int
+    {
+        $cutoffDate = Carbon::create($slip->year, $slip->month, 1)
+            ->endOfMonth()
+            ->subDays(2)
+            ->toDateString();
+
+        return ClassSession::query()
+            ->where('substitute_teacher_id', $slip->teacher_id)
+            ->where('status', ClassSession::STATUS_DIGANTI)
+            ->whereNull('honor_code')
+            ->whereYear('session_date', $slip->year)
+            ->whereMonth('session_date', $slip->month)
+            ->whereDate('session_date', '<=', $cutoffDate)
+            ->count();
     }
 
     /**
