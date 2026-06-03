@@ -66,26 +66,28 @@ class ScheduleInstrumentCheckTest extends TestCase
             'student_code' => 'M-2026-0001', 'full_name' => 'Budi Santoso',
             'gender' => 'L', 'status' => 'Aktif',
         ]);
-        Enrollment::create([
-            'student_id' => $student->id, 'package_id' => $package->id,
-            'teacher_id' => $teacher->id,
+        $enrollment = Enrollment::create([
+            'student_id'     => $student->id, 'package_id' => $package->id,
+            'teacher_id'     => $teacher->id,
             'effective_date' => now()->toDateString(), 'status' => 'ACTIVE',
+            'is_primary'     => true,
         ]);
 
-        return [$student, $pianoRoom, $drumRoom];
+        return [$student, $pianoRoom, $drumRoom, $enrollment];
     }
 
     public function test_tidak_bisa_buat_jadwal_dengan_ruangan_yang_tidak_support_instrumen(): void
     {
         $owner = $this->ownerUser();
-        [$student, $pianoRoom, $drumRoom] = $this->setupPianoStudent();
+        [$student, $pianoRoom, $drumRoom, $enrollment] = $this->setupPianoStudent();
 
         // Coba assign R8 (Drum) untuk murid Piano — harus ditolak
         $response = $this->actingAs($owner)->post(route('schedules.store', $student), [
-            'day_of_week' => 1,
-            'start_time'  => '15:00',
-            'end_time'    => '15:30',
-            'room_id'     => $drumRoom->id,
+            'enrollment_id' => $enrollment->id,
+            'day_of_week'   => 1,
+            'start_time'    => '15:00',
+            'end_time'      => '15:30',
+            'room_id'       => $drumRoom->id,
         ]);
 
         $response->assertRedirect();
@@ -97,14 +99,15 @@ class ScheduleInstrumentCheckTest extends TestCase
     public function test_bisa_buat_jadwal_dengan_ruangan_yang_support_instrumen(): void
     {
         $owner = $this->ownerUser();
-        [$student, $pianoRoom, $drumRoom] = $this->setupPianoStudent();
+        [$student, $pianoRoom, $drumRoom, $enrollment] = $this->setupPianoStudent();
 
         // Assign R2 (Piano, Gitar) untuk murid Piano — harus sukses
         $response = $this->actingAs($owner)->post(route('schedules.store', $student), [
-            'day_of_week' => 1,
-            'start_time'  => '15:00',
-            'end_time'    => '15:30',
-            'room_id'     => $pianoRoom->id,
+            'enrollment_id' => $enrollment->id,
+            'day_of_week'   => 1,
+            'start_time'    => '15:00',
+            'end_time'      => '15:30',
+            'room_id'       => $pianoRoom->id,
         ]);
 
         $response->assertRedirect();
@@ -119,13 +122,14 @@ class ScheduleInstrumentCheckTest extends TestCase
     {
         // room_id opsional — tanpa ruangan tetap valid
         $owner = $this->ownerUser();
-        [$student] = $this->setupPianoStudent();
+        [$student, ,, $enrollment] = $this->setupPianoStudent();
 
         $response = $this->actingAs($owner)->post(route('schedules.store', $student), [
-            'day_of_week' => 2,
-            'start_time'  => '10:00',
-            'end_time'    => '10:30',
-            'room_id'     => '',
+            'enrollment_id' => $enrollment->id,
+            'day_of_week'   => 2,
+            'start_time'    => '10:00',
+            'end_time'      => '10:30',
+            'room_id'       => '',
         ]);
 
         $response->assertRedirect();

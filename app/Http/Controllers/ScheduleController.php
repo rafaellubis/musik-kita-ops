@@ -145,8 +145,14 @@ class ScheduleController extends Controller
         return back()->with('success', 'Jadwal mingguan berhasil ditambahkan.');
     }
 
-    public function update(Request $request, Schedule $schedule)
+    public function update(Request $request, Student $student, Schedule $schedule)
     {
+        abort_unless(
+            $schedule->enrollment->student_id === $student->id,
+            403,
+            'Jadwal tidak ditemukan untuk murid ini.'
+        );
+
         $data = $request->validate([
             'day_of_week' => 'required|integer|min:0|max:6',
             'start_time'  => 'required|date_format:H:i',
@@ -249,8 +255,14 @@ class ScheduleController extends Controller
         return back()->with('success', 'Jadwal mingguan berhasil diperbarui.');
     }
 
-    public function destroy(Schedule $schedule)
+    public function destroy(Student $student, Schedule $schedule)
     {
+        abort_unless(
+            $schedule->enrollment->student_id === $student->id,
+            403,
+            'Jadwal tidak ditemukan untuk murid ini.'
+        );
+
         // CATATAN: hanya boleh hapus kalau belum ada sesi ter-generate.
         // Kalau sudah ada, lebih aman set is_active=false (toggle).
         if ($schedule->classSessions()->exists()) {
@@ -266,8 +278,14 @@ class ScheduleController extends Controller
      * Toggle is_active. Sesi yang sudah ter-generate TIDAK dihapus —
      * generator hanya skip pembuatan sesi BARU saat is_active=false.
      */
-    public function toggleActive(Schedule $schedule)
+    public function toggleActive(Student $student, Schedule $schedule)
     {
+        abort_unless(
+            $schedule->enrollment->student_id === $student->id,
+            403,
+            'Jadwal tidak ditemukan untuk murid ini.'
+        );
+
         $schedule->update(['is_active' => !$schedule->is_active]);
 
         $msg = $schedule->is_active

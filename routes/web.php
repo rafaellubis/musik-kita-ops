@@ -138,13 +138,14 @@ Route::middleware('auth')->group(function () {
         Route::post('students/{student}/schedules',
             [ScheduleController::class, 'store']
         )->name('schedules.store');
-        Route::patch('schedules/{schedule}',
+        // update/destroy/toggle nested di bawah student agar bisa validasi ownership
+        Route::patch('students/{student}/schedules/{schedule}',
             [ScheduleController::class, 'update']
         )->name('schedules.update');
-        Route::delete('schedules/{schedule}',
+        Route::delete('students/{student}/schedules/{schedule}',
             [ScheduleController::class, 'destroy']
         )->name('schedules.destroy');
-        Route::post('schedules/{schedule}/toggle-active',
+        Route::post('students/{student}/schedules/{schedule}/toggle-active',
             [ScheduleController::class, 'toggleActive']
         )->name('schedules.toggle-active');
 

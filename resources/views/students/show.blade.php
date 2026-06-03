@@ -898,7 +898,7 @@
                                     <button type="button"
                                             @click="editSchedule = {
                                                 id: {{ $sch->id }},
-                                                url: '{{ route('schedules.update', $sch->id) }}',
+                                                url: '{{ route('schedules.update', [$student->id, $sch->id]) }}',
                                                 day_of_week: {{ $sch->day_of_week }},
                                                 start_time: '{{ substr($sch->start_time, 0, 5) }}',
                                                 end_time: '{{ substr($sch->end_time, 0, 5) }}',
@@ -907,13 +907,13 @@
                                                 instrument: @js($aeInstrument)
                                             }"
                                             class="text-xs hover:underline" style="color:#5DB890">Edit</button>
-                                    <form method="POST" action="{{ route('schedules.toggle-active', $sch->id) }}" class="inline">
+                                    <form method="POST" action="{{ route('schedules.toggle-active', [$student->id, $sch->id]) }}" class="inline">
                                         @csrf
                                         <button type="submit" class="text-xs hover:underline" style="color:#FBBF24">
                                             {{ $sch->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
                                         </button>
                                     </form>
-                                    <form method="POST" action="{{ route('schedules.destroy', $sch->id) }}" class="inline"
+                                    <form method="POST" action="{{ route('schedules.destroy', [$student->id, $sch->id]) }}" class="inline"
                                           onsubmit="return confirm('Hapus jadwal ini?')">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="text-xs hover:underline" style="color:#F87171">Hapus</button>

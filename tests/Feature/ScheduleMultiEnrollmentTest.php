@@ -42,29 +42,20 @@ class ScheduleMultiEnrollmentTest extends TestCase
      */
     private function makeStudentWithTwoEnrollments(): array
     {
-        $piano = Instrument::create(['name' => 'Piano', 'code' => 'PIANO', 'is_active' => true, 'sort_order' => 1]);
-        $gitar = Instrument::create(['name' => 'Gitar', 'code' => 'GITAR', 'is_active' => true, 'sort_order' => 2]);
+        // firstOrCreate agar bisa dipanggil lebih dari sekali dalam satu test session
+        $piano = Instrument::firstOrCreate(['code' => 'PIANO'], ['name' => 'Piano', 'is_active' => true, 'sort_order' => 1]);
+        $gitar = Instrument::firstOrCreate(['code' => 'GITAR'], ['name' => 'Gitar', 'is_active' => true, 'sort_order' => 2]);
 
-        $pkgPiano = Package::create([
-            'code'            => 'REG-PIANO-L1',
-            'instrument_id'   => $piano->id,
-            'class_type'      => 'REGULER',
-            'grade'           => 'Level 1',
-            'duration_min'    => 30,
-            'price_per_month' => 370000,
-            'is_active'       => true,
-            'sort_order'      => 1,
-        ]);
-        $pkgGitar = Package::create([
-            'code'            => 'HOBBY-GITAR',
-            'instrument_id'   => $gitar->id,
-            'class_type'      => 'HOBBY',
-            'grade'           => null,
-            'duration_min'    => 30,
-            'price_per_month' => 390000,
-            'is_active'       => true,
-            'sort_order'      => 2,
-        ]);
+        $pkgPiano = Package::firstOrCreate(
+            ['code' => 'REG-PIANO-L1'],
+            ['instrument_id' => $piano->id, 'class_type' => 'REGULER', 'grade' => 'Level 1',
+             'duration_min' => 30, 'price_per_month' => 370000, 'is_active' => true, 'sort_order' => 1]
+        );
+        $pkgGitar = Package::firstOrCreate(
+            ['code' => 'HOBBY-GITAR'],
+            ['instrument_id' => $gitar->id, 'class_type' => 'HOBBY', 'grade' => null,
+             'duration_min' => 30, 'price_per_month' => 390000, 'is_active' => true, 'sort_order' => 2]
+        );
 
         $teacher = Teacher::factory()->create(['is_active' => true]);
         $student = Student::factory()->create(['status' => 'Aktif']);
@@ -208,5 +199,94 @@ class ScheduleMultiEnrollmentTest extends TestCase
                 'end_time'    => '10:30',
             ])
             ->assertSessionHasErrors('enrollment_id');
+    }
+
+    // =================== TASK 3 (A5) ===================
+
+    /**
+     * Helper: buat schedule langsung terkait ke enrollment murid tertentu.
+     */
+    private function makeScheduleForEnrollment(Enrollment $enrollment): Schedule
+    {
+        return Schedule::create([
+            'enrollment_id' => $enrollment->id,
+            'day_of_week'   => 1,
+            'start_time'    => '09:00:00',
+            'end_time'      => '09:30:00',
+            'room_id'       => null,
+            'is_active'     => true,
+        ]);
+    }
+
+    /**
+     * A5: update() dengan student yang salah (jadwal milik murid lain) harus 403.
+     */
+    public function test_update_with_wrong_student_returns_403(): void
+    {
+        [$studentA, $enrollA] = $this->makeStudentWithTwoEnrollments();
+        $scheduleA = $this->makeScheduleForEnrollment($enrollA);
+
+        // studentB berbeda, tidak punya hubungan ke scheduleA
+        [$studentB] = $this->makeStudentWithTwoEnrollments();
+
+        $this->actingAs($this->admin)
+            ->patch(route('schedules.update', [$studentB->id, $scheduleA->id]), [
+                'day_of_week' => 2,
+                'start_time'  => '10:00',
+                'end_time'    => '10:30',
+            ])
+            ->assertStatus(403);
+    }
+
+    /**
+     * A5: destroy() dengan student yang salah harus 403.
+     */
+    public function test_destroy_with_wrong_student_returns_403(): void
+    {
+        [$studentA, $enrollA] = $this->makeStudentWithTwoEnrollments();
+        $scheduleA = $this->makeScheduleForEnrollment($enrollA);
+
+        [$studentB] = $this->makeStudentWithTwoEnrollments();
+
+        $this->actingAs($this->admin)
+            ->delete(route('schedules.destroy', [$studentB->id, $scheduleA->id]))
+            ->assertStatus(403);
+    }
+
+    /**
+     * A5: toggleActive() dengan student yang salah harus 403.
+     */
+    public function test_toggle_active_with_wrong_student_returns_403(): void
+    {
+        [$studentA, $enrollA] = $this->makeStudentWithTwoEnrollments();
+        $scheduleA = $this->makeScheduleForEnrollment($enrollA);
+
+        [$studentB] = $this->makeStudentWithTwoEnrollments();
+
+        $this->actingAs($this->admin)
+            ->post(route('schedules.toggle-active', [$studentB->id, $scheduleA->id]))
+            ->assertStatus(403);
+    }
+
+    /**
+     * A5: update() dengan student yang BENAR harus berhasil (redirect).
+     */
+    public function test_update_with_correct_student_succeeds(): void
+    {
+        [$student, $enrollPiano] = $this->makeStudentWithTwoEnrollments();
+        $schedule = $this->makeScheduleForEnrollment($enrollPiano);
+
+        $this->actingAs($this->admin)
+            ->patch(route('schedules.update', [$student->id, $schedule->id]), [
+                'day_of_week' => 3,
+                'start_time'  => '11:00',
+                'end_time'    => '11:30',
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('schedules', [
+            'id'          => $schedule->id,
+            'day_of_week' => 3,
+        ]);
     }
 }
