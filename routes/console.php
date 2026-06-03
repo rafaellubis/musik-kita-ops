@@ -68,3 +68,20 @@ Schedule::command('students:check-overdue')
     ->monthlyOn(1, '06:05')
     ->name('m05-check-overdue-students')
     ->withoutOverlapping();
+
+// ===== M03: Pengingat jadwal kelas via Fonnte =====
+// Mode day_before / same_day: jam dari SCHEDULE_REMINDER_SEND_TIME (default 18:00).
+// Mode hours_before: tiap 15 menit, kirim ~N jam sebelum start_time sesi.
+Schedule::command('schedule-reminders:send')
+    ->dailyAt(config('schedule_reminder.send_time', '18:00'))
+    ->when(fn () => config('schedule_reminder.enabled')
+        && config('schedule_reminder.mode') !== 'hours_before')
+    ->name('m03-schedule-reminders-daily')
+    ->withoutOverlapping();
+
+Schedule::command('schedule-reminders:send')
+    ->everyFifteenMinutes()
+    ->when(fn () => config('schedule_reminder.enabled')
+        && config('schedule_reminder.mode') === 'hours_before')
+    ->name('m03-schedule-reminders-hours-before')
+    ->withoutOverlapping();

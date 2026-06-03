@@ -4,7 +4,10 @@
         <input type="text" name="code" value="{{ old('code', isset($template) ? $template->code : '') }}"
                class="w-full rounded border-gray-300 font-mono text-sm"
                placeholder="INVOICE_REMINDER"
-               @if(isset($template) && $template->code === \App\Models\WhatsappMessageTemplate::CODE_INVOICE_REMINDER) readonly @endif>
+               @if(isset($template) && in_array($template->code, [
+                   \App\Models\WhatsappMessageTemplate::CODE_INVOICE_REMINDER,
+                   \App\Models\WhatsappMessageTemplate::CODE_SCHEDULE_REMINDER,
+               ], true)) readonly @endif>
         @error('code')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
     </div>
     <div>

@@ -32,5 +32,26 @@ WhatsApp: {studio_wa}
 TEXT,
             ],
         );
+
+        WhatsappMessageTemplate::firstOrCreate(
+            ['code' => WhatsappMessageTemplate::CODE_SCHEDULE_REMINDER],
+            [
+                'name'       => 'Pengingat Jadwal Les',
+                'sort_order' => 2,
+                'is_active'  => true,
+                'body'       => <<<'TEXT'
+Yth. {nama_ortu},
+
+Pengingat jadwal les *{nama_murid}* ({kode_murid}) pada *{tanggal}*:
+
+{daftar_jadwal}
+
+Mohon hadir tepat waktu. Terima kasih.
+
+Musik KITA
+WhatsApp: {studio_wa}
+TEXT,
+            ],
+        );
     }
 }

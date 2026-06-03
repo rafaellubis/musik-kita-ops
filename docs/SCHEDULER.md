@@ -1,12 +1,14 @@
 # Setup Laravel Scheduler di Windows (Laragon)
 
-Sistem ini punya 3 tugas terjadwal otomatis (lihat `routes/console.php`):
+Sistem ini punya tugas terjadwal otomatis (lihat `routes/console.php`):
 
 | Command | Jadwal | Kegunaan |
 |---|---|---|
 | `sessions:generate-month` | Tanggal 25, 06:00 | Generate sesi mingguan untuk bulan berikutnya (M03) |
 | `invoices:generate-spp` | Tanggal 1, 06:00 | Terbitkan invoice SPP untuk semua murid Aktif (M05, BR-5.1) |
 | `invoices:apply-fines` | Harian 06:00 (mulai tanggal 11) | Update denda Rp 5.000/hari (M05, BR-5.3) |
+| `schedule-reminders:send` | Harian jam `SCHEDULE_REMINDER_SEND_TIME` (default 18:00) | Pengingat jadwal H-1 / hari-H via Fonnte |
+| `schedule-reminders:send` | Tiap 15 menit (jika mode `hours_before`) | Pengingat ~N jam sebelum kelas |
 
 Supaya tugas-tugas ini benar-benar jalan otomatis, **Task Scheduler Windows** harus
 memanggil `php artisan schedule:run` setiap menit. Caranya:
@@ -74,6 +76,22 @@ php artisan invoices:apply-fines --year=2026 --month=5
 
 # Apply denda dengan tanggal acuan custom (untuk testing)
 php artisan invoices:apply-fines --year=2026 --month=5 --as-of=2026-05-15
+
+# Pengingat jadwal (Fonnte) — preview tanpa kirim
+php artisan schedule-reminders:send --dry-run
+
+# Pengingat jadwal — kirim sesuai config .env
+php artisan schedule-reminders:send
+```
+
+Konfigurasi `.env` pengingat jadwal:
+
+```env
+SCHEDULE_REMINDER_ENABLED=true
+SCHEDULE_REMINDER_MODE=day_before      # day_before | same_day | hours_before
+SCHEDULE_REMINDER_SEND_TIME=18:00
+SCHEDULE_REMINDER_HOURS_BEFORE=2
+FONNTE_TOKEN=your-device-token
 ```
 
 Atau lewat UI:

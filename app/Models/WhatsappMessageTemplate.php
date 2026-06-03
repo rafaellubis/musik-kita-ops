@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Template pesan WhatsApp untuk reminder tagihan (Master Data).
+ * Template pesan WhatsApp (Master Data).
  */
 class WhatsappMessageTemplate extends Model
 {
@@ -24,11 +24,22 @@ class WhatsappMessageTemplate extends Model
 
     public const CODE_INVOICE_REMINDER = 'INVOICE_REMINDER';
 
+    public const CODE_SCHEDULE_REMINDER = 'SCHEDULE_REMINDER';
+
     /** Template aktif default untuk reminder tagihan. */
     public static function defaultInvoiceReminder(): ?self
     {
         return static::query()
             ->where('code', self::CODE_INVOICE_REMINDER)
+            ->where('is_active', true)
+            ->first();
+    }
+
+    /** Template aktif default untuk pengingat jadwal. */
+    public static function defaultScheduleReminder(): ?self
+    {
+        return static::query()
+            ->where('code', self::CODE_SCHEDULE_REMINDER)
             ->where('is_active', true)
             ->first();
     }

@@ -56,8 +56,11 @@ class WhatsappMessageTemplateController extends Controller
 
     public function destroy(WhatsappMessageTemplate $whatsappMessageTemplate): RedirectResponse
     {
-        if ($whatsappMessageTemplate->code === WhatsappMessageTemplate::CODE_INVOICE_REMINDER) {
-            return back()->with('error', 'Template INVOICE_REMINDER tidak boleh dihapus. Nonaktifkan saja.');
+        if (in_array($whatsappMessageTemplate->code, [
+            WhatsappMessageTemplate::CODE_INVOICE_REMINDER,
+            WhatsappMessageTemplate::CODE_SCHEDULE_REMINDER,
+        ], true)) {
+            return back()->with('error', "Template {$whatsappMessageTemplate->code} tidak boleh dihapus. Nonaktifkan saja.");
         }
 
         $code = $whatsappMessageTemplate->code;
