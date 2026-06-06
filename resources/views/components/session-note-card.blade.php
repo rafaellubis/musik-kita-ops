@@ -1,6 +1,7 @@
 @props([
     'studentName',
     'teacherName',
+    'substituteTeacherName' => null,
     'sessionDate',
     'sessionRating' => null,
     'materialLearned' => null,
@@ -20,8 +21,10 @@
             <td class="py-0.5">: {{ $studentName }}</td>
         </tr>
         <tr>
-            <td class="text-mk-muted pr-2 py-0.5 align-top whitespace-nowrap">Guru Pengajar</td>
-            <td class="py-0.5">: {{ $teacherName }}</td>
+            <td class="text-mk-muted pr-2 py-0.5 align-top whitespace-nowrap">
+                {{ filled($substituteTeacherName) ? 'Guru Pengganti' : 'Guru Pengajar' }}
+            </td>
+            <td class="py-0.5">: {{ filled($substituteTeacherName) ? $substituteTeacherName : $teacherName }}</td>
         </tr>
         <tr>
             <td class="text-mk-muted pr-2 py-0.5 align-top whitespace-nowrap">Tanggal Sesi</td>

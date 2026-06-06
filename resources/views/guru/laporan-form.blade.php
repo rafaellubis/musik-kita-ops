@@ -69,6 +69,7 @@
             <x-session-note-card
                 :student-name="$progressReport->student->full_name"
                 :teacher-name="$progressReport->teacher->name"
+                :substitute-teacher-name="$note->substitute_teacher_name"
                 :session-date="\Carbon\Carbon::parse($note->session_date)->locale('id')->translatedFormat('d F Y')"
                 :session-rating="$note->session_rating"
                 :material-learned="$note->material_learned"

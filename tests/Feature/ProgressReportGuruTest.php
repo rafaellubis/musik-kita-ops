@@ -290,4 +290,87 @@ class ProgressReportGuruTest extends TestCase
             'year'          => 2026,
         ]);
     }
+
+    public function test_diganti_without_note_not_synced_to_report(): void
+    {
+        ClassSession::factory()->create([
+            'enrollment_id'    => $this->enrollment->id,
+            'student_id'       => $this->enrollment->student_id,
+            'teacher_id'       => $this->teacher->id,
+            'session_date'     => '2026-05-15',
+            'start_time'       => '10:00:00',
+            'end_time'         => '10:30:00',
+            'status'           => ClassSession::STATUS_DIGANTI,
+            'substitute_teacher_id' => Teacher::factory()->create()->id,
+            'honor_code'       => 'H_PENG',
+            'honor_amount'     => 50000,
+        ]);
+
+        $report = ProgressReport::create([
+            'enrollment_id'      => $this->enrollment->id,
+            'student_id'         => $this->enrollment->student_id,
+            'teacher_id'         => $this->teacher->id,
+            'report_template_id' => $this->template->id,
+            'month'              => 5,
+            'year'               => 2026,
+            'status'             => 'DRAFT',
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->get("/guru/laporan/{$report->id}/edit")
+            ->assertOk();
+
+        $this->assertSame(0, ProgressReportSessionNote::where('progress_report_id', $report->id)->count());
+    }
+
+    public function test_diganti_with_substitute_note_synced_with_substitute_name(): void
+    {
+        $substitute = Teacher::factory()->create(['name' => 'Guru Pengganti A']);
+
+        $session = ClassSession::factory()->create([
+            'enrollment_id'         => $this->enrollment->id,
+            'student_id'            => $this->enrollment->student_id,
+            'teacher_id'            => $this->teacher->id,
+            'substitute_teacher_id' => $substitute->id,
+            'session_date'          => '2026-05-20',
+            'start_time'            => '10:00:00',
+            'end_time'              => '10:30:00',
+            'status'                => ClassSession::STATUS_DIGANTI,
+            'honor_code'            => 'H_PENG',
+            'honor_amount'          => 50000,
+        ]);
+
+        SessionTeacherNote::create([
+            'class_session_id' => $session->id,
+            'teacher_id'       => $substitute->id,
+            'material_learned' => 'Arpeggio minor',
+            'homework_notes'   => 'Latihan 10 menit',
+            'notes'            => 'Baik',
+            'session_rating'   => 5,
+        ]);
+
+        $report = ProgressReport::create([
+            'enrollment_id'      => $this->enrollment->id,
+            'student_id'         => $this->enrollment->student_id,
+            'teacher_id'         => $this->teacher->id,
+            'report_template_id' => $this->template->id,
+            'month'              => 5,
+            'year'               => 2026,
+            'status'             => 'DRAFT',
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->get("/guru/laporan/{$report->id}/edit")
+            ->assertOk()
+            ->assertSee('Guru Pengganti')
+            ->assertSee('Guru Pengganti A')
+            ->assertSee('Arpeggio minor');
+
+        $this->assertDatabaseHas('progress_report_session_notes', [
+            'progress_report_id'      => $report->id,
+            'class_session_id'        => $session->id,
+            'material_learned'        => 'Arpeggio minor',
+            'substitute_teacher_name' => 'Guru Pengganti A',
+        ]);
+    }
 }

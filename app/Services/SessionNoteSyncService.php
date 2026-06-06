@@ -5,13 +5,15 @@ namespace App\Services;
 use App\Models\ClassSession;
 use App\Models\ProgressReport;
 use App\Models\ProgressReportSessionNote;
+use App\Models\SessionTeacherNote;
 use Illuminate\Support\Facades\DB;
 
 class SessionNoteSyncService
 {
     /**
      * Replace all session note snapshots for a progress report from eligible
-     * HADIR / HADIR_TERLAMBAT class sessions in the report month.
+     * HADIR / HADIR_TERLAMBAT class sessions, plus confirmed DIGANTI sessions
+     * that already have substitute teacher notes.
      */
     public function sync(ProgressReport $report): void
     {
@@ -29,28 +31,56 @@ class SessionNoteSyncService
                             ->whereNotNull('honor_code');
                     });
                 })
-                ->with('teacherNote')
+                ->with(['teacherNote', 'substituteTeacher'])
                 ->orderBy('session_date')
                 ->orderBy('start_time')
-                ->get();
+                ->get()
+                ->filter(function (ClassSession $session) {
+                    if (in_array($session->status, [
+                        ClassSession::STATUS_HADIR,
+                        ClassSession::STATUS_HADIR_TERLAMBAT,
+                    ], true)) {
+                        return true;
+                    }
+
+                    return $session->status === ClassSession::STATUS_DIGANTI
+                        && self::noteHasContent($session->teacherNote);
+                })
+                ->values();
 
             $report->sessionNotes()->delete();
 
             foreach ($sessions as $index => $session) {
                 $teacherNote = $session->teacherNote;
+                $isSubstituteSession = $session->status === ClassSession::STATUS_DIGANTI;
 
                 ProgressReportSessionNote::create([
-                    'progress_report_id' => $report->id,
-                    'class_session_id'   => $session->id,
-                    'session_date'       => $session->session_date,
-                    'session_sequence'   => $session->session_sequence,
-                    'material_learned'   => $teacherNote?->material_learned,
-                    'homework_notes'     => $teacherNote?->homework_notes,
-                    'notes'              => $teacherNote?->notes ?? '',
-                    'session_rating'     => $teacherNote?->session_rating,
-                    'sort_order'         => $index,
+                    'progress_report_id'       => $report->id,
+                    'class_session_id'         => $session->id,
+                    'session_date'             => $session->session_date,
+                    'session_sequence'         => $session->session_sequence,
+                    'material_learned'         => $teacherNote?->material_learned,
+                    'homework_notes'           => $teacherNote?->homework_notes,
+                    'notes'                    => $teacherNote?->notes ?? '',
+                    'session_rating'           => $teacherNote?->session_rating,
+                    'substitute_teacher_name'  => $isSubstituteSession
+                        ? $session->substituteTeacher?->name
+                        : null,
+                    'sort_order'               => $index,
                 ]);
             }
         });
+    }
+
+    private static function noteHasContent(?SessionTeacherNote $note): bool
+    {
+        if (! $note) {
+            return false;
+        }
+
+        return filled(trim((string) ($note->material_learned ?? '')))
+            || filled(trim((string) ($note->homework_notes ?? '')))
+            || filled(trim((string) ($note->notes ?? '')))
+            || filled($note->session_rating);
     }
 }

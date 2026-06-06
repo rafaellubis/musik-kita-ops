@@ -16,6 +16,7 @@ class ProgressReportSessionNote extends Model
         'homework_notes',
         'session_sequence',
         'session_rating',
+        'substitute_teacher_name',
         'sort_order',
     ];
 
