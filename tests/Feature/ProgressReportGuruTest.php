@@ -423,4 +423,30 @@ class ProgressReportGuruTest extends TestCase
                 'kesimpulan_progress', 'progress_percent',
             ]);
     }
+
+    public function test_admin_bisa_download_pdf_laporan_submitted(): void
+    {
+        $admin = User::factory()->create(['email_verified_at' => now()]);
+        $admin->assignRole('Admin');
+
+        $report = ProgressReport::create([
+            'enrollment_id' => $this->enrollment->id,
+            'student_id' => $this->enrollment->student_id,
+            'teacher_id' => $this->teacher->id,
+            'report_template_id' => $this->template->id,
+            'month' => 5, 'year' => 2026, 'status' => 'SUBMITTED',
+            'submitted_at' => now(),
+            'rating_teknik' => 4, 'rating_materi' => 4,
+            'rating_reading' => 3, 'rating_repertoar' => 4,
+            'kesimpulan_progress' => 'BAIK',
+            'progress_percent' => 40,
+            'catatan_perkembangan_musikal' => 'Progres bagus.',
+            'catatan_karakter' => 'Rajin.',
+        ]);
+
+        $this->actingAs($admin)
+            ->get("/progress-reports/{$report->id}/pdf")
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
 }

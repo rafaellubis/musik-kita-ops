@@ -7,230 +7,155 @@
         body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #2C1A07; margin: 0; padding: 20px; }
         h2 { font-size: 12px; margin: 14px 0 6px; color: #3D2610; border-bottom: 1px solid #E8D5A0; padding-bottom: 4px; }
         .header-box { border: 1.5px solid #C8A870; border-radius: 4px; padding: 12px 16px; margin-bottom: 14px; }
-        .header-title { font-size: 14px; font-weight: bold; text-align: center; color: #3D2610; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-        .header-sub { text-align: center; font-size: 10px; color: #8A6848; margin-bottom: 8px; }
-        .header-note { text-align: center; font-size: 9px; color: #6B4A2A; font-style: italic; margin-bottom: 8px; }
+        .header-title { font-size: 14px; font-weight: bold; text-align: center; color: #3D2610; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
         .divider { height: 1px; background: #E8D5A0; margin: 8px 0; }
-        .meta-grid { width: 100%; border-collapse: collapse; }
-        .meta-grid td { padding: 3px 0; vertical-align: top; }
-        .meta-label { color: #8A6848; width: 110px; }
+        .meta-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .meta-table td { padding: 3px 0; vertical-align: top; }
+        .meta-label { color: #8A6848; width: 130px; }
         .meta-colon { width: 12px; color: #8A6848; }
         .meta-value { font-weight: bold; color: #2C1A07; }
-        .legend-box { font-size: 9px; color: #6B4A2A; background: #FBF3E0; border: 1px solid #E8D5A0; padding: 6px 10px; margin-bottom: 14px; line-height: 1.5; }
-        .section-box { margin-bottom: 12px; page-break-inside: avoid; }
-        .section-head { background: #3D2610; color: #fff; padding: 5px 10px; font-size: 11px; font-weight: bold; }
-        .section-count { float: right; font-weight: normal; font-size: 10px; opacity: 0.9; }
-        .section-summary { font-style: italic; color: #6B4A2A; font-size: 10px; padding: 6px 10px; background: #FBF3E0; border-left: 3px solid #C8A870; line-height: 1.5; }
-        .checklist { border: 1px solid #E8D5A0; }
-        .check-item { padding: 5px 10px; border-bottom: 1px solid #F0E4C0; font-size: 10.5px; line-height: 1.4; }
-        .check-item:last-child { border-bottom: none; }
-        .check-yes { color: #2a7a2a; font-weight: bold; }
-        .check-no { color: #aaa; }
-        .check-label-muted { color: #8A6848; }
-        .rep-chip { display: inline-block; font-size: 10px; padding: 3px 10px; border-radius: 10px; background: #F0E4C0; border: 1px solid #C8A870; margin: 2px 4px 2px 0; }
-        .narrative-block { margin-bottom: 10px; }
-        .narrative-title { font-size: 11px; font-weight: bold; color: #3D2610; margin-bottom: 4px; }
-        .narrative { white-space: pre-wrap; line-height: 1.6; color: #2C1A07; }
-        .session-date { font-size: 10px; font-weight: bold; color: #8A6848; margin-top: 8px; margin-bottom: 2px; }
-        .session-text { padding-left: 8px; border-left: 2px solid #E8D5A0; margin-bottom: 4px; }
-        .two-col { width: 100%; border-collapse: collapse; margin-top: 4px; }
-        .two-col td { width: 50%; vertical-align: top; padding: 0 8px 0 0; }
-        .two-col td:last-child { padding: 0 0 0 8px; }
-        .message-box { background: #FBF3E0; border: 1px solid #E8D5A0; padding: 8px 10px; border-radius: 3px; min-height: 60px; }
-        .footer { margin-top: 28px; text-align: right; page-break-inside: avoid; }
-        .ttd-box { display: inline-block; text-align: center; width: 180px; }
-        .ttd-city { font-size: 10px; color: #6B4A2A; margin-bottom: 4px; }
+        .stars { color: #C8A870; letter-spacing: 2px; font-size: 13px; }
+        .section-title { font-size: 11px; font-weight: bold; color: #3D2610; margin: 12px 0 6px; }
+        .week-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+        .week-label { width: 70px; font-size: 10px; color: #8A6848; vertical-align: top; padding: 6px 8px 6px 0; }
+        .week-box { border: 1px solid #E8D5A0; background: #FEFCF5; padding: 6px 10px; font-size: 10px; color: #2C1A07; min-height: 28px; line-height: 1.5; }
+        .rating-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+        .rating-label { width: 130px; color: #8A6848; font-size: 10.5px; padding: 4px 0; }
+        .narrative-box { border: 1px solid #E8D5A0; background: #FEFCF5; padding: 8px 10px; margin-bottom: 8px; min-height: 40px; font-size: 10.5px; white-space: pre-wrap; line-height: 1.6; color: #2C1A07; }
+        .narrative-title { font-size: 10.5px; font-weight: bold; color: #3D2610; margin-bottom: 4px; }
+        .kesimpulan-table { width: 100%; border-collapse: separate; border-spacing: 4px; margin-bottom: 10px; }
+        .kesimpulan-cell { border: 1px solid #E8D5A0; padding: 8px 4px; text-align: center; font-size: 9.5px; color: #8A6848; background: #FEFCF5; width: 25%; }
+        .kesimpulan-cell-active { border: 2px solid #C8A870; background: #FBF3E0; font-weight: bold; color: #3D2610; }
+        .footer-box { margin-top: 16px; padding-top: 10px; border-top: 1px solid #E8D5A0; }
+        .footer-instrument { font-size: 11px; font-weight: bold; color: #3D2610; margin-bottom: 6px; }
+        .ttd-box { text-align: right; margin-top: 28px; page-break-inside: avoid; }
         .ttd-space { height: 50px; }
-        .ttd-line { border-top: 1px solid #333; padding-top: 4px; font-size: 10px; font-weight: bold; }
-        .ttd-role { font-size: 9px; color: #8A6848; margin-top: 2px; }
+        .ttd-line { border-top: 1px solid #333; display: inline-block; padding-top: 4px; font-size: 10px; font-weight: bold; min-width: 180px; text-align: center; }
+        .ttd-role { font-size: 9px; color: #8A6848; margin-top: 2px; text-align: center; }
         .pdf-footnote { margin-top: 16px; font-size: 8px; color: #8A6848; text-align: center; border-top: 1px solid #E8D5A0; padding-top: 8px; }
     </style>
 </head>
 <body>
 
 @php
-    $pkg = $progressReport->enrollment->package;
-    $isKids = $pkg->isKidsClass();
-    $isDuo  = $pkg->isDuo();
-
-    if ($isKids) {
-        $programLabel = 'Kids Class · Eksplorasi minat & bakat (usia 4–5 tahun)';
-    } elseif ($isDuo) {
-        $programLabel = $pkg->instrument->name . ' · Reguler Basic · Belajar Berdua (1 ruangan)';
-    } elseif ($pkg->class_type === 'REGULER') {
-        $gradeLabel = $pkg->grade === 'BASIC' ? 'Basic' : ($pkg->grade ?? '-');
-        $programLabel = $pkg->instrument->name . ' · Reguler · Level ' . $gradeLabel;
-    } elseif ($pkg->class_type === 'HOBBY') {
-        $programLabel = $pkg->instrument->name . ' · Hobby · ' . $pkg->duration_min . ' menit';
-    } else {
-        $programLabel = $pkg->instrument->name . ' · ' . $pkg->code;
-    }
-
-    $repertoireTitle = $isKids
-        ? 'Aktivitas & Lagu yang Dijelajahi'
-        : 'Repertoar yang Dipelajari';
-
-    $ttdDate = ($progressReport->submitted_at ?? now())
+    $pkg         = $progressReport->enrollment->package;
+    $weekly      = $progressReport->weeklyMaterials();
+    $avgRating   = $progressReport->averageSessionRating();
+    $headerStars = $avgRating !== null
+        ? \App\Models\ProgressReport::renderStars((int) round($avgRating))
+        : '—';
+    $pct         = $progressReport->progress_percent ?? 0;
+    $emoji       = $progressReport->instrumentEmoji();
+    $ttdDate     = ($progressReport->submitted_at ?? now())
         ->locale('id')
         ->isoFormat('D MMMM Y');
+    $kesimpulanLabels = \App\Models\ProgressReport::kesimpulanLabels();
 @endphp
 
+{{-- ===== HEADER ===== --}}
 <div class="header-box">
     <div class="header-title">Laporan Progres Les Musik KITA</div>
-    <div class="header-sub">Studio Musik KITA · Laporan Bulanan</div>
-    <div class="header-note">Dikirim kepada orang tua / wali murid</div>
     <div class="divider"></div>
-    <table class="meta-grid">
+    <table class="meta-table">
         <tr>
-            <td class="meta-label">Nama Murid</td>
+            <td class="meta-label">Nama</td>
             <td class="meta-colon">:</td>
             <td class="meta-value">{{ $progressReport->student->full_name }}</td>
-            <td class="meta-label">Periode</td>
+        </tr>
+        <tr>
+            <td class="meta-label">Instrumen</td>
+            <td class="meta-colon">:</td>
+            <td class="meta-value">{{ $pkg->instrument->name }}</td>
+        </tr>
+        <tr>
+            <td class="meta-label">Guru Pengajar</td>
+            <td class="meta-colon">:</td>
+            <td class="meta-value">{{ $progressReport->teacher->name }}</td>
+        </tr>
+        <tr>
+            <td class="meta-label">Bulan</td>
             <td class="meta-colon">:</td>
             <td class="meta-value">{{ $progressReport->namaBulan() }}</td>
         </tr>
         <tr>
-            <td class="meta-label">Program Les</td>
+            <td class="meta-label">Rating Anak hari Ini</td>
             <td class="meta-colon">:</td>
-            <td class="meta-value">{{ $programLabel }}</td>
-            <td class="meta-label">Pengajar</td>
-            <td class="meta-colon">:</td>
-            <td class="meta-value">{{ $progressReport->teacher->name }}</td>
+            <td><span class="stars">{{ $headerStars }}</span></td>
         </tr>
-        @if($progressReport->student->nickname)
-        <tr>
-            <td class="meta-label">Panggilan</td>
-            <td class="meta-colon">:</td>
-            <td class="meta-value">{{ $progressReport->student->nickname }}</td>
-            <td colspan="3"></td>
-        </tr>
-        @endif
     </table>
 </div>
 
-<div class="legend-box">
-    <strong>Petunjuk membaca checklist:</strong>
-    ✓ = sudah ditargetkan &amp; menunjukkan kemajuan layak bulan ini &nbsp;|&nbsp;
-    ○ = belum fokus bulan ini / masih dalam proses / belum diajarkan.
-    Narasi di setiap bagian menjelaskan konteks untuk orang tua.
-</div>
-
-@foreach($progressReport->template->sections as $section)
-    @php
-        if (! $isDuo && str_contains($section->title, 'Belajar Berduo')) {
-            continue;
-        }
-
-        $sectionRecord = $progressReport->sections->firstWhere('report_template_section_id', $section->id);
-        $checkedCount = 0;
-        foreach ($section->items as $item) {
-            $itemRecord = $progressReport->items->firstWhere('report_template_item_id', $item->id);
-            if ($itemRecord?->is_checked) {
-                $checkedCount++;
-            }
-        }
-        $totalItems = $section->items->count();
-    @endphp
-    <div class="section-box">
-        <div class="section-head">
-            {{ $section->sort_order }}. {{ $section->title }}
-            @if($totalItems > 0)
-                <span class="section-count">{{ $checkedCount }}/{{ $totalItems }} tercapai</span>
-            @endif
-        </div>
-        @if($sectionRecord?->summary)
-            <div class="section-summary">{{ $sectionRecord->summary }}</div>
-        @endif
-        @if($totalItems > 0)
-            <div class="checklist">
-                @foreach($section->items as $item)
-                    @php
-                        $itemRecord = $progressReport->items->firstWhere('report_template_item_id', $item->id);
-                        $checked = $itemRecord?->is_checked ?? false;
-                    @endphp
-                    <div class="check-item">
-                        <span class="{{ $checked ? 'check-yes' : 'check-no' }}">{{ $checked ? '✓' : '○' }}</span>
-                        @if($checked)
-                            {{ $item->label }}
-                        @else
-                            <span class="check-label-muted">{{ $item->label }}</span>
-                        @endif
-                    </div>
-                @endforeach
-            </div>
-        @endif
-    </div>
-@endforeach
-
-@if(!empty($progressReport->repertoire))
-    <h2>{{ $repertoireTitle }}</h2>
-    @foreach($progressReport->repertoire as $lagu)
-        <span class="rep-chip">{{ $lagu }}</span>
-    @endforeach
-@endif
-
-@if($progressReport->highlight)
-    <div class="narrative-block">
-        <div class="narrative-title">Pencapaian Utama Bulan Ini</div>
-        <div class="narrative">{{ $progressReport->highlight }}</div>
-    </div>
-@endif
-
-@if($progressReport->sessionNotes->isNotEmpty())
-    <h2>Ringkasan Per Pertemuan</h2>
-    @foreach($progressReport->sessionNotes->sortBy([['session_date', 'asc'], ['sort_order', 'asc']]) as $note)
-        @php
-            $hasStructured = filled($note->material_learned) || filled($note->homework_notes);
-        @endphp
-        <div class="session-date">
-            {{ \Carbon\Carbon::parse($note->session_date)->locale('id')->isoFormat('D MMMM Y') }}
-            @if($note->session_sequence)
-                · Sesi ke-{{ $note->session_sequence }}
-            @endif
-        </div>
-        @if($hasStructured)
-            @if(filled($note->material_learned))
-                <div class="session-text narrative"><strong>Materi:</strong> {{ $note->material_learned }}</div>
-            @endif
-            @if(filled($note->homework_notes))
-                <div class="session-text narrative"><strong>Tugas &amp; Latihan:</strong> {{ $note->homework_notes }}</div>
-            @endif
-            @if(filled($note->notes))
-                <div class="session-text narrative"><strong>Catatan:</strong> {{ $note->notes }}</div>
-            @endif
-        @elseif(filled($note->notes))
-            <div class="session-text narrative">{{ $note->notes }}</div>
-        @endif
-    @endforeach
-@endif
-
-@if($progressReport->summary_notes || $progressReport->target_notes)
-    <table class="two-col">
+{{-- ===== KEHADIRAN & MATERI ===== --}}
+<div class="section-title">Kehadiran dan Materi yang Dipelajari</div>
+<table class="week-table">
+    @foreach ([1 => 'Minggu 1', 2 => 'Minggu 2', 3 => 'Minggu 3', 4 => 'Minggu 4'] as $seq => $mingguLabel)
         <tr>
-            @if($progressReport->summary_notes)
-                <td>
-                    <div class="narrative-title">Pesan Guru untuk Murid &amp; Orang Tua</div>
-                    <div class="message-box narrative">{{ $progressReport->summary_notes }}</div>
-                </td>
-            @endif
-            @if($progressReport->target_notes)
-                <td>
-                    <div class="narrative-title">Fokus Latihan Bulan Depan</div>
-                    <div class="message-box narrative">{{ $progressReport->target_notes }}</div>
-                </td>
-            @endif
+            <td class="week-label">{{ $mingguLabel }} :</td>
+            <td class="week-box">{{ $weekly[$seq] ?? '—' }}</td>
+        </tr>
+    @endforeach
+</table>
+
+{{-- ===== PERKEMBANGAN ===== --}}
+<div class="section-title">Perkembangan {{ $progressReport->student->full_name }} Selama Les di Bulan {{ $progressReport->namaBulan() }}</div>
+<table class="rating-table">
+    @foreach ([
+        'Teknik Bermain' => $progressReport->rating_teknik,
+        'Materi'         => $progressReport->rating_materi,
+        'Reading'        => $progressReport->rating_reading,
+        'Repertoar'      => $progressReport->rating_repertoar,
+    ] as $ratingLabel => $ratingVal)
+        <tr>
+            <td class="rating-label">{{ $ratingLabel }}</td>
+            <td><span class="stars">{{ $ratingVal ? \App\Models\ProgressReport::renderStars($ratingVal) : '—' }}</span></td>
+        </tr>
+    @endforeach
+</table>
+
+{{-- ===== CATATAN NARATIF ===== --}}
+<div class="narrative-title">Catatan Guru Terhadap Perkembangan Musikal {{ $progressReport->student->full_name }}</div>
+<div class="narrative-box">{{ $progressReport->catatan_perkembangan_musikal ?? '—' }}</div>
+
+<div class="narrative-title">Catatan Guru Terhadap Karakter {{ $progressReport->student->full_name }}</div>
+<div class="narrative-box">{{ $progressReport->catatan_karakter ?? '—' }}</div>
+
+{{-- ===== KESIMPULAN PROGRESS ===== --}}
+<div class="section-title">Kesimpulan Progress</div>
+<table class="kesimpulan-table">
+    <tr>
+        @foreach ($kesimpulanLabels as $key => $label)
+            <td class="{{ $progressReport->kesimpulan_progress === $key ? 'kesimpulan-cell-active' : 'kesimpulan-cell' }}">
+                {{ $label }}
+            </td>
+        @endforeach
+    </tr>
+</table>
+
+{{-- ===== FOOTER: INSTRUMENT + LEVEL + PROGRESS BAR ===== --}}
+<div class="footer-box">
+    <div class="footer-instrument">{{ $emoji }} {{ $pkg->instrument->name }} · {{ $pkg->getLevelLabel() }}</div>
+    <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td style="width:80%; vertical-align:middle;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #C8A870; overflow:hidden;">
+                    <tr>
+                        <td width="{{ $pct }}%" bgcolor="#C8A870" style="height:12px;"></td>
+                        <td width="{{ 100 - $pct }}%" bgcolor="#F0E4C0" style="height:12px;"></td>
+                    </tr>
+                </table>
+            </td>
+            <td style="width:20%; text-align:right; padding-left:8px; font-size:10px; color:#3D2610; vertical-align:middle;">{{ $pct }}%</td>
         </tr>
     </table>
-@endif
+</div>
 
-<div class="footer">
-    <div class="ttd-box">
-        <div class="ttd-city">Jakarta, {{ $ttdDate }}</div>
-        <div>Hormat kami,</div>
-        <div class="ttd-space"></div>
-        <div class="ttd-line">{{ $progressReport->teacher->name }}</div>
-        <div class="ttd-role">Pengajar {{ $progressReport->enrollment->package->instrument->name }}</div>
-    </div>
+{{-- ===== TTD ===== --}}
+<div class="ttd-box">
+    <div style="font-size:10px; color:#6B4A2A; margin-bottom:4px;">Jakarta, {{ $ttdDate }}</div>
+    <div style="font-size:10px;">Hormat kami,</div>
+    <div class="ttd-space"></div>
+    <div class="ttd-line">{{ $progressReport->teacher->name }}</div>
+    <div class="ttd-role">Pengajar {{ $pkg->instrument->name }}</div>
 </div>
 
 <div class="pdf-footnote">
