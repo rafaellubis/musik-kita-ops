@@ -39,9 +39,9 @@
     <h2 class="text-xs font-semibold tracking-widest text-mk-muted uppercase mb-3">Sesi Hari Ini</h2>
 
     @forelse($sesiHariIni as $sesi)
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm mb-3 overflow-hidden">
+        <div class="bg-mk-card rounded-xl border border-mk-border shadow-sm mb-3 overflow-hidden">
 
-            <div class="flex items-start justify-between px-4 py-3 border-b border-gray-100">
+            <div class="flex items-start justify-between px-4 py-3 border-b border-mk-borderLight">
                 <div>
                     <div class="font-semibold text-mk-text">{{ $sesi->student->full_name }}</div>
                     <div class="text-xs text-mk-muted mt-0.5">
@@ -57,7 +57,7 @@
 
         </div>
     @empty
-        <div class="bg-white rounded-xl border border-gray-100 px-4 py-10 text-center">
+        <div class="bg-mk-card rounded-xl border border-mk-border px-4 py-10 text-center">
             <div class="text-3xl mb-2">🎵</div>
             <div class="text-mk-muted text-sm">Tidak ada sesi hari ini.</div>
         </div>
@@ -70,11 +70,11 @@
         {{ \Carbon\Carbon::now()->locale('id')->isoFormat('MMMM Y') }}
     </h2>
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <div class="bg-white rounded-xl border border-gray-100 px-4 py-4 shadow-sm">
+        <div class="bg-mk-card rounded-xl border border-mk-border px-4 py-4 shadow-sm">
             <div class="text-2xl font-bold text-mk-text">{{ $totalSesiBulan }}</div>
             <div class="text-xs text-mk-muted mt-0.5">Sesi Terlaksana</div>
         </div>
-        <div class="bg-white rounded-xl border border-gray-100 px-4 py-4 shadow-sm">
+        <div class="bg-mk-card rounded-xl border border-mk-border px-4 py-4 shadow-sm">
             @if($slipBulanIni)
                 <div class="text-lg font-bold text-mk-text leading-tight">
                     Rp {{ number_format($slipBulanIni->total_honor, 0, ',', '.') }}
@@ -90,7 +90,7 @@
         {{-- Kartu Sesi Pending — hanya tampil jika ada pending --}}
         @if($jumlahPending > 0)
         <a href="{{ route('guru.sesi-pending.index') }}"
-           class="bg-white rounded-xl border border-gray-100 px-4 py-4 shadow-sm hover:bg-gray-50 transition-colors">
+           class="bg-mk-card rounded-xl border border-mk-border px-4 py-4 shadow-sm hover:bg-mk-cardHover transition-colors">
             <div class="text-2xl font-bold text-red-500">{{ $jumlahPending }}</div>
             <div class="text-xs text-mk-muted mt-0.5">Sesi Pending</div>
         </a>

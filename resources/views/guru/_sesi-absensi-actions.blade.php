@@ -65,7 +65,7 @@
                 </button>
             </form>
             <button @click="showLate = !showLate"
-                    class="flex-1 py-2.5 rounded-xl border-2 border-yellow-400 text-yellow-600
+                    class="flex-1 py-2.5 rounded-xl border border-yellow-400 text-yellow-600
                            font-semibold text-sm hover:bg-yellow-50 transition-colors appearance-none">
                 ⏱ Terlambat
             </button>
@@ -77,7 +77,7 @@
                 <div class="flex-1">
                     <input type="number" name="late_minutes" min="1" max="60"
                            placeholder="Berapa menit terlambat?"
-                           class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm
+                           class="w-full border border-mk-borderLight rounded-xl px-3 py-2.5 text-sm bg-mk-card
                                   focus:outline-none focus:ring-2 focus:ring-yellow-300">
                 </div>
                 <button type="submit"
@@ -107,54 +107,61 @@
 @endif
 
 @if($canWriteNotes)
-    <div class="px-4 pb-3 border-t border-gray-100 space-y-3">
-        <div class="py-1 text-sm font-semibold text-gray-700">
-            Catatan Sesi
-            @if(!$teacherNote)
-                <span class="text-mk-accent font-normal text-xs">— isi setelah sesi selesai</span>
-            @endif
-        </div>
-        <form method="POST" action="{{ route('guru.sesi.catatan.update', $sesi) }}" class="space-y-3">
-            @csrf @method('PATCH')
-            <div>
-                <label class="block text-xs font-medium text-gray-600 mb-1">Rating Anak hari Ini</label>
-                <select name="session_rating"
-                        class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white
-                               focus:outline-none focus:ring-2 focus:ring-blue-200">
-                    <option value="">— Pilih rating (opsional) —</option>
-                    @for ($i = 1; $i <= 5; $i++)
-                        <option value="{{ $i }}" @selected((int) old('session_rating', $teacherNote?->session_rating) === $i)>
-                            {{ $i }} / 5
-                        </option>
-                    @endfor
-                </select>
+    <div class="px-4 pb-3 border-t border-mk-borderLight">
+        <details class="group"
+                 @if($errors->any() || filled(old('material_learned')) || filled(old('homework_notes')) || filled(old('notes')) || filled(old('session_rating'))) open @endif>
+            <summary class="flex items-center justify-between py-2.5 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                <span class="text-sm font-semibold text-mk-text">
+                    Catatan Sesi
+                    @if(!$teacherNote)
+                        <span class="text-mk-accent font-normal text-xs">— tap untuk isi</span>
+                    @endif
+                </span>
+                <span class="text-xs text-mk-muted group-open:hidden">▼</span>
+                <span class="text-xs text-mk-muted hidden group-open:inline">▲</span>
+            </summary>
+            <div class="space-y-3 pt-1">
+                <form method="POST" action="{{ route('guru.sesi.catatan.update', $sesi) }}" class="space-y-3">
+                    @csrf @method('PATCH')
+                    <div>
+                        <label class="block text-xs font-medium text-mk-muted mb-1">Rating Anak hari Ini</label>
+                        <select name="session_rating"
+                                class="w-full border border-mk-borderLight rounded-xl px-3 py-2.5 text-sm bg-mk-card
+                                       focus:outline-none focus:ring-2 focus:ring-mk-accent/30">
+                            <option value="">— Pilih rating (opsional) —</option>
+                            @for ($i = 1; $i <= 5; $i++)
+                                <option value="{{ $i }}" @selected((int) old('session_rating', $teacherNote?->session_rating) === $i)>
+                                    {{ $i }} / 5
+                                </option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-mk-muted mb-1">Materi yang dipelajari</label>
+                        <textarea name="material_learned" rows="2" maxlength="2000"
+                                  class="w-full border border-mk-borderLight rounded-xl px-3 py-2.5 text-sm bg-mk-card
+                                         focus:outline-none focus:ring-2 focus:ring-mk-accent/30 resize-y"
+                                  placeholder="Contoh: Scales mayor, teknik pernafasan">{{ old('material_learned', $teacherNote?->material_learned) }}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-mk-muted mb-1">Tugas &amp; Latihan/Persiapan 1 Minggu Kedepan</label>
+                        <textarea name="homework_notes" rows="2" maxlength="2000"
+                                  class="w-full border border-mk-borderLight rounded-xl px-3 py-2.5 text-sm bg-mk-card
+                                         focus:outline-none focus:ring-2 focus:ring-mk-accent/30 resize-y"
+                                  placeholder="Contoh: Latihan 15 menit per hari">{{ old('homework_notes', $teacherNote?->homework_notes) }}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-mk-muted mb-1">Catatan</label>
+                        <textarea name="notes" rows="2" maxlength="2000"
+                                  class="w-full border border-mk-borderLight rounded-xl px-3 py-2.5 text-sm bg-mk-card
+                                         focus:outline-none focus:ring-2 focus:ring-mk-accent/30 resize-y"
+                                  placeholder="Catatan tambahan untuk murid/orang tua">{{ old('notes', $teacherNote?->notes) }}</textarea>
+                    </div>
+                    <button type="submit" class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors appearance-none btn-mk-primary">
+                        Simpan Catatan
+                    </button>
+                </form>
             </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-600 mb-1">Materi yang dipelajari</label>
-                <textarea name="material_learned" rows="2" maxlength="2000"
-                          class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm
-                                 focus:outline-none focus:ring-2 focus:ring-blue-200 resize-y"
-                          placeholder="Contoh: Scales mayor, teknik pernafasan">{{ old('material_learned', $teacherNote?->material_learned) }}</textarea>
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-600 mb-1">Tugas &amp; Latihan/Persiapan 1 Minggu Kedepan</label>
-                <textarea name="homework_notes" rows="2" maxlength="2000"
-                          class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm
-                                 focus:outline-none focus:ring-2 focus:ring-blue-200 resize-y"
-                          placeholder="Contoh: Latihan 15 menit per hari">{{ old('homework_notes', $teacherNote?->homework_notes) }}</textarea>
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-600 mb-1">Catatan</label>
-                <textarea name="notes" rows="2" maxlength="2000"
-                          class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm
-                                 focus:outline-none focus:ring-2 focus:ring-blue-200 resize-y"
-                          placeholder="Catatan tambahan untuk murid/orang tua">{{ old('notes', $teacherNote?->notes) }}</textarea>
-            </div>
-            <button type="submit"
-                    class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors appearance-none"
-                    style="background-color:#3b82f6;color:#ffffff;">
-                Simpan Catatan
-            </button>
-        </form>
+        </details>
     </div>
 @endif

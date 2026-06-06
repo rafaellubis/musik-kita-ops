@@ -24,7 +24,7 @@
             </div>
 
             @foreach($sesiHari as $s)
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm mb-2 overflow-hidden">
+                <div class="bg-mk-card rounded-xl border border-mk-border shadow-sm mb-2 overflow-hidden">
                     <div class="flex items-start justify-between px-4 py-3">
                         <div>
                             <div class="font-medium text-mk-text text-sm">{{ $s->student->full_name }}</div>
@@ -55,7 +55,7 @@
             @endforeach
         </div>
     @empty
-        <div class="bg-white rounded-xl border border-gray-100 px-4 py-12 text-center">
+        <div class="bg-mk-card rounded-xl border border-mk-border px-4 py-12 text-center">
             <div class="text-3xl mb-2">📅</div>
             <div class="text-mk-muted text-sm">Tidak ada sesi dalam periode ini.</div>
         </div>
@@ -64,9 +64,9 @@
 
 {{-- ===== DESKTOP: Tabel ===== --}}
 <div class="hidden lg:block px-6 pb-6">
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="bg-mk-card rounded-xl border border-mk-border shadow-sm overflow-hidden">
         <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b border-gray-100">
+            <thead class="bg-mk-surface border-b border-mk-borderLight">
                 <tr>
                     <th class="text-left px-4 py-3 text-xs font-semibold text-mk-muted uppercase tracking-wider">Tanggal</th>
                     <th class="text-left px-4 py-3 text-xs font-semibold text-mk-muted uppercase tracking-wider">Murid</th>
@@ -76,7 +76,7 @@
                     <th class="px-4 py-3 w-32"></th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50">
+            <tbody class="divide-y divide-mk-borderLight">
                 @forelse($sesi as $s)
                     @php
                         $showSessionActions = $s->session_date === $today
@@ -87,7 +87,7 @@
                                 && $s->honor_code !== null
                             );
                     @endphp
-                    <tr class="{{ $s->session_date === $today ? 'bg-green-50/30' : '' }}">
+                    <tr class="{{ $s->session_date === $today ? 'bg-mk-accentDim' : '' }}">
                         <td class="px-4 py-3 text-mk-text">
                             {{ \Carbon\Carbon::parse($s->session_date)->locale('id')->isoFormat('ddd, D MMM') }}
                             @if($s->session_date === $today)
@@ -131,7 +131,7 @@
                                         Input Absensi
                                     </button>
                                     <div x-show="open" x-transition @click.outside="open = false"
-                                         class="absolute right-0 top-9 z-10 w-56 bg-white border border-gray-100 rounded-xl shadow-lg p-3 space-y-2">
+                                         class="absolute right-0 top-9 z-10 w-56 bg-mk-card border border-mk-border rounded-xl shadow-lg p-3 space-y-2">
                                         <form method="POST" action="{{ route('guru.absensi.update', $s) }}">
                                             @csrf @method('PATCH')
                                             <input type="hidden" name="status" value="HADIR">
@@ -141,7 +141,7 @@
                                             @csrf @method('PATCH')
                                             <input type="hidden" name="status" value="HADIR_TERLAMBAT">
                                             <input type="number" name="late_minutes" min="1" max="60" placeholder="mnt"
-                                                   class="w-16 border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-300">
+                                                   class="w-16 border border-mk-borderLight rounded-lg px-2 py-2 text-sm bg-mk-card focus:outline-none focus:ring-1 focus:ring-yellow-300">
                                             <button type="submit" class="flex-1 py-2 bg-yellow-400 hover:bg-yellow-500 text-white rounded-lg text-sm font-medium">⏱ Terlambat</button>
                                         </form>
                                     </div>
@@ -150,7 +150,7 @@
                         </td>
                     </tr>
                     @if($showSessionActions)
-                        <tr class="bg-gray-50/60">
+                        <tr class="bg-mk-surface">
                             <td colspan="6" class="px-4 py-0">
                                 @include('guru._sesi-absensi-actions', ['sesi' => $s, 'teacher' => $teacher])
                             </td>
