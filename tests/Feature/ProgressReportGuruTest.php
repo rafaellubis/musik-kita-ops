@@ -123,17 +123,17 @@ class ProgressReportGuruTest extends TestCase
             'month' => 5, 'year' => 2026, 'status' => 'DRAFT',
         ]);
 
-        $item = $this->template->sections->first()->items->first();
-
         $this->actingAs($this->guruUser)
             ->put("/guru/laporan/{$report->id}", [
-                'highlight'        => 'Murid berkembang pesat.',
-                'summary_notes'    => 'Terus latihan.',
-                'target_notes'     => 'Kuasai falsetto.',
-                'repertoire'       => ['Reflection'],
-                'section_summary'  => [],
-                'checked_items'    => [$item->id],
-                'submit'           => '1',
+                'rating_teknik'                => 4,
+                'rating_materi'                => 4,
+                'rating_reading'               => 3,
+                'rating_repertoar'             => 4,
+                'catatan_perkembangan_musikal'  => 'Bagus bulan ini.',
+                'catatan_karakter'             => 'Disiplin latihan.',
+                'kesimpulan_progress'          => 'BAIK',
+                'progress_percent'             => 40,
+                'submit'                       => '1',
             ])
             ->assertRedirect();
 
@@ -372,5 +372,55 @@ class ProgressReportGuruTest extends TestCase
             'material_learned'        => 'Arpeggio minor',
             'substitute_teacher_name' => 'Guru Pengganti A',
         ]);
+    }
+
+    public function test_guru_bisa_simpan_draft_dengan_field_baru(): void
+    {
+        $report = ProgressReport::create([
+            'enrollment_id' => $this->enrollment->id,
+            'student_id' => $this->enrollment->student_id,
+            'teacher_id' => $this->teacher->id,
+            'report_template_id' => $this->template->id,
+            'month' => 5, 'year' => 2026, 'status' => 'DRAFT',
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->put("/guru/laporan/{$report->id}", [
+                'rating_teknik' => 4,
+                'rating_materi' => 3,
+                'rating_reading' => 5,
+                'rating_repertoar' => 4,
+                'catatan_perkembangan_musikal' => 'Teknik jari membaik.',
+                'catatan_karakter' => 'Rajin dan fokus.',
+                'kesimpulan_progress' => 'BAIK',
+                'progress_percent' => 40,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('progress_reports', [
+            'id' => $report->id,
+            'rating_teknik' => 4,
+            'kesimpulan_progress' => 'BAIK',
+            'progress_percent' => 40,
+        ]);
+    }
+
+    public function test_submit_gagal_jika_field_wajib_kosong(): void
+    {
+        $report = ProgressReport::create([
+            'enrollment_id' => $this->enrollment->id,
+            'student_id' => $this->enrollment->student_id,
+            'teacher_id' => $this->teacher->id,
+            'report_template_id' => $this->template->id,
+            'month' => 5, 'year' => 2026, 'status' => 'DRAFT',
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->put("/guru/laporan/{$report->id}", ['submit' => '1'])
+            ->assertSessionHasErrors([
+                'rating_teknik', 'rating_materi', 'rating_reading', 'rating_repertoar',
+                'kesimpulan_progress', 'progress_percent',
+            ]);
     }
 }

@@ -60,7 +60,7 @@ class GuruController extends Controller
             })
             ->where('session_date', $today)
             ->whereNotIn('status', ['CANCELLED'])
-            ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher', 'teacherNote'])
+            ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher', 'teacherNote', 'originSession'])
             ->orderBy('start_time')
             ->get();
 
@@ -110,7 +110,7 @@ class GuruController extends Controller
                   ->orWhere('substitute_teacher_id', $teacher->id);
             })
             ->whereBetween('session_date', [$mulai, $akhir])
-            ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher', 'teacherNote'])
+            ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher', 'teacherNote', 'originSession'])
             ->orderBy('session_date')
             ->orderBy('start_time')
             ->get();
@@ -336,12 +336,11 @@ class GuruController extends Controller
         $this->sessionNoteSyncService->sync($progressReport);
 
         $progressReport->load([
-            'template.sections.items',
-            'sections.templateSection',
-            'items.templateItem',
+            'template',
             'sessionNotes',
             'student',
-            'enrollment.package',
+            'enrollment.package.instrument',
+            'teacher',
         ]);
 
         return view('guru.laporan-form', compact('progressReport'));
@@ -359,40 +358,38 @@ class GuruController extends Controller
 
         $this->sessionNoteSyncService->sync($progressReport);
 
-        $validated = $request->validate([
-            'highlight'            => 'nullable|string|max:3000',
-            'summary_notes'        => 'nullable|string|max:2000',
-            'target_notes'         => 'nullable|string|max:2000',
-            'repertoire'           => 'nullable|array',
-            'repertoire.*'         => 'string|max:200',
-            'section_summary'      => 'nullable|array',
-            'section_summary.*'    => 'nullable|string|max:500',
-            'checked_items'        => 'nullable|array',
-            'checked_items.*'      => 'integer|exists:report_template_items,id',
-        ]);
+        $rules = [
+            'rating_teknik'                => 'nullable|integer|min:1|max:5',
+            'rating_materi'                => 'nullable|integer|min:1|max:5',
+            'rating_reading'               => 'nullable|integer|min:1|max:5',
+            'rating_repertoar'             => 'nullable|integer|min:1|max:5',
+            'catatan_perkembangan_musikal' => 'nullable|string|max:3000',
+            'catatan_karakter'             => 'nullable|string|max:3000',
+            'kesimpulan_progress'          => 'nullable|in:' . implode(',', array_keys(ProgressReport::kesimpulanLabels())),
+            'progress_percent'             => 'nullable|integer|min:0|max:100',
+        ];
+
+        if ($request->input('submit') === '1') {
+            $rules['rating_teknik']       = 'required|integer|min:1|max:5';
+            $rules['rating_materi']       = 'required|integer|min:1|max:5';
+            $rules['rating_reading']      = 'required|integer|min:1|max:5';
+            $rules['rating_repertoar']    = 'required|integer|min:1|max:5';
+            $rules['kesimpulan_progress'] = 'required|in:' . implode(',', array_keys(ProgressReport::kesimpulanLabels()));
+            $rules['progress_percent']    = 'required|integer|min:0|max:100';
+        }
+
+        $validated = $request->validate($rules);
 
         $progressReport->update([
-            'highlight'     => $validated['highlight'] ?? null,
-            'summary_notes' => $validated['summary_notes'] ?? null,
-            'target_notes'  => $validated['target_notes'] ?? null,
-            'repertoire'    => array_filter($validated['repertoire'] ?? []),
+            'rating_teknik'                => $validated['rating_teknik'] ?? null,
+            'rating_materi'                => $validated['rating_materi'] ?? null,
+            'rating_reading'               => $validated['rating_reading'] ?? null,
+            'rating_repertoar'             => $validated['rating_repertoar'] ?? null,
+            'catatan_perkembangan_musikal' => $validated['catatan_perkembangan_musikal'] ?? null,
+            'catatan_karakter'             => $validated['catatan_karakter'] ?? null,
+            'kesimpulan_progress'          => $validated['kesimpulan_progress'] ?? null,
+            'progress_percent'             => $validated['progress_percent'] ?? null,
         ]);
-
-        if (!empty($validated['section_summary'])) {
-            foreach ($validated['section_summary'] as $sectionId => $summary) {
-                ProgressReportSection::where('progress_report_id', $progressReport->id)
-                    ->where('report_template_section_id', $sectionId)
-                    ->update(['summary' => $summary ?: null]);
-            }
-        }
-
-        $checkedIds = $validated['checked_items'] ?? [];
-        ProgressReportItem::where('progress_report_id', $progressReport->id)->update(['is_checked' => false]);
-        if (!empty($checkedIds)) {
-            ProgressReportItem::where('progress_report_id', $progressReport->id)
-                ->whereIn('report_template_item_id', $checkedIds)
-                ->update(['is_checked' => true]);
-        }
 
         if ($request->input('submit') === '1') {
             $progressReport->update([
