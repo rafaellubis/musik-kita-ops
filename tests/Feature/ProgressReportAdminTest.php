@@ -24,6 +24,7 @@ class ProgressReportAdminTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->withoutVite();
         foreach (['Owner', 'Admin', 'Auditor', 'Guru'] as $r) {
             Role::firstOrCreate(['name' => $r, 'guard_name' => 'web']);
         }

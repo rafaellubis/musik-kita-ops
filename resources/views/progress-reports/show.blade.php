@@ -58,10 +58,43 @@
         @if($progressReport->sessionNotes->isNotEmpty())
             <div class="bg-white shadow-sm rounded-lg mb-4 p-5">
                 <div class="font-semibold text-sm text-gray-700 mb-3">Catatan Per Sesi</div>
-                @foreach($progressReport->sessionNotes as $note)
+                @foreach($progressReport->sessionNotes->sortBy([['session_date', 'asc'], ['sort_order', 'asc']]) as $note)
+                    @php
+                        $hasStructured = filled($note->material_learned) || filled($note->homework_notes);
+                    @endphp
                     <div class="mb-3 border-b border-gray-50 pb-3 last:border-0">
-                        <div class="text-xs font-semibold text-gray-500 mb-1">{{ \Carbon\Carbon::parse($note->session_date)->locale('id')->isoFormat('D MMMM Y') }}</div>
-                        <p class="text-sm text-gray-600 whitespace-pre-line">{{ $note->notes }}</p>
+                        <div class="text-xs font-semibold text-gray-500 mb-2">
+                            {{ \Carbon\Carbon::parse($note->session_date)->locale('id')->isoFormat('D MMMM Y') }}
+                            @if($note->session_sequence)
+                                · Sesi ke-{{ $note->session_sequence }}
+                            @endif
+                        </div>
+                        @if($hasStructured)
+                            <div class="space-y-2 text-sm text-gray-600">
+                                @if(filled($note->material_learned))
+                                    <div>
+                                        <span class="font-medium text-gray-700">Materi:</span>
+                                        <p class="whitespace-pre-line">{{ $note->material_learned }}</p>
+                                    </div>
+                                @endif
+                                @if(filled($note->homework_notes))
+                                    <div>
+                                        <span class="font-medium text-gray-700">Tugas & Latihan:</span>
+                                        <p class="whitespace-pre-line">{{ $note->homework_notes }}</p>
+                                    </div>
+                                @endif
+                                @if(filled($note->notes))
+                                    <div>
+                                        <span class="font-medium text-gray-700">Catatan:</span>
+                                        <p class="whitespace-pre-line">{{ $note->notes }}</p>
+                                    </div>
+                                @endif
+                            </div>
+                        @elseif(filled($note->notes))
+                            <p class="text-sm text-gray-600 whitespace-pre-line">{{ $note->notes }}</p>
+                        @else
+                            <p class="text-sm text-gray-400 italic">Belum diisi</p>
+                        @endif
                     </div>
                 @endforeach
             </div>

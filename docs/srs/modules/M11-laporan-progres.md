@@ -48,7 +48,17 @@ Template laporan (Owner), guru isi laporan per murid/periode, staff review & cet
 | `progress_reports` | Instance laporan per murid |
 | `progress_report_sections` | Jawaban per section |
 | `progress_report_items` | Nilai per item |
-| `progress_report_session_notes` | Catatan per sesi |
+| `progress_report_session_notes` | Snapshot catatan per sesi (sync dari `session_teacher_notes`) |
+
+### Catatan per sesi (guru → laporan bulanan)
+
+| Tabel | Peran |
+|-------|--------|
+| `session_teacher_notes` | Source of truth: catatan terstruktur per `ClassSession` (Materi, Tugas/Latihan, Catatan) |
+
+Guru isi via `PATCH /guru/sesi/{classSession}/catatan` setelah absensi HADIR. Saat buka/simpan laporan DRAFT, `SessionNoteSyncService` sync ke `progress_report_session_notes` (read-only di form). Snapshot frozen saat SUBMITTED.
+
+Spec: `docs/superpowers/specs/2026-06-06-catatan-per-sesi-guru-design.md`
 
 Migrasi: `2026_05_29_081049_*` series.
 
