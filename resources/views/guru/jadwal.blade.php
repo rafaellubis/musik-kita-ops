@@ -39,7 +39,16 @@
                         @include('guru._badge-status', ['status' => $s->status])
                     </div>
 
-                    @if($tanggal === $today)
+                    @php
+                        $showSessionActions = $tanggal === $today
+                            || in_array($s->status, ['HADIR', 'HADIR_TERLAMBAT'], true)
+                            || (
+                                (int) $s->substitute_teacher_id === (int) $teacher->id
+                                && $s->status === 'DIGANTI'
+                                && $s->honor_code !== null
+                            );
+                    @endphp
+                    @if($showSessionActions)
                         @include('guru._sesi-absensi-actions', ['sesi' => $s, 'teacher' => $teacher])
                     @endif
                 </div>
@@ -69,6 +78,15 @@
             </thead>
             <tbody class="divide-y divide-gray-50">
                 @forelse($sesi as $s)
+                    @php
+                        $showSessionActions = $s->session_date === $today
+                            || in_array($s->status, ['HADIR', 'HADIR_TERLAMBAT'], true)
+                            || (
+                                (int) $s->substitute_teacher_id === (int) $teacher->id
+                                && $s->status === 'DIGANTI'
+                                && $s->honor_code !== null
+                            );
+                    @endphp
                     <tr class="{{ $s->session_date === $today ? 'bg-green-50/30' : '' }}">
                         <td class="px-4 py-3 text-mk-text">
                             {{ \Carbon\Carbon::parse($s->session_date)->locale('id')->isoFormat('ddd, D MMM') }}
@@ -131,6 +149,13 @@
                             @endif
                         </td>
                     </tr>
+                    @if($showSessionActions)
+                        <tr class="bg-gray-50/60">
+                            <td colspan="6" class="px-4 py-0">
+                                @include('guru._sesi-absensi-actions', ['sesi' => $s, 'teacher' => $teacher])
+                            </td>
+                        </tr>
+                    @endif
                 @empty
                     <tr>
                         <td colspan="6" class="px-4 py-12 text-center text-mk-muted">Tidak ada sesi dalam periode ini.</td>
