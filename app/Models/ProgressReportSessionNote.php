@@ -15,12 +15,14 @@ class ProgressReportSessionNote extends Model
         'material_learned',
         'homework_notes',
         'session_sequence',
+        'session_rating',
         'sort_order',
     ];
 
     protected $casts = [
         'session_date'     => 'date',
         'session_sequence' => 'integer',
+        'session_rating'   => 'integer',
     ];
 
     public function report(): BelongsTo

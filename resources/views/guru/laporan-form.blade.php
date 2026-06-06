@@ -66,36 +66,16 @@
         <div class="font-semibold text-sm text-mk-text mb-1">Catatan Per Sesi</div>
         <p class="text-xs text-mk-muted mb-3">Diisi per sesi dari dashboard/jadwal — otomatis tampil di sini.</p>
         @forelse($progressReport->sessionNotes->sortBy([['session_date', 'asc'], ['sort_order', 'asc']]) as $note)
-            @php
-                $isEmpty = blank($note->material_learned) && blank($note->homework_notes) && blank($note->notes);
-            @endphp
-            <div class="mb-3 border border-gray-100 rounded-lg p-3 bg-white last:mb-0">
-                <div class="flex items-center gap-2 mb-2">
-                    <div class="text-xs font-semibold text-mk-muted">
-                        {{ \Carbon\Carbon::parse($note->session_date)->locale('id')->translatedFormat('d M Y') }}
-                        @if($note->session_sequence)
-                            · Sesi ke-{{ $note->session_sequence }}
-                        @endif
-                    </div>
-                    @if($isEmpty)
-                        <span class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-medium">Belum diisi</span>
-                    @endif
-                </div>
-                <div class="space-y-2 text-sm">
-                    <div>
-                        <div class="text-xs font-medium text-mk-muted mb-0.5">Materi</div>
-                        <p class="text-mk-text whitespace-pre-line">{{ $note->material_learned ?: '—' }}</p>
-                    </div>
-                    <div>
-                        <div class="text-xs font-medium text-mk-muted mb-0.5">Tugas & Latihan</div>
-                        <p class="text-mk-text whitespace-pre-line">{{ $note->homework_notes ?: '—' }}</p>
-                    </div>
-                    <div>
-                        <div class="text-xs font-medium text-mk-muted mb-0.5">Catatan</div>
-                        <p class="text-mk-text whitespace-pre-line">{{ $note->notes ?: '—' }}</p>
-                    </div>
-                </div>
-            </div>
+            <x-session-note-card
+                :student-name="$progressReport->student->full_name"
+                :teacher-name="$progressReport->teacher->name"
+                :session-date="\Carbon\Carbon::parse($note->session_date)->locale('id')->translatedFormat('d F Y')"
+                :session-rating="$note->session_rating"
+                :material-learned="$note->material_learned"
+                :homework-notes="$note->homework_notes"
+                :notes="$note->notes"
+                :show-empty-badge="true"
+            />
         @empty
             <p class="text-sm text-mk-muted">Belum ada sesi HADIR bulan ini.</p>
         @endforelse

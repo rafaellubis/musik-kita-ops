@@ -546,19 +546,18 @@ class GuruController extends Controller
 
         abort_if(!$isMainTeacher && !$isSubstitute, 403, 'Bukan sesi Anda.');
 
-        abort_if(
-            !in_array($classSession->status, [ClassSession::STATUS_HADIR, ClassSession::STATUS_HADIR_TERLAMBAT], true),
-            403,
-            'Catatan hanya bisa diisi untuk sesi yang sudah hadir.'
-        );
+        $isMainTeacherAttended = $isMainTeacher
+            && in_array($classSession->status, [ClassSession::STATUS_HADIR, ClassSession::STATUS_HADIR_TERLAMBAT], true);
+        $isSubstituteAttended = $isSubstitute
+            && !$isMainTeacher
+            && $classSession->status === ClassSession::STATUS_DIGANTI
+            && $classSession->honor_code !== null;
 
-        if ($isSubstitute && !$isMainTeacher) {
-            abort_if(
-                $classSession->honor_code === null,
-                403,
-                'Guru pengganti belum dikonfirmasi.'
-            );
-        }
+        abort_if(
+            !$isMainTeacherAttended && !$isSubstituteAttended,
+            403,
+            'Catatan hanya bisa diisi setelah absensi sesi tercatat.'
+        );
 
         $sessionDate = Carbon::parse($classSession->session_date);
         $reportSubmitted = ProgressReport::where('enrollment_id', $classSession->enrollment_id)
@@ -577,10 +576,13 @@ class GuruController extends Controller
             'material_learned' => 'nullable|string|max:2000',
             'homework_notes'   => 'nullable|string|max:2000',
             'notes'            => 'nullable|string|max:2000',
+            'session_rating'   => 'nullable|integer|min:1|max:5',
         ]);
 
-        $hasContent = collect($validated)
-            ->contains(fn (?string $value) => filled(trim((string) $value)));
+        $hasContent = filled(trim((string) ($validated['material_learned'] ?? '')))
+            || filled(trim((string) ($validated['homework_notes'] ?? '')))
+            || filled(trim((string) ($validated['notes'] ?? '')))
+            || filled($validated['session_rating'] ?? null);
 
         if (!$hasContent) {
             return back()
@@ -595,6 +597,7 @@ class GuruController extends Controller
                 'material_learned' => $validated['material_learned'] ?? null,
                 'homework_notes'   => $validated['homework_notes'] ?? null,
                 'notes'            => $validated['notes'] ?? null,
+                'session_rating'   => $validated['session_rating'] ?? null,
             ]
         );
 

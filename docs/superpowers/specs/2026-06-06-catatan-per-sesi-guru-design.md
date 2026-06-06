@@ -41,6 +41,7 @@ Guru saat ini mengisi **catatan per sesi** secara manual di form laporan progres
 | `material_learned` | text nullable | Materi yang dipelajari |
 | `homework_notes` | text nullable | Tugas & latihan/persiapan 1 minggu ke depan |
 | `notes` | text nullable | Catatan tambahan |
+| `session_rating` | unsignedTinyInteger nullable | Rating 1–5 (opsional) |
 | timestamps | | |
 
 **Validasi:** minimal 1 dari 3 field harus terisi.
@@ -53,8 +54,18 @@ Guru saat ini mengisi **catatan per sesi** secara manual di form laporan progres
 | `material_learned` | text nullable |
 | `homework_notes` | text nullable |
 | `session_sequence` | unsignedTinyInteger nullable |
+| `session_rating` | unsignedTinyInteger nullable |
 
 Kolom `notes` existing = catatan tambahan. Snapshot frozen saat laporan SUBMITTED.
+
+## 6b. Kartu Laporan Sesi (Web Only)
+
+| Aspek | Keputusan |
+|-------|-----------|
+| Tampilan web | Kartu formal per sesi di laporan-form guru + admin show |
+| PDF bulanan | **Tidak diubah** — tetap format ringkas tanpa rating/kotak |
+| Rating | Opsional 1–5 bintang; input bintang di form guru |
+| Komponen | `resources/views/components/session-note-card.blade.php` |
 
 ## 5. Business Rules
 
@@ -114,25 +125,21 @@ File: `resources/views/guru/_sesi-absensi-actions.blade.php`
 - Setelah HADIR/HADIR_TERLAMBAT: collapsible form 3 field
 - Route: `PATCH /guru/sesi/{classSession}/catatan`
 
-### Form laporan bulanan — read-only
+### Form laporan bulanan — read-only kartu
 
 File: `resources/views/guru/laporan-form.blade.php`
 
-- Hapus input manual + tombol tambah
-- Tampilkan card read-only per sesi (tanggal, label sesi, 3 field)
-- Peringatan kuning jika sesi HADIR tanpa catatan
+- Kartu per sesi via `<x-session-note-card>` (Nama, Guru, Tanggal, Rating, 3 kotak)
+- Peringatan kuning jika sesi HADIR tanpa catatan teks
 - Konfirmasi JS saat submit jika ada sesi tanpa catatan
 
-### PDF & admin show
+### Admin show — kartu sesi
 
-Format:
+File: `resources/views/progress-reports/show.blade.php` — reuse `<x-session-note-card>`.
 
-```
-Sesi ke-3 · 12 Juni 2026
-Materi: ...
-Tugas: ...
-Catatan: ...
-```
+### PDF bulanan
+
+File: `resources/views/progress-reports/pdf.blade.php` — **tidak diubah** (format ringkas tanpa rating/kotak).
 
 ## 8. Out of Scope v1
 
@@ -153,8 +160,9 @@ Catatan: ...
 | `app/Http/Controllers/GuruController.php` | `updateSessionNotes`, sync, hapus manual notes |
 | `routes/web.php` | Route PATCH catatan |
 | `resources/views/guru/_sesi-absensi-actions.blade.php` | Form catatan |
-| `resources/views/guru/laporan-form.blade.php` | Read-only |
-| `resources/views/progress-reports/pdf.blade.php` | Format terstruktur |
-| `resources/views/progress-reports/show.blade.php` | Format terstruktur |
+| `resources/views/guru/laporan-form.blade.php` | Read-only kartu (`x-session-note-card`) |
+| `resources/views/progress-reports/show.blade.php` | Kartu sesi admin |
+| `resources/views/components/session-note-card.blade.php` | Partial kartu web |
+| `resources/views/progress-reports/pdf.blade.php` | Tidak diubah (format ringkas) |
 | `tests/Feature/SessionTeacherNoteTest.php` | Baru |
 | `tests/Feature/ProgressReportGuruTest.php` | Extend sync tests |

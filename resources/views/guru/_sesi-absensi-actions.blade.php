@@ -12,9 +12,10 @@
     $isOwnScheduled = $sesi->status === 'SCHEDULED'
         && (int) $sesi->teacher_id === (int) $teacher->id
         && !$sesi->substitute_teacher_id;
-    $canWriteNotes = in_array($sesi->status, ['HADIR', 'HADIR_TERLAMBAT'], true)
-        && ((int) $sesi->teacher_id === (int) $teacher->id
-            || ((int) $sesi->substitute_teacher_id === (int) $teacher->id && $sesi->honor_code !== null));
+    $canWriteNotes = (
+        in_array($sesi->status, ['HADIR', 'HADIR_TERLAMBAT'], true)
+        && (int) $sesi->teacher_id === (int) $teacher->id
+    ) || $isSubstituteConfirmed;
     $teacherNote = $sesi->teacherNote;
 @endphp
 
@@ -106,15 +107,32 @@
 @endif
 
 @if($canWriteNotes)
-    <div x-data="{ openNotes: false }" class="px-4 pb-3 border-t border-gray-100">
+    <div x-data="{
+            openNotes: true,
+            rating: {{ json_encode($teacherNote?->session_rating) }},
+            setRating(n) { this.rating = this.rating === n ? null : n; }
+         }"
+         class="px-4 pb-3 border-t border-gray-100">
         <button type="button" @click="openNotes = !openNotes"
                 class="w-full flex items-center justify-between py-2.5 text-sm font-semibold text-gray-700 hover:text-gray-900">
-            <span>Catatan Sesi</span>
+            <span>Catatan Sesi @if(!$teacherNote)<span class="text-mk-accent font-normal">— tap untuk isi</span>@endif</span>
             <span x-text="openNotes ? '▲' : '▼'" class="text-xs text-mk-muted"></span>
         </button>
         <div x-show="openNotes" x-transition class="space-y-3 pt-1">
             <form method="POST" action="{{ route('guru.sesi.catatan.update', $sesi) }}" class="space-y-3">
                 @csrf @method('PATCH')
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Rating Anak hari Ini</label>
+                    <div class="flex gap-1">
+                        @for ($i = 1; $i <= 5; $i++)
+                            <button type="button" @click="setRating({{ $i }})"
+                                    class="text-2xl leading-none appearance-none transition-colors"
+                                    :class="(rating ?? 0) >= {{ $i }} ? 'text-yellow-500' : 'text-gray-300'"
+                                    aria-label="Rating {{ $i }}">★</button>
+                        @endfor
+                    </div>
+                    <input type="hidden" name="session_rating" :value="rating ?? ''">
+                </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">Materi yang dipelajari</label>
                     <textarea name="material_learned" rows="2" maxlength="2000"

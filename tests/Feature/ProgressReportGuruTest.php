@@ -226,6 +226,7 @@ class ProgressReportGuruTest extends TestCase
             'material_learned' => 'Scales',
             'homework_notes'   => 'Practice daily',
             'notes'            => 'Good progress',
+            'session_rating'   => 4,
         ]);
 
         $report = ProgressReport::create([
@@ -250,6 +251,7 @@ class ProgressReportGuruTest extends TestCase
             'material_learned'   => 'Scales',
             'homework_notes'     => 'Practice daily',
             'notes'              => 'Good progress',
+            'session_rating'     => 4,
         ]);
 
         $this->assertDatabaseHas('progress_report_session_notes', [

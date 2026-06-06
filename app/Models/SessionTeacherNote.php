@@ -13,6 +13,11 @@ class SessionTeacherNote extends Model
         'material_learned',
         'homework_notes',
         'notes',
+        'session_rating',
+    ];
+
+    protected $casts = [
+        'session_rating' => 'integer',
     ];
 
     public function classSession(): BelongsTo

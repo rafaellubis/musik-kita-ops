@@ -90,6 +90,7 @@ class SessionTeacherNoteTest extends TestCase
         $session = $this->createHadirSession([
             'teacher_id'            => $guruAsli->id,
             'substitute_teacher_id' => $this->teacher->id,
+            'status'                => ClassSession::STATUS_DIGANTI,
             'honor_code'            => 'H_PENG',
             'honor_amount'          => 50000,
         ]);
@@ -182,5 +183,77 @@ class SessionTeacherNoteTest extends TestCase
                 'material_learned' => 'Tidak boleh',
             ])
             ->assertForbidden();
+    }
+
+    public function test_guru_can_save_session_rating(): void
+    {
+        $session = $this->createHadirSession();
+
+        $this->actingAs($this->guruUser)
+            ->patch(route('guru.sesi.catatan.update', $session), [
+                'material_learned' => 'Scales mayor',
+                'session_rating'   => 4,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success', 'Catatan sesi tersimpan.');
+
+        $this->assertDatabaseHas('session_teacher_notes', [
+            'class_session_id' => $session->id,
+            'session_rating'   => 4,
+        ]);
+    }
+
+    public function test_session_rating_rejects_invalid_values(): void
+    {
+        $session = $this->createHadirSession();
+
+        $this->actingAs($this->guruUser)
+            ->patch(route('guru.sesi.catatan.update', $session), [
+                'material_learned' => 'Scales mayor',
+                'session_rating'   => 6,
+            ])
+            ->assertSessionHasErrors('session_rating');
+
+        $this->actingAs($this->guruUser)
+            ->patch(route('guru.sesi.catatan.update', $session), [
+                'material_learned' => 'Scales mayor',
+                'session_rating'   => 0,
+            ])
+            ->assertSessionHasErrors('session_rating');
+    }
+
+    public function test_session_rating_is_optional_when_text_present(): void
+    {
+        $session = $this->createHadirSession();
+
+        $this->actingAs($this->guruUser)
+            ->patch(route('guru.sesi.catatan.update', $session), [
+                'material_learned' => 'Scales mayor',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success', 'Catatan sesi tersimpan.');
+
+        $this->assertDatabaseHas('session_teacher_notes', [
+            'class_session_id' => $session->id,
+            'material_learned' => 'Scales mayor',
+            'session_rating'   => null,
+        ]);
+    }
+
+    public function test_session_rating_only_is_valid_content(): void
+    {
+        $session = $this->createHadirSession();
+
+        $this->actingAs($this->guruUser)
+            ->patch(route('guru.sesi.catatan.update', $session), [
+                'session_rating' => 5,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success', 'Catatan sesi tersimpan.');
+
+        $this->assertDatabaseHas('session_teacher_notes', [
+            'class_session_id' => $session->id,
+            'session_rating'   => 5,
+        ]);
     }
 }

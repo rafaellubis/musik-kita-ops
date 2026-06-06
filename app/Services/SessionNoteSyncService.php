@@ -20,10 +20,15 @@ class SessionNoteSyncService
                 ->where('enrollment_id', $report->enrollment_id)
                 ->whereMonth('session_date', $report->month)
                 ->whereYear('session_date', $report->year)
-                ->whereIn('status', [
-                    ClassSession::STATUS_HADIR,
-                    ClassSession::STATUS_HADIR_TERLAMBAT,
-                ])
+                ->where(function ($query) {
+                    $query->whereIn('status', [
+                        ClassSession::STATUS_HADIR,
+                        ClassSession::STATUS_HADIR_TERLAMBAT,
+                    ])->orWhere(function ($sub) {
+                        $sub->where('status', ClassSession::STATUS_DIGANTI)
+                            ->whereNotNull('honor_code');
+                    });
+                })
                 ->with('teacherNote')
                 ->orderBy('session_date')
                 ->orderBy('start_time')
@@ -42,6 +47,7 @@ class SessionNoteSyncService
                     'material_learned'   => $teacherNote?->material_learned,
                     'homework_notes'     => $teacherNote?->homework_notes,
                     'notes'              => $teacherNote?->notes ?? '',
+                    'session_rating'     => $teacherNote?->session_rating,
                     'sort_order'         => $index,
                 ]);
             }
