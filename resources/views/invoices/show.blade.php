@@ -23,13 +23,14 @@
             'VOID'    => 'bg-gray-100 text-gray-500 border-gray-300',
         ];
         $isOwner      = auth()->user()?->hasRole('Owner');
+        $isAdmin      = auth()->user()?->hasRole('Admin');
         $canPay       = $invoice->status !== 'PAID' && $invoice->status !== 'VOID';
         // Item manual bisa ditambah/dihapus selama invoice belum PAID/VOID
         $canEditItems = in_array($invoice->status, ['UNPAID', 'PARTIAL']);
         // Diskon: boleh selama UNPAID atau PARTIAL (sama dengan canEditItems)
         $canDiscount = $canEditItems;
-        // Void invoice: Owner only, belum VOID, tidak ada pembayaran aktif
-        $canVoidInvoice = $isOwner
+        // Void invoice: Owner atau Admin, belum VOID, tidak ada pembayaran aktif
+        $canVoidInvoice = ($isOwner || $isAdmin)
             && $invoice->status !== 'VOID'
             && $invoice->payments->whereNull('voided_at')->isEmpty();
         // Semua invoice harus dibayar penuh — field amount selalu di-lock = saldo.
@@ -193,7 +194,7 @@
             </div>
             @endif
 
-            {{-- ===== Form Void Invoice (Owner only) ===== --}}
+            {{-- ===== Form Void Invoice (Owner + Admin) ===== --}}
             @if($canVoidInvoice)
             <div id="void-invoice-panel" class="mt-4 pt-4 border-t border-red-200" style="display:none">
                 <form method="POST" action="{{ route('invoices.void', $invoice->id) }}"
@@ -697,9 +698,10 @@
                 </table>
             @endif
 
-            @if(!$isOwner)
+            @if($isAdmin && !$isOwner)
                 <p class="mt-3 text-xs text-mk-dim">
-                    Void pembayaran dan void invoice hanya bisa dilakukan oleh role Owner.
+                    Void pembayaran hanya bisa dilakukan oleh role Owner.
+                    Void invoice hanya untuk tagihan tanpa pembayaran aktif.
                 </p>
             @endif
         </div>

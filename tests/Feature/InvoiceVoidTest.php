@@ -75,16 +75,45 @@ class InvoiceVoidTest extends TestCase
         ]);
     }
 
-    public function test_admin_tidak_bisa_void_invoice(): void
+    public function test_admin_bisa_void_invoice_unpaid(): void
     {
-        $this->actingAs($this->admin)
+        $response = $this->actingAs($this->admin)
             ->post(route('invoices.void', $this->invoice), [
-                'reason' => 'Coba void',
-            ])
-            ->assertForbidden();
+                'reason' => 'Duplikat SPP generate Juni',
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
 
         $this->invoice->refresh();
-        $this->assertEquals(Invoice::STATUS_UNPAID, $this->invoice->status);
+        $this->assertEquals(Invoice::STATUS_VOID, $this->invoice->status);
+        $this->assertEquals($this->admin->id, $this->invoice->voided_by);
+    }
+
+    public function test_admin_tidak_bisa_void_invoice_dengan_pembayaran_aktif(): void
+    {
+        Payment::create([
+            'receipt_number' => 'KW/2026/06/0002',
+            'invoice_id'     => $this->invoice->id,
+            'amount'         => 100000,
+            'method'         => 'CASH',
+            'payment_date'   => now()->toDateString(),
+            'created_by'     => $this->admin->id,
+        ]);
+        $this->invoice->update([
+            'paid_amount' => 100000,
+            'status'      => Invoice::STATUS_PARTIAL,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('invoices.void', $this->invoice), [
+                'reason' => 'Salah invoice',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->invoice->refresh();
+        $this->assertEquals(Invoice::STATUS_PARTIAL, $this->invoice->status);
     }
 
     public function test_void_gagal_jika_ada_pembayaran_aktif(): void

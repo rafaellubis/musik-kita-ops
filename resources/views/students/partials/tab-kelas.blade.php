@@ -318,6 +318,9 @@
                     <input type="date" name="effective_date"
                            value="{{ now()->addDay()->format('Y-m-d') }}" required
                            class="block w-full rounded-lg text-sm px-3 py-2 border border-mk-border">
+                    <p class="text-xs text-mk-dim mt-1">
+                        Tanggal sebelum hari ini? Jalankan ulang generator sesi untuk bulan terkait.
+                    </p>
                 </div>
 
                 {{-- Jadikan utama (checkbox) --}}

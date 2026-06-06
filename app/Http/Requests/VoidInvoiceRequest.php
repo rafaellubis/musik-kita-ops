@@ -8,7 +8,7 @@ class VoidInvoiceRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // Otorisasi role Owner dijaga middleware route.
+        // Otorisasi role Owner|Admin dijaga middleware route.
         return true;
     }
 

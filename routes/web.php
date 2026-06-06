@@ -291,11 +291,6 @@ Route::middleware('auth')->group(function () {
             [PaymentController::class, 'void']
         )->name('payments.void');
 
-        // Void invoice — hanya Owner, row tidak dihapus (audit trail).
-        Route::post('invoices/{invoice}/void',
-            [InvoiceController::class, 'void']
-        )->name('invoices.void');
-
         // ===== Laporan Progres — Template Master Data (Owner only) =====
         // index + show didaftarkan juga di group read-only di bawah.
         Route::resource('report-templates', ReportTemplateController::class)
@@ -369,9 +364,15 @@ Route::middleware('auth')->group(function () {
 
     /* ======================================================================
      | WRITE OPERASIONAL — Item manual invoice (Owner + Admin)
-     | Admin boleh tambah/hapus item manual, tapi tidak bisa void payment.
+     | Admin boleh tambah/hapus item manual, void invoice (tanpa pembayaran aktif),
+     | tapi tidak bisa void payment.
      |====================================================================== */
     Route::middleware('role:Owner|Admin')->group(function () {
+        // Void invoice — row tidak dihapus (audit trail). Ditolak jika ada pembayaran aktif.
+        Route::post('invoices/{invoice}/void',
+            [InvoiceController::class, 'void']
+        )->name('invoices.void');
+
         // Tambah item manual ke invoice
         Route::post('invoices/{invoice}/items',
             [InvoiceItemController::class, 'store']

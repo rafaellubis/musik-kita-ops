@@ -17,8 +17,8 @@ use InvalidArgumentException;
 /**
  * List & detail invoice (M05).
  *
- * Read invoice + generator SPP/denda. Void invoice & catat pembayaran
- * lewat method terpisah (void = Owner only).
+ * Read invoice + generator SPP/denda. Void invoice (Owner|Admin) &
+ * void pembayaran (Owner only) lewat method terpisah.
  */
 class InvoiceController extends Controller
 {
@@ -111,7 +111,7 @@ class InvoiceController extends Controller
     }
 
     /**
-     * Void invoice. Hanya Owner — middleware role:Owner di route.
+     * Void invoice. Owner atau Admin — middleware role:Owner|Admin di route.
      * Row tidak dihapus; status → VOID + audit log.
      */
     public function void(VoidInvoiceRequest $request, Invoice $invoice): RedirectResponse

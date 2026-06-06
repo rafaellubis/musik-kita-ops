@@ -69,6 +69,41 @@ class EnrollmentControllerTest extends TestCase
         $this->assertEquals($e1->id, $this->student->primary_enrollment_id);
     }
 
+    public function test_tambah_kelas_dengan_tanggal_efektif_masa_lalu(): void
+    {
+        $room         = Room::factory()->create();
+        $pastDate     = now()->subMonth()->toDateString();
+        $primary      = Enrollment::factory()->for($this->student)->create([
+            'is_primary' => true, 'status' => 'ACTIVE',
+        ]);
+        $this->student->update(['primary_enrollment_id' => $primary->id]);
+
+        $response = $this->actingAs($this->admin)->post(
+            route('students.enrollments.store', $this->student),
+            [
+                'package_id'     => $this->package->id,
+                'teacher_id'     => $this->teacher->id,
+                'room_id'        => $room->id,
+                'day_of_week'    => 1,
+                'start_time'     => '16:00',
+                'effective_date' => $pastDate,
+                'jadikan_utama'  => false,
+            ]
+        );
+
+        $response->assertRedirect();
+
+        $newEnrollment = Enrollment::query()
+            ->where('student_id', $this->student->id)
+            ->where('package_id', $this->package->id)
+            ->where('id', '!=', $primary->id)
+            ->first();
+
+        $this->assertNotNull($newEnrollment);
+        $this->assertSame($pastDate, $newEnrollment->effective_date->toDateString());
+        $this->assertSame('ACTIVE', $newEnrollment->status);
+    }
+
     // ===== LIFECYCLE GATE — hanya murid Aktif boleh tambah kelas =====
 
     #[\PHPUnit\Framework\Attributes\DataProvider('statusYangDiblokProvider')]

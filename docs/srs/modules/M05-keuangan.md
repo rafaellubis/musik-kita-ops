@@ -16,6 +16,7 @@ Invoice (SPP, registrasi, denda, item manual), pembayaran, diskon, cicilan Kids 
 | Kids bundle 3 termin | `invoices.generate-bundle` | Owner\|Admin |
 | Kids final project | `invoices.generate-kids-fp` | Owner\|Admin |
 | Store payment | `payments.store` | Owner\|Admin |
+| Void invoice | `invoices.void` | Owner\|Admin |
 | Void payment | `payments.void` | **Owner** |
 | Receipt | `payments.receipt` | + Auditor |
 | Store item manual | `invoice-items.store` | Owner\|Admin |
@@ -66,7 +67,8 @@ Diskon: `parent_item_id`, `discount_type` NOMINAL|PERCENT, `discount_value`, `di
 | Lunas | SPP + seluruh denda terbayar |
 | Denda | Independen per invoice |
 | Diskon | Hanya UNPAID/PARTIAL; max 90% (kecuali DENDA boleh 100%) |
-| Void | Owner only |
+| Void invoice | Owner\|Admin; ditolak jika ada pembayaran aktif |
+| Void payment | Owner only |
 | Tunggakan | Notifikasi >1 bulan; auto-mundur cron **belum** ada |
 
 **Catatan divergensi:** BR-DSK.5 hapus diskon Owner-only — route aktual Owner|Admin.
@@ -92,6 +94,6 @@ resources/views/payments/
 
 - [ ] Invoice SPP selalu punya `enrollment_id`
 - [ ] Diskon = item terpisah amount negatif + parent_item_id
-- [ ] Void menolak Admin (403/middleware)
+- [ ] Void invoice boleh Admin; void payment menolak Admin (403)
 - [ ] Recalc `total_amount` / status setelah payment & diskon
 - [ ] Tests: `MultiKelasInvoiceTest`, `DiscountTest`, `KidsFpInvoiceTest`, `KidsBundleInstallmentUiTest`

@@ -27,7 +27,7 @@
                 <button type="submit"
                         class="w-full py-2.5 rounded-xl font-semibold text-sm appearance-none"
                         style="background-color:#22c55e;color:#ffffff;">
-                    ✓ Saya Hadir Menggantikan
+                    ✓ Hadir
                 </button>
             </form>
             <form method="POST" action="{{ route('guru.absensi.confirm-substitute', $sesi) }}"

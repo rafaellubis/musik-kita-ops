@@ -29,7 +29,7 @@ class StoreEnrollmentRequest extends FormRequest
             'room_id'                   => ['required', 'exists:rooms,id'],
             'day_of_week'               => ['required', 'integer', 'between:0,6'],
             'start_time'                => ['required', 'date_format:H:i'],
-            'effective_date'            => ['required', 'date', 'after_or_equal:today'],
+            'effective_date'            => ['required', 'date'],
             'jadikan_utama'             => ['sometimes', 'boolean'],
             'new_primary_enrollment_id' => ['sometimes', 'nullable', 'exists:enrollments,id'],
         ];
@@ -46,8 +46,7 @@ class StoreEnrollmentRequest extends FormRequest
             'room_id.required'              => 'Ruangan wajib dipilih.',
             'day_of_week.required'          => 'Hari wajib dipilih.',
             'start_time.required'           => 'Jam mulai wajib diisi.',
-            'effective_date.required'       => 'Tanggal mulai efektif wajib diisi.',
-            'effective_date.after_or_equal' => 'Tanggal efektif tidak boleh sebelum hari ini.',
+            'effective_date.required' => 'Tanggal mulai efektif wajib diisi.',
         ];
     }
 }

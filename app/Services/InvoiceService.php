@@ -283,7 +283,7 @@ class InvoiceService
 
     /**
      * Void invoice — batalkan tagihan tanpa menghapus row (audit trail).
-     * Hanya Owner (middleware route). Invoice dengan pembayaran aktif harus
+     * Owner atau Admin (middleware route). Invoice dengan pembayaran aktif harus
      * di-void pembayarannya dulu.
      *
      * Idempotent guard: invoice sudah VOID → exception.
