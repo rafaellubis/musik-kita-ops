@@ -178,9 +178,29 @@
 
 @if($progressReport->sessionNotes->isNotEmpty())
     <h2>Ringkasan Per Pertemuan</h2>
-    @foreach($progressReport->sessionNotes as $note)
-        <div class="session-date">{{ \Carbon\Carbon::parse($note->session_date)->locale('id')->isoFormat('D MMMM Y') }}</div>
-        <div class="session-text narrative">{{ $note->notes }}</div>
+    @foreach($progressReport->sessionNotes->sortBy([['session_date', 'asc'], ['sort_order', 'asc']]) as $note)
+        @php
+            $hasStructured = filled($note->material_learned) || filled($note->homework_notes);
+        @endphp
+        <div class="session-date">
+            {{ \Carbon\Carbon::parse($note->session_date)->locale('id')->isoFormat('D MMMM Y') }}
+            @if($note->session_sequence)
+                · Sesi ke-{{ $note->session_sequence }}
+            @endif
+        </div>
+        @if($hasStructured)
+            @if(filled($note->material_learned))
+                <div class="session-text narrative"><strong>Materi:</strong> {{ $note->material_learned }}</div>
+            @endif
+            @if(filled($note->homework_notes))
+                <div class="session-text narrative"><strong>Tugas &amp; Latihan:</strong> {{ $note->homework_notes }}</div>
+            @endif
+            @if(filled($note->notes))
+                <div class="session-text narrative"><strong>Catatan:</strong> {{ $note->notes }}</div>
+            @endif
+        @elseif(filled($note->notes))
+            <div class="session-text narrative">{{ $note->notes }}</div>
+        @endif
     @endforeach
 @endif
 

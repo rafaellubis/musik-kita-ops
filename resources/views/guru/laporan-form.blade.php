@@ -5,7 +5,7 @@
     <p class="text-sm text-mk-muted">{{ $progressReport->enrollment->package->code }} · {{ $progressReport->namaBulan() }}</p>
 </div>
 
-<form method="POST" action="{{ route('guru.laporan.update', $progressReport) }}">
+<form method="POST" action="{{ route('guru.laporan.update', $progressReport) }}" onsubmit="return confirmSubmit(event)">
     @csrf @method('PUT')
 
     {{-- Checklist per seksi — seksi DUO hanya untuk paket DUO --}}
@@ -61,23 +61,44 @@
                   class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900">{{ old('highlight', $progressReport->highlight) }}</textarea>
     </div>
 
-    {{-- Catatan per sesi --}}
-    <div class="mx-4 mb-4 bg-mk-card border border-mk-border rounded-xl p-4"
-         x-data="{ sesi: {{ json_encode($progressReport->sessionNotes->map(fn($n) => ['date' => $n->session_date->format('Y-m-d'), 'notes' => $n->notes])->values()->toArray() ?: []) }}, tambah() { this.sesi.push({ date: '', notes: '' }); }, hapus(i) { this.sesi.splice(i, 1); } }">
-        <div class="font-semibold text-sm text-mk-text mb-2">Catatan Per Sesi</div>
-        <template x-for="(s, i) in sesi" :key="i">
-            <div class="mb-3 border border-gray-100 rounded-lg p-3 bg-white">
-                <div class="flex gap-2 mb-2">
-                    <input type="date" :name="'session_dates[' + i + ']'" x-model="s.date"
-                           class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-900">
-                    <button type="button" @click="hapus(i)" class="ml-auto text-red-400 hover:text-red-600 text-lg leading-none px-1">×</button>
+    {{-- Catatan per sesi (read-only, dari dashboard/jadwal) --}}
+    <div class="mx-4 mb-4 bg-mk-card border border-mk-border rounded-xl p-4">
+        <div class="font-semibold text-sm text-mk-text mb-1">Catatan Per Sesi</div>
+        <p class="text-xs text-mk-muted mb-3">Diisi per sesi dari dashboard/jadwal — otomatis tampil di sini.</p>
+        @forelse($progressReport->sessionNotes->sortBy([['session_date', 'asc'], ['sort_order', 'asc']]) as $note)
+            @php
+                $isEmpty = blank($note->material_learned) && blank($note->homework_notes) && blank($note->notes);
+            @endphp
+            <div class="mb-3 border border-gray-100 rounded-lg p-3 bg-white last:mb-0">
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="text-xs font-semibold text-mk-muted">
+                        {{ \Carbon\Carbon::parse($note->session_date)->locale('id')->translatedFormat('d M Y') }}
+                        @if($note->session_sequence)
+                            · Sesi ke-{{ $note->session_sequence }}
+                        @endif
+                    </div>
+                    @if($isEmpty)
+                        <span class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-medium">Belum diisi</span>
+                    @endif
                 </div>
-                <textarea :name="'session_notes_text[' + i + ']'" x-model="s.notes" rows="3"
-                          placeholder="Catatan sesi ini..."
-                          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900"></textarea>
+                <div class="space-y-2 text-sm">
+                    <div>
+                        <div class="text-xs font-medium text-mk-muted mb-0.5">Materi</div>
+                        <p class="text-mk-text whitespace-pre-line">{{ $note->material_learned ?: '—' }}</p>
+                    </div>
+                    <div>
+                        <div class="text-xs font-medium text-mk-muted mb-0.5">Tugas & Latihan</div>
+                        <p class="text-mk-text whitespace-pre-line">{{ $note->homework_notes ?: '—' }}</p>
+                    </div>
+                    <div>
+                        <div class="text-xs font-medium text-mk-muted mb-0.5">Catatan</div>
+                        <p class="text-mk-text whitespace-pre-line">{{ $note->notes ?: '—' }}</p>
+                    </div>
+                </div>
             </div>
-        </template>
-        <button type="button" @click="tambah()" class="text-mk-accent text-sm hover:underline">+ Tambah catatan sesi</button>
+        @empty
+            <p class="text-sm text-mk-muted">Belum ada sesi HADIR bulan ini.</p>
+        @endforelse
     </div>
 
     {{-- Catatan akhir --}}
@@ -101,11 +122,31 @@
             Simpan Draft
         </button>
         <button type="submit" name="submit" value="1"
-                onclick="return confirm('Submit laporan? Setelah disubmit, laporan tidak bisa diedit.')"
                 class="flex-1 py-3 rounded-xl font-semibold text-sm btn-mk-primary">
             Submit Laporan
         </button>
     </div>
 </form>
+
+<script>
+function confirmSubmit(event) {
+    const submitter = event.submitter;
+    const isSubmit = submitter && (submitter.name === 'submit' || submitter.value === '1');
+    if (!isSubmit) {
+        return true;
+    }
+
+    const hasEmptyNotes = @json(
+        $progressReport->sessionNotes->contains(fn ($n) =>
+            blank($n->material_learned) && blank($n->homework_notes) && blank($n->notes)
+        )
+    );
+    if (hasEmptyNotes && !confirm('Masih ada sesi tanpa catatan. Lanjut submit?')) {
+        return false;
+    }
+
+    return confirm('Submit laporan? Setelah disubmit, laporan tidak bisa diedit.');
+}
+</script>
 
 </x-guru-layout>
