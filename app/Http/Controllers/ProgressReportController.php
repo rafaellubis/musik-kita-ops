@@ -55,9 +55,6 @@ class ProgressReportController extends Controller
             'student',
             'teacher',
             'enrollment.package.instrument',
-            'template.sections.items',
-            'sections.templateSection',
-            'items.templateItem',
             'sessionNotes',
         ]);
 
