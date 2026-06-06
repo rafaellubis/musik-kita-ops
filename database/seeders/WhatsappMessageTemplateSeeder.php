@@ -53,5 +53,39 @@ WhatsApp: {studio_wa}
 TEXT,
             ],
         );
+
+        WhatsappMessageTemplate::firstOrCreate(
+            ['code' => WhatsappMessageTemplate::CODE_SESSION_REPORT],
+            [
+                'name'       => 'Laporan Sesi ke Ortu',
+                'sort_order' => 3,
+                'is_active'  => true,
+                'body'       => <<<'TEXT'
+Halo, Yth. {nama_ortu} 👋
+
+Les musik *{nama_murid}* hari ini sudah selesai. Terima kasih sudah mempercayakan perjalanan musiknya kepada kami di Musik KITA 🎵
+
+📅 *{tanggal_sesi}*
+🎹 Instrumen: {instrumen}
+👨‍🏫 Guru: {nama_guru}
+
+*Materi hari ini:*
+{materi}
+
+*Latihan minggu ini:*
+{tugas}
+
+{blok_catatan}
+
+{pesan_semangat}
+
+Kami senang melihat langkah-langkah kecil {nama_murid} menuju kemampuan bermusik yang lebih baik. Dukungan Bapak/Ibu di rumah sangat berarti — semangat latihan ya! 💪🎶
+
+Salam hangat,
+Musik KITA
+WA: {studio_wa}
+TEXT,
+            ],
+        );
     }
 }

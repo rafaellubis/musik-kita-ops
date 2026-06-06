@@ -9,11 +9,13 @@ use App\Models\ProgressReport;
 use App\Models\ProgressReportItem;
 use App\Models\ProgressReportSection;
 use App\Models\SessionTeacherNote;
+use App\Jobs\SendSessionReportWaJob;
 use App\Services\AttendanceService;
 use App\Services\ProgressReportPdfService;
 use App\Services\ProgressReportService;
 use App\Services\ReportTemplateResolverService;
 use App\Services\SessionNoteSyncService;
+use App\Services\SessionReportWaService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -45,6 +47,7 @@ class GuruController extends Controller
         private readonly SessionNoteSyncService $sessionNoteSyncService,
         private readonly ProgressReportService $progressReportService,
         private readonly ProgressReportPdfService $pdfService,
+        private readonly SessionReportWaService $sessionReportWaService,
     ) {}
 
     /**
@@ -658,6 +661,17 @@ class GuruController extends Controller
             ]
         );
 
-        return back()->with('success', 'Catatan sesi tersimpan.');
+        $note = SessionTeacherNote::query()
+            ->where('class_session_id', $classSession->id)
+            ->first();
+
+        if ($note && $this->sessionReportWaService->isEnabled()) {
+            SendSessionReportWaJob::dispatch(
+                $classSession->id,
+                $note->updated_at->toIso8601String(),
+            )->delay(now()->addMinutes($this->sessionReportWaService->debounceMinutes()));
+        }
+
+        return back()->with('success', 'Catatan sesi tersimpan. Laporan sesi akan otomatis dikirim ke WhatsApp orang tua.');
     }
 }

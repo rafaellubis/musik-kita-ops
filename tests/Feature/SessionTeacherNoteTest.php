@@ -73,7 +73,7 @@ class SessionTeacherNoteTest extends TestCase
                 'notes'            => 'Murid antusias',
             ])
             ->assertRedirect()
-            ->assertSessionHas('success', 'Catatan sesi tersimpan.');
+            ->assertSessionHas('success', 'Catatan sesi tersimpan. Laporan sesi akan otomatis dikirim ke WhatsApp orang tua.');
 
         $this->assertDatabaseHas('session_teacher_notes', [
             'class_session_id' => $session->id,
@@ -102,7 +102,7 @@ class SessionTeacherNoteTest extends TestCase
                 'notes'            => null,
             ])
             ->assertRedirect()
-            ->assertSessionHas('success', 'Catatan sesi tersimpan.');
+            ->assertSessionHas('success', 'Catatan sesi tersimpan. Laporan sesi akan otomatis dikirim ke WhatsApp orang tua.');
 
         $this->assertDatabaseHas('session_teacher_notes', [
             'class_session_id' => $session->id,
@@ -195,7 +195,7 @@ class SessionTeacherNoteTest extends TestCase
                 'session_rating'   => 4,
             ])
             ->assertRedirect()
-            ->assertSessionHas('success', 'Catatan sesi tersimpan.');
+            ->assertSessionHas('success', 'Catatan sesi tersimpan. Laporan sesi akan otomatis dikirim ke WhatsApp orang tua.');
 
         $this->assertDatabaseHas('session_teacher_notes', [
             'class_session_id' => $session->id,
@@ -231,7 +231,7 @@ class SessionTeacherNoteTest extends TestCase
                 'material_learned' => 'Scales mayor',
             ])
             ->assertRedirect()
-            ->assertSessionHas('success', 'Catatan sesi tersimpan.');
+            ->assertSessionHas('success', 'Catatan sesi tersimpan. Laporan sesi akan otomatis dikirim ke WhatsApp orang tua.');
 
         $this->assertDatabaseHas('session_teacher_notes', [
             'class_session_id' => $session->id,
@@ -249,7 +249,7 @@ class SessionTeacherNoteTest extends TestCase
                 'session_rating' => 5,
             ])
             ->assertRedirect()
-            ->assertSessionHas('success', 'Catatan sesi tersimpan.');
+            ->assertSessionHas('success', 'Catatan sesi tersimpan. Laporan sesi akan otomatis dikirim ke WhatsApp orang tua.');
 
         $this->assertDatabaseHas('session_teacher_notes', [
             'class_session_id' => $session->id,

@@ -57,6 +57,8 @@
 
     <x-sidebar-item route="progress-reports.index" icon="📝" label="Laporan Progres"
         :active="request()->routeIs('progress-reports.*')" />
+    <x-sidebar-item route="session-report-wa-logs.index" icon="📲" label="Log Laporan Sesi WA"
+        :active="request()->routeIs('session-report-wa-logs.*')" />
 
     @if(auth()->user()->hasRole('Owner'))
         <x-sidebar-item route="reports.finance" icon="📈" label="Laporan"

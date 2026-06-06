@@ -59,6 +59,7 @@ class WhatsappMessageTemplateController extends Controller
         if (in_array($whatsappMessageTemplate->code, [
             WhatsappMessageTemplate::CODE_INVOICE_REMINDER,
             WhatsappMessageTemplate::CODE_SCHEDULE_REMINDER,
+            WhatsappMessageTemplate::CODE_SESSION_REPORT,
         ], true)) {
             return back()->with('error', "Template {$whatsappMessageTemplate->code} tidak boleh dihapus. Nonaktifkan saja.");
         }

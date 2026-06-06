@@ -17,6 +17,11 @@
         && (int) $sesi->teacher_id === (int) $teacher->id
     ) || $isSubstituteConfirmed;
     $teacherNote = $sesi->teacherNote;
+    $waService = app(\App\Services\SessionReportWaService::class);
+    $waState = $teacherNote ? $waService->deliveryState($sesi) : 'DISABLED';
+    $waMaskedPhone = $waService->maskPhone(
+        $sesi->student?->parent_phone ?: $sesi->student?->phone
+    );
 @endphp
 
 @if($isSubstitutePending)
@@ -160,6 +165,25 @@
                     <button type="submit" class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors appearance-none btn-mk-primary">
                         Simpan Catatan
                     </button>
+                    @if($waState !== 'DISABLED')
+                        <div class="text-xs rounded-lg px-3 py-2 border
+                            @if($waState === 'SENT') border-green-200 bg-green-50 text-green-700
+                            @elseif($waState === 'FAILED') border-red-200 bg-red-50 text-red-700
+                            @elseif($waState === 'SKIPPED') border-gray-200 bg-gray-50 text-gray-600
+                            @else border-amber-200 bg-amber-50 text-amber-700
+                            @endif">
+                            @if($waState === 'SENT')
+                                ✓ Pesan WA terkirim ke {{ $waMaskedPhone }}
+                            @elseif($waState === 'FAILED')
+                                ⚠ Gagal kirim WA — hubungi admin
+                            @elseif($waState === 'SKIPPED')
+                                ℹ Nomor WA tidak tersedia
+                            @else
+                                ⏳ Akan dikirim ke ortu dalam ~{{ config('session_report_wa.debounce_minutes', 10) }} menit
+                            @endif
+                        </div>
+                        <p class="text-[11px] text-mk-muted">Dikirim ke nomor ortu, atau nomor murid jika ortu kosong.</p>
+                    @endif
                 </form>
             </div>
         </details>

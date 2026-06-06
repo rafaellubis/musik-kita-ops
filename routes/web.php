@@ -30,6 +30,7 @@ use App\Http\Controllers\KalenderController;
 use App\Http\Controllers\ProgressReportController;
 use App\Http\Controllers\ReportTemplateController;
 use App\Http\Controllers\InvoiceReminderController;
+use App\Http\Controllers\SessionReportWaLogController;
 use App\Http\Controllers\WhatsappMessageTemplateController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -240,6 +241,9 @@ Route::middleware('auth')->group(function () {
             ->name('invoice-reminders.index');
         Route::post('invoice-reminders/send', [InvoiceReminderController::class, 'send'])
             ->name('invoice-reminders.send');
+
+        Route::post('session-report-wa-logs/{sessionReportWaLog}/resend', [SessionReportWaLogController::class, 'resend'])
+            ->name('session-report-wa-logs.resend');
 
     });
 
@@ -481,6 +485,9 @@ Route::middleware('auth')->group(function () {
         Route::resource('whatsapp-templates', WhatsappMessageTemplateController::class)
             ->parameters(['whatsapp-templates' => 'whatsappMessageTemplate'])
             ->only(['index']);
+
+        Route::get('session-report-wa-logs', [SessionReportWaLogController::class, 'index'])
+            ->name('session-report-wa-logs.index');
 
         // ===== Laporan Progres Murid — Admin/Owner/Auditor view laporan yang disubmit guru =====
         // /pdf HARUS sebelum /{progressReport} agar tidak ditangkap wildcard show.

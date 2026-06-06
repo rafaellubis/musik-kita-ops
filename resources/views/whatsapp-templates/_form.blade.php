@@ -7,6 +7,7 @@
                @if(isset($template) && in_array($template->code, [
                    \App\Models\WhatsappMessageTemplate::CODE_INVOICE_REMINDER,
                    \App\Models\WhatsappMessageTemplate::CODE_SCHEDULE_REMINDER,
+                   \App\Models\WhatsappMessageTemplate::CODE_SESSION_REPORT,
                ], true)) readonly @endif>
         @error('code')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
     </div>
