@@ -1,13 +1,16 @@
 <?php
 namespace Tests\Feature;
 
+use App\Models\ClassSession;
 use App\Models\Enrollment;
 use App\Models\Instrument;
 use App\Models\Package;
 use App\Models\ProgressReport;
+use App\Models\ProgressReportSessionNote;
 use App\Models\ReportTemplate;
 use App\Models\ReportTemplateSection;
 use App\Models\ReportTemplateItem;
+use App\Models\SessionTeacherNote;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
@@ -27,6 +30,7 @@ class ProgressReportGuruTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->withoutVite();
         foreach (['Owner', 'Admin', 'Auditor', 'Guru'] as $r) {
             Role::firstOrCreate(['name' => $r, 'guard_name' => 'web']);
         }
@@ -189,6 +193,68 @@ class ProgressReportGuruTest extends TestCase
         $this->assertDatabaseHas('progress_reports', [
             'enrollment_id'      => $enrollment->id,
             'report_template_id' => $regulerTemplate->id,
+        ]);
+    }
+
+    public function test_laporan_edit_syncs_session_notes_from_hadir_sessions(): void
+    {
+        $session1 = ClassSession::factory()->create([
+            'enrollment_id'    => $this->enrollment->id,
+            'student_id'       => $this->enrollment->student_id,
+            'teacher_id'       => $this->teacher->id,
+            'session_date'     => '2026-05-05',
+            'start_time'       => '10:00:00',
+            'end_time'         => '10:30:00',
+            'status'           => ClassSession::STATUS_HADIR,
+            'session_sequence' => 1,
+        ]);
+
+        $session2 = ClassSession::factory()->create([
+            'enrollment_id'    => $this->enrollment->id,
+            'student_id'       => $this->enrollment->student_id,
+            'teacher_id'       => $this->teacher->id,
+            'session_date'     => '2026-05-12',
+            'start_time'       => '10:00:00',
+            'end_time'         => '10:30:00',
+            'status'           => ClassSession::STATUS_HADIR,
+            'session_sequence' => 2,
+        ]);
+
+        SessionTeacherNote::create([
+            'class_session_id' => $session1->id,
+            'teacher_id'       => $this->teacher->id,
+            'material_learned' => 'Scales',
+            'homework_notes'   => 'Practice daily',
+            'notes'            => 'Good progress',
+        ]);
+
+        $report = ProgressReport::create([
+            'enrollment_id'      => $this->enrollment->id,
+            'student_id'         => $this->enrollment->student_id,
+            'teacher_id'         => $this->teacher->id,
+            'report_template_id' => $this->template->id,
+            'month'              => 5,
+            'year'               => 2026,
+            'status'             => 'DRAFT',
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->get("/guru/laporan/{$report->id}/edit")
+            ->assertOk();
+
+        $this->assertEquals(2, ProgressReportSessionNote::where('progress_report_id', $report->id)->count());
+
+        $this->assertDatabaseHas('progress_report_session_notes', [
+            'progress_report_id' => $report->id,
+            'class_session_id'   => $session1->id,
+            'material_learned'   => 'Scales',
+            'homework_notes'     => 'Practice daily',
+            'notes'              => 'Good progress',
+        ]);
+
+        $this->assertDatabaseHas('progress_report_session_notes', [
+            'progress_report_id' => $report->id,
+            'class_session_id'   => $session2->id,
         ]);
     }
 

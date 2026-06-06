@@ -8,9 +8,9 @@ use App\Models\HonorSlip;
 use App\Models\ProgressReport;
 use App\Models\ProgressReportItem;
 use App\Models\ProgressReportSection;
-use App\Models\ProgressReportSessionNote;
 use App\Services\AttendanceService;
 use App\Services\ReportTemplateResolverService;
+use App\Services\SessionNoteSyncService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -39,6 +39,7 @@ class GuruController extends Controller
     public function __construct(
         private readonly AttendanceService $attendanceService,
         private readonly ReportTemplateResolverService $reportTemplateResolver,
+        private readonly SessionNoteSyncService $sessionNoteSyncService,
     ) {}
 
     /**
@@ -331,6 +332,8 @@ class GuruController extends Controller
         abort_if($progressReport->teacher_id !== $teacher->id, 403, 'Bukan laporan Anda.');
         abort_if($progressReport->status === ProgressReport::STATUS_SUBMITTED, 403, 'Laporan sudah disubmit.');
 
+        $this->sessionNoteSyncService->sync($progressReport);
+
         $progressReport->load([
             'template.sections.items',
             'sections.templateSection',
@@ -353,6 +356,8 @@ class GuruController extends Controller
         abort_if($progressReport->teacher_id !== $teacher->id, 403, 'Bukan laporan Anda.');
         abort_if($progressReport->status === ProgressReport::STATUS_SUBMITTED, 403, 'Laporan sudah disubmit.');
 
+        $this->sessionNoteSyncService->sync($progressReport);
+
         $validated = $request->validate([
             'highlight'            => 'nullable|string|max:3000',
             'summary_notes'        => 'nullable|string|max:2000',
@@ -363,10 +368,6 @@ class GuruController extends Controller
             'section_summary.*'    => 'nullable|string|max:500',
             'checked_items'        => 'nullable|array',
             'checked_items.*'      => 'integer|exists:report_template_items,id',
-            'session_dates'        => 'nullable|array',
-            'session_dates.*'      => 'nullable|date',
-            'session_notes_text'   => 'nullable|array',
-            'session_notes_text.*' => 'nullable|string|max:2000',
         ]);
 
         $progressReport->update([
@@ -390,20 +391,6 @@ class GuruController extends Controller
             ProgressReportItem::where('progress_report_id', $progressReport->id)
                 ->whereIn('report_template_item_id', $checkedIds)
                 ->update(['is_checked' => true]);
-        }
-
-        $progressReport->sessionNotes()->delete();
-        $dates = $validated['session_dates'] ?? [];
-        $notes = $validated['session_notes_text'] ?? [];
-        foreach ($dates as $i => $date) {
-            if (!empty($date) && !empty($notes[$i])) {
-                ProgressReportSessionNote::create([
-                    'progress_report_id' => $progressReport->id,
-                    'session_date'       => $date,
-                    'notes'              => $notes[$i],
-                    'sort_order'         => $i,
-                ]);
-            }
         }
 
         if ($request->input('submit') === '1') {
