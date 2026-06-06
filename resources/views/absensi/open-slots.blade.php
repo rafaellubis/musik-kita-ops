@@ -33,6 +33,7 @@
                             <th class="px-4 py-3 text-left">Murid Asli</th>
                             <th class="px-4 py-3 text-center">Sesi ke-</th>
                             <th class="px-4 py-3 text-center">Pending</th>
+                            <th class="px-4 py-3 text-left">Catatan Admin</th>
                             <th class="px-4 py-3 text-left">Saran Guru</th>
                             <th class="px-4 py-3 text-right">Aksi</th>
                         </tr>
@@ -42,10 +43,17 @@
                     @foreach($slots as $slot)
                     @php
                         $hariLalu = (int) \Carbon\Carbon::parse($slot->session_date)->diffInDays(today());
-                        // Cari saran guru dari kolom notes
+                        // Pisahkan catatan admin dan saran guru dari kolom notes
                         $saranGuru = null;
-                        if ($slot->notes && preg_match('/\[SARAN GURU: (.+?)\]/', $slot->notes, $m)) {
-                            $saranGuru = $m[1];
+                        $catatanAdmin = null;
+                        if ($slot->notes) {
+                            if (preg_match('/\[SARAN GURU: (.+?)\]/', $slot->notes, $m)) {
+                                $saranGuru = $m[1];
+                            }
+                            $catatanAdmin = trim(preg_replace('/\[SARAN GURU: [^\]]+\]/', '', $slot->notes));
+                            if ($catatanAdmin === '') {
+                                $catatanAdmin = null;
+                            }
                         }
                     @endphp
                     <tbody x-data="{
@@ -97,6 +105,11 @@
                                         { replacement_date: this.jadwalDate, replacement_time: this.jadwalTime, room_id: this.jadwalRoomId || null }
                                     );
                                 },
+                                submitBatal() {
+                                    const nama = @js($slot->student->full_name);
+                                    if (!confirm(`Batalkan izin pending untuk ${nama}? Sesi kembali ke status belum diinput.`)) return;
+                                    this.postAction('{{ route('absensi.open-slots.cancel', $slot) }}', {});
+                                },
                             }"
                             class="border-b border-mk-border">
 
@@ -140,6 +153,18 @@
                                 </span>
                             </td>
 
+                            {{-- Catatan Admin --}}
+                            <td class="px-4 py-3 text-xs max-w-[200px]">
+                                @if($catatanAdmin)
+                                    <span class="inline-flex items-start gap-1 bg-slate-50 text-slate-700
+                                                 border border-slate-200 rounded px-2 py-1">
+                                        📝 <span class="break-words">{{ $catatanAdmin }}</span>
+                                    </span>
+                                @else
+                                    <span class="text-mk-dim">—</span>
+                                @endif
+                            </td>
+
                             {{-- Saran Guru --}}
                             <td class="px-4 py-3 text-xs">
                                 @if($saranGuru)
@@ -163,15 +188,22 @@
                                 <button
                                     @click="showAction = (showAction === 'jadwal') ? null : 'jadwal'; errorMsg = ''"
                                     :class="showAction === 'jadwal' ? 'bg-green-50 border-green-400 text-green-700' : 'border-mk-border text-mk-muted hover:text-mk-text hover:bg-mk-surface'"
-                                    class="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded border transition-colors">
+                                    class="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded border transition-colors mr-1">
                                     Jadwalkan Pengganti
+                                </button>
+                                <button
+                                    @click="submitBatal()"
+                                    :disabled="loading"
+                                    class="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded border border-red-200
+                                           text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors">
+                                    Batalkan Pending
                                 </button>
                             </td>
                         </tr>
 
                         {{-- Expand: form Isi Slot --}}
                         <tr x-show="showAction === 'isi'" x-cloak class="bg-mk-surface">
-                            <td colspan="8" class="px-6 py-4">
+                            <td colspan="9" class="px-6 py-4">
                                 <p class="text-xs font-semibold text-mk-muted mb-3 uppercase tracking-wider">
                                     Isi slot dengan murid lain — sesi IZIN PENDING murid asli tetap pending
                                 </p>
@@ -215,10 +247,15 @@
 
                         {{-- Expand: form Jadwalkan Pengganti --}}
                         <tr x-show="showAction === 'jadwal'" x-cloak class="bg-mk-surface">
-                            <td colspan="8" class="px-6 py-4">
+                            <td colspan="9" class="px-6 py-4">
                                 <p class="text-xs font-semibold text-mk-muted mb-3 uppercase tracking-wider">
                                     Jadwalkan sesi pengganti untuk murid asli
                                 </p>
+                                @if($catatanAdmin)
+                                <div class="mb-3 px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700">
+                                    📝 <strong>Catatan Admin:</strong> {{ $catatanAdmin }}
+                                </div>
+                                @endif
                                 @if($saranGuru)
                                 <div class="mb-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700">
                                     💬 <strong>Saran dari Guru:</strong> {{ $saranGuru }} — sudah diisi otomatis di bawah

@@ -367,6 +367,41 @@ class AbsensiController extends Controller
     }
 
     /**
+     * Batalkan IZIN_PENDING — reset sesi ke SCHEDULED, bersihkan catatan & honor.
+     *
+     * Hanya untuk sesi yang belum punya replacement (sama seperti filter Open Slot Board).
+     */
+    public function cancelPending(ClassSession $session): JsonResponse
+    {
+        abort_if($session->status !== ClassSession::STATUS_IZIN_PENDING, 422, 'Sesi bukan IZIN_PENDING.');
+
+        $hasReplacement = ClassSession::where('origin_session_id', $session->id)
+            ->whereNull('split_part')
+            ->exists();
+
+        if ($hasReplacement) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sesi ini sudah punya sesi pengganti/isian slot dan tidak bisa dibatalkan dari sini.',
+            ], 422);
+        }
+
+        $session->update([
+            'status'                => ClassSession::STATUS_SCHEDULED,
+            'notes'                 => null,
+            'honor_code'            => null,
+            'honor_amount'          => null,
+            'late_minutes'          => null,
+            'substitute_teacher_id' => null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Izin pending dibatalkan. Sesi kembali ke belum diinput.',
+        ]);
+    }
+
+    /**
      * Validasi kondisi guard sebelum membuat split part.
      * Melempar InvalidArgumentException jika kondisi tidak terpenuhi.
      *

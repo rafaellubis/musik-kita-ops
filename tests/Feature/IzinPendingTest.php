@@ -81,6 +81,31 @@ class IzinPendingTest extends TestCase
     }
 
     /** @test */
+    public function admin_dapat_set_izin_pending_dengan_catatan(): void
+    {
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+
+        $admin   = \App\Models\User::factory()->create();
+        $admin->assignRole('Admin');
+        $session = $this->makeSession();
+
+        $response = $this->actingAs($admin)->patchJson(
+            route('absensi.update', $session),
+            [
+                'status' => 'IZIN_PENDING',
+                'notes'  => 'Murid izin sakit, jadwal menyusul',
+            ]
+        );
+
+        $response->assertOk()->assertJson(['success' => true]);
+        $this->assertDatabaseHas('class_sessions', [
+            'id'     => $session->id,
+            'status' => 'IZIN_PENDING',
+            'notes'  => 'Murid izin sakit, jadwal menyusul',
+        ]);
+    }
+
+    /** @test */
     public function honor_calculation_excludes_izin_pending_sessions(): void
     {
         // Buat user agar FK created_by di teacher_honor_slips tidak error
@@ -233,6 +258,67 @@ class IzinPendingTest extends TestCase
             'teacher_id'    => $sessionBudi->teacher_id,
             'session_date'  => today()->toDateString(),
             'start_time'    => '09:00:00',
+        ]);
+    }
+
+    /** @test */
+    public function admin_dapat_batalkan_izin_pending_dari_open_slot_board(): void
+    {
+        Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $admin   = User::factory()->create();
+        $admin->assignRole('Admin');
+        $session = $this->makeSession([
+            'status'       => 'IZIN_PENDING',
+            'honor_code'   => 'H_IZIN',
+            'honor_amount' => 0,
+            'notes'        => 'Murid izin sakit',
+        ]);
+
+        $response = $this->actingAs($admin)->postJson(
+            route('absensi.open-slots.cancel', $session)
+        );
+
+        $response->assertOk()->assertJson(['success' => true]);
+        $this->assertDatabaseHas('class_sessions', [
+            'id'           => $session->id,
+            'status'       => 'SCHEDULED',
+            'notes'        => null,
+            'honor_code'   => null,
+            'honor_amount' => null,
+        ]);
+    }
+
+    /** @test */
+    public function batalkan_izin_pending_ditolak_jika_sudah_punya_replacement(): void
+    {
+        Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $admin   = User::factory()->create();
+        $admin->assignRole('Admin');
+        $session = $this->makeSession([
+            'status'       => 'IZIN_PENDING',
+            'honor_code'   => 'H_IZIN',
+            'honor_amount' => 0,
+        ]);
+
+        ClassSession::factory()->create([
+            'origin_session_id' => $session->id,
+            'status'            => 'SCHEDULED',
+            'teacher_id'        => $session->teacher_id,
+            'student_id'        => $session->student_id,
+            'enrollment_id'     => $session->enrollment_id,
+            'session_date'      => $session->session_date,
+            'start_time'        => $session->start_time,
+            'end_time'          => $session->end_time,
+        ]);
+
+        $response = $this->actingAs($admin)->postJson(
+            route('absensi.open-slots.cancel', $session)
+        );
+
+        $response->assertStatus(422)->assertJson(['success' => false]);
+        $this->assertDatabaseHas('class_sessions', [
+            'id'     => $session->id,
+            'status' => 'IZIN_PENDING',
         ]);
     }
 

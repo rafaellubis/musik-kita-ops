@@ -187,6 +187,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/absensi/open-slots/{session}/schedule',
             [AbsensiController::class, 'scheduleReplacement']
         )->name('absensi.open-slots.schedule');
+        Route::post('/absensi/open-slots/{session}/cancel',
+            [AbsensiController::class, 'cancelPending']
+        )->name('absensi.open-slots.cancel');
 
         // ===== M04: Absensi Harian — update inline per sesi via AJAX =====
         Route::patch('/absensi/{classSession}',

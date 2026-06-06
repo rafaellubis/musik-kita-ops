@@ -35,6 +35,7 @@
         part2Time: '',
         part2RoomId: '',
         part2Error: '',
+        pendingNotes: '',
         async save(newStatus, extra = {}) {
             this.loading  = true;
             this.errorMsg = '';
@@ -54,12 +55,18 @@
                     if (data.late_minutes)            this.lateMinutes     = data.late_minutes;
                     if (data.substitute_teacher_name) this.substituteLabel = data.substitute_teacher_name;
                     if (data.replacement_label)       this.replacementLabel = data.replacement_label;
+                    if (newStatus === 'IZIN_PENDING') this.pendingNotes = '';
                     this.showModal = null;
                     this.$el.dataset.status = data.status;
                 } else {
                     this.errorMsg = data.message || 'Gagal menyimpan.';
                 }
             } finally { this.loading = false; }
+        },
+        savePending() {
+            this.save('IZIN_PENDING', {
+                notes: this.pendingNotes.trim() || null,
+            });
         },
         saveReschedule() {
             if (!this.rescheduleDate || !this.rescheduleTime) return;
@@ -307,7 +314,7 @@
                     IZIN
                 </button>
                 {{-- IZIN PENDING → izin tanpa tanggal, jadwal menyusul (Open Slot Board). --}}
-                <button @click="save('IZIN_PENDING')"
+                <button @click="showModal = 'pending'"
                     class="border border-amber-300 text-amber-700 hover:bg-amber-50 rounded px-3 py-1.5 text-xs">
                     PENDING
                 </button>
@@ -479,6 +486,36 @@
                             <span x-text="splitMode ? 'Jadwalkan Bagian 1' : 'Buat Sesi Pengganti'"></span>
                         </button>
                         <button @click="showModal = null; errorMsg = ''; splitMode = false"
+                            class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2 px-3 rounded">
+                            Batal
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Mini-modal: IZIN PENDING — keterangan opsional sebelum simpan --}}
+            <div x-show="showModal === 'pending'" @click.outside="showModal = null"
+                class="fixed inset-0 z-40 flex items-center justify-center"
+                style="display: none;">
+                <div class="bg-mk-card border border-mk-border rounded-lg shadow-xl w-80 p-5">
+                    <p class="text-mk-muted text-sm font-medium mb-1">Izin — Tanggal Menyusul</p>
+                    <p class="text-mk-dim text-xs mb-3 truncate">
+                        {{ $session->student->full_name }} · {{ $session->teacher->name }}
+                    </p>
+                    <p class="text-xs mb-3" style="color:#8A6848;background:rgba(245,158,11,0.08);padding:6px 8px;border-radius:6px;border:1px solid rgba(245,158,11,0.2)">
+                        Sesi masuk Open Slot Board. Jadwal pengganti diatur belakangan.
+                    </p>
+                    <label class="block text-mk-dim text-xs mb-1">Keterangan <span class="text-mk-dim">(opsional)</span></label>
+                    <textarea x-model="pendingNotes" maxlength="500" rows="3"
+                        placeholder="Misal: Murid izin sakit, belum tahu jadwal pengganti"
+                        class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-4 resize-none"></textarea>
+                    <div class="flex gap-2">
+                        <button type="button" @click="savePending()"
+                            :disabled="loading"
+                            class="flex-1 disabled:opacity-40 font-semibold text-xs py-2 rounded btn-mk-primary">
+                            Simpan Pending
+                        </button>
+                        <button type="button" @click="showModal = null; pendingNotes = ''"
                             class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2 px-3 rounded">
                             Batal
                         </button>
