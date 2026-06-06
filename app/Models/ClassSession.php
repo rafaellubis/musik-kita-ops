@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Sesi kelas konkret per tanggal (M03/M04).
@@ -125,6 +126,11 @@ class ClassSession extends Model
     public function replacementSessions(): HasMany
     {
         return $this->hasMany(ClassSession::class, 'origin_session_id');
+    }
+
+    public function teacherNote(): HasOne
+    {
+        return $this->hasOne(SessionTeacherNote::class);
     }
 
     /**
