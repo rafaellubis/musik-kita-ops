@@ -53,10 +53,29 @@
             Perkembangan {{ $progressReport->student->full_name }} Selama Les di Bulan {{ $progressReport->namaBulan() }}
         </div>
         <div class="space-y-3">
-            <x-star-rating-select name="rating_teknik" label="Teknik Bermain" :value="$progressReport->rating_teknik" />
-            <x-star-rating-select name="rating_materi" label="Materi" :value="$progressReport->rating_materi" />
-            <x-star-rating-select name="rating_reading" label="Reading" :value="$progressReport->rating_reading" />
-            <x-star-rating-select name="rating_repertoar" label="Repertoar" :value="$progressReport->rating_repertoar" />
+            @foreach (\App\Models\ProgressReport::monthlyRatingFields() as $field)
+                <div class="flex items-start gap-3">
+                    <span class="text-sm font-medium text-mk-text w-28 shrink-0 pt-2">{{ $field['label'] }}</span>
+                    <div class="w-32 shrink-0">
+                        <select name="{{ $field['rating'] }}"
+                                class="w-full bg-white border border-gray-200 rounded-lg px-2 py-2 text-sm text-gray-900">
+                            <option value="">—</option>
+                            @for ($i = 1; $i <= 5; $i++)
+                                <option value="{{ $i }}" @selected((int) old($field['rating'], $progressReport->{$field['rating']}) === $i)>
+                                    {{ str_repeat('★', $i) }}{{ str_repeat('☆', 5 - $i) }}
+                                </option>
+                            @endfor
+                        </select>
+                        @error($field['rating'])<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <textarea name="{{ $field['catatan'] }}" rows="2"
+                                  placeholder="Catatan (opsional)..."
+                                  class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900">{{ old($field['catatan'], $progressReport->{$field['catatan']}) }}</textarea>
+                        @error($field['catatan'])<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+            @endforeach
         </div>
     </div>
 
@@ -121,6 +140,14 @@
     </div>
 
     {{-- Submit buttons --}}
+    <div class="mx-4 mb-3">
+        <a href="{{ route('guru.laporan.pdf', $progressReport) }}" target="_blank"
+           class="block text-center py-2.5 rounded-xl text-sm font-semibold border border-mk-accent/40 text-mk-accent hover:bg-mk-accent/10">
+            View PDF
+        </a>
+        <p class="text-xs text-mk-muted text-center mt-2">Simpan draft dulu agar perubahan terbaru muncul di preview.</p>
+    </div>
+
     <div class="mx-4 mb-8 flex gap-3">
         <button type="submit"
                 class="flex-1 py-3 rounded-xl font-semibold text-sm border border-mk-accent/40 text-mk-accent hover:bg-mk-accent/10">

@@ -3,16 +3,19 @@ namespace App\Http\Controllers;
 
 use App\Models\ProgressReport;
 use App\Models\Teacher;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\ProgressReportPdfService;
 use Illuminate\Http\Request;
 
 /**
- * ProgressReportController — Admin/Owner/Auditor lihat laporan yang disubmit guru.
+ * ProgressReportController — Admin/Owner/Auditor lihat laporan progres guru.
  * Guru submit via /guru/laporan (GuruController).
- * Admin/Owner lihat daftar, detail, dan download PDF via controller ini.
+ * Admin/Owner lihat daftar, detail, preview PDF, dan download PDF via controller ini.
  */
 class ProgressReportController extends Controller
 {
+    public function __construct(
+        private readonly ProgressReportPdfService $pdfService,
+    ) {}
     /**
      * Daftar semua laporan progres — bisa filter by guru, status, bulan, tahun.
      */
@@ -62,28 +65,45 @@ class ProgressReportController extends Controller
     }
 
     /**
-     * Download PDF laporan progres — generate via DomPDF.
-     * Hanya tersedia untuk laporan berstatus SUBMITTED.
+     * Halaman preview PDF — iframe inline + tombol download.
      */
-    public function pdf(ProgressReport $progressReport)
+    public function pdfView(ProgressReport $progressReport)
     {
-        abort_unless($progressReport->status === ProgressReport::STATUS_SUBMITTED, 404);
+        $progressReport = $this->pdfService->loadReport($progressReport);
 
-        $progressReport->load([
-            'student',
-            'teacher',
-            'enrollment.package.instrument',
-            'sessionNotes',
-        ]);
+        return view('progress-reports.pdf-viewer', $this->viewerData($progressReport));
+    }
 
-        $pdf = Pdf::loadView('progress-reports.pdf', compact('progressReport'))
-            ->setPaper('a4', 'portrait');
+    /**
+     * Stream PDF inline untuk iframe preview.
+     */
+    public function pdfFile(ProgressReport $progressReport)
+    {
+        $progressReport = $this->pdfService->loadReport($progressReport);
 
-        // Nama file: Laporan-NamaMurid-BulanTahun.pdf
-        $filename = 'Laporan-' .
-            str_replace(' ', '-', $progressReport->student->full_name) . '-' .
-            $progressReport->namaBulan() . '.pdf';
+        return $this->pdfService->makePdf($progressReport)
+            ->stream($this->pdfService->filename($progressReport));
+    }
 
-        return $pdf->download($filename);
+    /**
+     * Download PDF laporan progres — generate via DomPDF.
+     */
+    public function pdfDownload(ProgressReport $progressReport)
+    {
+        $progressReport = $this->pdfService->loadReport($progressReport);
+
+        return $this->pdfService->makePdf($progressReport)
+            ->download($this->pdfService->filename($progressReport));
+    }
+
+    private function viewerData(ProgressReport $progressReport): array
+    {
+        return [
+            'progressReport' => $progressReport,
+            'layout' => 'admin',
+            'backUrl' => route('progress-reports.show', $progressReport),
+            'downloadUrl' => route('progress-reports.pdf.download', $progressReport),
+            'fileUrl' => route('progress-reports.pdf.file', $progressReport),
+        ];
     }
 }

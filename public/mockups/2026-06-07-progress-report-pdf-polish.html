@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockup — Progress Report PDF (Corporate Neutral v2)</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #E5E7EB;
+            color: #1F2937;
+            padding: 32px 16px 48px;
+            line-height: 1.45;
+        }
+
+        .toolbar {
+            max-width: 210mm;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar h1 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .toolbar p {
+            font-size: 12px;
+            color: #6B7280;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            border: 1px solid #D1D5DB;
+            background: #fff;
+            color: #374151;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn:hover { background: #F9FAFB; }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: #fff;
+            box-shadow: 0 4px 24px rgba(0,0,0,.12);
+            padding: 16mm 15mm 14mm;
+            font-size: 11px;
+        }
+
+        .report-number {
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 10px;
+            color: #6B7280;
+            text-align: right;
+            margin-bottom: 1px;
+        }
+
+        /* ── Branded header strip ── */
+        .brand-strip {
+            background: #1E3A5F;
+            border-radius: 4px 4px 0 0;
+            padding: 14px 16px;
+        }
+
+        .brand-table { width: 100%; border-collapse: collapse; }
+        .brand-table td { vertical-align: middle; border: none; padding: 0; }
+
+        .logo-cell { width: 110px; padding-right: 14px !important; }
+
+        .logo-img {
+            height: 40px;
+            max-width: 100px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .logo-fallback {
+            display: none;
+            color: #fff;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: .04em;
+        }
+
+        .logo-fallback small {
+            display: block;
+            font-weight: 400;
+            font-size: 8px;
+            opacity: .75;
+            margin-top: 2px;
+        }
+
+        .doc-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .doc-sub {
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            margin-top: 4px;
+        }
+
+        .doc-period {
+            font-size: 9px;
+            color: rgba(255,255,255,.65);
+            margin-top: 2px;
+        }
+
+        /* ── Meta box ── */
+        .meta-box {
+            border: 1px solid #D1D5DB;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            padding: 12px 16px 14px;
+            margin-bottom: 16px;
+        }
+
+        .meta-table { width: 100%; border-collapse: collapse; }
+        .meta-table td { padding: 3px 0; vertical-align: top; border: none; }
+        .meta-label { color: #6B7280; width: 130px; }
+        .meta-colon { width: 12px; color: #6B7280; }
+        .meta-value { font-weight: 600; color: #1F2937; }
+
+        .stars { color: #B45309; letter-spacing: 2px; font-size: 13px; }
+
+        /* ── Sections ── */
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #1E3A5F;
+            margin: 14px 0 7px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #D1D5DB;
+        }
+
+        .week-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+        .week-label { width: 72px; font-size: 10px; color: #6B7280; vertical-align: top; padding: 6px 8px 6px 0; }
+        .week-box {
+            border: 1px solid #D1D5DB;
+            background: #F9FAFB;
+            padding: 6px 10px;
+            font-size: 10px;
+            color: #1F2937;
+            min-height: 28px;
+            line-height: 1.5;
+            border-radius: 3px;
+        }
+
+        .rating-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+        .rating-label { width: 130px; color: #6B7280; font-size: 10.5px; padding: 4px 0; }
+
+        .narrative-title { font-size: 10.5px; font-weight: 700; color: #1E3A5F; margin-bottom: 4px; }
+        .narrative-box {
+            border: 1px solid #D1D5DB;
+            background: #F9FAFB;
+            padding: 8px 10px;
+            margin-bottom: 10px;
+            min-height: 40px;
+            font-size: 10.5px;
+            line-height: 1.6;
+            color: #1F2937;
+            border-radius: 3px;
+        }
+
+        .kesimpulan-table { width: 100%; border-collapse: separate; border-spacing: 4px; margin-bottom: 10px; }
+        .kesimpulan-cell {
+            border: 1px solid #D1D5DB;
+            padding: 8px 4px;
+            text-align: center;
+            font-size: 9.5px;
+            color: #6B7280;
+            background: #F9FAFB;
+            width: 25%;
+            border-radius: 3px;
+        }
+        .kesimpulan-cell-active {
+            border: 2px solid #1E3A5F;
+            background: #EEF2FF;
+            font-weight: 700;
+            color: #1E3A5F;
+        }
+
+        /* ── Footer progress ── */
+        .footer-box {
+            margin-top: 16px;
+            padding-top: 10px;
+            border-top: 1px solid #D1D5DB;
+        }
+
+        .footer-instrument {
+            font-size: 11px;
+            font-weight: 700;
+            color: #1F2937;
+            margin-bottom: 8px;
+        }
+
+        .progress-label {
+            font-size: 9px;
+            font-weight: 700;
+            color: #1E3A5F;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .progress-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-track {
+            width: 220px;
+            height: 10px;
+            background: #E5E7EB;
+            border: 1px solid #D1D5DB;
+            border-radius: 2px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #1E3A5F;
+            border-radius: 1px 0 0 1px;
+        }
+
+        .progress-pct {
+            font-size: 10px;
+            font-weight: 600;
+            color: #1F2937;
+        }
+
+        /* ── TTD — satu kolom, sejajar vertikal dengan nama guru ── */
+        .ttd-box {
+            margin-top: 28px;
+            page-break-inside: avoid;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .ttd-inner {
+            width: 200px;
+            text-align: center;
+        }
+        .ttd-date { font-size: 10px; color: #6B7280; margin-bottom: 4px; }
+        .ttd-role-label { font-size: 10px; color: #1F2937; margin-bottom: 0; }
+        .ttd-space { height: 50px; }
+        .ttd-line {
+            border-top: 1px solid #374151;
+            padding-top: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #1F2937;
+        }
+        .ttd-sub { font-size: 9px; color: #6B7280; margin-top: 2px; }
+
+        .footnote {
+            margin-top: 16px;
+            font-size: 8px;
+            color: #6B7280;
+            text-align: center;
+            border-top: 1px solid #D1D5DB;
+            padding-top: 8px;
+        }
+
+        .mockup-badge {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            background: #1E3A5F;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 8px 14px;
+            border-radius: 999px;
+            box-shadow: 0 2px 12px rgba(30,58,95,.35);
+            letter-spacing: .04em;
+        }
+
+        @media print {
+            body { background: #fff; padding: 0; }
+            .toolbar, .mockup-badge { display: none; }
+            .page { box-shadow: none; width: 100%; min-height: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <div>
+        <h1>Mockup PDF — Progress Report (Corporate Neutral v2)</h1>
+        <p>Preview desain sebelum implementasi ke <code>pdf.blade.php</code></p>
+    </div>
+    <div class="toolbar-actions">
+        <button class="btn" onclick="window.print()">Cetak / Save PDF</button>
+    </div>
+</div>
+
+<div class="page">
+
+    <div class="report-number">LMK/LPR/2026/06/0001</div>
+
+    {{-- Branded header --}}
+    <div class="brand-strip">
+        <table class="brand-table">
+            <tr>
+                <td class="logo-cell">
+                    <img class="logo-img" src="/images/logo-musikkita-dark-mode.PNG"
+                         alt="Musik KITA"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div class="logo-fallback">
+                        MUSIK KITA
+                        <small>Music Education Studio</small>
+                    </div>
+                </td>
+                <td>
+                    <div class="doc-title">Monthly Progress Report</div>
+                    <div class="doc-sub">Les Musik KITA</div>
+                    <div class="doc-period">Periode: Juni 2026</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="meta-box">
+        <table class="meta-table">
+            <tr>
+                <td class="meta-label">Nama</td>
+                <td class="meta-colon">:</td>
+                <td class="meta-value">Budi Santoso</td>
+            </tr>
+            <tr>
+                <td class="meta-label">Instrumen</td>
+                <td class="meta-colon">:</td>
+                <td class="meta-value">Piano · Level 2</td>
+            </tr>
+            <tr>
+                <td class="meta-label">Guru Pengajar</td>
+                <td class="meta-colon">:</td>
+                <td class="meta-value">Pak Andi Wijaya</td>
+            </tr>
+            <tr>
+                <td class="meta-label">Bulan</td>
+                <td class="meta-colon">:</td>
+                <td class="meta-value">Juni 2026</td>
+            </tr>
+            <tr>
+                <td class="meta-label">Rating Anak hari Ini</td>
+                <td class="meta-colon">:</td>
+                <td><span class="stars">★★★★☆</span></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section-title">Kehadiran dan Materi yang Dipelajari</div>
+    <table class="week-table">
+        <tr><td class="week-label">Minggu 1 :</td><td class="week-box">Skala C mayor, posisi jari dasar</td></tr>
+        <tr><td class="week-label">Minggu 2 :</td><td class="week-box">Latihan arpeggio C–G, metronom 60 bpm</td></tr>
+        <tr><td class="week-label">Minggu 3 :</td><td class="week-box">—</td></tr>
+        <tr><td class="week-label">Minggu 4 :</td><td class="week-box">Intro lagu "Canon in D" — bagian A</td></tr>
+    </table>
+
+    <div class="section-title">Perkembangan Budi Santoso Selama Les di Bulan Juni 2026</div>
+    <table class="rating-table">
+        <tr><td class="rating-label">Teknik Bermain</td><td><span class="stars">★★★★☆</span></td></tr>
+        <tr><td class="rating-label">Materi</td><td><span class="stars">★★★★☆</span></td></tr>
+        <tr><td class="rating-label">Reading</td><td><span class="stars">★★★☆☆</span></td></tr>
+        <tr><td class="rating-label">Repertoar</td><td><span class="stars">★★★★☆</span></td></tr>
+    </table>
+
+    <div class="narrative-title">Catatan Guru Terhadap Perkembangan Musikal Budi Santoso</div>
+    <div class="narrative-box">Teknik jari kanan sudah lebih stabil. Budi mulai bisa memainkan arpeggio dengan tempo konsisten. Perlu latihan reading not balok treble clef lebih rutin.</div>
+
+    <div class="narrative-title">Catatan Guru Terhadap Karakter Budi Santoso</div>
+    <div class="narrative-box">Rajin dan fokus selama sesi. Terkadang malu saat diminta main solo di depan orang tua — perlu dorongan bertahap.</div>
+
+    <div class="section-title">Laporan Progress</div>
+    <table class="kesimpulan-table">
+        <tr>
+            <td class="kesimpulan-cell">Perlu Pendampingan Lebih</td>
+            <td class="kesimpulan-cell">Cukup</td>
+            <td class="kesimpulan-cell kesimpulan-cell-active">Baik</td>
+            <td class="kesimpulan-cell">Sangat Baik</td>
+        </tr>
+    </table>
+
+    <div class="footer-box">
+        <div class="footer-instrument">🎹 Piano · Level 2</div>
+        <div class="progress-label">Progress</div>
+        <div class="progress-row">
+            <div class="progress-track">
+                <div class="progress-fill" style="width: 40%;"></div>
+            </div>
+            <span class="progress-pct">40%</span>
+        </div>
+    </div>
+
+    <div class="ttd-box">
+        <div class="ttd-inner">
+            <div class="ttd-date">Jakarta, 7 Juni 2026</div>
+            <div class="ttd-role-label">Guru Pengajar</div>
+            <div class="ttd-space"></div>
+            <div class="ttd-line">Pak Andi Wijaya</div>
+            <div class="ttd-sub">Pengajar Piano</div>
+        </div>
+    </div>
+
+    <div class="footnote">
+        Laporan ini merupakan evaluasi perkembangan belajar bulanan.
+        Untuk pertanyaan lebih lanjut, silakan hubungi admin studio Musik KITA.
+    </div>
+
+</div>
+
+<div class="mockup-badge">MOCKUP v2.2</div>
+
+</body>
+</html>

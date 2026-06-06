@@ -175,6 +175,26 @@ class ClassSession extends Model
         return '—';
     }
 
+    /**
+     * Identitas sesi untuk portal guru (dashboard/jadwal).
+     * Sesi biasa: "Sesi ke-3 · Juni 2026". Reschedule/split: label penuh getSessionLabel().
+     */
+    public function getGuruSessionIdentity(): string
+    {
+        if (($this->split_part && $this->origin_session_id && $this->originSession)
+            || ($this->origin_session_id && $this->originSession)) {
+            return $this->getSessionLabel();
+        }
+
+        if ($this->session_sequence) {
+            $bulan = Carbon::parse($this->session_date)->locale('id')->translatedFormat('F Y');
+
+            return "Sesi ke-{$this->session_sequence} · {$bulan}";
+        }
+
+        return '—';
+    }
+
     // ============= SCOPES =============
 
     public function scopeInMonth($query, int $year, int $month)

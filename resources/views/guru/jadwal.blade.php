@@ -28,6 +28,7 @@
                     <div class="flex items-start justify-between px-4 py-3">
                         <div>
                             <div class="font-medium text-mk-text text-sm">{{ $s->student->full_name }}</div>
+                            @include('guru._sesi-identitas', ['sesi' => $s])
                             <div class="text-xs text-mk-muted mt-0.5">
                                 {{ \Carbon\Carbon::parse($s->start_time)->format('H:i') }}–{{ \Carbon\Carbon::parse($s->end_time)->format('H:i') }}
                                 @if($s->room) · {{ $s->room->name }} @endif
@@ -96,6 +97,7 @@
                         </td>
                         <td class="px-4 py-3">
                             <div class="font-medium text-mk-text">{{ $s->student->full_name }}</div>
+                            @include('guru._sesi-identitas', ['sesi' => $s])
                             @if($s->substitute_teacher_id === auth()->user()->teacher?->id)
                                 <div class="text-[10px] text-blue-500">Pengganti</div>
                             @endif

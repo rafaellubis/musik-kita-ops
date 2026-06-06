@@ -69,4 +69,44 @@ class Package extends Model
         }
         return $this->code;
     }
+
+    /**
+     * Label instrumen + level untuk header/PDF laporan progress.
+     * HOBBY/Kids: instrumen saja. DUO/REGULER: instrumen · Basic atau Level N.
+     */
+    public function getReportInstrumentLabel(): string
+    {
+        $instrumentName = $this->instrument?->name ?? '';
+        $levelSuffix    = $this->getReportLevelSuffix();
+
+        if ($levelSuffix === null) {
+            return $instrumentName;
+        }
+
+        return $instrumentName . ' · ' . $levelSuffix;
+    }
+
+    private function getReportLevelSuffix(): ?string
+    {
+        if ($this->isKidsClass() || $this->class_type === 'HOBBY') {
+            return null;
+        }
+
+        if ($this->isDuo() || ($this->class_type === 'REGULER' && $this->grade === 'BASIC')) {
+            return 'Basic';
+        }
+
+        if ($this->class_type === 'REGULER') {
+            $gradeMap = [
+                'L1' => 'Level 1',
+                'L2' => 'Level 2',
+                'L3' => 'Level 3',
+                'L4' => 'Level 4',
+            ];
+
+            return $gradeMap[$this->grade] ?? ('Level ' . ($this->grade ?? '-'));
+        }
+
+        return null;
+    }
 }

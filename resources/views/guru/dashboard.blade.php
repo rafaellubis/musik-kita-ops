@@ -44,6 +44,7 @@
             <div class="flex items-start justify-between px-4 py-3 border-b border-mk-borderLight">
                 <div>
                     <div class="font-semibold text-mk-text">{{ $sesi->student->full_name }}</div>
+                    @include('guru._sesi-identitas', ['sesi' => $sesi])
                     <div class="text-xs text-mk-muted mt-0.5">
                         {{ \Carbon\Carbon::parse($sesi->start_time)->format('H:i') }}–{{ \Carbon\Carbon::parse($sesi->end_time)->format('H:i') }}
                         @if($sesi->room) · {{ $sesi->room->name }} @endif

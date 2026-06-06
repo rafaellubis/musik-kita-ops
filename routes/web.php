@@ -485,7 +485,9 @@ Route::middleware('auth')->group(function () {
         // ===== Laporan Progres Murid — Admin/Owner/Auditor view laporan yang disubmit guru =====
         // /pdf HARUS sebelum /{progressReport} agar tidak ditangkap wildcard show.
         Route::get('progress-reports', [ProgressReportController::class, 'index'])->name('progress-reports.index');
-        Route::get('progress-reports/{progressReport}/pdf', [ProgressReportController::class, 'pdf'])->name('progress-reports.pdf');
+        Route::get('progress-reports/{progressReport}/pdf/download', [ProgressReportController::class, 'pdfDownload'])->name('progress-reports.pdf.download');
+        Route::get('progress-reports/{progressReport}/pdf/file', [ProgressReportController::class, 'pdfFile'])->name('progress-reports.pdf.file');
+        Route::get('progress-reports/{progressReport}/pdf', [ProgressReportController::class, 'pdfView'])->name('progress-reports.pdf');
         Route::get('progress-reports/{progressReport}', [ProgressReportController::class, 'show'])->name('progress-reports.show');
 
         // ===== M09: Laporan statistik murid (read-only, semua role) =====
@@ -535,6 +537,9 @@ Route::middleware(['auth', 'verified', 'role:Guru'])
         // ===== Laporan Progres Murid =====
         Route::get('/laporan',                       [GuruController::class, 'laporan'])->name('laporan.index');
         Route::post('/laporan',                      [GuruController::class, 'laporanStore'])->name('laporan.store');
+        Route::get('/laporan/{progressReport}/pdf/download', [GuruController::class, 'laporanPdfDownload'])->name('laporan.pdf.download');
+        Route::get('/laporan/{progressReport}/pdf/file', [GuruController::class, 'laporanPdfFile'])->name('laporan.pdf.file');
+        Route::get('/laporan/{progressReport}/pdf', [GuruController::class, 'laporanPdfView'])->name('laporan.pdf');
         Route::get('/laporan/{progressReport}/edit', [GuruController::class, 'laporanEdit'])->name('laporan.edit');
         Route::put('/laporan/{progressReport}',      [GuruController::class, 'laporanUpdate'])->name('laporan.update');
     });

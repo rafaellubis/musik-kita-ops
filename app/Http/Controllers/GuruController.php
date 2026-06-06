@@ -10,6 +10,8 @@ use App\Models\ProgressReportItem;
 use App\Models\ProgressReportSection;
 use App\Models\SessionTeacherNote;
 use App\Services\AttendanceService;
+use App\Services\ProgressReportPdfService;
+use App\Services\ProgressReportService;
 use App\Services\ReportTemplateResolverService;
 use App\Services\SessionNoteSyncService;
 use Carbon\Carbon;
@@ -41,6 +43,8 @@ class GuruController extends Controller
         private readonly AttendanceService $attendanceService,
         private readonly ReportTemplateResolverService $reportTemplateResolver,
         private readonly SessionNoteSyncService $sessionNoteSyncService,
+        private readonly ProgressReportService $progressReportService,
+        private readonly ProgressReportPdfService $pdfService,
     ) {}
 
     /**
@@ -295,6 +299,10 @@ class GuruController extends Controller
         $template->load('sections.items');
 
         $report = ProgressReport::create([
+            'report_number'      => $this->progressReportService->generateReportNumber(
+                $validated['year'],
+                $validated['month'],
+            ),
             'enrollment_id'      => $enrollment->id,
             'student_id'         => $enrollment->student_id,
             'teacher_id'         => $teacher->id,
@@ -363,6 +371,10 @@ class GuruController extends Controller
             'rating_materi'                => 'nullable|integer|min:1|max:5',
             'rating_reading'               => 'nullable|integer|min:1|max:5',
             'rating_repertoar'             => 'nullable|integer|min:1|max:5',
+            'catatan_teknik'               => 'nullable|string|max:1000',
+            'catatan_materi'               => 'nullable|string|max:1000',
+            'catatan_reading'              => 'nullable|string|max:1000',
+            'catatan_repertoar'            => 'nullable|string|max:1000',
             'catatan_perkembangan_musikal' => 'nullable|string|max:3000',
             'catatan_karakter'             => 'nullable|string|max:3000',
             'kesimpulan_progress'          => 'nullable|in:' . implode(',', array_keys(ProgressReport::kesimpulanLabels())),
@@ -385,6 +397,10 @@ class GuruController extends Controller
             'rating_materi'                => $validated['rating_materi'] ?? null,
             'rating_reading'               => $validated['rating_reading'] ?? null,
             'rating_repertoar'             => $validated['rating_repertoar'] ?? null,
+            'catatan_teknik'               => $validated['catatan_teknik'] ?? null,
+            'catatan_materi'               => $validated['catatan_materi'] ?? null,
+            'catatan_reading'              => $validated['catatan_reading'] ?? null,
+            'catatan_repertoar'            => $validated['catatan_repertoar'] ?? null,
             'catatan_perkembangan_musikal' => $validated['catatan_perkembangan_musikal'] ?? null,
             'catatan_karakter'             => $validated['catatan_karakter'] ?? null,
             'kesimpulan_progress'          => $validated['kesimpulan_progress'] ?? null,
@@ -401,6 +417,50 @@ class GuruController extends Controller
         }
 
         return back()->with('success', 'Draft laporan tersimpan.');
+    }
+
+    /**
+     * Preview PDF laporan — tersedia untuk draft maupun submitted.
+     */
+    public function laporanPdfView(ProgressReport $progressReport)
+    {
+        $this->authorizeOwnReport($progressReport);
+        $progressReport = $this->pdfService->loadReport($progressReport);
+
+        return view('progress-reports.pdf-viewer', [
+            'progressReport' => $progressReport,
+            'layout' => 'guru',
+            'backUrl' => $progressReport->status === ProgressReport::STATUS_DRAFT
+                ? route('guru.laporan.edit', $progressReport)
+                : route('guru.laporan.index'),
+            'downloadUrl' => route('guru.laporan.pdf.download', $progressReport),
+            'fileUrl' => route('guru.laporan.pdf.file', $progressReport),
+        ]);
+    }
+
+    public function laporanPdfFile(ProgressReport $progressReport)
+    {
+        $this->authorizeOwnReport($progressReport);
+        $progressReport = $this->pdfService->loadReport($progressReport);
+
+        return $this->pdfService->makePdf($progressReport)
+            ->stream($this->pdfService->filename($progressReport));
+    }
+
+    public function laporanPdfDownload(ProgressReport $progressReport)
+    {
+        $this->authorizeOwnReport($progressReport);
+        $progressReport = $this->pdfService->loadReport($progressReport);
+
+        return $this->pdfService->makePdf($progressReport)
+            ->download($this->pdfService->filename($progressReport));
+    }
+
+    private function authorizeOwnReport(ProgressReport $progressReport): void
+    {
+        $teacher = auth()->user()->teacher;
+        abort_if(! $teacher, 403);
+        abort_if($progressReport->teacher_id !== $teacher->id, 403, 'Bukan laporan Anda.');
     }
 
     public function updateAbsensi(Request $request, ClassSession $classSession)

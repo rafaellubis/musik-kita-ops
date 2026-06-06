@@ -134,4 +134,65 @@ class SessionLabelTest extends TestCase
             $replacement->getSessionLabel()
         );
     }
+
+    public function test_guru_identity_sesi_reguler_format_compact(): void
+    {
+        $session = new ClassSession();
+        $session->session_date     = '2026-06-10';
+        $session->session_sequence = 3;
+
+        $this->assertSame('Sesi ke-3 · Juni 2026', $session->getGuruSessionIdentity());
+    }
+
+    public function test_guru_identity_reschedule_menggunakan_label_penuh(): void
+    {
+        $teacher = Teacher::factory()->create();
+        $student = Student::factory()->create(['status' => 'Aktif']);
+        $package = Package::factory()->create(['class_type' => 'REGULER']);
+        $enrollment = Enrollment::factory()->create([
+            'student_id' => $student->id,
+            'package_id' => $package->id,
+            'teacher_id' => $teacher->id,
+            'status'     => 'ACTIVE',
+        ]);
+
+        $origin = ClassSession::create([
+            'enrollment_id'    => $enrollment->id,
+            'student_id'       => $student->id,
+            'teacher_id'       => $teacher->id,
+            'session_date'     => '2026-05-11',
+            'start_time'       => '14:00:00',
+            'end_time'         => '14:30:00',
+            'status'           => 'LIBUR',
+            'session_sequence' => null,
+        ]);
+
+        $replacement = ClassSession::create([
+            'enrollment_id'     => $enrollment->id,
+            'student_id'        => $student->id,
+            'teacher_id'        => $teacher->id,
+            'session_date'      => '2026-05-28',
+            'start_time'        => '14:00:00',
+            'end_time'          => '14:30:00',
+            'status'            => 'SCHEDULED',
+            'session_sequence'  => 2,
+            'origin_session_id' => $origin->id,
+        ]);
+
+        $replacement->load('originSession');
+
+        $this->assertSame(
+            'Reschedule dari Sesi ke-2 Bulan Mei 2026',
+            $replacement->getGuruSessionIdentity()
+        );
+    }
+
+    public function test_guru_identity_tanpa_sequence_adalah_dash(): void
+    {
+        $session = new ClassSession();
+        $session->session_date     = '2026-05-11';
+        $session->session_sequence = null;
+
+        $this->assertSame('—', $session->getGuruSessionIdentity());
+    }
 }

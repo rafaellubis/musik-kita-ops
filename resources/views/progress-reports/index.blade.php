@@ -46,6 +46,7 @@
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50">
                         <tr class="border-b text-left text-xs text-gray-500 uppercase tracking-wide">
+                            <th class="px-4 py-3">No. Laporan</th>
                             <th class="px-4 py-3">Murid</th>
                             <th class="px-4 py-3">Guru</th>
                             <th class="px-4 py-3">Kelas</th>
@@ -57,6 +58,7 @@
                     <tbody class="divide-y">
                         @foreach($laporan as $r)
                         <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-2 font-mono text-xs text-gray-500">{{ $r->report_number ?? '—' }}</td>
                             <td class="px-4 py-2 font-medium text-gray-800">{{ $r->student->full_name }}</td>
                             <td class="px-4 py-2 text-gray-600">{{ $r->teacher->name }}</td>
                             <td class="px-4 py-2 text-gray-500 text-xs font-mono">{{ $r->enrollment->package->code }}</td>
@@ -68,9 +70,7 @@
                             </td>
                             <td class="px-4 py-2 text-right whitespace-nowrap">
                                 <a href="{{ route('progress-reports.show', $r) }}" class="text-indigo-600 hover:underline text-xs mr-3">Detail</a>
-                                @if($r->status === 'SUBMITTED')
-                                    <a href="{{ route('progress-reports.pdf', $r) }}" class="text-green-600 hover:underline text-xs">↓ PDF</a>
-                                @endif
+                                <a href="{{ route('progress-reports.pdf', $r) }}" class="text-green-600 hover:underline text-xs">View PDF</a>
                             </td>
                         </tr>
                         @endforeach

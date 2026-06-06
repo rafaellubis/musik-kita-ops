@@ -98,6 +98,11 @@
                    class="mt-3 block text-center py-2 rounded-lg text-sm font-semibold border border-mk-accent/40 text-mk-accent hover:bg-mk-accent/10">
                     Lanjut Isi →
                 </a>
+            @else
+                <a href="{{ route('guru.laporan.pdf', $r) }}"
+                   class="mt-3 block text-center py-2 rounded-lg text-sm font-semibold border border-mk-accent/40 text-mk-accent hover:bg-mk-accent/10">
+                    View PDF
+                </a>
             @endif
         </div>
     @empty

@@ -87,9 +87,51 @@ class ProgressReportGuruTest extends TestCase
         $this->assertDatabaseHas('progress_reports', [
             'enrollment_id'      => $this->enrollment->id,
             'report_template_id' => $this->template->id,
+            'report_number'      => 'LMK/LPR/2026/05/0001',
             'month'              => 5,
             'year'               => 2026,
             'status'             => 'DRAFT',
+        ]);
+    }
+
+    public function test_nomor_laporan_increment_per_bulan(): void
+    {
+        $this->actingAs($this->guruUser)
+            ->post('/guru/laporan', [
+                'enrollment_id' => $this->enrollment->id,
+                'month'         => 5,
+                'year'          => 2026,
+            ])
+            ->assertRedirect();
+
+        $instrument2 = Instrument::create(['code' => 'GTR', 'name' => 'Gitar', 'is_active' => true, 'sort_order' => 2]);
+        $package2 = Package::create([
+            'code' => 'GTR-HOB-30', 'instrument_id' => $instrument2->id,
+            'class_type' => 'HOBBY', 'duration_min' => 30,
+            'price_per_month' => 390000, 'is_active' => true, 'sort_order' => 2,
+        ]);
+        $student2 = Student::factory()->create(['status' => 'Aktif']);
+        $enrollment2 = Enrollment::create([
+            'student_id' => $student2->id, 'package_id' => $package2->id,
+            'teacher_id' => $this->teacher->id, 'status' => 'ACTIVE',
+            'effective_date' => now()->toDateString(), 'is_primary' => true,
+        ]);
+        ReportTemplate::create([
+            'instrument_id' => $instrument2->id, 'name' => 'Gitar · Hobby',
+            'template_kind' => ReportTemplate::KIND_HOBBY, 'is_active' => true, 'sort_order' => 2,
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->post('/guru/laporan', [
+                'enrollment_id' => $enrollment2->id,
+                'month'         => 5,
+                'year'          => 2026,
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('progress_reports', [
+            'enrollment_id' => $enrollment2->id,
+            'report_number' => 'LMK/LPR/2026/05/0002',
         ]);
     }
 
@@ -390,6 +432,8 @@ class ProgressReportGuruTest extends TestCase
                 'rating_materi' => 3,
                 'rating_reading' => 5,
                 'rating_repertoar' => 4,
+                'catatan_teknik' => 'Postur jari sudah konsisten.',
+                'catatan_materi' => 'Scale mayor dikuasai.',
                 'catatan_perkembangan_musikal' => 'Teknik jari membaik.',
                 'catatan_karakter' => 'Rajin dan fokus.',
                 'kesimpulan_progress' => 'BAIK',
@@ -401,6 +445,8 @@ class ProgressReportGuruTest extends TestCase
         $this->assertDatabaseHas('progress_reports', [
             'id' => $report->id,
             'rating_teknik' => 4,
+            'catatan_teknik' => 'Postur jari sudah konsisten.',
+            'catatan_materi' => 'Scale mayor dikuasai.',
             'kesimpulan_progress' => 'BAIK',
             'progress_percent' => 40,
         ]);
@@ -424,12 +470,48 @@ class ProgressReportGuruTest extends TestCase
             ]);
     }
 
+    public function test_guru_bisa_view_pdf_draft(): void
+    {
+        $report = ProgressReport::create([
+            'report_number' => 'LMK/LPR/2026/05/0001',
+            'enrollment_id' => $this->enrollment->id,
+            'student_id' => $this->enrollment->student_id,
+            'teacher_id' => $this->teacher->id,
+            'report_template_id' => $this->template->id,
+            'month' => 5, 'year' => 2026, 'status' => 'DRAFT',
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->get("/guru/laporan/{$report->id}/pdf")
+            ->assertOk()
+            ->assertSee('Preview PDF')
+            ->assertSee('Draft');
+    }
+
+    public function test_guru_tidak_bisa_view_pdf_laporan_guru_lain(): void
+    {
+        $otherTeacher = Teacher::factory()->create();
+        $report = ProgressReport::create([
+            'report_number' => 'LMK/LPR/2026/05/0002',
+            'enrollment_id' => $this->enrollment->id,
+            'student_id' => $this->enrollment->student_id,
+            'teacher_id' => $otherTeacher->id,
+            'report_template_id' => $this->template->id,
+            'month' => 6, 'year' => 2026, 'status' => 'DRAFT',
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->get("/guru/laporan/{$report->id}/pdf")
+            ->assertForbidden();
+    }
+
     public function test_admin_bisa_download_pdf_laporan_submitted(): void
     {
         $admin = User::factory()->create(['email_verified_at' => now()]);
         $admin->assignRole('Admin');
 
         $report = ProgressReport::create([
+            'report_number' => 'LMK/LPR/2026/05/0001',
             'enrollment_id' => $this->enrollment->id,
             'student_id' => $this->enrollment->student_id,
             'teacher_id' => $this->teacher->id,
@@ -444,9 +526,16 @@ class ProgressReportGuruTest extends TestCase
             'catatan_karakter' => 'Rajin.',
         ]);
 
-        $this->actingAs($admin)
-            ->get("/progress-reports/{$report->id}/pdf")
-            ->assertOk()
+        $response = $this->actingAs($admin)
+            ->get("/progress-reports/{$report->id}/pdf/download");
+
+        $response->assertOk()
             ->assertHeader('content-type', 'application/pdf');
+
+        $this->assertLessThan(
+            200 * 1024,
+            strlen($response->getContent()),
+            'PDF laporan progress seharusnya di bawah 200 KB setelah optimasi.'
+        );
     }
 }

@@ -15,11 +15,13 @@ class ProgressReport extends Model
     public const KESIMPULAN_SANGAT_BAIK = 'SANGAT_BAIK';
 
     protected $fillable = [
+        'report_number',
         'enrollment_id', 'student_id', 'teacher_id', 'report_template_id',
         'month', 'year', 'status',
         'highlight', 'summary_notes', 'target_notes', 'repertoire',
         'submitted_at',
         'rating_teknik', 'rating_materi', 'rating_reading', 'rating_repertoar',
+        'catatan_teknik', 'catatan_materi', 'catatan_reading', 'catatan_repertoar',
         'catatan_perkembangan_musikal', 'catatan_karakter',
         'kesimpulan_progress', 'progress_percent',
     ];
@@ -65,6 +67,16 @@ class ProgressReport extends Model
             self::KESIMPULAN_CUKUP              => 'Cukup',
             self::KESIMPULAN_BAIK               => 'Baik',
             self::KESIMPULAN_SANGAT_BAIK        => 'Sangat Baik',
+        ];
+    }
+
+    public static function monthlyRatingFields(): array
+    {
+        return [
+            ['label' => 'Teknik Bermain', 'rating' => 'rating_teknik', 'catatan' => 'catatan_teknik'],
+            ['label' => 'Materi', 'rating' => 'rating_materi', 'catatan' => 'catatan_materi'],
+            ['label' => 'Reading', 'rating' => 'rating_reading', 'catatan' => 'catatan_reading'],
+            ['label' => 'Repertoar', 'rating' => 'rating_repertoar', 'catatan' => 'catatan_repertoar'],
         ];
     }
 

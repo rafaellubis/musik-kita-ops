@@ -79,11 +79,31 @@ class ProgressReportAdminTest extends TestCase
         $this->actingAs($guruUser)->get('/progress-reports')->assertForbidden();
     }
 
-    public function test_admin_bisa_download_pdf(): void
+    public function test_admin_bisa_view_pdf(): void
     {
         $this->actingAs($this->admin)
             ->get("/progress-reports/{$this->report->id}/pdf")
             ->assertOk()
+            ->assertSee('Preview PDF')
+            ->assertSee('Download PDF');
+    }
+
+    public function test_admin_bisa_download_pdf(): void
+    {
+        $this->actingAs($this->admin)
+            ->get("/progress-reports/{$this->report->id}/pdf/download")
+            ->assertOk()
             ->assertHeader('Content-Type', 'application/pdf');
+    }
+
+    public function test_admin_bisa_view_pdf_draft(): void
+    {
+        $this->report->update(['status' => 'DRAFT', 'submitted_at' => null]);
+
+        $this->actingAs($this->admin)
+            ->get("/progress-reports/{$this->report->id}/pdf")
+            ->assertOk()
+            ->assertSee('Preview PDF')
+            ->assertSee('Draft');
     }
 }
