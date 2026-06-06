@@ -154,7 +154,8 @@ class TrialSessionCreationTest extends TestCase
         $this->expectExceptionMessage('assigned_teacher_id wajib diisi');
 
         $lifecycle = new \App\Services\StudentLifecycleService(
-            new \App\Services\InvoiceService()
+            new \App\Services\InvoiceService(),
+            new \App\Services\EnrollmentSessionCleanupService()
         );
         $lifecycle->mulaiTrial($student, [
             'trial_date' => now()->addDay()->format('Y-m-d\TH:i'),

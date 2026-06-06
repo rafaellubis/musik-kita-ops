@@ -8,6 +8,7 @@ use App\Models\Package;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Services\EnrollmentSessionCleanupService;
 use App\Services\InvoiceService;
 use App\Services\StudentLifecycleService;
 use Carbon\Carbon;
@@ -34,7 +35,7 @@ class StudentCutiTest extends TestCase
         $user = User::factory()->create()->assignRole('Admin');
         $this->actingAs($user);
 
-        $this->lifecycle = new StudentLifecycleService(new InvoiceService());
+        $this->lifecycle = new StudentLifecycleService(new InvoiceService(), new EnrollmentSessionCleanupService());
         $this->student   = Student::factory()->create(['status' => 'Aktif']);
     }
 

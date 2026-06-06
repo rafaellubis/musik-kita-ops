@@ -67,6 +67,8 @@ class ProgressReportController extends Controller
      */
     public function pdf(ProgressReport $progressReport)
     {
+        abort_unless($progressReport->status === ProgressReport::STATUS_SUBMITTED, 404);
+
         $progressReport->load([
             'student',
             'teacher',
