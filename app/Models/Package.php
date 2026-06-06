@@ -52,4 +52,21 @@ class Package extends Model
     {
         return $this->class_type === 'DUO';
     }
+
+    public function getLevelLabel(): string
+    {
+        if ($this->isKidsClass()) {
+            return 'Kids Class';
+        }
+        if ($this->class_type === 'HOBBY') {
+            return 'Hobby';
+        }
+        if ($this->isDuo()) {
+            return 'Basic · Belajar Berdua';
+        }
+        if ($this->class_type === 'REGULER') {
+            return $this->grade === 'BASIC' ? 'Basic' : 'Level ' . ($this->grade ?? '-');
+        }
+        return $this->code;
+    }
 }
