@@ -34,3 +34,5 @@ memory/
 /*.jpeg
 /*.html
 /docs/mockups/
+
+.worktrees/
