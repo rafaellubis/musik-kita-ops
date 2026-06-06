@@ -12,6 +12,10 @@
     $isOwnScheduled = $sesi->status === 'SCHEDULED'
         && (int) $sesi->teacher_id === (int) $teacher->id
         && !$sesi->substitute_teacher_id;
+    $canWriteNotes = in_array($sesi->status, ['HADIR', 'HADIR_TERLAMBAT'], true)
+        && ((int) $sesi->teacher_id === (int) $teacher->id
+            || ((int) $sesi->substitute_teacher_id === (int) $teacher->id && $sesi->honor_code !== null));
+    $teacherNote = $sesi->teacherNote;
 @endphp
 
 @if($isSubstitutePending)
@@ -98,5 +102,46 @@
                 Status: {{ $sesi->status }}
             @endif
         </span>
+    </div>
+@endif
+
+@if($canWriteNotes)
+    <div x-data="{ openNotes: false }" class="px-4 pb-3 border-t border-gray-100">
+        <button type="button" @click="openNotes = !openNotes"
+                class="w-full flex items-center justify-between py-2.5 text-sm font-semibold text-gray-700 hover:text-gray-900">
+            <span>Catatan Sesi</span>
+            <span x-text="openNotes ? '▲' : '▼'" class="text-xs text-mk-muted"></span>
+        </button>
+        <div x-show="openNotes" x-transition class="space-y-3 pt-1">
+            <form method="POST" action="{{ route('guru.sesi.catatan.update', $sesi) }}" class="space-y-3">
+                @csrf @method('PATCH')
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Materi yang dipelajari</label>
+                    <textarea name="material_learned" rows="2" maxlength="2000"
+                              class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm
+                                     focus:outline-none focus:ring-2 focus:ring-blue-200 resize-y"
+                              placeholder="Contoh: Scales mayor, teknik pernafasan">{{ old('material_learned', $teacherNote?->material_learned) }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Tugas &amp; Latihan/Persiapan 1 Minggu Kedepan</label>
+                    <textarea name="homework_notes" rows="2" maxlength="2000"
+                              class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm
+                                     focus:outline-none focus:ring-2 focus:ring-blue-200 resize-y"
+                              placeholder="Contoh: Latihan 15 menit per hari">{{ old('homework_notes', $teacherNote?->homework_notes) }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Catatan</label>
+                    <textarea name="notes" rows="2" maxlength="2000"
+                              class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm
+                                     focus:outline-none focus:ring-2 focus:ring-blue-200 resize-y"
+                              placeholder="Catatan tambahan untuk murid/orang tua">{{ old('notes', $teacherNote?->notes) }}</textarea>
+                </div>
+                <button type="submit"
+                        class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors appearance-none"
+                        style="background-color:#3b82f6;color:#ffffff;">
+                    Simpan Catatan
+                </button>
+            </form>
+        </div>
     </div>
 @endif

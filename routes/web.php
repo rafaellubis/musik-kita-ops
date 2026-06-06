@@ -526,6 +526,8 @@ Route::middleware(['auth', 'verified', 'role:Guru'])
         // Konfirmasi kehadiran sebagai guru pengganti (DIGANTI two-phase)
         Route::post('/sesi/{classSession}/confirm-substitute', [GuruController::class, 'confirmSubstitute'])
             ->name('absensi.confirm-substitute');
+        Route::patch('/sesi/{classSession}/catatan', [GuruController::class, 'updateSessionNotes'])
+            ->name('sesi.catatan.update');
         Route::get('/profil',                        [GuruController::class, 'profil'])->name('profil');
         Route::get('/sesi-pending',                  [GuruController::class, 'sesiPending'])->name('sesi-pending.index');
         Route::post('/sesi-pending/{session}/suggest', [GuruController::class, 'suggestDate'])->name('sesi-pending.suggest');

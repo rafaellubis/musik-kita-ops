@@ -8,6 +8,7 @@ use App\Models\HonorSlip;
 use App\Models\ProgressReport;
 use App\Models\ProgressReportItem;
 use App\Models\ProgressReportSection;
+use App\Models\SessionTeacherNote;
 use App\Services\AttendanceService;
 use App\Services\ReportTemplateResolverService;
 use App\Services\SessionNoteSyncService;
@@ -59,7 +60,7 @@ class GuruController extends Controller
             })
             ->where('session_date', $today)
             ->whereNotIn('status', ['CANCELLED'])
-            ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher'])
+            ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher', 'teacherNote'])
             ->orderBy('start_time')
             ->get();
 
@@ -109,7 +110,7 @@ class GuruController extends Controller
                   ->orWhere('substitute_teacher_id', $teacher->id);
             })
             ->whereBetween('session_date', [$mulai, $akhir])
-            ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher'])
+            ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher', 'teacherNote'])
             ->orderBy('session_date')
             ->orderBy('start_time')
             ->get();
@@ -529,5 +530,74 @@ class GuruController extends Controller
         ]);
 
         return back()->with('success', 'Penugasan pengganti dibatalkan. Admin perlu atur ulang jika masih diperlukan.');
+    }
+
+    /**
+     * Guru simpan catatan terstruktur per sesi (materi, tugas, catatan).
+     * Boleh untuk sesi HADIR/HADIR_TERLAMBAT di bulan yang laporannya belum SUBMITTED.
+     */
+    public function updateSessionNotes(Request $request, ClassSession $classSession)
+    {
+        $teacher = auth()->user()->teacher;
+        abort_if(!$teacher, 403);
+
+        $isMainTeacher = (int) $classSession->teacher_id === (int) $teacher->id;
+        $isSubstitute = (int) $classSession->substitute_teacher_id === (int) $teacher->id;
+
+        abort_if(!$isMainTeacher && !$isSubstitute, 403, 'Bukan sesi Anda.');
+
+        abort_if(
+            !in_array($classSession->status, [ClassSession::STATUS_HADIR, ClassSession::STATUS_HADIR_TERLAMBAT], true),
+            403,
+            'Catatan hanya bisa diisi untuk sesi yang sudah hadir.'
+        );
+
+        if ($isSubstitute && !$isMainTeacher) {
+            abort_if(
+                $classSession->honor_code === null,
+                403,
+                'Guru pengganti belum dikonfirmasi.'
+            );
+        }
+
+        $sessionDate = Carbon::parse($classSession->session_date);
+        $reportSubmitted = ProgressReport::where('enrollment_id', $classSession->enrollment_id)
+            ->where('month', $sessionDate->month)
+            ->where('year', $sessionDate->year)
+            ->where('status', ProgressReport::STATUS_SUBMITTED)
+            ->exists();
+
+        abort_if(
+            $reportSubmitted,
+            403,
+            'Laporan bulan ini sudah disubmit, catatan tidak bisa diubah.'
+        );
+
+        $validated = $request->validate([
+            'material_learned' => 'nullable|string|max:2000',
+            'homework_notes'   => 'nullable|string|max:2000',
+            'notes'            => 'nullable|string|max:2000',
+        ]);
+
+        $hasContent = collect($validated)
+            ->contains(fn (?string $value) => filled(trim((string) $value)));
+
+        if (!$hasContent) {
+            return back()
+                ->withErrors(['notes' => 'Isi minimal satu kolom catatan.'])
+                ->withInput();
+        }
+
+        SessionTeacherNote::updateOrCreate(
+            ['class_session_id' => $classSession->id],
+            [
+                'teacher_id'       => $teacher->id,
+                'material_learned' => $validated['material_learned'] ?? null,
+                'homework_notes'   => $validated['homework_notes'] ?? null,
+                'notes'            => $validated['notes'] ?? null,
+            ]
+        );
+
+        return back()->with('success', 'Catatan sesi tersimpan.');
     }
 }
