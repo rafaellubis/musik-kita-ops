@@ -374,4 +374,162 @@ class RescheduleTest extends TestCase
             'status'            => 'SCHEDULED',
         ]);
     }
+
+    /** Helper: buat sesi DUO dengan enrollment+package DUO. */
+    private function makeDuoSession(array $override = []): ClassSession
+    {
+        $teacher = $override['teacher'] ?? Teacher::factory()->create(['name' => 'Guru DUO', 'is_active' => true]);
+        unset($override['teacher']);
+
+        $student = Student::factory()->create();
+        $package = Package::factory()->create([
+            'class_type'   => 'DUO',
+            'duration_min' => 30,
+            'is_active'    => true,
+        ]);
+        $enrollment = Enrollment::factory()->create([
+            'student_id' => $student->id,
+            'teacher_id' => $teacher->id,
+            'package_id' => $package->id,
+            'status'     => 'ACTIVE',
+        ]);
+
+        return ClassSession::factory()->create(array_merge([
+            'teacher_id'    => $teacher->id,
+            'student_id'    => $student->id,
+            'enrollment_id' => $enrollment->id,
+            'session_date'  => '2026-06-02',
+            'start_time'    => '10:00:00',
+            'end_time'      => '10:30:00',
+            'status'        => ClassSession::STATUS_IZIN_RESCHEDULE,
+        ], $override));
+    }
+
+    /** @test */
+    public function duo_reschedule_ke_slot_pasangan_duo_berhasil(): void
+    {
+        $teacher = Teacher::factory()->create(['is_active' => true]);
+        $room    = Room::factory()->create(['is_active' => true]);
+
+        $sessionA = $this->makeDuoSession([
+            'teacher'      => $teacher,
+            'room_id'      => $room->id,
+            'session_date' => '2026-06-02',
+            'start_time'   => '09:00:00',
+            'end_time'     => '09:30:00',
+        ]);
+
+        // Pasangan DUO sudah punya sesi di slot target
+        $partnerPackage = Package::factory()->create(['class_type' => 'DUO', 'duration_min' => 30]);
+        $partnerEnroll  = Enrollment::factory()->create([
+            'student_id' => Student::factory()->create()->id,
+            'teacher_id' => $teacher->id,
+            'package_id' => $partnerPackage->id,
+            'status'     => 'ACTIVE',
+        ]);
+        ClassSession::factory()->create([
+            'teacher_id'    => $teacher->id,
+            'student_id'    => $partnerEnroll->student_id,
+            'enrollment_id' => $partnerEnroll->id,
+            'room_id'       => $room->id,
+            'session_date'  => '2026-06-05',
+            'start_time'    => '10:00:00',
+            'end_time'      => '10:30:00',
+            'status'        => ClassSession::STATUS_SCHEDULED,
+        ]);
+
+        $response = $this->actingAs($this->adminUser())->patchJson(
+            route('absensi.update', $sessionA),
+            [
+                'status'              => 'IZIN_RESCHEDULE',
+                'replacement_date'    => '2026-06-05',
+                'replacement_time'    => '10:00',
+                'replacement_room_id' => $room->id,
+            ]
+        );
+
+        $response->assertOk()->assertJson(['success' => true]);
+        $this->assertDatabaseHas('class_sessions', [
+            'student_id'        => $sessionA->student_id,
+            'session_date'      => '2026-06-05',
+            'start_time'        => '10:00:00',
+            'origin_session_id' => $sessionA->id,
+            'status'            => 'SCHEDULED',
+        ]);
+    }
+
+    /** @test */
+    public function duo_reschedule_ke_slot_reguler_gagal(): void
+    {
+        $teacher = Teacher::factory()->create(['is_active' => true]);
+        $session = $this->makeDuoSession(['teacher' => $teacher]);
+
+        $regularPackage = Package::factory()->create(['class_type' => 'REGULER', 'duration_min' => 30]);
+        $regularEnroll  = Enrollment::factory()->create([
+            'student_id' => Student::factory()->create()->id,
+            'teacher_id' => $teacher->id,
+            'package_id' => $regularPackage->id,
+            'status'     => 'ACTIVE',
+        ]);
+        ClassSession::factory()->create([
+            'teacher_id'    => $teacher->id,
+            'student_id'    => $regularEnroll->student_id,
+            'enrollment_id' => $regularEnroll->id,
+            'session_date'  => '2026-06-05',
+            'start_time'    => '14:00:00',
+            'end_time'      => '14:30:00',
+            'status'        => ClassSession::STATUS_SCHEDULED,
+        ]);
+
+        $response = $this->actingAs($this->adminUser())->patchJson(
+            route('absensi.update', $session),
+            [
+                'status'           => 'IZIN_RESCHEDULE',
+                'replacement_date' => '2026-06-05',
+                'replacement_time' => '14:00',
+            ]
+        );
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('Guru', $response->json('message'));
+    }
+
+    /** @test */
+    public function duo_reschedule_ke_slot_duo_penuh_gagal(): void
+    {
+        $teacher = Teacher::factory()->create(['is_active' => true]);
+        $session = $this->makeDuoSession(['teacher' => $teacher]);
+
+        $duoPackage = Package::factory()->create(['class_type' => 'DUO', 'duration_min' => 30]);
+
+        foreach (range(1, 2) as $_) {
+            $enroll = Enrollment::factory()->create([
+                'student_id' => Student::factory()->create()->id,
+                'teacher_id' => $teacher->id,
+                'package_id' => $duoPackage->id,
+                'status'     => 'ACTIVE',
+            ]);
+            ClassSession::factory()->create([
+                'teacher_id'    => $teacher->id,
+                'student_id'    => $enroll->student_id,
+                'enrollment_id' => $enroll->id,
+                'session_date'  => '2026-06-05',
+                'start_time'    => '14:00:00',
+                'end_time'      => '14:30:00',
+                'status'        => ClassSession::STATUS_SCHEDULED,
+            ]);
+        }
+
+        $response = $this->actingAs($this->adminUser())->patchJson(
+            route('absensi.update', $session),
+            [
+                'status'           => 'IZIN_RESCHEDULE',
+                'replacement_date' => '2026-06-05',
+                'replacement_time' => '14:00',
+            ]
+        );
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('Slot DUO sudah penuh', $response->json('message'));
+    }
 }

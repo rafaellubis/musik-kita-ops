@@ -492,4 +492,110 @@ class SplitRescheduleTest extends TestCase
         $response->assertStatus(422);
         $this->assertStringContainsString('bagian dari split', $response->json('message'));
     }
+
+    /** @test */
+    public function duo_split_reschedule_ke_slot_pasangan_duo_berhasil(): void
+    {
+        $teacher = Teacher::factory()->create(['is_active' => true]);
+        $room    = \App\Models\Room::factory()->create(['is_active' => true]);
+
+        $duoPackage = Package::factory()->create([
+            'class_type'      => 'DUO',
+            'duration_min'    => 30,
+            'price_per_month' => 320000,
+            'is_active'       => true,
+        ]);
+        $student    = Student::factory()->create();
+        $enrollment = Enrollment::factory()->create([
+            'student_id' => $student->id,
+            'teacher_id' => $teacher->id,
+            'package_id' => $duoPackage->id,
+            'status'     => 'ACTIVE',
+        ]);
+        $original = ClassSession::factory()->create([
+            'teacher_id'       => $teacher->id,
+            'student_id'       => $student->id,
+            'enrollment_id'    => $enrollment->id,
+            'session_date'     => '2026-05-20',
+            'start_time'       => '10:00:00',
+            'end_time'         => '10:30:00',
+            'status'           => ClassSession::STATUS_IZIN_RESCHEDULE,
+            'session_sequence' => 3,
+        ]);
+
+        $partnerEnroll = Enrollment::factory()->create([
+            'student_id' => Student::factory()->create()->id,
+            'teacher_id' => $teacher->id,
+            'package_id' => $duoPackage->id,
+            'status'     => 'ACTIVE',
+        ]);
+        ClassSession::factory()->create([
+            'teacher_id'    => $teacher->id,
+            'student_id'    => $partnerEnroll->student_id,
+            'enrollment_id' => $partnerEnroll->id,
+            'room_id'       => $room->id,
+            'session_date'  => '2026-06-10',
+            'start_time'    => '14:00:00',
+            'end_time'      => '14:30:00',
+            'status'        => ClassSession::STATUS_SCHEDULED,
+        ]);
+
+        $service = app(\App\Services\RescheduleService::class);
+        $part1   = $service->createSplitPart($original, '2026-06-10', '14:00', $room->id, 1);
+
+        $this->assertEquals('14:00:00', $part1->start_time);
+        $this->assertEquals('14:15:00', $part1->end_time);
+        $this->assertEquals($room->id, $part1->room_id);
+    }
+
+    /** @test */
+    public function duo_split_reschedule_ke_slot_duo_penuh_gagal(): void
+    {
+        $teacher = Teacher::factory()->create(['is_active' => true]);
+        $duoPackage = Package::factory()->create([
+            'class_type'      => 'DUO',
+            'duration_min'    => 30,
+            'price_per_month' => 320000,
+            'is_active'       => true,
+        ]);
+        $enrollment = Enrollment::factory()->create([
+            'student_id' => Student::factory()->create()->id,
+            'teacher_id' => $teacher->id,
+            'package_id' => $duoPackage->id,
+            'status'     => 'ACTIVE',
+        ]);
+        $original = ClassSession::factory()->create([
+            'teacher_id'    => $teacher->id,
+            'student_id'    => $enrollment->student_id,
+            'enrollment_id' => $enrollment->id,
+            'session_date'  => '2026-05-20',
+            'start_time'    => '10:00:00',
+            'end_time'      => '10:30:00',
+            'status'        => ClassSession::STATUS_IZIN_RESCHEDULE,
+        ]);
+
+        foreach (range(1, 2) as $_) {
+            $partner = Enrollment::factory()->create([
+                'student_id' => Student::factory()->create()->id,
+                'teacher_id' => $teacher->id,
+                'package_id' => $duoPackage->id,
+                'status'     => 'ACTIVE',
+            ]);
+            ClassSession::factory()->create([
+                'teacher_id'    => $teacher->id,
+                'student_id'    => $partner->student_id,
+                'enrollment_id' => $partner->id,
+                'session_date'  => '2026-06-10',
+                'start_time'    => '14:00:00',
+                'end_time'      => '14:30:00',
+                'status'        => ClassSession::STATUS_SCHEDULED,
+            ]);
+        }
+
+        $service = app(\App\Services\RescheduleService::class);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Slot DUO sudah penuh');
+        $service->createSplitPart($original, '2026-06-10', '14:00', null, 1);
+    }
 }
