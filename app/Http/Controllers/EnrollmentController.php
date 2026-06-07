@@ -87,7 +87,16 @@ class EnrollmentController extends Controller
                     ->withInput();
             }
         } else {
-            if ($teacherConflicts->isNotEmpty()) {
+            // Kids Class grup boleh share slot dengan Kids lain; privat tetap diblokir
+            $blockingConflicts = $this->conflictDetector->findBlockingTeacherConflicts(
+                teacherId: $data['teacher_id'],
+                dayOfWeek: $data['day_of_week'],
+                startTime: $startTime,
+                endTime:   $endTime,
+                newClassType: $package->class_type,
+            );
+
+            if ($blockingConflicts->isNotEmpty()) {
                 return back()
                     ->withErrors(['teacher_id' => 'Guru sudah punya jadwal di hari dan jam tersebut.'])
                     ->withInput();

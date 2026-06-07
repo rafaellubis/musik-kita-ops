@@ -11,8 +11,10 @@ use Illuminate\Support\Collection;
  * Cek konflik jadwal mingguan tetap (M03).
  *
  * Aturan:
- *   1. Konflik guru: 1 guru tidak boleh punya 2 schedule di hari + jam
- *      yang overlap. Selalu konflik (tidak ada exception).
+ *   1. Konflik guru: 1 guru tidak boleh punya 2 schedule privat (REGULER/HOBBY)
+ *      di hari + jam yang overlap. Pengecualian:
+ *      - KIDS_CLASS / KIDS_CLASS_BUNDLE boleh overlap antar-Kids (kelas grup)
+ *      - DUO punya aturan khusus (maks 2 pasangan DUO) — di caller
  *
  *   2. Konflik ruang: 1 ruang tidak boleh punya N schedule overlap kalau
  *      N >= room.capacity. Untuk ruang biasa (capacity=1), 2 schedule
@@ -56,6 +58,46 @@ class ScheduleConflictDetector
             ->when($excludeScheduleId, fn ($q) => $q->where('id', '!=', $excludeScheduleId))
             ->with('enrollment.student', 'enrollment.package')
             ->get();
+    }
+
+    /**
+     * Konflik guru yang benar-benar memblokir penambahan jadwal baru (Opsi 2).
+     *
+     * - Paket Kids baru: hanya diblokir jika slot sudah dipakai kelas non-Kids
+     * - Paket privat (REGULER/HOBBY/dll): semua overlap memblokir
+     * - DUO: caller pakai findTeacherConflicts + filter DUO sendiri
+     */
+    public function findBlockingTeacherConflicts(
+        int $teacherId,
+        int $dayOfWeek,
+        string $startTime,
+        string $endTime,
+        string $newClassType,
+        ?int $excludeScheduleId = null,
+    ): Collection {
+        $conflicts = $this->findTeacherConflicts(
+            $teacherId,
+            $dayOfWeek,
+            $startTime,
+            $endTime,
+            $excludeScheduleId,
+        );
+
+        if ($this->isKidsClassType($newClassType)) {
+            return $conflicts
+                ->filter(fn ($schedule) => ! $this->isKidsClassType(
+                    $schedule->enrollment?->package?->class_type
+                ))
+                ->values();
+        }
+
+        return $conflicts;
+    }
+
+    /** Apakah class_type termasuk kelas grup Kids? */
+    public function isKidsClassType(?string $classType): bool
+    {
+        return in_array($classType, ['KIDS_CLASS', 'KIDS_CLASS_BUNDLE'], true);
     }
 
     /**
