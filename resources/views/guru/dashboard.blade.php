@@ -5,19 +5,6 @@
     <p class="text-sm text-mk-muted">{{ \Carbon\Carbon::today()->locale('id')->isoFormat('dddd, D MMMM Y') }}</p>
 </div>
 
-{{-- ===== QUICK LINKS --}}
-<div class="mx-4 mb-3">
-    <a href="{{ route('guru.laporan.index') }}"
-       class="flex items-center gap-3 bg-mk-card border border-mk-border rounded-xl px-4 py-3 hover:bg-mk-cardHover transition-colors">
-        <span class="text-xl">📝</span>
-        <div class="flex-1">
-            <div class="font-semibold text-mk-text text-sm">Laporan Progres</div>
-            <div class="text-xs text-mk-muted mt-0.5">Isi laporan perkembangan murid bulanan</div>
-        </div>
-        <span class="text-mk-muted text-lg">›</span>
-    </a>
-</div>
-
 {{-- ===== BANNER SESI PENDING (tampil hanya jika ada) ===== --}}
 @if($jumlahPending > 0)
 <div class="mx-4 mb-2">

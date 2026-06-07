@@ -39,6 +39,8 @@
             <x-sidebar-item route="guru.sesi-pending.index" icon="📋" label="Sesi Pending"
                 :active="request()->routeIs('guru.sesi-pending*')"
                 :badge="$guruPendingCount ?: null" />
+            <x-sidebar-item route="guru.laporan.index" icon="📝" label="Laporan Progress"
+                :active="request()->routeIs('guru.laporan*')" />
             <x-sidebar-item route="guru.honor" icon="💰" label="Slip Honor"
                 :active="request()->routeIs('guru.honor*')" />
         </nav>
@@ -65,10 +67,24 @@
         {{-- Topbar --}}
         <div class="relative z-20 shrink-0 h-14 bg-mk-sidebar border-b border-white/[0.06] flex items-center px-4 lg:px-6 gap-3">
             <span class="text-white/90 font-semibold text-sm lg:text-base flex-1">{{ $title }}</span>
-            <a href="{{ route('guru.profil') }}"
-               class="lg:hidden text-[11px] text-white/50 hover:text-white/70 truncate max-w-[140px] transition-colors">
-                {{ auth()->user()->name }} 🔑
-            </a>
+            <div class="lg:hidden flex items-center gap-2 shrink-0">
+                <a href="{{ route('guru.profil') }}"
+                   class="text-[11px] text-white/50 hover:text-white/70 truncate max-w-[120px] transition-colors">
+                    {{ auth()->user()->name }} 🔑
+                </a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit"
+                            title="Keluar"
+                            class="flex items-center gap-1 text-[11px] text-white/50 hover:text-red-400 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                        <span>Keluar</span>
+                    </button>
+                </form>
+            </div>
         </div>
 
         {{-- Konten --}}
@@ -134,6 +150,16 @@
         Sesi Pending
     </a>
 
+    <a href="{{ route('guru.laporan.index') }}"
+       class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors
+              {{ request()->routeIs('guru.laporan*') ? 'text-mk-accent' : 'text-white/45 hover:text-white/75' }}">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Laporan Progress
+    </a>
+
     <a href="{{ route('guru.honor') }}"
        class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors
               {{ request()->routeIs('guru.honor*') ? 'text-mk-accent' : 'text-white/45 hover:text-white/75' }}">
@@ -143,19 +169,6 @@
         </svg>
         Honor
     </a>
-
-    {{-- Tombol Keluar --}}
-    <form method="POST" action="{{ route('logout') }}" class="flex-1">
-        @csrf
-        <button type="submit"
-                class="w-full h-full flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium text-white/45 hover:text-red-400 transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-            </svg>
-            Keluar
-        </button>
-    </form>
 
 </nav>
 
