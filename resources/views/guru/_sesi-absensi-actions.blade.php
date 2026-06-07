@@ -39,21 +39,12 @@
                 @csrf
                 <input type="hidden" name="action" value="hadir">
                 <button type="submit"
-                        class="w-full py-2.5 rounded-xl font-semibold text-sm appearance-none"
+                        class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors appearance-none"
                         style="background-color:#22c55e;color:#ffffff;">
                     ✓ Hadir
                 </button>
             </form>
-            <form method="POST" action="{{ route('guru.absensi.confirm-substitute', $sesi) }}"
-                  onsubmit="return confirm('Batalkan penugasan pengganti? Admin perlu atur ulang.');">
-                @csrf
-                <input type="hidden" name="action" value="batal">
-                <button type="submit"
-                        class="w-full py-2.5 rounded-xl font-semibold text-sm appearance-none"
-                        style="background-color:rgba(248,113,113,0.15);color:#F87171;">
-                    ✗ Batal
-                </button>
-            </form>
+            
         </div>
     </div>
 @elseif($isSubstituteConfirmed)

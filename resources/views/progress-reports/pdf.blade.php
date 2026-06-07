@@ -120,7 +120,7 @@
             <td class="meta-value">{{ $progressReport->namaBulan() }}</td>
         </tr>
         <tr>
-            <td class="meta-label">Rating Anak hari Ini</td>
+            <td class="meta-label">Rating Anak Bulan Ini</td>
             <td class="meta-colon">:</td>
             <td><span class="stars">{{ $headerStars }}</span></td>
         </tr>
@@ -174,7 +174,7 @@
 
 <div class="footer-box">
     <div class="footer-instrument">{{ $pkg->getReportInstrumentLabel() }}</div>
-    <div class="progress-label">Progress</div>
+    <div class="progress-label">Progress Level</div>
     <table cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
         <tr>
             <td width="{{ $barWidth }}" style="vertical-align:middle;padding:0;">
@@ -212,8 +212,7 @@
 </div>
 
 <div class="pdf-footnote">
-    Laporan ini merupakan evaluasi perkembangan belajar bulanan.
-    Untuk pertanyaan lebih lanjut, silakan hubungi admin studio Musik KITA.
+    Laporan ini merupakan evaluasi perkembangan belajar bulanan.Untuk pertanyaan lebih lanjut, silakan hubungi admin studio Musik KITA.
 </div>
 
 </body>
