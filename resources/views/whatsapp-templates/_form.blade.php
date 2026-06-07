@@ -20,6 +20,36 @@
     </div>
     <div>
         <label class="block text-sm font-medium text-mk-text mb-1">Isi Pesan</label>
+        @if(isset($template))
+            @php
+                $placeholders = match ($template->code) {
+                    \App\Models\WhatsappMessageTemplate::CODE_INVOICE_REMINDER => [
+                        '{nama_ortu}', '{nama_murid}', '{kode_murid}', '{daftar_invoice}',
+                        '{total_tagihan}', '{tempo_terdekat}', '{studio_wa}',
+                    ],
+                    \App\Models\WhatsappMessageTemplate::CODE_SCHEDULE_REMINDER => [
+                        '{nama_ortu}', '{nama_murid}', '{kode_murid}', '{tanggal}',
+                        '{daftar_jadwal}', '{studio_wa}',
+                    ],
+                    \App\Models\WhatsappMessageTemplate::CODE_SESSION_REPORT => [
+                        '{nama_ortu}', '{nama_murid}', '{tanggal_sesi}', '{instrumen}',
+                        '{nama_guru}', '{materi}', '{tugas}', '{blok_catatan}',
+                        '{pesan_semangat}', '{studio_wa}',
+                    ],
+                    \App\Models\WhatsappMessageTemplate::CODE_SESSION_REPORT_STUDENT => [
+                        '{nama_murid}', '{tanggal_sesi}', '{instrumen}', '{nama_guru}',
+                        '{materi}', '{tugas}', '{blok_catatan}', '{pesan_semangat}', '{studio_wa}',
+                    ],
+                    default => ['{nama_murid}', '{nama_ortu}', '{studio_wa}'],
+                };
+            @endphp
+            <p class="mb-2 p-2 rounded-lg bg-gray-50 text-xs text-mk-muted">
+                Placeholder untuk template ini:
+                @foreach($placeholders as $ph)
+                    <code class="text-mk-text">{{ $ph }}</code>@if(! $loop->last),@endif
+                @endforeach
+            </p>
+        @endif
         <textarea name="body" rows="14"
                   class="w-full rounded border-gray-300 text-sm font-mono">{{ old('body', isset($template) ? $template->body : '') }}</textarea>
         @error('body')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror

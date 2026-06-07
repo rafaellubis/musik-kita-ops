@@ -15,6 +15,9 @@ class WhatsappMessageTemplateController extends Controller
 {
     public function index(): View
     {
+        // Buat template bawaan jika DB kosong / belum pernah di-seed
+        WhatsappMessageTemplate::ensureSystemDefaults();
+
         $templates = WhatsappMessageTemplate::orderBy('sort_order')->orderBy('code')->get();
 
         return view('whatsapp-templates.index', compact('templates'));

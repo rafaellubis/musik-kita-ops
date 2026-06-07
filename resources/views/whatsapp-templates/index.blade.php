@@ -3,7 +3,7 @@
         <div class="flex justify-between items-center">
             <div>
                 <h2 class="font-semibold text-xl text-mk-text">Template Pesan WhatsApp</h2>
-                <div class="text-xs text-mk-muted mt-0.5">Master data template untuk reminder tagihan</div>
+                <div class="text-xs text-mk-muted mt-0.5">Reminder tagihan, jadwal, dan laporan sesi WhatsApp</div>
             </div>
             @role('Owner')
             <a href="{{ route('whatsapp-templates.create') }}"
@@ -15,14 +15,6 @@
     </x-slot>
 
     <div class="py-6 px-4 lg:px-8">
-        <div class="mb-4 p-3 rounded-lg bg-mk-surface text-xs text-mk-muted">
-            Placeholder: <code class="text-mk-text">{nama_murid}</code>,
-            <code>{kode_murid}</code>, <code>{nama_ortu}</code>,
-            <code>{total_tagihan}</code>, <code>{jumlah_invoice}</code>,
-            <code>{daftar_invoice}</code>, <code>{tempo_terdekat}</code>,
-            <code>{studio_wa}</code>
-        </div>
-
         <div class="bg-mk-card shadow-sm sm:rounded-lg overflow-hidden">
             @if($templates->isEmpty())
                 <div class="p-8 text-center text-mk-dim">Belum ada template.</div>
@@ -56,7 +48,12 @@
                                 <td class="px-4 py-2 text-right whitespace-nowrap">
                                     <a href="{{ route('whatsapp-templates.edit', $t) }}"
                                        class="text-blue-600 hover:underline text-xs">Edit</a>
-                                    @if($t->code !== \App\Models\WhatsappMessageTemplate::CODE_INVOICE_REMINDER)
+                                    @if(! in_array($t->code, [
+                                        \App\Models\WhatsappMessageTemplate::CODE_INVOICE_REMINDER,
+                                        \App\Models\WhatsappMessageTemplate::CODE_SCHEDULE_REMINDER,
+                                        \App\Models\WhatsappMessageTemplate::CODE_SESSION_REPORT,
+                                        \App\Models\WhatsappMessageTemplate::CODE_SESSION_REPORT_STUDENT,
+                                    ], true))
                                     <form action="{{ route('whatsapp-templates.destroy', $t) }}" method="POST" class="inline ml-2"
                                           onsubmit="return confirm('Hapus template {{ $t->code }}?');">
                                         @csrf

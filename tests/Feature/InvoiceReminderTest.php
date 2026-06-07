@@ -208,6 +208,20 @@ class InvoiceReminderTest extends TestCase
         $this->assertStringStartsWith('%PDF', $pdf);
     }
 
+    public function test_index_provisions_system_templates_when_database_empty(): void
+    {
+        WhatsappMessageTemplate::query()->delete();
+
+        $this->actingAs($this->owner)
+            ->get(route('whatsapp-templates.index'))
+            ->assertOk()
+            ->assertSee('SESSION_REPORT')
+            ->assertSee('SESSION_REPORT_STUDENT')
+            ->assertSee('INVOICE_REMINDER');
+
+        $this->assertDatabaseCount('whatsapp_message_templates', 4);
+    }
+
     public function test_whatsapp_template_crud_owner_only(): void
     {
         $this->actingAs($this->owner)

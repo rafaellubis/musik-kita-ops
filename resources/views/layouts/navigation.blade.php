@@ -89,11 +89,8 @@
     <x-sidebar-item route="report-templates.index" icon="📋" label="Template Laporan"
         :active="request()->routeIs('report-templates.*')" />
     @endrole
-    {{-- Nonaktif untuk semua role: tampil abu-abu, tidak bisa diklik --}}
     <x-sidebar-item route="whatsapp-templates.index" icon="💬" label="Template WA"
-        :active="request()->routeIs('whatsapp-templates.*')"
-        :disabled="false"
-        title="Sementara dinonaktifkan" />
+        :active="request()->routeIs('whatsapp-templates.*')" />
     @role('Owner|Auditor')
     <x-sidebar-item route="invoice-components.index" icon="🧾" label="Komponen Invoice"
         :active="request()->routeIs('invoice-components.*')" />
