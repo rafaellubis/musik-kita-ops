@@ -150,6 +150,123 @@
                     </div>
                 @endif
             </div>
+
+            {{-- Panel slot sesi + tambah manual (Owner/Admin) --}}
+            @if(auth()->user()->hasAnyRole(['Owner', 'Admin']) && $student->status === 'Aktif')
+                @php $slotInfo = $enrollmentSlotSummaries[$enrollment->id] ?? null; @endphp
+                @if($slotInfo)
+                <div class="px-5 py-3 bg-mk-surface border-t border-mk-borderLight" x-data="{ showManualModal: false }">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-[10px] uppercase tracking-widest font-semibold text-mk-dim">
+                            Slot Sesi · {{ $slotInfo['month_label'] }}
+                        </div>
+                        @if($slotInfo['next_sequence'])
+                            <button type="button" @click="showManualModal = true"
+                                    class="px-2.5 py-1 rounded-lg text-[10px] font-semibold"
+                                    style="background:rgba(93,184,144,0.15);color:#5DB890">
+                                + Tambah Sesi Manual
+                            </button>
+                        @else
+                            <span class="text-[10px] text-mk-dim">Semua slot terisi</span>
+                        @endif
+                    </div>
+                    <div class="flex gap-1.5">
+                        @foreach([1, 2, 3, 4] as $seq)
+                            @php $slotSession = $slotInfo['slots'][$seq] ?? null; @endphp
+                            <div class="flex-1 text-center px-1 py-1.5 rounded text-[10px] font-medium
+                                {{ $slotSession ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-400' }}">
+                                {{ $seq }}
+                                @if($slotSession)
+                                    <div class="font-normal opacity-75">
+                                        {{ \Carbon\Carbon::parse($slotSession->session_date)->format('d/m') }}
+                                    </div>
+                                @else
+                                    <div class="font-normal">—</div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+
+                    @if($errors->has('manual_session') && old('enrollment_id') == $enrollment->id)
+                        <p class="text-xs text-red-600 mt-2">{{ $errors->first('manual_session') }}</p>
+                    @endif
+
+                    <div x-show="showManualModal" x-cloak
+                         class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+                         @click.self="showManualModal = false"
+                         @keydown.escape.window="showManualModal = false">
+                        <div class="bg-mk-card rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+                            <h3 class="text-base font-semibold text-mk-text mb-1">Tambah Sesi Manual</h3>
+                            <p class="text-xs text-mk-dim mb-4">
+                                Atribusi: {{ $slotInfo['month_label'] }} · Slot {{ $slotInfo['next_sequence'] }}
+                            </p>
+                            <form method="POST"
+                                  action="{{ route('students.enrollments.manual-sessions.store', [$student, $enrollment]) }}">
+                                @csrf
+                                <input type="hidden" name="enrollment_id" value="{{ $enrollment->id }}">
+                                <input type="hidden" name="session_sequence" value="{{ $slotInfo['next_sequence'] }}">
+                                <div class="space-y-3 mb-4">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="block text-xs font-medium text-mk-muted mb-1">Atribusi Tahun</label>
+                                            <input type="number" name="attribution_year" required min="2024" max="2030"
+                                                   value="{{ old('attribution_year', $slotInfo['year']) }}"
+                                                   class="w-full border border-mk-border rounded-lg px-3 py-2 text-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-mk-muted mb-1">Atribusi Bulan</label>
+                                            <select name="attribution_month" required
+                                                    class="w-full border border-mk-border rounded-lg px-3 py-2 text-sm">
+                                                @for($m = 1; $m <= 12; $m++)
+                                                    <option value="{{ $m }}"
+                                                        @selected((int) old('attribution_month', $slotInfo['month']) === $m)>
+                                                        {{ \Carbon\Carbon::create(2026, $m, 1)->locale('id')->translatedFormat('F') }}
+                                                    </option>
+                                                @endfor
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-mk-muted mb-1">Tanggal Sesi</label>
+                                        <input type="date" name="session_date" required
+                                               value="{{ old('session_date') }}"
+                                               class="w-full border border-mk-border rounded-lg px-3 py-2 text-sm">
+                                        <p class="text-[10px] text-mk-dim mt-1">Boleh di bulan lain (rapel) — tetap masuk laporan {{ $slotInfo['month_label'] }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-mk-muted mb-1">Jam Mulai</label>
+                                        <input type="time" name="start_time" required
+                                               value="{{ old('start_time', $jadwal ? \Carbon\Carbon::parse($jadwal->start_time)->format('H:i') : '14:00') }}"
+                                               class="w-full border border-mk-border rounded-lg px-3 py-2 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-mk-muted mb-1">Ruangan</label>
+                                        <select name="room_id" class="w-full border border-mk-border rounded-lg px-3 py-2 text-sm">
+                                            <option value="">— Tanpa ruangan —</option>
+                                            @foreach($allRooms ?? [] as $room)
+                                                <option value="{{ $room->id }}" @selected(old('room_id') == $room->id)>
+                                                    {{ $room->code }} — {{ $room->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 justify-end">
+                                    <button type="button" @click="showManualModal = false"
+                                            class="px-4 py-2 rounded-lg text-sm text-mk-muted hover:bg-mk-surfaceHover">
+                                        Batal
+                                    </button>
+                                    <button type="submit"
+                                            class="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700">
+                                        Buat Sesi
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                @endif
+            @endif
         @empty
             <div class="px-5 py-8 text-center text-sm text-mk-dim">
                 Belum ada kelas berjalan.<br>

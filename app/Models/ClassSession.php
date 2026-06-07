@@ -34,6 +34,7 @@ class ClassSession extends Model
         'late_minutes', 'notes',
         'honor_code', 'honor_amount',
         'session_sequence', 'origin_session_id', 'split_part',
+        'attribution_month', 'attribution_year', 'session_type',
     ];
 
     protected $casts = [
@@ -42,9 +43,28 @@ class ClassSession extends Model
         // Kode yang butuh operasi tanggal pakai Carbon::parse($session->session_date).
         'late_minutes'     => 'integer',
         'honor_amount'     => 'integer',
-        'session_sequence' => 'integer',
-        'split_part'      => 'integer',
+        'session_sequence'   => 'integer',
+        'split_part'         => 'integer',
+        'attribution_month'  => 'integer',
+        'attribution_year'   => 'integer',
     ];
+
+    public const TYPE_REGULAR = 'REGULAR';
+    public const TYPE_MANUAL  = 'MANUAL';
+
+    protected static function booted(): void
+    {
+        static::creating(function (ClassSession $session) {
+            if ($session->session_date && $session->attribution_month === null) {
+                $date = Carbon::parse($session->session_date);
+                $session->attribution_month = $date->month;
+                $session->attribution_year  = $date->year;
+            }
+            if ($session->session_type === null) {
+                $session->session_type = self::TYPE_REGULAR;
+            }
+        });
+    }
 
     /**
      * Status enum yang valid (referensi cepat ke CLAUDE.md).
@@ -154,6 +174,21 @@ class ClassSession extends Model
             return "Bagian {$this->split_part}/2 — Reschedule dari Sesi ke-{$seq} Bulan {$bulan}";
         }
 
+        // Sesi manual (admin) — atribusi bisa beda dari tanggal fisik (rapel).
+        if ($this->session_type === self::TYPE_MANUAL && $this->session_sequence) {
+            $attrBulan = Carbon::create($this->attributionYear(), $this->attributionMonth(), 1)
+                ->locale('id')->translatedFormat('F Y');
+            $actual = Carbon::parse($this->session_date)->locale('id')->translatedFormat('d M Y');
+            $seq = $this->session_sequence;
+
+            if ($this->attributionMonth() !== (int) Carbon::parse($this->session_date)->month
+                || $this->attributionYear() !== (int) Carbon::parse($this->session_date)->year) {
+                return "Sesi ke-{$seq} Bulan {$attrBulan} (manual · rapel {$actual})";
+            }
+
+            return "Sesi ke-{$seq} Bulan {$attrBulan} (manual · {$actual})";
+        }
+
         // Sesi pengganti / reschedule biasa — ada origin
         if ($this->origin_session_id && $this->originSession) {
             // Bulan dari tanggal ORIGIN (kapan sesi aslinya harusnya berlangsung).
@@ -167,7 +202,8 @@ class ClassSession extends Model
 
         // Sesi biasa dengan sequence (SCHEDULED atau LIBUR tanpa replacement)
         if ($this->session_sequence) {
-            $bulan = Carbon::parse($this->session_date)->locale('id')->translatedFormat('F Y');
+            $bulan = Carbon::create($this->attributionYear(), $this->attributionMonth(), 1)
+                ->locale('id')->translatedFormat('F Y');
             return "Sesi ke-{$this->session_sequence} Bulan {$bulan}";
         }
 
@@ -187,7 +223,8 @@ class ClassSession extends Model
         }
 
         if ($this->session_sequence) {
-            $bulan = Carbon::parse($this->session_date)->locale('id')->translatedFormat('F Y');
+            $bulan = Carbon::create($this->attributionYear(), $this->attributionMonth(), 1)
+                ->locale('id')->translatedFormat('F Y');
 
             return "Sesi ke-{$this->session_sequence} · {$bulan}";
         }
@@ -195,7 +232,31 @@ class ClassSession extends Model
         return '—';
     }
 
+    public function attributionMonth(): int
+    {
+        if ($this->attribution_month) {
+            return (int) $this->attribution_month;
+        }
+
+        return (int) Carbon::parse($this->session_date)->month;
+    }
+
+    public function attributionYear(): int
+    {
+        if ($this->attribution_year) {
+            return (int) $this->attribution_year;
+        }
+
+        return (int) Carbon::parse($this->session_date)->year;
+    }
+
     // ============= SCOPES =============
+
+    public function scopeForAttributionMonth($query, int $year, int $month)
+    {
+        return $query->where('attribution_year', $year)
+                     ->where('attribution_month', $month);
+    }
 
     public function scopeInMonth($query, int $year, int $month)
     {

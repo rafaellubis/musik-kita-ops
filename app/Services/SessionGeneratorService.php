@@ -177,6 +177,7 @@ class SessionGeneratorService
                     'honor_amount'     => $honorAmount,
                     'notes'            => 'Auto-set LIBUR: ' . $holiday->name,
                     'session_sequence' => $liburSequence,
+                    ...$this->attributionFields($date),
                 ]);
 
                 $report['created']++;
@@ -213,6 +214,7 @@ class SessionGeneratorService
                     'room_id'          => $schedule->room_id,
                     'status'           => 'SCHEDULED',
                     'session_sequence' => $slotCounter,
+                    ...$this->attributionFields($date),
                 ]);
 
                 $report['created']++;
@@ -276,6 +278,8 @@ class SessionGeneratorService
                 'notes'            => 'Sesi pengganti dari tanggal libur',
                 'session_sequence' => $repItem['reserved_slot'],    // mewarisi slot LIBUR
                 'origin_session_id'=> $repItem['libur_session_id'], // referensi ke sesi LIBUR
+                // Atribusi mengikuti bulan yang di-generate (slot mingguan), bukan bulan tanggal pengganti.
+                ...$this->attributionFields($monthStart),
             ]);
 
             $report['created']++;
@@ -476,5 +480,15 @@ class SessionGeneratorService
             ->get()
             ->mapWithKeys(fn ($h) => [$h->date->toDateString() => $h])
             ->all();
+    }
+
+    /** @return array{attribution_year: int, attribution_month: int, session_type: string} */
+    private function attributionFields(Carbon $date): array
+    {
+        return [
+            'attribution_year'  => $date->year,
+            'attribution_month' => $date->month,
+            'session_type'      => ClassSession::TYPE_REGULAR,
+        ];
     }
 }

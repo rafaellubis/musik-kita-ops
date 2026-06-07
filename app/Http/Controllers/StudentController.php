@@ -13,6 +13,7 @@ use App\Models\Schedule;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Services\InvoiceService;
+use App\Services\ManualSessionService;
 use App\Services\StudentLifecycleService;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
@@ -204,6 +205,22 @@ class StudentController extends Controller
         // Ambil fee KIDS_FP dari konstanta InvoiceService (BR: Rp 140.000)
         $kidsFpFee = InvoiceService::FEE_KIDS_FP;
 
+        // M03: Ringkasan slot sesi per enrollment (panel sesi manual)
+        $manualSessionService = app(ManualSessionService::class);
+        $enrollmentSlotSummaries = [];
+        foreach ($activeEnrollments as $enrollment) {
+            $attrYear  = now()->year;
+            $attrMonth = now()->month;
+            $enrollmentSlotSummaries[$enrollment->id] = [
+                'year'          => $attrYear,
+                'month'         => $attrMonth,
+                'month_label'   => \Carbon\Carbon::create($attrYear, $attrMonth, 1)
+                    ->locale('id')->translatedFormat('F Y'),
+                'slots'         => $manualSessionService->slotSummary($enrollment, $attrYear, $attrMonth),
+                'next_sequence' => $manualSessionService->suggestNextSequence($enrollment, $attrYear, $attrMonth),
+            ];
+        }
+
         return view('students.show', compact(
             'student', 'packages', 'teachers', 'rooms',
             'roomsForFilter', 'bookedSchedules',
@@ -213,6 +230,7 @@ class StudentController extends Controller
             'allPackages', 'allTeachers', 'allRooms',
             'kidsInstallments',
             'tampilKidsFpButton', 'kidsFpFee',
+            'enrollmentSlotSummaries',
         ));
     }
 
