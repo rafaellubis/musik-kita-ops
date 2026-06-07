@@ -19,8 +19,12 @@
     $teacherNote = $sesi->teacherNote;
     $waService = app(\App\Services\SessionReportWaService::class);
     $waState = $teacherNote ? $waService->deliveryState($sesi) : 'DISABLED';
+    $waRecipientType = $sesi->student ? $waService->resolveRecipientType($sesi->student) : null;
+    $waRecipientLabel = $waRecipientType === 'student' ? 'murid' : 'ortu';
     $waMaskedPhone = $waService->maskPhone(
-        $sesi->student?->parent_phone ?: $sesi->student?->phone
+        $waRecipientType === 'student'
+            ? $sesi->student?->phone
+            : ($sesi->student?->parent_phone ?: $sesi->student?->phone)
     );
 @endphp
 
@@ -179,10 +183,10 @@
                             @elseif($waState === 'SKIPPED')
                                 ℹ Nomor WA tidak tersedia
                             @else
-                                ⏳ Akan dikirim ke ortu dalam ~{{ config('session_report_wa.debounce_minutes', 10) }} menit
+                                ⏳ Akan dikirim ke {{ $waRecipientLabel }} dalam ~{{ config('session_report_wa.debounce_minutes', 10) }} menit
                             @endif
                         </div>
-                        <p class="text-[11px] text-mk-muted">Dikirim ke nomor ortu, atau nomor murid jika ortu kosong.</p>
+                        <p class="text-[11px] text-mk-muted">Dikirim ke nomor ortu terlebih dahulu; jika kosong, ke nomor murid dengan template berbeda.</p>
                     @endif
                 </form>
             </div>

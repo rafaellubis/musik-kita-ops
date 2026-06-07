@@ -48,6 +48,10 @@ class WhatsappMessageTemplateController extends Controller
         $data = $request->validated();
         $data['is_active'] = $request->boolean('is_active', false);
 
+        if ($whatsappMessageTemplate->isSessionReportTemplate()) {
+            $data['encouragement_lines'] = $request->input('encouragement_lines');
+        }
+
         $whatsappMessageTemplate->update($data);
 
         return redirect()->route('whatsapp-templates.index')
@@ -60,6 +64,7 @@ class WhatsappMessageTemplateController extends Controller
             WhatsappMessageTemplate::CODE_INVOICE_REMINDER,
             WhatsappMessageTemplate::CODE_SCHEDULE_REMINDER,
             WhatsappMessageTemplate::CODE_SESSION_REPORT,
+            WhatsappMessageTemplate::CODE_SESSION_REPORT_STUDENT,
         ], true)) {
             return back()->with('error', "Template {$whatsappMessageTemplate->code} tidak boleh dihapus. Nonaktifkan saja.");
         }

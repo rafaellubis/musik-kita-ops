@@ -92,7 +92,7 @@
     {{-- Nonaktif untuk semua role: tampil abu-abu, tidak bisa diklik --}}
     <x-sidebar-item route="whatsapp-templates.index" icon="💬" label="Template WA"
         :active="request()->routeIs('whatsapp-templates.*')"
-        :disabled="true"
+        :disabled="false"
         title="Sementara dinonaktifkan" />
     @role('Owner|Auditor')
     <x-sidebar-item route="invoice-components.index" icon="🧾" label="Komponen Invoice"

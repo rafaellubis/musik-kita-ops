@@ -51,6 +51,22 @@ class SessionReportWaTest extends TestCase
         $this->assertTrue($template->is_active);
     }
 
+    public function test_default_session_report_student_template_exists_after_seed(): void
+    {
+        $this->seed(\Database\Seeders\WhatsappMessageTemplateSeeder::class);
+
+        $template = WhatsappMessageTemplate::defaultSessionReportStudent();
+
+        $this->assertNotNull($template);
+        $this->assertSame(WhatsappMessageTemplate::CODE_SESSION_REPORT_STUDENT, $template->code);
+        $this->assertTrue($template->is_active);
+        $this->assertStringContainsString('{nama_murid}', $template->body);
+        $this->assertStringNotContainsString('{nama_ortu}', $template->body);
+        $this->assertNotEmpty($template->encouragement_lines['rating_5']);
+        $this->assertNotEmpty($template->encouragement_lines['rating_2']);
+        $this->assertNotEmpty($template->encouragement_lines['rating_1']);
+    }
+
     private function seedSessionReportTemplate(): void
     {
         WhatsappMessageTemplate::create([
@@ -59,6 +75,14 @@ class SessionReportWaTest extends TestCase
             'body'       => 'Halo {nama_ortu}, {nama_murid} {tanggal_sesi} {instrumen} {nama_guru} M:{materi} T:{tugas} {blok_catatan} {pesan_semangat} {studio_wa}',
             'is_active'  => true,
             'sort_order' => 3,
+        ]);
+
+        WhatsappMessageTemplate::create([
+            'code'       => WhatsappMessageTemplate::CODE_SESSION_REPORT_STUDENT,
+            'name'       => 'Laporan Sesi ke Murid',
+            'body'       => 'Halo {nama_murid}! Kamu les {instrumen}. {pesan_semangat}',
+            'is_active'  => true,
+            'sort_order' => 4,
         ]);
     }
 
@@ -119,6 +143,170 @@ class SessionReportWaTest extends TestCase
         $this->assertStringContainsString('Ani Kecil', $message);
         $this->assertStringContainsString('Scales mayor', $message);
         $this->assertStringContainsString('antusias dan fokus', $message);
+    }
+
+    public function test_compose_message_uses_student_template_when_sent_to_student(): void
+    {
+        ['session' => $session] = $this->buildSessionWithNote(null, '081234567890');
+
+        $session->load(['student', 'teacher', 'enrollment.package.instrument', 'teacherNote']);
+        $message = app(SessionReportWaService::class)->composeMessage($session, false, 'student');
+
+        $this->assertStringStartsWith('Halo Ani Kecil!', $message);
+        $this->assertStringContainsString('Kamu les Piano', $message);
+        $this->assertStringContainsString('Kamu tampil sangat antusias', $message);
+        $this->assertStringNotContainsString('Bu Siti', $message);
+        $this->assertStringNotContainsString('Bapak/Ibu', $message);
+    }
+
+    public function test_compose_message_uses_parent_template_by_default(): void
+    {
+        ['session' => $session] = $this->buildSessionWithNote();
+
+        $session->load(['student', 'teacher', 'enrollment.package.instrument', 'teacherNote']);
+        $message = app(SessionReportWaService::class)->composeMessage($session, false, 'parent');
+
+        $this->assertStringContainsString('Bu Siti', $message);
+        $this->assertStringContainsString('antusias dan fokus', $message);
+    }
+
+    public function test_compose_message_uses_custom_encouragement_from_template(): void
+    {
+        ['session' => $session] = $this->buildSessionWithNote(null, '081234567890');
+
+        WhatsappMessageTemplate::where('code', WhatsappMessageTemplate::CODE_SESSION_REPORT_STUDENT)
+            ->update(['encouragement_lines' => [
+                'rating_5' => 'Custom pesan semangat rating 5',
+                'rating_4' => 'Custom rating 4',
+                'rating_3' => 'Custom rating 3',
+                'rating_2' => 'Custom rating 2',
+                'rating_1' => 'Custom rating 1',
+                'default'  => 'Custom default',
+            ]]);
+
+        $session->load(['student', 'teacher', 'enrollment.package.instrument', 'teacherNote']);
+        $message = app(SessionReportWaService::class)->composeMessage($session, false, 'student');
+
+        $this->assertStringContainsString('Custom pesan semangat rating 5', $message);
+    }
+
+    public function test_compose_message_uses_rating_2_encouragement(): void
+    {
+        ['session' => $session] = $this->buildSessionWithNote();
+
+        SessionTeacherNote::first()->update(['session_rating' => 2]);
+
+        WhatsappMessageTemplate::where('code', WhatsappMessageTemplate::CODE_SESSION_REPORT)
+            ->update(['encouragement_lines' => array_merge(
+                WhatsappMessageTemplate::defaultEncouragementLines(WhatsappMessageTemplate::CODE_SESSION_REPORT),
+                ['rating_2' => 'Pesan khusus rating dua ortu'],
+            )]);
+
+        $session->load(['student', 'teacher', 'enrollment.package.instrument', 'teacherNote']);
+        $message = app(SessionReportWaService::class)->composeMessage($session, false, 'parent');
+
+        $this->assertStringContainsString('Pesan khusus rating dua ortu', $message);
+    }
+
+    public function test_compose_message_uses_rating_1_encouragement(): void
+    {
+        ['session' => $session] = $this->buildSessionWithNote(null, '081234567890');
+
+        SessionTeacherNote::first()->update(['session_rating' => 1]);
+
+        WhatsappMessageTemplate::where('code', WhatsappMessageTemplate::CODE_SESSION_REPORT_STUDENT)
+            ->update(['encouragement_lines' => array_merge(
+                WhatsappMessageTemplate::defaultEncouragementLines(WhatsappMessageTemplate::CODE_SESSION_REPORT_STUDENT),
+                ['rating_1' => 'Pesan khusus rating satu murid'],
+            )]);
+
+        $session->load(['student', 'teacher', 'enrollment.package.instrument', 'teacherNote']);
+        $message = app(SessionReportWaService::class)->composeMessage($session, false, 'student');
+
+        $this->assertStringContainsString('Pesan khusus rating satu murid', $message);
+    }
+
+    public function test_owner_can_update_encouragement_lines_on_session_report_template(): void
+    {
+        $this->seed(\Database\Seeders\WhatsappMessageTemplateSeeder::class);
+
+        $owner = User::factory()->create();
+        $owner->assignRole('Owner');
+
+        $template = WhatsappMessageTemplate::defaultSessionReport();
+        $newLines = [
+            'rating_5' => 'Ortu rating 5 baru',
+            'rating_4' => 'Ortu rating 4 baru',
+            'rating_3' => 'Ortu rating 3 baru',
+            'rating_2' => 'Ortu rating 2 baru',
+            'rating_1' => 'Ortu rating 1 baru',
+            'default'  => 'Ortu default baru',
+        ];
+
+        $this->actingAs($owner)
+            ->put(route('whatsapp-templates.update', $template), [
+                'code'                => $template->code,
+                'name'                => $template->name,
+                'body'                => $template->body,
+                'sort_order'          => $template->sort_order,
+                'is_active'           => 1,
+                'encouragement_lines' => $newLines,
+            ])
+            ->assertRedirect(route('whatsapp-templates.index'));
+
+        $template->refresh();
+        $this->assertSame('Ortu rating 2 baru', $template->encouragement_lines['rating_2']);
+        $this->assertSame('Ortu rating 1 baru', $template->encouragement_lines['rating_1']);
+    }
+
+    public function test_resolve_recipient_type_prefers_parent_over_student(): void
+    {
+        $student = Student::factory()->create([
+            'parent_phone' => '0816920592',
+            'phone'        => '081234567890',
+        ]);
+
+        $service = app(SessionReportWaService::class);
+
+        $this->assertSame('parent', $service->resolveRecipientType($student));
+    }
+
+    public function test_resolve_recipient_type_falls_back_to_student(): void
+    {
+        $student = Student::factory()->create([
+            'parent_phone' => null,
+            'phone'        => '081234567890',
+        ]);
+
+        $this->assertSame('student', app(SessionReportWaService::class)->resolveRecipientType($student));
+    }
+
+    public function test_falls_back_to_student_template_in_message_body(): void
+    {
+        config([
+            'session_report_wa.enabled'    => true,
+            'services.fonnte.token'        => 'test-fonnte-token',
+            'services.fonnte.base_url'     => 'https://api.fonnte.com',
+            'services.fonnte.country_code' => '62',
+        ]);
+
+        Http::fake([
+            'https://api.fonnte.com/send' => Http::response([
+                'status' => true,
+                'id'     => ['999'],
+            ], 200),
+        ]);
+
+        ['session' => $session] = $this->buildSessionWithNote(null, '081234567890');
+        $note = SessionTeacherNote::first();
+
+        $session->load(['student', 'teacher', 'enrollment.package.instrument', 'teacherNote']);
+        app(SessionReportWaService::class)->sendForSession($session, $note->updated_at->copy());
+
+        $log = SessionReportWaLog::first();
+        $this->assertNotNull($log);
+        $this->assertStringContainsString('Kamu les Piano', $log->message_body);
+        $this->assertStringNotContainsString('Bu Siti', $log->message_body);
     }
 
     public function test_sends_to_parent_phone(): void

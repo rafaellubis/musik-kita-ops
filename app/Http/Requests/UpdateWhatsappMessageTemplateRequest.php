@@ -16,7 +16,7 @@ class UpdateWhatsappMessageTemplateRequest extends FormRequest
     {
         $template = $this->route('whatsappMessageTemplate');
 
-        return [
+        $rules = [
             'code' => [
                 'required',
                 'string',
@@ -28,6 +28,15 @@ class UpdateWhatsappMessageTemplateRequest extends FormRequest
             'body'       => ['required', 'string', 'max:5000'],
             'sort_order' => ['required', 'integer', 'min:0', 'max:999'],
         ];
+
+        if ($template instanceof \App\Models\WhatsappMessageTemplate
+            && $template->isSessionReportTemplate()) {
+            foreach (['rating_5', 'rating_4', 'rating_3', 'rating_2', 'rating_1', 'default'] as $key) {
+                $rules["encouragement_lines.{$key}"] = ['required', 'string', 'max:500'];
+            }
+        }
+
+        return $rules;
     }
 
     public function messages(): array
@@ -36,6 +45,8 @@ class UpdateWhatsappMessageTemplateRequest extends FormRequest
             'code.unique' => 'Kode sudah digunakan template lain.',
             'code.regex'  => 'Kode hanya huruf besar, angka, dan underscore.',
             'body.required' => 'Isi pesan wajib diisi.',
+            'encouragement_lines.*.required' => 'Pesan semangat wajib diisi.',
+            'encouragement_lines.*.max'      => 'Pesan semangat maksimal 500 karakter.',
         ];
     }
 }

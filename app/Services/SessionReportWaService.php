@@ -69,11 +69,35 @@ class SessionReportWaService
         return substr($normalized, 0, 4) . '***' . substr($normalized, -4);
     }
 
-    public function composeMessage(ClassSession $session, bool $isUpdate = false): string
+    /** @return 'parent'|'student'|null */
+    public function resolveRecipientType(Student $student): ?string
     {
-        $template = WhatsappMessageTemplate::defaultSessionReport();
+        if ($this->fonnte->isValidPhone($student->parent_phone)) {
+            return 'parent';
+        }
+
+        if ($this->fonnte->isValidPhone($student->phone)) {
+            return 'student';
+        }
+
+        return null;
+    }
+
+    public function composeMessage(
+        ClassSession $session,
+        bool $isUpdate = false,
+        string $recipientType = 'parent',
+    ): string {
+        $template = $recipientType === 'student'
+            ? WhatsappMessageTemplate::defaultSessionReportStudent()
+            : WhatsappMessageTemplate::defaultSessionReport();
+
         if (! $template) {
-            throw new \RuntimeException('Template SESSION_REPORT aktif tidak ditemukan.');
+            $code = $recipientType === 'student'
+                ? WhatsappMessageTemplate::CODE_SESSION_REPORT_STUDENT
+                : WhatsappMessageTemplate::CODE_SESSION_REPORT;
+
+            throw new \RuntimeException("Template {$code} aktif tidak ditemukan.");
         }
 
         $student = $session->student;
@@ -103,7 +127,7 @@ class SessionReportWaService
                 ? trim((string) $note->homework_notes)
                 : 'Tidak ada tugas khusus — cukup latihan ringan sesuai materi hari ini',
             '{blok_catatan}'   => $blokCatatan,
-            '{pesan_semangat}' => $this->encouragementLine($student, $note?->session_rating),
+            '{pesan_semangat}' => $template->encouragementForRating($note?->session_rating),
             '{studio_wa}'      => FonnteService::STUDIO_WA_DISPLAY,
         ];
 
@@ -158,8 +182,9 @@ class SessionReportWaService
             return null;
         }
 
-        $recipientPhone = $this->resolveRecipientPhone($student);
-        if ($recipientPhone === null) {
+        $recipientType = $this->resolveRecipientType($student);
+        $recipientPhone = $this->resolveRecipientPhone($student, $recipientType);
+        if ($recipientType === null || $recipientPhone === null) {
             return $this->persistLog(
                 session: $session,
                 student: $student,
@@ -186,7 +211,7 @@ class SessionReportWaService
         }
 
         $isUpdate = $latestSuccess !== null;
-        $message = $this->composeMessage($session, $isUpdate);
+        $message = $this->composeMessage($session, $isUpdate, $recipientType);
         $result = $this->fonnte->sendText($recipientPhone, $message);
 
         return $this->persistLog(
@@ -201,18 +226,6 @@ class SessionReportWaService
         );
     }
 
-    private function encouragementLine(?Student $student, ?int $rating): string
-    {
-        $name = $student?->full_name ?? 'Ananda';
-
-        return match (true) {
-            $rating === 5 => "Hari ini {$name} tampil sangat antusias dan fokus — perkembangannya terlihat jelas!",
-            $rating === 4 => "{$name} menunjukkan kemajuan yang baik hari ini. Pertahankan semangatnya!",
-            $rating === 3 => "{$name} sudah berusaha dengan baik. Sedikit latihan rutin di rumah akan membuat hasilnya makin terasa.",
-            default       => "Setiap sesi adalah langkah berharga. Mari terus mendampingi {$name} dengan sabar dan konsisten.",
-        };
-    }
-
     private function noteHasSendableContent(SessionTeacherNote $note): bool
     {
         return filled(trim((string) ($note->material_learned ?? '')))
@@ -221,17 +234,15 @@ class SessionReportWaService
             || filled($note->session_rating);
     }
 
-    private function resolveRecipientPhone(Student $student): ?string
+    private function resolveRecipientPhone(Student $student, ?string $recipientType = null): ?string
     {
-        if ($this->fonnte->isValidPhone($student->parent_phone)) {
-            return $student->parent_phone;
-        }
+        $recipientType ??= $this->resolveRecipientType($student);
 
-        if ($this->fonnte->isValidPhone($student->phone)) {
-            return $student->phone;
-        }
-
-        return null;
+        return match ($recipientType) {
+            'parent'  => $student->parent_phone,
+            'student' => $student->phone,
+            default   => null,
+        };
     }
 
     private function latestSuccessLog(int $classSessionId): ?SessionReportWaLog
