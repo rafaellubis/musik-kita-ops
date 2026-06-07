@@ -619,10 +619,9 @@ class GuruController extends Controller
             'Catatan hanya bisa diisi setelah absensi sesi tercatat.'
         );
 
-        $sessionDate = Carbon::parse($classSession->session_date);
         $reportSubmitted = ProgressReport::where('enrollment_id', $classSession->enrollment_id)
-            ->where('month', $sessionDate->month)
-            ->where('year', $sessionDate->year)
+            ->where('month', $classSession->attributionMonth())
+            ->where('year', $classSession->attributionYear())
             ->where('status', ProgressReport::STATUS_SUBMITTED)
             ->exists();
 

@@ -20,8 +20,7 @@ class SessionNoteSyncService
         DB::transaction(function () use ($report) {
             $sessions = ClassSession::query()
                 ->where('enrollment_id', $report->enrollment_id)
-                ->whereMonth('session_date', $report->month)
-                ->whereYear('session_date', $report->year)
+                ->forAttributionMonth($report->year, $report->month)
                 ->where(function ($query) {
                     $query->whereIn('status', [
                         ClassSession::STATUS_HADIR,

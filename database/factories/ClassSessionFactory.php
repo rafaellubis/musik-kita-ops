@@ -37,6 +37,20 @@ class ClassSessionFactory extends Factory
             'notes'                 => null,
             'honor_code'            => null,
             'honor_amount'          => null,
+            'session_type'          => ClassSession::TYPE_REGULAR,
+            'attribution_month'     => null,
+            'attribution_year'      => null,
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterMaking(function (ClassSession $session) {
+            if ($session->session_date && $session->attribution_month === null) {
+                $date = \Carbon\Carbon::parse($session->session_date);
+                $session->attribution_month = $date->month;
+                $session->attribution_year  = $date->year;
+            }
+        });
     }
 }

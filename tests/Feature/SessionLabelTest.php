@@ -195,4 +195,19 @@ class SessionLabelTest extends TestCase
 
         $this->assertSame('—', $session->getGuruSessionIdentity());
     }
+
+    public function test_label_sesi_manual_rapel_cross_month(): void
+    {
+        $session = new ClassSession();
+        $session->session_date       = '2026-02-07';
+        $session->session_sequence   = 3;
+        $session->session_type       = ClassSession::TYPE_MANUAL;
+        $session->attribution_year   = 2026;
+        $session->attribution_month  = 1;
+
+        $this->assertSame(
+            'Sesi ke-3 Bulan Januari 2026 (manual · rapel 07 Feb 2026)',
+            $session->getSessionLabel()
+        );
+    }
 }

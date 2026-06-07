@@ -17,6 +17,9 @@ use InvalidArgumentException;
  */
 class RescheduleService
 {
+    public function __construct(
+        private readonly ScheduleConflictDetector $conflictDetector,
+    ) {}
     /**
      * Buat sesi pengganti untuk sesi yang di-reschedule.
      *
@@ -60,14 +63,14 @@ class RescheduleService
         // Guru selalu dari sesi asli (guru tidak berubah meski murid di-override)
         $original->loadMissing('teacher');
 
-        $isDuo = $overrideEnrollment !== null
-            ? $overrideEnrollment->package->isDuo()
-            : $original->enrollment->package->isDuo();
+        $newClassType = $overrideEnrollment !== null
+            ? $overrideEnrollment->package->class_type
+            : $original->enrollment->package->class_type;
 
-        $this->assertNoTeacherConflict($original, $isDuo, $date, $startTimeFull, $endTime);
+        $this->assertNoTeacherConflict($original, $newClassType, $date, $startTimeFull, $endTime);
 
         if ($roomId !== null) {
-            $this->assertNoRoomConflict($original, $isDuo, $roomId, $date, $startTimeFull, $endTime);
+            $this->assertNoRoomConflict($original, $newClassType, $roomId, $date, $startTimeFull, $endTime);
         }
 
         // Buat sesi pengganti (ad-hoc — schedule_id null)
@@ -128,12 +131,12 @@ class RescheduleService
         $endTime       = Carbon::createFromFormat('H:i', $startTime)->addMinutes($durationMin)->format('H:i:s');
         $startTimeFull = $startTime . ':00';
 
-        $isDuo = $original->enrollment->package->isDuo();
+        $newClassType = $original->enrollment->package->class_type;
 
-        $this->assertNoTeacherConflict($original, $isDuo, $date, $startTimeFull, $endTime);
+        $this->assertNoTeacherConflict($original, $newClassType, $date, $startTimeFull, $endTime);
 
         if ($roomId !== null) {
-            $this->assertNoRoomConflict($original, $isDuo, $roomId, $date, $startTimeFull, $endTime);
+            $this->assertNoRoomConflict($original, $newClassType, $roomId, $date, $startTimeFull, $endTime);
         }
 
         // Honor = setengah honor normal satu sesi (DUO pakai rate dari PayrollConfig)
@@ -170,7 +173,7 @@ class RescheduleService
      */
     private function assertNoTeacherConflict(
         ClassSession $original,
-        bool $isDuo,
+        string $newClassType,
         string $date,
         string $startTimeFull,
         string $endTime,
@@ -178,26 +181,42 @@ class RescheduleService
         $query = $this->overlappingSessionsQuery($original, $date, $startTimeFull, $endTime)
             ->where('teacher_id', $original->teacher_id);
 
-        $conflict = $isDuo
-            ? $this->findDuoSlotConflict($query)
-            : ['kind' => 'blocked', 'session' => $query->first()];
+        if ($newClassType === 'DUO') {
+            $conflict = $this->findDuoSlotConflict($query);
 
-        if ($conflict['session'] === null) {
+            if ($conflict['session'] === null) {
+                return;
+            }
+
+            if ($conflict['kind'] === 'full') {
+                throw new InvalidArgumentException(
+                    'Slot DUO sudah penuh (maksimal 2 murid per slot).'
+                );
+            }
+
+            $this->throwTeacherConflictException($original, $date, $conflict['session']);
+
             return;
         }
 
-        if ($conflict['kind'] === 'full') {
-            throw new InvalidArgumentException(
-                'Slot DUO sudah penuh (maksimal 2 murid per slot).'
-            );
+        if ($this->conflictDetector->isKidsClassType($newClassType)) {
+            $blocking = (clone $query)
+                ->whereHas('enrollment.package', function ($q) {
+                    $q->whereNotIn('class_type', ['KIDS_CLASS', 'KIDS_CLASS_BUNDLE']);
+                })
+                ->first();
+
+            if ($blocking !== null) {
+                $this->throwTeacherConflictException($original, $date, $blocking);
+            }
+
+            return;
         }
 
-        $namaGuru   = $original->teacher->name;
-        $jamMulai   = substr($conflict['session']->start_time, 0, 5);
-        $jamSelesai = substr($conflict['session']->end_time, 0, 5);
-        throw new InvalidArgumentException(
-            "Guru {$namaGuru} sudah ada sesi lain pada {$date} {$jamMulai}–{$jamSelesai}"
-        );
+        $blocking = $query->first();
+        if ($blocking !== null) {
+            $this->throwTeacherConflictException($original, $date, $blocking);
+        }
     }
 
     /**
@@ -205,7 +224,7 @@ class RescheduleService
      */
     private function assertNoRoomConflict(
         ClassSession $original,
-        bool $isDuo,
+        string $newClassType,
         int $roomId,
         string $date,
         string $startTimeFull,
@@ -214,24 +233,68 @@ class RescheduleService
         $query = $this->overlappingSessionsQuery($original, $date, $startTimeFull, $endTime)
             ->where('room_id', $roomId);
 
-        $conflict = $isDuo
-            ? $this->findDuoSlotConflict($query)
-            : ['kind' => 'blocked', 'session' => $query->first()];
+        if ($newClassType === 'DUO') {
+            $conflict = $this->findDuoSlotConflict($query);
 
-        if ($conflict['session'] === null) {
+            if ($conflict['session'] === null) {
+                return;
+            }
+
+            if ($conflict['kind'] === 'full') {
+                throw new InvalidArgumentException(
+                    'Ruangan tidak tersedia di slot ini untuk DUO.'
+                );
+            }
+
+            $room = Room::find($roomId);
+            $this->throwRoomConflictException($room, $date, $conflict['session']);
+
             return;
         }
 
-        $room = Room::find($roomId);
+        if ($this->conflictDetector->isKidsClassType($newClassType)) {
+            $room = Room::find($roomId);
+            if ($room === null) {
+                return;
+            }
 
-        if ($conflict['kind'] === 'full') {
-            throw new InvalidArgumentException(
-                'Ruangan tidak tersedia di slot ini untuk DUO.'
-            );
+            $occupancy = (clone $query)->count();
+            if (($occupancy + 1) > $room->capacity) {
+                throw new InvalidArgumentException(
+                    "Kapasitas ruangan {$room->code} sudah penuh di slot ini."
+                );
+            }
+
+            return;
         }
 
-        $jamMulai   = substr($conflict['session']->start_time, 0, 5);
-        $jamSelesai = substr($conflict['session']->end_time, 0, 5);
+        $blocking = $query->first();
+        if ($blocking !== null) {
+            $room = Room::find($roomId);
+            $this->throwRoomConflictException($room, $date, $blocking);
+        }
+    }
+
+    private function throwTeacherConflictException(
+        ClassSession $original,
+        string $date,
+        ClassSession $conflict,
+    ): void {
+        $namaGuru   = $original->teacher->name;
+        $jamMulai   = substr($conflict->start_time, 0, 5);
+        $jamSelesai = substr($conflict->end_time, 0, 5);
+        throw new InvalidArgumentException(
+            "Guru {$namaGuru} sudah ada sesi lain pada {$date} {$jamMulai}–{$jamSelesai}"
+        );
+    }
+
+    private function throwRoomConflictException(
+        ?Room $room,
+        string $date,
+        ClassSession $conflict,
+    ): void {
+        $jamMulai   = substr($conflict->start_time, 0, 5);
+        $jamSelesai = substr($conflict->end_time, 0, 5);
         throw new InvalidArgumentException(
             "Ruangan {$room->code} sudah dipakai pada {$date} {$jamMulai}–{$jamSelesai}"
         );

@@ -25,6 +25,7 @@ use App\Http\Controllers\SessionController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\EnrollmentController;
+use App\Http\Controllers\ManualSessionController;
 use App\Http\Controllers\GuruController;
 use App\Http\Controllers\KalenderController;
 use App\Http\Controllers\ProgressReportController;
@@ -161,6 +162,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('students/{student}/enrollments/{enrollment}',
             [EnrollmentController::class, 'destroy']
         )->name('students.enrollments.destroy');
+        Route::post('students/{student}/enrollments/{enrollment}/manual-sessions',
+            [ManualSessionController::class, 'store']
+        )->name('students.enrollments.manual-sessions.store');
 
         // ===== M03: Generator sesi manual =====
         Route::post('sessions/generate',

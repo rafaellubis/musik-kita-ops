@@ -77,9 +77,17 @@ class ScheduleController extends Controller
                     'Slot DUO sudah penuh (maksimal 2 murid per slot).');
             }
         } else {
-            if ($teacherClashes->isNotEmpty()) {
-                $names = $teacherClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
-                                        ->implode(', ');
+            $blockingClashes = $this->conflictDetector->findBlockingTeacherConflicts(
+                teacherId: $enrollment->teacher_id,
+                dayOfWeek: $data['day_of_week'],
+                startTime: $data['start_time'],
+                endTime:   $data['end_time'],
+                newClassType: $package?->class_type ?? '',
+            );
+
+            if ($blockingClashes->isNotEmpty()) {
+                $names = $blockingClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
+                                         ->implode(', ');
                 return back()->withInput()->with('error',
                     "Bentrok jadwal guru di slot tsb. Sudah dipakai untuk: {$names}.");
             }
@@ -194,9 +202,18 @@ class ScheduleController extends Controller
                     'Slot DUO sudah penuh (maksimal 2 murid per slot).');
             }
         } else {
-            if ($teacherClashes->isNotEmpty()) {
-                $names = $teacherClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
-                                        ->implode(', ');
+            $blockingClashes = $this->conflictDetector->findBlockingTeacherConflicts(
+                teacherId: $teacherId,
+                dayOfWeek: $data['day_of_week'],
+                startTime: $data['start_time'],
+                endTime:   $data['end_time'],
+                newClassType: $package?->class_type ?? '',
+                excludeScheduleId: $schedule->id,
+            );
+
+            if ($blockingClashes->isNotEmpty()) {
+                $names = $blockingClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
+                                         ->implode(', ');
                 return back()->withInput()->with('error',
                     "Bentrok jadwal guru di slot tsb. Sudah dipakai untuk: {$names}.");
             }
