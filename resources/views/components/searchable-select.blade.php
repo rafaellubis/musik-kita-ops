@@ -5,6 +5,7 @@
     'selected' => null,
     'options' => [],
     'autoSubmit' => false,
+    'required' => false,
     'inputClass' => 'mk-searchable-select-trigger block w-full rounded text-sm',
 ])
 
@@ -64,6 +65,7 @@
         },
         select(value) {
             this.selectedValue = value;
+            this.$dispatch('searchable-select-changed', { name: this.name, value });
             this.close();
             this.submitForm();
         },
@@ -76,7 +78,7 @@
         <label class="block text-xs text-mk-dim mb-1">{{ $label }}</label>
     @endif
 
-    <input type="hidden" :name="name" :value="selectedValue">
+    <input type="hidden" :name="name" :value="selectedValue" @if($required) required @endif>
 
     <button
         type="button"
@@ -94,7 +96,7 @@
         x-show="open"
         x-cloak
         x-transition
-        class="mk-searchable-select-panel absolute z-50 mt-1 w-full rounded-lg shadow-lg overflow-hidden"
+        class="mk-searchable-select-panel absolute z-50 mt-1 w-full rounded-lg shadow-lg overflow-hidden bg-white border border-gray-200"
     >
         <div class="mk-searchable-select-panel-header p-2">
             <input
@@ -103,7 +105,7 @@
                 x-model="search"
                 @click.stop
                 placeholder="Cari..."
-                class="block w-full rounded text-sm px-2 py-1.5"
+                class="block w-full rounded text-sm px-2 py-1.5 bg-white border border-gray-200"
             >
         </div>
 

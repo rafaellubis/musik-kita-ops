@@ -5,6 +5,13 @@
     <p class="text-sm text-mk-muted">Laporan perkembangan murid bulanan</p>
 </div>
 
+@php
+    $enrollmentOptions = $enrollments->map(fn ($e) => [
+        'value' => (string) $e->id,
+        'label' => $e->student->full_name . ' — ' . $e->package->code,
+    ])->values()->all();
+@endphp
+
 {{-- Form buat laporan baru — template otomatis dari paket enrollment --}}
 <div class="mx-4 mb-4">
     <details class="bg-mk-card border border-mk-border rounded-xl">
@@ -21,20 +28,20 @@
                 get canSubmit() {
                     return this.enrollmentId && this.preview && this.preview.ok;
                 }
-             }">
+             }"
+             @searchable-select-changed="if ($event.detail.name === 'enrollment_id') enrollmentId = $event.detail.value">
             <form method="POST" action="{{ route('guru.laporan.store') }}">
                 @csrf
                 <div class="mb-3">
-                    <label class="block text-xs text-mk-muted mb-1">Kelas / Murid</label>
-                    <select name="enrollment_id" x-model="enrollmentId"
-                            class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm" required>
-                        <option value="">-- Pilih murid --</option>
-                        @foreach($enrollments as $e)
-                            <option value="{{ $e->id }}" @selected(old('enrollment_id') == $e->id)>
-                                {{ $e->student->full_name }} — {{ $e->package->code }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <x-searchable-select
+                        name="enrollment_id"
+                        label="Kelas / Murid"
+                        placeholder="-- Pilih murid --"
+                        :selected="old('enrollment_id')"
+                        :options="$enrollmentOptions"
+                        :required="true"
+                        inputClass="w-full bg-white border border-gray-200 rounded-lg text-sm"
+                    />
                 </div>
 
                 {{-- Preview template otomatis --}}

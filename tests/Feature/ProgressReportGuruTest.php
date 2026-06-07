@@ -71,7 +71,11 @@ class ProgressReportGuruTest extends TestCase
 
     public function test_guru_bisa_lihat_halaman_laporan(): void
     {
-        $this->actingAs($this->guruUser)->get('/guru/laporan')->assertOk();
+        $this->actingAs($this->guruUser)
+            ->get('/guru/laporan')
+            ->assertOk()
+            ->assertSee('Cari...', false)
+            ->assertSee('-- Pilih murid --', false);
     }
 
     public function test_guru_bisa_buat_laporan_baru_auto_template(): void
