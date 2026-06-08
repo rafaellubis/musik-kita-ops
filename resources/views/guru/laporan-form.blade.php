@@ -89,9 +89,9 @@
     </div>
 
     <div class="mx-4 mb-4 bg-mk-card border border-mk-border rounded-xl p-4">
-        <div class="font-semibold text-sm text-mk-text mb-2">Catatan Guru Terhadap Karakter</div>
+        <div class="font-semibold text-sm text-mk-text mb-2">Catatan Lainnya (jika ada):</div>
         <textarea name="catatan_karakter" rows="4"
-                  placeholder="Tuliskan catatan karakter dan kebiasaan belajar murid..."
+                  placeholder="Tuliskan catatan lainnya (jika ada)..."
                   class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900">{{ old('catatan_karakter', $progressReport->catatan_karakter) }}</textarea>
         @error('catatan_karakter')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
     </div>

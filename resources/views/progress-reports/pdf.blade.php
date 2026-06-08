@@ -155,7 +155,7 @@
 <div class="narrative-title">Catatan Guru Terhadap Perkembangan Musikal {{ $progressReport->student->full_name }}</div>
 <div class="narrative-box">{{ $progressReport->catatan_perkembangan_musikal ?? '—' }}</div>
 
-<div class="narrative-title">Catatan Guru Terhadap Karakter {{ $progressReport->student->full_name }}</div>
+<div class="narrative-title">Catatan Lainnya (jika ada):</div>
 <div class="narrative-box">{{ $progressReport->catatan_karakter ?? '—' }}</div>
 
 <div class="section-title">Laporan Progress</div>
