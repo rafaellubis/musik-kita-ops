@@ -151,6 +151,54 @@ class AttendanceService
                     'Guru pengganti tidak boleh sama dengan guru asli.'
                 );
             }
+
+            // === VALIDASI KONFLIK GURU PENGGANTI ===
+            if ($session instanceof ClassSession) {
+                // Gunakan jam pengganti jika disediakan, jika tidak gunakan jam sesi asli
+                $effectiveStart = !empty($data['substitute_start_time'])
+                    ? $data['substitute_start_time'] . ':00'
+                    : $session->start_time;
+                $effectiveEnd = !empty($data['substitute_end_time'])
+                    ? $data['substitute_end_time'] . ':00'
+                    : $session->end_time;
+
+                // Cek apakah guru pengganti sudah ada sesi sebagai guru asli atau
+                // sebagai guru pengganti di sesi lain di waktu yang sama
+                $excludedStatuses = ClassSession::statusesExcludedFromScheduleConflict();
+                $guruConflict = ClassSession::where(function ($q) use ($data) {
+                        $q->where('teacher_id', $data['substitute_teacher_id'])
+                          ->orWhere('substitute_teacher_id', $data['substitute_teacher_id']);
+                    })
+                    ->whereDate('session_date', $session->session_date)
+                    ->where('start_time', '<', $effectiveEnd)
+                    ->where('end_time', '>', $effectiveStart)
+                    ->whereNotIn('status', $excludedStatuses)
+                    ->where('id', '!=', $session->id)
+                    ->exists();
+
+                if ($guruConflict) {
+                    throw new InvalidArgumentException(
+                        'Guru pengganti sudah memiliki sesi lain di waktu tersebut.'
+                    );
+                }
+
+                // === VALIDASI KONFLIK RUANGAN PENGGANTI ===
+                if (!empty($data['substitute_room_id'])) {
+                    $roomConflict = ClassSession::where('room_id', (int) $data['substitute_room_id'])
+                        ->whereDate('session_date', $session->session_date)
+                        ->where('start_time', '<', $effectiveEnd)
+                        ->where('end_time', '>', $effectiveStart)
+                        ->whereNotIn('status', $excludedStatuses)
+                        ->where('id', '!=', $session->id)
+                        ->exists();
+
+                    if ($roomConflict) {
+                        throw new InvalidArgumentException(
+                            'Ruangan pengganti sudah dipakai di waktu tersebut.'
+                        );
+                    }
+                }
+            }
         }
     }
 
