@@ -109,6 +109,20 @@ class AbsensiController extends Controller
             ], 403);
         }
 
+        // Guard: sesi IZIN_RESCHEDULE yang sudah punya pengganti tidak bisa diubah ke status lain
+        // kecuali CANCELLED. Mencegah orphan replacement session.
+        if ($classSession->status === ClassSession::STATUS_IZIN_RESCHEDULE) {
+            $hasReplacement = ClassSession::where('origin_session_id', $classSession->id)
+                ->whereNull('split_part')
+                ->exists();
+            if ($hasReplacement && $request->status !== ClassSession::STATUS_CANCELLED) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sesi ini sudah memiliki sesi pengganti. Batalkan sesi (CANCELLED) jika perlu mengubah status.',
+                ], 422);
+            }
+        }
+
         // Guard: sesi yang sudah HADIR/HADIR_TERLAMBAT hanya bisa di-CANCELLED.
         // Koreksi status lain tidak diizinkan — batalkan dulu, baru input ulang.
         $statusSudahHadir = in_array($classSession->status, [

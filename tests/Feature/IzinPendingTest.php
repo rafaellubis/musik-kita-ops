@@ -323,6 +323,69 @@ class IzinPendingTest extends TestCase
     }
 
     /** @test */
+    public function test_update_menolak_ubah_izin_reschedule_ke_izin_pending_jika_sudah_ada_sesi_pengganti(): void
+    {
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $admin     = \App\Models\User::factory()->create();
+        $admin->assignRole('Admin');
+
+        $teacher    = \App\Models\Teacher::factory()->create(['is_active' => true]);
+        $room       = \App\Models\Room::factory()->create(['capacity' => 1, 'is_active' => true]);
+        $package    = \App\Models\Package::factory()->create(['class_type' => 'REGULER', 'duration_min' => 30, 'price_per_month' => 370000, 'is_active' => true]);
+        $student    = \App\Models\Student::factory()->create(['status' => 'Aktif']);
+        $enrollment = \App\Models\Enrollment::factory()->create([
+            'student_id' => $student->id,
+            'teacher_id' => $teacher->id,
+            'package_id' => $package->id,
+            'status'     => 'ACTIVE',
+        ]);
+
+        // Sesi asli sudah IZIN_RESCHEDULE
+        $sesiAsli = \App\Models\ClassSession::factory()->create([
+            'enrollment_id' => $enrollment->id,
+            'student_id'    => $student->id,
+            'teacher_id'    => $teacher->id,
+            'room_id'       => $room->id,
+            'session_date'  => '2026-07-07',
+            'start_time'    => '15:00:00',
+            'end_time'      => '15:30:00',
+            'status'        => 'IZIN_RESCHEDULE',
+            'honor_code'    => null,
+            'honor_amount'  => 0,
+        ]);
+
+        // Sesi pengganti sudah ada (non-split)
+        \App\Models\ClassSession::factory()->create([
+            'enrollment_id'     => $enrollment->id,
+            'student_id'        => $student->id,
+            'teacher_id'        => $teacher->id,
+            'room_id'           => $room->id,
+            'session_date'      => '2026-07-14',
+            'start_time'        => '15:00:00',
+            'end_time'          => '15:30:00',
+            'status'            => 'SCHEDULED',
+            'origin_session_id' => $sesiAsli->id,
+            'split_part'        => null,
+        ]);
+
+        // Coba ubah sesi asli dari IZIN_RESCHEDULE → IZIN_PENDING — harus ditolak
+        $response = $this->actingAs($admin)
+            ->patchJson(route('absensi.update', $sesiAsli), [
+                'status' => 'IZIN_PENDING',
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJson(['success' => false]);
+        $this->assertStringContainsString(
+            'pengganti',
+            $response->json('message')
+        );
+
+        // Status sesi asli tidak berubah
+        $this->assertEquals('IZIN_RESCHEDULE', $sesiAsli->fresh()->status);
+    }
+
+    /** @test */
     public function open_slot_board_hanya_tampilkan_izin_pending_tanpa_replacement(): void
     {
         $admin = \App\Models\User::factory()->create();
