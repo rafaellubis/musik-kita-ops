@@ -338,4 +338,88 @@ class SessionGeneratorConflictTest extends TestCase
             "Hanya satu schedule yang boleh dibuat untuk guru/hari/jam yang sama saat import. " .
             "Actual: {$jumlahSchedule}");
     }
+
+    public function test_generator_tidak_anggap_izin_reschedule_sebagai_konflik(): void
+    {
+        $teacher = Teacher::factory()->create(['is_active' => true]);
+        $room    = Room::factory()->create(['capacity' => 1, 'is_active' => true]);
+        $package = Package::factory()->create([
+            'duration_min'    => 30,
+            'class_type'      => 'REGULER',
+            'price_per_month' => 370000,
+            'is_active'       => true,
+        ]);
+
+        $student1    = Student::factory()->create(['status' => 'Aktif']);
+        $enrollment1 = Enrollment::factory()->create([
+            'student_id' => $student1->id,
+            'teacher_id' => $teacher->id,
+            'package_id' => $package->id,
+            'status'     => 'ACTIVE',
+        ]);
+        $schedule1 = Schedule::factory()->create([
+            'enrollment_id' => $enrollment1->id,
+            'day_of_week'   => 1,
+            'start_time'    => '15:00',
+            'end_time'      => '15:30',
+            'room_id'       => $room->id,
+            'is_active'     => true,
+        ]);
+
+        $targetMonth = Carbon::now()->addMonth()->startOfMonth();
+        $senin       = $targetMonth->copy()->next('Monday');
+
+        // Buat IZIN_RESCHEDULE untuk SEMUA hari Senin murid 1 di bulan ini,
+        // agar tidak ada sesi SCHEDULED tersisa yang jadi konflik nyata untuk murid 2.
+        $allMondays = collect();
+        $cursor = $targetMonth->copy();
+        while ($cursor->month === $targetMonth->month) {
+            if ($cursor->dayOfWeek === 1) {
+                $allMondays->push($cursor->copy());
+            }
+            $cursor->addDay();
+        }
+        foreach ($allMondays as $monday) {
+            ClassSession::factory()->create([
+                'schedule_id'   => $schedule1->id,
+                'enrollment_id' => $enrollment1->id,
+                'student_id'    => $student1->id,
+                'teacher_id'    => $teacher->id,
+                'session_date'  => $monday->toDateString(),
+                'start_time'    => '15:00:00',
+                'end_time'      => '15:30:00',
+                'room_id'       => $room->id,
+                'status'        => 'IZIN_RESCHEDULE',
+            ]);
+        }
+
+        $student2    = Student::factory()->create(['status' => 'Aktif']);
+        $enrollment2 = Enrollment::factory()->create([
+            'student_id' => $student2->id,
+            'teacher_id' => $teacher->id,
+            'package_id' => $package->id,
+            'status'     => 'ACTIVE',
+        ]);
+        Schedule::factory()->create([
+            'enrollment_id' => $enrollment2->id,
+            'day_of_week'   => 1,
+            'start_time'    => '15:00',
+            'end_time'      => '15:30',
+            'room_id'       => $room->id,
+            'is_active'     => true,
+        ]);
+
+        $report = app(\App\Services\SessionGeneratorService::class)
+            ->generateForMonth($targetMonth->year, $targetMonth->month);
+
+        $this->assertEquals(0, $report['skipped_conflict'],
+            'Generator seharusnya tidak menghitung IZIN_RESCHEDULE sebagai konflik');
+
+        $this->assertTrue(
+            ClassSession::where('student_id', $student2->id)
+                ->whereDate('session_date', $senin->toDateString())
+                ->exists(),
+            'Sesi murid 2 harus ter-generate meski murid 1 punya IZIN_RESCHEDULE di slot yang sama'
+        );
+    }
 }

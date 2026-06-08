@@ -414,7 +414,7 @@ class SessionGeneratorService
             ->where('start_time', '<', $schedule->end_time)
             ->where('end_time', '>', $schedule->start_time)
             ->where('schedule_id', '!=', $schedule->id)
-            ->whereNotIn('status', ['CANCELLED'])
+            ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
             ->first();
 
         if ($teacherConflict) {
@@ -428,7 +428,7 @@ class SessionGeneratorService
                 ->where('start_time', '<', $schedule->end_time)
                 ->where('end_time', '>', $schedule->start_time)
                 ->where('schedule_id', '!=', $schedule->id)
-                ->whereNotIn('status', ['CANCELLED'])
+                ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
                 ->first();
 
             if ($roomConflict) {
