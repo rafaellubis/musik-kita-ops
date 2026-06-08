@@ -172,6 +172,28 @@ class ScheduleController extends Controller
             'is_active'     => true,
         ]);
 
+        // Secondary check: cek class_sessions konkret untuk potensi konflik dengan
+        // manual/replacement sessions di 30 hari ke depan. Hanya peringatan (warning),
+        // bukan error — jadwal tetap tersimpan karena ini adalah template mingguan.
+        // Filter day-of-week dilakukan di PHP untuk kompatibilitas SQLite (test) dan MySQL.
+        // Filter day-of-week dilakukan di PHP untuk kompatibilitas SQLite (test) dan MySQL.
+        $upcomingConflict = \App\Models\ClassSession::where('teacher_id', $enrollment->teacher_id)
+            ->where('session_date', '>=', today()->toDateString())
+            ->where('session_date', '<=', today()->addDays(30)->toDateString())
+            ->whereNull('schedule_id')  // hanya manual/replacement sessions
+            ->where('start_time', '<', $data['end_time'] . ':00')
+            ->where('end_time', '>', $data['start_time'] . ':00')
+            ->whereNotIn('status', ['CANCELLED', 'IZIN_RESCHEDULE', 'IZIN_PENDING'])
+            ->get()
+            ->contains(function ($session) use ($data) {
+                return \Carbon\Carbon::parse($session->session_date)->dayOfWeek === (int) $data['day_of_week'];
+            });
+
+        if ($upcomingConflict) {
+            return back()->with('warning',
+                'Jadwal berhasil ditambahkan, namun terdeteksi potensi bentrok dengan sesi manual/pengganti yang sudah ada di 30 hari ke depan. Cek kalender untuk konfirmasi.');
+        }
+
         return back()->with('success', 'Jadwal mingguan berhasil ditambahkan.');
     }
 

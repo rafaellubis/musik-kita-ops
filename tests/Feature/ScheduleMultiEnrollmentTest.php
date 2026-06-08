@@ -381,4 +381,58 @@ class ScheduleMultiEnrollmentTest extends TestCase
         $response->assertSessionHasNoErrors();
         $response->assertSessionMissing('error');
     }
+
+    // =================== TASK 5 (RS2) ===================
+
+    /**
+     * RS2: store() harus memberi peringatan jika ada manual/replacement session
+     * di slot yang sama untuk guru yang sama — cek tabel class_sessions konkret.
+     */
+    public function test_store_memperingatkan_jika_ada_manual_session_di_slot_yang_sama(): void
+    {
+        [$student, $enrollPiano, , $teacher] = $this->makeStudentWithTwoEnrollments();
+
+        $room = Room::factory()->create([
+            'capacity' => 1,
+            'is_active' => true,
+            'supported_instruments' => ['Piano'],
+        ]);
+
+        // Manual session yang sudah ada (schedule_id = null) untuk guru ini di Senin 15:00
+        $package    = $enrollPiano->package;
+        $studentLain = \App\Models\Student::factory()->create(['status' => 'Aktif']);
+        $enrollLain  = \App\Models\Enrollment::factory()->create([
+            'student_id' => $studentLain->id,
+            'teacher_id' => $teacher->id,
+            'package_id' => $package->id,
+            'status'     => 'ACTIVE',
+        ]);
+        \App\Models\ClassSession::factory()->create([
+            'schedule_id'   => null, // manual session
+            'enrollment_id' => $enrollLain->id,
+            'student_id'    => $studentLain->id,
+            'teacher_id'    => $teacher->id,
+            'room_id'       => $room->id,
+            'session_date'  => now()->next('Monday')->toDateString(),
+            'start_time'    => '15:00:00',
+            'end_time'      => '15:30:00',
+            'status'        => 'SCHEDULED',
+        ]);
+
+        // Buat jadwal mingguan baru untuk guru yang sama di Senin 15:00
+        $response = $this->actingAs($this->admin)
+            ->post(route('schedules.store', $student), [
+                'enrollment_id' => $enrollPiano->id,
+                'day_of_week'   => 1,
+                'start_time'    => '15:00',
+                'end_time'      => '15:30',
+                'room_id'       => $room->id,
+            ]);
+
+        // Harus ada warning tentang potensi konflik dengan manual session
+        $this->assertTrue(
+            session()->has('warning') || session()->has('error'),
+            'Controller harus memberikan peringatan saat ada manual session di slot yang sama'
+        );
+    }
 }
