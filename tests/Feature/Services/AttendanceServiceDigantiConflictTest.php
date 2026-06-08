@@ -51,7 +51,7 @@ class AttendanceServiceDigantiConflictTest extends TestCase
         $this->makeSession($guruPengganti, $room, '2026-07-01', '15:00:00', '15:30:00', 'SCHEDULED');
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessageMatches('/sudah/i');
+        $this->expectExceptionMessageMatches('/sudah memiliki sesi lain/i');
 
         app(AttendanceService::class)->recordAttendance($sesiTarget, [
             'status'                => 'DIGANTI',
@@ -91,6 +91,7 @@ class AttendanceServiceDigantiConflictTest extends TestCase
         ]);
 
         $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/ruangan pengganti/i');
 
         app(AttendanceService::class)->recordAttendance($sesiTarget, [
             'status'                => 'DIGANTI',
