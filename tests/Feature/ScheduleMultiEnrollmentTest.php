@@ -289,4 +289,96 @@ class ScheduleMultiEnrollmentTest extends TestCase
             'day_of_week' => 3,
         ]);
     }
+
+    // =================== TASK 4 (S1) ===================
+
+    /**
+     * S1: store() harus menolak jadwal baru jika murid sudah punya jadwal aktif
+     * di hari dan jam yang overlap (multi-enrollment double-booking).
+     */
+    public function test_store_menolak_jadwal_jika_murid_sudah_punya_jadwal_aktif_di_jam_yang_sama(): void
+    {
+        [$student, $enrollPiano, $enrollGitar, $teacher] = $this->makeStudentWithTwoEnrollments();
+
+        $room1 = Room::factory()->create([
+            'capacity'              => 1,
+            'is_active'             => true,
+            'supported_instruments' => ['Piano'],
+        ]);
+        $room2 = Room::factory()->create([
+            'capacity'              => 1,
+            'is_active'             => true,
+            'supported_instruments' => ['Gitar'],
+        ]);
+
+        // Buat jadwal Piano di Senin 15:00–15:30
+        Schedule::factory()->create([
+            'enrollment_id' => $enrollPiano->id,
+            'day_of_week'   => 1,
+            'start_time'    => '15:00',
+            'end_time'      => '15:30',
+            'room_id'       => $room1->id,
+            'is_active'     => true,
+        ]);
+
+        // Coba tambah jadwal Gitar di Senin 15:10–15:40 (overlap dengan Piano)
+        $teacherGitar = Teacher::factory()->create(['is_active' => true]);
+        $enrollGitar->update(['teacher_id' => $teacherGitar->id]);
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('schedules.store', $student), [
+                'enrollment_id' => $enrollGitar->id,
+                'day_of_week'   => 1,
+                'start_time'    => '15:10',
+                'end_time'      => '15:40',
+                'room_id'       => $room2->id,
+            ]);
+
+        // Controller menggunakan flash 'error', bukan validation errors
+        $response->assertSessionHas('error');
+    }
+
+    /**
+     * S1: store() harus mengizinkan jadwal baru jika di hari yang berbeda.
+     */
+    public function test_store_mengizinkan_jadwal_jika_murid_punya_jadwal_di_hari_berbeda(): void
+    {
+        [$student, $enrollPiano, $enrollGitar, $teacher] = $this->makeStudentWithTwoEnrollments();
+
+        $room1 = Room::factory()->create([
+            'capacity'              => 1,
+            'is_active'             => true,
+            'supported_instruments' => ['Piano'],
+        ]);
+        $room2 = Room::factory()->create([
+            'capacity'              => 1,
+            'is_active'             => true,
+            'supported_instruments' => ['Gitar'],
+        ]);
+
+        Schedule::factory()->create([
+            'enrollment_id' => $enrollPiano->id,
+            'day_of_week'   => 1, // Senin
+            'start_time'    => '15:00',
+            'end_time'      => '15:30',
+            'room_id'       => $room1->id,
+            'is_active'     => true,
+        ]);
+
+        $teacherGitar = Teacher::factory()->create(['is_active' => true]);
+        $enrollGitar->update(['teacher_id' => $teacherGitar->id]);
+
+        // Rabu (hari berbeda) — harus diizinkan
+        $response = $this->actingAs($this->admin)
+            ->post(route('schedules.store', $student), [
+                'enrollment_id' => $enrollGitar->id,
+                'day_of_week'   => 3, // Rabu
+                'start_time'    => '15:00',
+                'end_time'      => '15:30',
+                'room_id'       => $room2->id,
+            ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertSessionMissing('error');
+    }
 }

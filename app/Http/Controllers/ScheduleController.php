@@ -140,6 +140,28 @@ class ScheduleController extends Controller
             }
         }
 
+        // Validasi: murid tidak boleh punya jadwal aktif lain di hari + jam yang overlap
+        // (berlaku untuk multi-enrollment — Piano dan Gitar di waktu yang sama tidak masuk akal)
+        $studentId        = $enrollment->student_id;
+        $studentConflicts = Schedule::query()
+            ->active()
+            ->whereHas('enrollment', function ($q) use ($studentId) {
+                $q->active()->where('student_id', $studentId);
+            })
+            ->where('day_of_week', $data['day_of_week'])
+            ->where('start_time', '<', $data['end_time'])
+            ->where('end_time', '>', $data['start_time'])
+            ->get();
+
+        if ($studentConflicts->isNotEmpty()) {
+            $namaKelas = $studentConflicts->map(function ($s) {
+                $pkg = $s->enrollment?->package;
+                return ($pkg?->instrument?->name ?? '?') . ' ' . ($s->start_time ? substr($s->start_time, 0, 5) : '');
+            })->implode(', ');
+            return back()->withInput()->with('error',
+                "Murid sudah memiliki jadwal aktif di slot yang sama: {$namaKelas}.");
+        }
+
         Schedule::create([
             'enrollment_id' => $enrollment->id,
             'day_of_week'   => $data['day_of_week'],
@@ -265,6 +287,28 @@ class ScheduleController extends Controller
                     "Pilih ruangan lain atau kosongkan field ruangan."
                 );
             }
+        }
+
+        // Validasi: murid tidak boleh punya jadwal aktif lain di hari + jam yang overlap
+        $studentId        = $schedule->enrollment->student_id;
+        $studentConflicts = Schedule::query()
+            ->active()
+            ->whereHas('enrollment', function ($q) use ($studentId) {
+                $q->active()->where('student_id', $studentId);
+            })
+            ->where('day_of_week', $data['day_of_week'])
+            ->where('start_time', '<', $data['end_time'])
+            ->where('end_time', '>', $data['start_time'])
+            ->where('id', '!=', $schedule->id) // kecualikan diri sendiri
+            ->get();
+
+        if ($studentConflicts->isNotEmpty()) {
+            $namaKelas = $studentConflicts->map(function ($s) {
+                $pkg = $s->enrollment?->package;
+                return ($pkg?->instrument?->name ?? '?') . ' ' . ($s->start_time ? substr($s->start_time, 0, 5) : '');
+            })->implode(', ');
+            return back()->withInput()->with('error',
+                "Murid sudah memiliki jadwal aktif di slot yang sama: {$namaKelas}.");
         }
 
         $schedule->update($data);
