@@ -176,14 +176,13 @@ class ScheduleController extends Controller
         // manual/replacement sessions di 30 hari ke depan. Hanya peringatan (warning),
         // bukan error — jadwal tetap tersimpan karena ini adalah template mingguan.
         // Filter day-of-week dilakukan di PHP untuk kompatibilitas SQLite (test) dan MySQL.
-        // Filter day-of-week dilakukan di PHP untuk kompatibilitas SQLite (test) dan MySQL.
         $upcomingConflict = \App\Models\ClassSession::where('teacher_id', $enrollment->teacher_id)
             ->where('session_date', '>=', today()->toDateString())
             ->where('session_date', '<=', today()->addDays(30)->toDateString())
             ->whereNull('schedule_id')  // hanya manual/replacement sessions
             ->where('start_time', '<', $data['end_time'] . ':00')
             ->where('end_time', '>', $data['start_time'] . ':00')
-            ->whereNotIn('status', ['CANCELLED', 'IZIN_RESCHEDULE', 'IZIN_PENDING'])
+            ->whereNotIn('status', \App\Models\ClassSession::statusesExcludedFromScheduleConflict())
             ->get()
             ->contains(function ($session) use ($data) {
                 return \Carbon\Carbon::parse($session->session_date)->dayOfWeek === (int) $data['day_of_week'];
