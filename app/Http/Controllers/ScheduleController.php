@@ -334,6 +334,18 @@ class ScheduleController extends Controller
 
         $schedule->update($data);
 
+        // Sinkronisasi: update sesi SCHEDULED masa depan yang sudah ter-generate
+        // agar konsisten dengan perubahan jadwal mingguan (jam, ruang).
+        // Sesi dengan status SCHEDULED di-update; sesi lewat/status lain TIDAK diubah.
+        \App\Models\ClassSession::where('schedule_id', $schedule->id)
+            ->where('session_date', '>=', today()->toDateString())
+            ->where('status', \App\Models\ClassSession::STATUS_SCHEDULED)
+            ->update([
+                'start_time' => $data['start_time'] . ':00',
+                'end_time'   => $data['end_time'] . ':00',
+                'room_id'    => !empty($data['room_id']) ? $data['room_id'] : null,
+            ]);
+
         return back()->with('success', 'Jadwal mingguan berhasil diperbarui.');
     }
 

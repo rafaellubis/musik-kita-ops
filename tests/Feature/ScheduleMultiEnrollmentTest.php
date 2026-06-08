@@ -435,4 +435,112 @@ class ScheduleMultiEnrollmentTest extends TestCase
             'Controller harus memberikan peringatan saat ada manual session di slot yang sama'
         );
     }
+
+    // =================== TASK 8 (RS1) ===================
+
+    /**
+     * RS1: Update jadwal mingguan juga mengupdate start_time, end_time, room_id
+     * sesi SCHEDULED masa depan yang sudah ter-generate.
+     * Sesi lewat (HADIR, dll) TIDAK boleh berubah.
+     */
+    public function test_update_jadwal_juga_mengupdate_sesi_scheduled_mendatang(): void
+    {
+        $student = \App\Models\Student::factory()->create(['status' => 'Aktif']);
+        $teacher = \App\Models\Teacher::factory()->create(['is_active' => true]);
+
+        // Buat instrument dengan nama yang dikenal agar room support check lolos
+        $instrument = \App\Models\Instrument::factory()->create(['name' => 'Piano', 'is_active' => true]);
+
+        $room1 = \App\Models\Room::factory()->create([
+            'capacity'              => 1,
+            'is_active'             => true,
+            'supported_instruments' => ['Piano'],
+        ]);
+        $room2 = \App\Models\Room::factory()->create([
+            'capacity'              => 1,
+            'is_active'             => true,
+            'supported_instruments' => ['Piano'],
+        ]);
+        $package = \App\Models\Package::factory()->create([
+            'instrument_id' => $instrument->id,
+            'class_type' => 'REGULER', 'duration_min' => 30, 'price_per_month' => 370000, 'is_active' => true,
+        ]);
+        $enrollment = \App\Models\Enrollment::factory()->create([
+            'student_id' => $student->id, 'teacher_id' => $teacher->id,
+            'package_id' => $package->id, 'status' => 'ACTIVE',
+        ]);
+
+        // Schedule: Monday (1), 15:00-15:30, room1
+        $schedule = \App\Models\Schedule::factory()->create([
+            'enrollment_id' => $enrollment->id,
+            'day_of_week'   => 1, // Monday
+            'start_time'    => '15:00:00',
+            'end_time'      => '15:30:00',
+            'room_id'       => $room1->id,
+            'is_active'     => true,
+        ]);
+
+        // Future SCHEDULED sessions linked to this schedule
+        $sesi1 = \App\Models\ClassSession::factory()->create([
+            'schedule_id'   => $schedule->id,
+            'enrollment_id' => $enrollment->id,
+            'student_id'    => $student->id,
+            'teacher_id'    => $teacher->id,
+            'room_id'       => $room1->id,
+            'session_date'  => now()->addDays(7)->format('Y-m-d'), // next Monday
+            'start_time'    => '15:00:00',
+            'end_time'      => '15:30:00',
+            'status'        => \App\Models\ClassSession::STATUS_SCHEDULED,
+        ]);
+        $sesi2 = \App\Models\ClassSession::factory()->create([
+            'schedule_id'   => $schedule->id,
+            'enrollment_id' => $enrollment->id,
+            'student_id'    => $student->id,
+            'teacher_id'    => $teacher->id,
+            'room_id'       => $room1->id,
+            'session_date'  => now()->addDays(14)->format('Y-m-d'), // 2 weeks later
+            'start_time'    => '15:00:00',
+            'end_time'      => '15:30:00',
+            'status'        => \App\Models\ClassSession::STATUS_SCHEDULED,
+        ]);
+
+        // Past session (HADIR) — should NOT be updated
+        $sesiLama = \App\Models\ClassSession::factory()->create([
+            'schedule_id'   => $schedule->id,
+            'enrollment_id' => $enrollment->id,
+            'student_id'    => $student->id,
+            'teacher_id'    => $teacher->id,
+            'room_id'       => $room1->id,
+            'session_date'  => now()->subDays(7)->format('Y-m-d'),
+            'start_time'    => '15:00:00',
+            'end_time'      => '15:30:00',
+            'status'        => \App\Models\ClassSession::STATUS_HADIR,
+        ]);
+
+        // Update schedule to different time and room
+        $this->actingAs($this->admin)
+            ->patch(route('schedules.update', [$student, $schedule]), [
+                'day_of_week' => 1,
+                'start_time'  => '16:00',
+                'end_time'    => '16:30',
+                'room_id'     => $room2->id,
+            ])
+            ->assertSessionHas('success');
+
+        // Future SCHEDULED sessions should be updated
+        $sesi1->refresh();
+        $this->assertEquals('16:00:00', $sesi1->start_time, 'Sesi 1: start_time harus ter-update');
+        $this->assertEquals('16:30:00', $sesi1->end_time, 'Sesi 1: end_time harus ter-update');
+        $this->assertEquals($room2->id, $sesi1->room_id, 'Sesi 1: room_id harus ter-update');
+
+        $sesi2->refresh();
+        $this->assertEquals('16:00:00', $sesi2->start_time, 'Sesi 2: start_time harus ter-update');
+        $this->assertEquals('16:30:00', $sesi2->end_time, 'Sesi 2: end_time harus ter-update');
+        $this->assertEquals($room2->id, $sesi2->room_id, 'Sesi 2: room_id harus ter-update');
+
+        // Past session (HADIR) should NOT be updated
+        $sesiLama->refresh();
+        $this->assertEquals('15:00:00', $sesiLama->start_time, 'Sesi lama: start_time tidak berubah');
+        $this->assertEquals($room1->id, $sesiLama->room_id, 'Sesi lama: room_id tidak berubah');
+    }
 }
