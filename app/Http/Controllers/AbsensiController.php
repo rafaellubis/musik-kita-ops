@@ -151,39 +151,30 @@ class AbsensiController extends Controller
 
         try {
             DB::transaction(function () use ($request, $classSession) {
-                // AttendanceService menghitung honor_code + honor_amount berdasarkan status & paket.
-                // Untuk DIGANTI: substitute_start_time/end_time/room_id diteruskan agar sesi
-                // bisa di-update jam/ruangnya jika pengganti masuk berbeda tempat/waktu.
-                $this->attendanceService->recordAttendance($classSession, [
-                    'status'                => $request->status,
-                    'late_minutes'          => $request->late_minutes,
-                    'substitute_teacher_id' => $request->substitute_teacher_id,
-                    'substitute_start_time' => $request->substitute_start_time,
-                    'substitute_end_time'   => $request->substitute_end_time,
-                    'substitute_room_id'    => $request->substitute_room_id,
-                    'notes'                 => $request->notes,
-                    '__session'             => $classSession,
-                ]);
-
                 if ($request->status === ClassSession::STATUS_IZIN_RESCHEDULE) {
-                    // Guard: sesi asli tidak boleh punya lebih dari satu pengganti reguler.
-                    // UI sudah menyembunyikan tombol "ubah" untuk kasus ini, guard ini
-                    // sebagai perlindungan tambahan jika ada request langsung ke API.
-                    $hasReplacement = ClassSession::where('origin_session_id', $classSession->id)
-                        ->whereNull('split_part')
-                        ->exists();
-                    if ($hasReplacement) {
-                        throw new \InvalidArgumentException(
-                            'Sesi ini sudah memiliki sesi pengganti dan tidak bisa di-reschedule ulang.'
-                        );
-                    }
-
-                    $this->rescheduleService->createReplacement(
+                    // scheduleReplacement() handle recordAttendance + RescheduleService::createReplacement
+                    // dalam satu transaction, dengan guard duplicate replacement + konflik guru/ruang.
+                    $this->attendanceService->scheduleReplacement(
                         $classSession,
                         $request->replacement_date,
                         $request->replacement_time,
                         $request->replacement_room_id,
+                        $request->notes,
                     );
+                } else {
+                    // AttendanceService menghitung honor_code + honor_amount berdasarkan status & paket.
+                    // Untuk DIGANTI: substitute_start_time/end_time/room_id diteruskan agar sesi
+                    // bisa di-update jam/ruangnya jika pengganti masuk berbeda tempat/waktu.
+                    $this->attendanceService->recordAttendance($classSession, [
+                        'status'                => $request->status,
+                        'late_minutes'          => $request->late_minutes,
+                        'substitute_teacher_id' => $request->substitute_teacher_id,
+                        'substitute_start_time' => $request->substitute_start_time,
+                        'substitute_end_time'   => $request->substitute_end_time,
+                        'substitute_room_id'    => $request->substitute_room_id,
+                        'notes'                 => $request->notes,
+                        '__session'             => $classSession,
+                    ]);
                 }
             });
         } catch (\InvalidArgumentException $e) {

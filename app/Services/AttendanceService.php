@@ -122,6 +122,60 @@ class AttendanceService
     }
 
     /**
+     * Catat absensi IZIN_RESCHEDULE + buat sesi pengganti.
+     *
+     * 1. Mengubah status sesi asli → IZIN_RESCHEDULE (honor = Rp 0)
+     * 2. Guard: pastikan belum ada sesi pengganti untuk sesi ini
+     * 3. Buat sesi pengganti via RescheduleService::createReplacement()
+     *
+     * Semua operasi dalam DB transaction — jika gagal (konflik guru/ruang),
+     * status sesi asli tetap SCHEDULED (rollback).
+     *
+     * @param  ClassSession $session            Sesi asli (status harus SCHEDULED atau IZIN_RESCHEDULE)
+     * @param  string       $replacementDate    Format Y-m-d
+     * @param  string       $replacementTime    Format H:i
+     * @param  int|null     $replacementRoomId  ID ruangan atau null
+     * @param  string|null  $notes              Catatan tambahan
+     * @return ClassSession                     Sesi pengganti yang baru dibuat
+     * @throws InvalidArgumentException         Jika konflik atau sudah ada pengganti
+     */
+    public function scheduleReplacement(
+        ClassSession $session,
+        string $replacementDate,
+        string $replacementTime,
+        ?int $replacementRoomId,
+        ?string $notes = null,
+    ): ClassSession {
+        return DB::transaction(function () use ($session, $replacementDate, $replacementTime, $replacementRoomId, $notes) {
+            // Step 1: catat absensi IZIN_RESCHEDULE
+            $this->recordAttendance($session, [
+                'status' => ClassSession::STATUS_IZIN_RESCHEDULE,
+                'notes'  => $notes,
+            ]);
+
+            // Step 2: guard — cegah duplicate replacement
+            $hasReplacement = ClassSession::where('origin_session_id', $session->id)
+                ->whereNull('split_part')
+                ->exists();
+            if ($hasReplacement) {
+                throw new InvalidArgumentException(
+                    'Sesi ini sudah memiliki sesi pengganti dan tidak bisa di-reschedule ulang.'
+                );
+            }
+
+            // Step 3: buat sesi pengganti via RescheduleService
+            $replacement = app(\App\Services\RescheduleService::class)->createReplacement(
+                $session,
+                $replacementDate,
+                $replacementTime,
+                $replacementRoomId,
+            );
+
+            return $replacement;
+        });
+    }
+
+    /**
      * Pastikan field wajib per status sudah ada.
      * HADIR_TERLAMBAT → late_minutes wajib (>0)
      * DIGANTI         → substitute_teacher_id wajib
