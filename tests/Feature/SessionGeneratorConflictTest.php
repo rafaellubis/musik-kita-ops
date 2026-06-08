@@ -422,4 +422,80 @@ class SessionGeneratorConflictTest extends TestCase
             'Sesi murid 2 harus ter-generate meski murid 1 punya IZIN_RESCHEDULE di slot yang sama'
         );
     }
+
+    public function test_generator_tidak_buat_sesi_duo_ketiga_di_slot_yang_sama(): void
+    {
+        $teacher = Teacher::factory()->create(['is_active' => true]);
+        $room    = Room::factory()->create(['capacity' => 2, 'is_active' => true]);
+        $pkgDuo  = Package::factory()->create([
+            'duration_min'    => 30,
+            'class_type'      => 'DUO',
+            'price_per_month' => 370000,
+            'is_active'       => true,
+        ]);
+
+        $targetMonth = Carbon::now()->addMonth()->startOfMonth();
+        $senin       = $targetMonth->copy()->next('Monday');
+
+        // Buat 2 murid DUO yang sudah punya sesi di slot yang sama (slot penuh)
+        foreach ([1, 2] as $i) {
+            $student    = Student::factory()->create(['status' => 'Aktif']);
+            $enrollment = Enrollment::factory()->create([
+                'student_id' => $student->id,
+                'teacher_id' => $teacher->id,
+                'package_id' => $pkgDuo->id,
+                'status'     => 'ACTIVE',
+            ]);
+            $schedule = Schedule::factory()->create([
+                'enrollment_id' => $enrollment->id,
+                'day_of_week'   => 1,
+                'start_time'    => '15:00',
+                'end_time'      => '15:30',
+                'room_id'       => $room->id,
+                'is_active'     => true,
+            ]);
+            ClassSession::factory()->create([
+                'schedule_id'   => $schedule->id,
+                'enrollment_id' => $enrollment->id,
+                'student_id'    => $student->id,
+                'teacher_id'    => $teacher->id,
+                'session_date'  => $senin->toDateString(),
+                'start_time'    => '15:00:00',
+                'end_time'      => '15:30:00',
+                'room_id'       => $room->id,
+                'status'        => 'SCHEDULED',
+            ]);
+        }
+
+        // Murid DUO ke-3 mencoba masuk ke slot yang sama — harus di-block
+        $student3    = Student::factory()->create(['status' => 'Aktif']);
+        $enrollment3 = Enrollment::factory()->create([
+            'student_id' => $student3->id,
+            'teacher_id' => $teacher->id,
+            'package_id' => $pkgDuo->id,
+            'status'     => 'ACTIVE',
+        ]);
+        Schedule::factory()->create([
+            'enrollment_id' => $enrollment3->id,
+            'day_of_week'   => 1,
+            'start_time'    => '15:00',
+            'end_time'      => '15:30',
+            'room_id'       => $room->id,
+            'is_active'     => true,
+        ]);
+
+        $report = app(\App\Services\SessionGeneratorService::class)
+            ->generateForMonth($targetMonth->year, $targetMonth->month);
+
+        // Murid 3 harus di-skip sebagai konflik (slot DUO penuh)
+        $this->assertGreaterThan(0, $report['skipped_conflict'],
+            'Generator harus mendeteksi slot DUO penuh sebagai konflik');
+
+        $this->assertFalse(
+            ClassSession::where('student_id', $student3->id)
+                ->whereDate('session_date', $senin->toDateString())
+                ->exists(),
+            'Sesi murid DUO ke-3 tidak boleh ter-generate karena slot sudah penuh'
+        );
+    }
 }

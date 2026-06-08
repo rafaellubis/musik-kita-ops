@@ -402,6 +402,29 @@ class SessionGeneratorService
                 }
             }
 
+            // Cek slot DUO tidak melebihi 2 murid (BR-3.11)
+            $duoCount = ClassSession::where('teacher_id', $teacherId)
+                ->whereDate('session_date', $date)
+                ->where('start_time', '<', $schedule->end_time)
+                ->where('end_time', '>', $schedule->start_time)
+                ->where('schedule_id', '!=', $schedule->id)
+                ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
+                ->whereHas('enrollment.package', fn ($q) => $q->where('class_type', 'DUO'))
+                ->count();
+
+            if ($duoCount >= 2) {
+                // Kembalikan salah satu sesi DUO yang sudah ada sebagai referensi konflik
+                return ClassSession::where('teacher_id', $teacherId)
+                    ->whereDate('session_date', $date)
+                    ->where('start_time', '<', $schedule->end_time)
+                    ->where('end_time', '>', $schedule->start_time)
+                    ->where('schedule_id', '!=', $schedule->id)
+                    ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
+                    ->whereHas('enrollment.package', fn ($q) => $q->where('class_type', 'DUO'))
+                    ->with('student')
+                    ->first();
+            }
+
             return null;
         }
 
