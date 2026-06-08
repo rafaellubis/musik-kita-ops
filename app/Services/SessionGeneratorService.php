@@ -378,7 +378,7 @@ class SessionGeneratorService
                 ->where('start_time', '<', $schedule->end_time)
                 ->where('end_time', '>', $schedule->start_time)
                 ->where('schedule_id', '!=', $schedule->id)
-                ->whereNotIn('status', ['CANCELLED'])
+                ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
                 ->whereHas('enrollment.package', fn ($q) => $q->where('class_type', '!=', 'DUO'))
                 ->first();
 
@@ -393,7 +393,7 @@ class SessionGeneratorService
                     ->where('start_time', '<', $schedule->end_time)
                     ->where('end_time', '>', $schedule->start_time)
                     ->where('schedule_id', '!=', $schedule->id)
-                    ->whereNotIn('status', ['CANCELLED'])
+                    ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
                     ->whereHas('enrollment.package', fn ($q) => $q->where('class_type', '!=', 'DUO'))
                     ->first();
 
