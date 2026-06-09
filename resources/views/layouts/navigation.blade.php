@@ -50,7 +50,9 @@
     <x-sidebar-item route="expenses.index" icon="📊" label="Pengeluaran"
         :active="request()->routeIs('expenses.*') || request()->routeIs('expense-categories.*')" />
     <x-sidebar-item route="events.index" icon="🎤" label="Event"
-        :active="request()->routeIs('events.*') || request()->routeIs('event-participants.*')" />
+        :active="request()->routeIs('events.*') || request()->routeIs('event-participants.*')"
+        :disabled="true"
+        title="Sementara dinonaktifkan"/>
 
     {{-- Grup: LAPORAN --}}
     <div class="px-2 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-white/40 uppercase">Laporan</div>
@@ -87,7 +89,9 @@
         :active="request()->routeIs('holidays.*')" />
     @role('Owner')
     <x-sidebar-item route="report-templates.index" icon="📋" label="Template Laporan"
-        :active="request()->routeIs('report-templates.*')" />
+        :active="request()->routeIs('report-templates.*')"
+        :disabled="true"
+        title="Sementara dinonaktifkan"/>
     @endrole
     <x-sidebar-item route="whatsapp-templates.index" icon="💬" label="Template WA"
         :active="request()->routeIs('whatsapp-templates.*')" />
