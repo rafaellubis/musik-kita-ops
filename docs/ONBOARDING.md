@@ -1,413 +1,386 @@
-# Onboarding Guide — Musik KITA Sistem Operasional
+# Musik KITA Ops — Onboarding Guide
 
-> Dibuat otomatis dari knowledge graph `/understand-anything`. Diperbarui: 2026-05-27.
-
----
-
-## 1. Project Overview
-
-**Musik KITA Sistem Operasional** adalah sistem administrasi dan keuangan internal untuk studio musik "Musik KITA". Sistem ini menggantikan proses Excel yang tidak skalabel dan dijalankan secara offline di jaringan LAN lokal studio.
-
-| Aspek | Detail |
-|---|---|
-| **Framework** | Laravel 11 (PHP 8.3) |
-| **Frontend** | Blade Templates + Tailwind CSS 3 + Alpine.js + ApexCharts |
-| **Auth & RBAC** | Laravel Breeze + Spatie Permission v6 |
-| **Build** | Vite (`npm run dev` / `npm run build`) |
-| **Database** | MySQL via Laragon (`mk_operasional`) |
-| **Testing** | PHPUnit + SQLite in-memory (agar tidak menyentuh DB produksi) |
-| **Import** | Maatwebsite Excel (import data 300+ murid dari Excel lama) |
-| **Deployment** | LAN lokal studio — tidak tersedia online |
-
-### Akun Default (setelah `php artisan db:seed`)
-```
-owner@musikkita.local   / password   → role Owner   (akses penuh)
-admin@musikkita.local   / password   → role Admin   (operasional harian)
-auditor@musikkita.local / password   → role Auditor (read-only)
-```
-**Ganti password ketiga akun ini sebelum sistem dipakai live.**
-
-### Skala Operasional
-- ~300 murid aktif, 18 guru pengajar
-- ~1.200 sesi privat/bulan + sesi Kids Class grup
-- 18 slip honor guru/bulan
-- 9 studio (R1–R9), 8 instrumen aktif (Saxophone nonaktif)
+> Generated from the project knowledge graph — 2026-06-09
+> 1,371 nodes · 2,076 edges · 626 files · 9 architectural layers
 
 ---
 
-## 2. Architecture Layers
+## Project Overview
 
-Sistem terdiri dari 5 layer yang mengikuti pola Laravel standar:
+**Musik KITA Operations** is a studio music school administration and finance management system built on **Laravel 11**. It replaces a manual Excel workflow for a music studio serving approximately **300 students** and **18 teachers**, processing over **1,200 private sessions per month** across **9 studio rooms**.
 
-### Layer 1 — Routing & Entry
-**Titik masuk semua HTTP request.** Laravel menggunakan front controller pattern: semua request masuk via `public/index.php`.
+### Tech Stack
 
-| File | Peran |
+| Layer | Technology |
 |---|---|
-| `public/index.php` | Entry point tunggal semua HTTP request |
-| `bootstrap/app.php` | Konfigurasi framework, middleware global, alias route |
-| `routes/web.php` | Peta lengkap ~416 baris semua fitur M01–M09 |
-| `routes/auth.php` | Route autentikasi Laravel Breeze |
-| `routes/console.php` | Artisan command schedule (cron job) |
+| Backend | PHP 8.3 · Laravel 11 · Laravel Breeze |
+| Frontend | Blade Templates · Tailwind CSS 3 · Alpine.js |
+| Auth & RBAC | Laravel Breeze + Spatie Permission v6 (4 roles) |
+| Database | MySQL (via Laragon on Windows) |
+| Build | Vite |
+| PDF | DOMPDF |
+| Excel | Laravel Excel |
+| WhatsApp | Fonnte (Wablas) API — for notifications & reminders |
 
-### Layer 2 — HTTP Layer
-**Controller dan Form Request** yang menerima input, memanggil service, dan mengembalikan response ke Blade.
+### User Roles
 
-Semua controller berada di `app/Http/Controllers/` (tidak ada subfolder `Admin/`).
-
-**Controller utama:**
-| Controller | Modul | Tanggung Jawab |
-|---|---|---|
-| `StudentController` | M02 | CRUD murid + lifecycle transitions |
-| `EnrollmentController` | M02 | Multi-kelas: tambah, set primary, stop enrollment |
-| `AbsensiController` | M04 | Input absensi harian via AJAX + modal reschedule |
-| `InvoiceController` | M05 | Manajemen invoice SPP + diskon |
-| `PaymentController` | M05 | Catat pembayaran (CASH/TRANSFER/QRIS/DEBIT) + void |
-| `HonorController` | M06 | Review & cetak slip honor guru |
-| `EventController` | M08 | Siklus Mini Concert & Ujian Grade |
-| `DashboardController` | M09 | Agregasi data P&L + statistik operasional |
-| `ScheduleController` | M03 | Jadwal mingguan tetap per enrollment |
-| `HolidayController` | M01 | Hari libur + tanggal pengganti |
-
-### Layer 3 — Business Logic Layer
-**Service classes dan Artisan commands** yang mengimplementasikan aturan bisnis inti.
-
-| File | Fungsi |
+| Role | Access Level |
 |---|---|
-| `StudentLifecycleService` | State machine murid: 6 status, 12 transisi valid |
-| `SessionGeneratorService` | Generate 1.200+ sesi bulanan, handle libur & conflict |
-| `HonorCalculationService` | Kalkulasi honor guru: 10 skenario honor_code |
-| `AttendanceService` | Proses absensi + otomatis hitung honor_code per sesi |
-| `InvoiceService` | Generate SPP bulanan, denda harian, cicilan Kids Bundle |
-| `RescheduleService` | Buat sesi pengganti dengan conflict detection |
-| `EventHonorService` | Honor guru pendamping + pengawas ujian ke slip utama |
-| `DiscountService` | Terapkan diskon NOMINAL/PERCENT ke invoice item |
-| `ScheduleConflictDetector` | Deteksi double-booking guru dan ruang |
-| `StudentImportService` | Import data 300+ murid dari Excel template |
-
-**Artisan Commands (cron job):**
-| Command | Jadwal | Fungsi |
-|---|---|---|
-| `sessions:generate` | Tgl 25 tiap bulan | Generate sesi bulan berikutnya |
-| `spp:generate` | Tgl 1 tiap bulan | Generate invoice SPP otomatis |
-| `fines:apply` | Setiap hari | Tambah denda Rp 5.000/hari mulai tgl 11 |
-| `honor:calculate` | H-2 akhir bulan | Kalkulasi honor semua guru |
-| `students:check-overdue` | Harian | Kirim notifikasi murid tunggakan >1 bulan |
-
-### Layer 4 — Data Layer
-**Eloquent Models, Migrasi, Seeder, dan Factory.**
-
-**Model inti:**
-| Model | Tabel | Keterangan |
-|---|---|---|
-| `Student` | `students` | Entitas sentral (fan-in 56 — direferensikan terbanyak) |
-| `Enrollment` | `enrollments` | Hubungkan murid ↔ paket + guru (multi-kelas) |
-| `ClassSession` | `class_sessions` | Sesi konkret per tanggal, 9 status absensi |
-| `Schedule` | `schedules` | Jadwal mingguan tetap per enrollment |
-| `Invoice` | `invoices` | Tagihan murid, nomor INV/YYYY/MM/NNNN |
-| `InvoiceItem` | `invoice_items` | Baris tagihan + item diskon (self-referencing FK) |
-| `Payment` | `payments` | Pembayaran, nomor KW/YYYY/MM/NNNN |
-| `HonorSlip` | `teacher_honor_slips` | Slip honor guru per bulan |
-| `Package` | `packages` | Katalog paket kelas dengan harga |
-| `Teacher` | `teachers` | Data guru termasuk info bank untuk slip honor |
-| `Holiday` | `holidays` | Hari libur + `replacement_date` + `is_honor_paid` |
-| `ClassSession` | `class_sessions` | Hasil materialisasi jadwal mingguan |
-| `EventParticipant` | `event_participants` | Peserta event + `accompanying_teacher_id` |
-| `PayrollConfig` | `payroll_configs` | Formula honor tersimpan di DB (bisa diubah tanpa deploy) |
-
-### Layer 5 — Presentation Layer
-**Blade Templates, CSS, dan Alpine.js** yang membentuk antarmuka operator studio.
-
-| File/Folder | Peran |
-|---|---|
-| `resources/views/layouts/app.blade.php` | Shell visual: sidebar, topbar jam digital, notifikasi |
-| `resources/css/app.css` | Tema Mint & Mahogany, scoping `.dark-content` / `.light-content` |
-| `tailwind.config.js` | Token warna `mk.*` (bg-mk-sidebar, mk-accent gold, dll) |
-| `resources/views/absensi/` | Halaman absensi harian (paling kompleks secara UI) |
-| `resources/views/students/` | Detail murid + tab kelas multi-enrollment |
-| `resources/views/honors/` | Slip honor termasuk halaman cetak |
-| `resources/views/dashboard.blade.php` | Dashboard P&L dengan grafik ApexCharts |
+| **Owner** | Full access — pricing, master data deletion, void payments, manage users, audit log, mark honor as paid |
+| **Admin** | Daily operations — students, schedules, attendance, billing, payments. Cannot change prices, delete master data, or void payments |
+| **Auditor** | Read-only across all data and reports |
+| **Guru** | Teacher self-service portal — attendance, notes, progress reports, honor slip viewing |
 
 ---
 
-## 3. Key Concepts
+## Architecture Layers
 
-### Multi-Enrollment (Multi-Kelas)
-Satu murid bisa punya beberapa enrollment aktif sekaligus (contoh: Piano Reguler + Gitar Hobby). Satu enrollment ditandai `is_primary=true` dan tersimpan di `students.primary_enrollment_id` — enrollment inilah yang men-trigger invoice SPP otomatis. Akses paket/guru/ruang murid **selalu** via `$student->primaryEnrollment->package`, **bukan** via kolom langsung di `students` (kolom-kolom itu sudah dihapus di migrasi Mei 2026).
+The project follows a clean **Laravel MVC + Service** architecture with 9 distinct layers:
 
-### State Machine Murid
-```
-Calon → Trial → Aktif → Cuti → Mundur
-                  ↓              ↓
-               Selesai        Aktif (reaktivasi)
-```
-Setiap transisi diimplementasikan sebagai method di `StudentLifecycleService` dan membawa side effect (buat enrollment, generate invoice, ubah status enrollment). Seluruh riwayat transisi tersimpan di `student_status_histories`.
+### 1. API Layer (67 files)
+> HTTP route definitions, controllers, and form request validation for all web endpoints.
 
-### Honor Guru — 10 Skenario
-Honor guru tidak tersimpan sebagai kolom tetap — ia **dihitung** dari formula `PayrollConfig` dan kode yang ditetapkan `AttendanceService` saat absensi dicatat (`honor_code` di tabel `class_sessions`):
+Controllers are organized by domain module (Absensi, Enrollment, Schedule, Student, Invoice, Payment, Honor, Event, etc.) in `app/Http/Controllers/`. Form Request validators in `app/Http/Requests/` enforce input validation with Indonesian-language error messages. Route definitions in `routes/web.php` apply RBAC middleware per route group.
 
-| Kode | Skenario | Honor |
-|---|---|---|
-| `H_REG` | Sesi terlaksana normal | harga × 50% / 4 |
-| `H_TRIAL` | Trial murid hadir | sama H_REG |
-| `TRIAL_NS` | Trial murid no-show | Rp 0 |
-| `H_VIDEO` | Izin video pengganti | sama H_REG |
-| `H_LIBUR` | Libur nasional (tanpa replacement) | sama H_REG (tetap bayar) |
-| `H_HANGUS` | Murid no-show / hangus | sama H_REG (tetap bayar) |
-| `H_PENG` | Diajar guru pengganti | ke guru pengganti |
-| `H_KIDS` | Sesi Kids Class | murid_terdaftar × Rp 42.500 |
-| `H_UJIAN` | Pengawas ujian grade | Rp 250.000 flat |
-| `H_IZIN` | IZIN_RESCHEDULE (sesi original) | Rp 0 (dibayar via sesi pengganti) |
+### 2. Service Layer (33 files)
+> Business logic services, queue jobs, notifications, and data export utilities.
 
-### Session Generator
-Setiap tanggal 25, `SessionGeneratorService` membuat sesi konkret bulan berikutnya dari jadwal mingguan (`schedules`). Generator ini:
-- Membatasi 3–4 sesi per murid per bulan
-- Menandai sesi libur nasional sebagai `LIBUR`
-- Membuat sesi pengganti jika holiday punya `replacement_date`
-- Meng-skip enrollment dengan status `ON_LEAVE` (murid cuti)
-- Mendeteksi dan meng-skip konflik guru/ruang
+Services encapsulate the system's complex business rules:
+- **SessionGeneratorService** — Monthly session generation with academic calendar rules
+- **AttendanceService** — 10 honor-code scenarios per attendance status
+- **RescheduleService** — Phase 2 rescheduling with conflict detection
+- **InvoiceService** — SPP auto-generation, installments, late fines
+- **HonorCalculationService** — Teacher payroll from session data
+- **StudentLifecycleService** — 6-status state machine transitions
+- **EventHonorService** — Event honor injection for accompanying teachers
 
-### Invoice & Denda
-Invoice SPP digenerate tanggal 1 per bulan (via cron `spp:generate`). Tempo bayar tgl 1–10. Mulai tgl 11, cron `fines:apply` menambahkan denda Rp 5.000/hari sebagai `InvoiceItem` dengan kode `DENDA`. Diskon dapat ditambahkan manual oleh Owner/Admin dengan `parent_item_id` yang menunjuk ke item yang didiskon.
+### 3. Data Layer (140 files)
+> Eloquent models, database migrations, seeders, and test factories.
 
-### RBAC (3 Role)
-| Role | Akses |
+**Core Models** (highest fan-in): `Student` (77 edges), `ClassSession`, `Enrollment`, `Package`, `Teacher`, `Invoice`, `HonorSlip`. Models use Laravel Eloquent ORM with rich relationships: `$student->primaryEnrollment->package->price_per_month`.
+
+**Migrations** (~65 files) trace the full schema evolution from initial Laravel tables through multi-class support, academic calendar, progress reports, Guru portal, WhatsApp templates, and Duo class type.
+
+### 4. Presentation Layer (132 files)
+> Blade templates, Tailwind CSS, JavaScript, Blade components, and UI mockups.
+
+Views organized by module under `resources/views/`: `absensi/`, `students/`, `invoices/`, `honors/`, `events/`, `guru/`, `progress-reports/`, etc. Uses a single light-mode mint-and-mahogany theme. Alpine.js powers all inline interactions (status dropdowns, modals, searchable selects). ApexCharts handles dashboard charts.
+
+### 5. Console Layer (8 files)
+> Artisan CLI commands for scheduled tasks.
+
+- `GenerateMonthlySessions` — Cron job (25th of month) for next month's sessions
+- `GenerateMonthlySpp` — Invoice generation on the 1st
+- `ApplyLateFines` — Daily fine application (Rp 5,000/day from 11th)
+- `CalculateHonor` — Monthly teacher payroll (H-2 before month end)
+- `CheckOverdueStudents` — Auto-mundur detection for >1 month unpaid
+- `SendScheduleReminders` — WhatsApp schedule reminders
+- `GuruCreateAccounts` — One-time teacher account creation
+
+### 6. Configuration Layer (27 files)
+> Application configuration, build tool settings, service provider registration.
+
+`config/` contains standard Laravel config files plus custom ones: `instruments.php`, `schedule_reminder.php`, `session_report_wa.php`, `studio.php`. Tailwind and Vite configs at project root.
+
+### 7. Test Layer (82 files)
+> Feature and unit test suites covering all 11 modules (M01-M11).
+
+Tests use PHPUnit with SQLite in-memory database. Key test files include extensive coverage of absensi (attendance), reschedule, session generation, student import, invoice generation, honor calculation, and multi-enrollment scenarios.
+
+### 8. Bootstrap Layer (7 files)
+> Application entry points, HTTP front controller, core service provider.
+
+`public/index.php` → `bootstrap/app.php` → `AppServiceProvider` (registers View Composer for overdue notifications in topbar).
+
+### 9. Documentation Layer (127 files)
+> Project documentation, SRS modules, development plans, bug reports, AI coding rules.
+
+The SRS (`docs/srs/SRS-musik-kita-ops-2026-05-31.md`) is the authoritative system specification. Module-specific SRS docs are in `docs/srs/modules/`. Implementation plans live under `docs/superpowers/plans/` and design specs under `docs/superpowers/specs/`. The `CLAUDE.md` root file is the definitive project briefing for AI-assisted development.
+
+---
+
+## Guided Tour — 13 Steps
+
+### Step 1: Project Overview
+**Start here:** Read `CLAUDE.md` — the comprehensive briefing covering architecture, schema, business rules, UI design, coding conventions, and all 11 modules.
+
+### Step 2: Application Entry and Routing
+**Files:** `public/index.php` → `routes/web.php` → `bootstrap/app.php`
+Understand how every request flows through the Laravel front controller, how RBAC middleware gates every route, and how Spatie role/permission checks are configured.
+
+### Step 3: Core Domain Models
+**Files:** `app/Models/Student.php`, `app/Models/Enrollment.php`, `app/Models/Package.php`
+These three models form the data vocabulary of the entire system. The Enrollment model bridges students to packages and teachers — every feature references these relationships.
+
+### Step 4: Scheduling Foundation
+**Files:** `app/Models/Schedule.php`, `app/Models/ClassSession.php`, `app/Models/Room.php`, `app/Models/Teacher.php`
+Understand the two dimensions of time: weekly `schedules` (day-of-week + time slots) and concrete `class_sessions` (specific dates with attendance status).
+
+### Step 5: Session Generation and Conflict Detection
+**Files:** `app/Services/SessionGeneratorService.php`, `app/Services/ScheduleConflictDetector.php`, `app/Console/Commands/GenerateMonthlySessions.php`
+The system's most important background process: generating sessions from schedules, handling holidays with replacement dates, and enforcing the max-4-sessions-per-month rule.
+
+### Step 6: Attendance and Rescheduling
+**Files:** `app/Http/Controllers/AbsensiController.php`, `app/Services/AttendanceService.php`, `app/Services/RescheduleService.php`
+The operational heart — inline AJAX attendance recording with 10 statuses, each mapped to a specific honor code. RescheduleService handles creating replacement sessions when students cancel with sufficient notice.
+
+### Step 7: Student Finance and Invoicing
+**Files:** `app/Models/Invoice.php`, `app/Models/InvoiceItem.php`, `app/Models/Payment.php`, `app/Services/InvoiceService.php`
+The billing lifecycle: auto-generated SPP per active enrollment, late fines, NOMINAL/PERCENT discounts, Kids Class Bundle 3-term installments, and 4 payment methods (CASH, TRANSFER, QRIS, DEBIT).
+
+### Step 8: Teacher Honor System
+**Files:** `app/Models/HonorSlip.php`, `app/Services/HonorCalculationService.php`, `app/Http/Controllers/HonorController.php`
+Teacher compensation with 10 honor codes covering every attendance scenario. Slips aggregate base honor (auto), event honor, transport, and other honor. Status flows DRAFT → CALCULATED → PAID.
+
+### Step 9: Student Lifecycle Management
+**Files:** `app/Http/Controllers/StudentController.php`, `app/Services/StudentLifecycleService.php`, `app/Models/StudentStatusHistory.php`
+The 6-status state machine: CALON → TRIAL → AKTIF ↔ CUTI → MUNDUR / SELESAI. Every transition triggers the correct side effects (enrollment updates, session cleanup, invoice generation).
+
+### Step 10: Events, Concerts, and Exams
+**Files:** `app/Http/Controllers/EventController.php`, `app/Models/Event.php`, `app/Services/EventHonorService.php`
+Mini Concerts and exams with DRAFT → COMPLETED lifecycle. Exam results trigger automatic grade progression. Event completion injects Rp 250,000 honor for accompanying teachers.
+
+### Step 11: Dashboard and Reporting
+**Files:** `app/Http/Controllers/DashboardController.php`, `app/Http/Controllers/ReportController.php`, `routes/console.php`
+Real-time P&L dashboard with role-based visibility. Financial reports with payment method breakdowns. Console route definitions schedule all cron tasks.
+
+### Step 12: Teacher Portal
+**Files:** `app/Http/Controllers/GuruController.php`, `resources/views/guru/`, `resources/js/app.js`
+Teacher self-service: today's schedule, 2-week calendar, self-service attendance, progress report creation, honor slip viewing. Mobile-first layout with Alpine.js bottom navigation.
+
+### Step 13: System Architecture Summary
+**File:** `docs/srs/SRS-musik-kita-ops-2026-05-31.md`
+The authoritative SRS document tying all components together — showing how the layered architecture serves a studio managing 1,200+ sessions/month across 9 rooms with 18 teachers.
+
+---
+
+## Key Concepts
+
+### Naming Conventions — CRITICAL
+- **Package code** (not name): `packages.code` — e.g., "REG-B-PNO-30"
+- **Duration**: `duration_min` (not `duration_minutes`)
+- **Student name**: `full_name` (not `name`)
+- **Student code**: `student_code` (not `code`)
+- **Class type enum** (always UPPERCASE): `REGULER`, `HOBBY`, `KIDS_CLASS`, `KIDS_CLASS_BUNDLE`
+- **Student status enum** (Title Case): `Calon`, `Trial`, `Aktif`, `Cuti`, `Selesai`, `Mengundurkan Diri`
+- **Columns DELETED**: `students.package_id`, `assigned_teacher_id`, `assigned_room_id` — use `$student->primaryEnrollment->package` instead
+
+### Multi-Class Architecture
+Students can have multiple enrollments (e.g., Piano Regular + Guitar Hobby). Each enrollment is independent: own schedule, own invoice, own attendance. `students.primary_enrollment_id` marks the primary enrollment for UI display. Invoice SPP is generated for ALL ACTIVE enrollments per BR-MK.4.
+
+### Honor Calculation
+Teachers are paid per session via the formula: `package_price × 50% / 4`. There are 10 honor codes covering every scenario:
+- **H_REG** — Normal session (hadir/telat)
+- **H_TRIAL** — Trial session (student attended)
+- **TRIAL_NS** — Trial no-show (Rp 0)
+- **H_VIDEO** — Video replacement
+- **H_LIBUR** — National holiday (full pay)
+- **H_HANGUS** — No-show/forfeit (full pay)
+- **H_PENG** — Substitute teacher
+- **H_KIDS** — Kids Class group
+- **H_UJIAN** — Exam supervisor (Rp 250,000 flat)
+- **H_IZIN** — Original session of reschedule (Rp 0 — paid via replacement)
+- **H_SPLIT** — Split reschedule (half honor per part)
+
+### Attendance Status Flow
+9 session statuses: `SCHEDULED` → `HADIR`, `HADIR_TERLAMBAT`, `IZIN_RESCHEDULE`, `IZIN_VIDEO`, `HANGUS`, `LIBUR`, `DIGANTI`, `CANCELLED`. Reschedule rules: first cancellation with ≥5h notice per month grants replacement session. Second+ cancellation → video replacement. <5h notice → forfeit.
+
+### Cuti (Leave)
+Students can take paid leave (Rp 100,000) for max 1 month, extendable once (total 2 months max). During cuti: enrollment status → `ON_LEAVE`, no sessions generated, no SPP generated. On return: enrollment → `ACTIVE`, cuti dates cleared.
+
+---
+
+## Complexity Hotspots
+
+These are the most complex files in the codebase — approach with care:
+
+| File | Lines | Layer | Why Complex |
+|---|---|---|---|
+| `app/Http/Controllers/AbsensiController.php` | ~900 | API | 8+ attendance status transitions, AJAX responses, reschedule mini-modal, substitute teacher assignment |
+| `app/Services/SessionGeneratorService.php` | ~600 | Service | Academic calendar rules, holiday replacement dates, week-5 logic, 4-session cap, honor code assignment |
+| `routes/web.php` | ~450 | API | All 70+ routes with RBAC middleware, Guru route group, role-specific prefixes |
+| `app/Http/Controllers/StudentController.php` | ~800 | API | Full CRUD + 6 lifecycle actions, multi-enrollment management, import wizard |
+| `app/Services/InvoiceService.php` | ~550 | Service | SPP auto-generation, installment calculations, fine application, void logic |
+| `app/Services/StudentLifecycleService.php` | ~450 | Service | 6-status state machine with all transition side effects |
+| `app/Http/Controllers/GuruController.php` | ~676 | API | 19 methods for teacher portal: attendance, notes, progress reports, honor slips |
+| `app/Services/AttendanceService.php` | ~400 | Service | 10 honor-code business rules, per-session honor calculation |
+| `app/Http/Controllers/InvoiceController.php` | ~500 | API | Invoice CRUD, void, manual SPP generation, fine management |
+| `app/Services/StudentImportService.php` | ~480 | Service | Two-phase Excel import with validation |
+
+**Test files with high complexity:** `AbsensiControllerTest`, `RescheduleTest`, `SplitRescheduleTest`, `SessionGeneratorConflictTest`, `StudentImportServiceTest` — these reflect the corresponding production code complexity and are excellent learning resources for understanding edge cases.
+
+---
+
+## File Map by Module
+
+### M01 — Master Data
+| File | Purpose |
 |---|---|
-| **Owner** | Full access: ubah harga, void payment, manage user, audit log, tandai honor dibayar |
-| **Admin** | Operasional: daftar murid, jadwal, absensi, tagihan, pembayaran |
-| **Auditor** | Read-only semua data dan laporan |
+| `app/Http/Controllers/InstrumentController.php` | Instrument CRUD |
+| `app/Http/Controllers/PackageController.php` | Package/pricing CRUD (Owner only for price changes) |
+| `app/Http/Controllers/RoomController.php` | Room CRUD with supported_instruments JSON |
+| `app/Http/Controllers/TeacherController.php` | Teacher CRUD with instrument matrix |
+| `app/Http/Controllers/HolidayController.php` | Academic calendar with replacement dates |
+| `app/Http/Controllers/InvoiceComponentController.php` | Invoice item catalog (Owner-managed) |
+| `app/Models/Instrument.php`, `Package.php`, `Room.php`, `Teacher.php`, `Holiday.php` | Corresponding Eloquent models |
 
-Tidak ada role Guru — guru tidak login ke sistem; absensi diinput oleh Admin.
-
-### Naming Conventions Kritis
-```
-✓ packages.code              (bukan packages.name)
-✓ packages.duration_min      (bukan duration_minutes)
-✓ class_type: REGULER / HOBBY / KIDS_CLASS / KIDS_CLASS_BUNDLE  (huruf kapital semua)
-✓ student.status: Calon / Trial / Aktif / Cuti / Selesai / Mengundurkan Diri  (Title Case)
-✓ $student->primaryEnrollment->package  (bukan $student->package — accessor lama sudah dihapus)
-```
-
----
-
-## 4. Guided Tour (15 Langkah)
-
-Ikuti urutan ini untuk memahami codebase dari fondasi hingga fitur lengkap:
-
-### Langkah 1 — Spesifikasi & Business Rules
-**Baca `CLAUDE.md` terlebih dahulu.** Dokumen ini adalah satu-satunya sumber kebenaran proyek — memuat 78+ business rules, skema database kritis, 10 skenario honor guru, state machine status murid, design system UI Mahogany, dan konvensi kode. Membacanya menjawab pertanyaan "mengapa kode ditulis seperti ini" sebelum melihat implementasinya.
-
-### Langkah 2 — Tech Stack & Dependensi
-Baca `composer.json` dan `package.json`. Kombinasi Laravel 11 + Spatie Permission + Blade + Alpine.js dipilih agar mudah dipahami solo developer pemula — tidak ada JavaScript framework besar.
-
-> **Catatan Laravel 11:** Tidak ada `app/Http/Kernel.php` lagi. Middleware global dan alias route didaftarkan langsung di `bootstrap/app.php` via `->withMiddleware()`.
-
-### Langkah 3 — Entry Point & Bootstrap
-`public/index.php` adalah pintu masuk tunggal semua HTTP request (front controller pattern). Ia memuat `bootstrap/app.php` yang mengonfigurasi routing dan mendaftarkan middleware RBAC Spatie Permission.
-
-### Langkah 4 — Peta Seluruh Fitur: `routes/web.php`
-Dengan fan-out tertinggi (26 edge), file ini (~416 baris) adalah peta lengkap semua fitur sistem. Setiap grup route dijaga `middleware(['auth', 'role:Owner|Admin'])`. Membaca struktur route memberi gambaran cepat sebelum masuk ke logika bisnis.
-
-### Langkah 5 — Domain Model: Master Data
-`Package`, `Teacher`, `Room`, `Instrument` adalah fondasi yang direferensikan hampir semua fitur lain. Package mendefinisikan harga per bulan — honor guru dihitung dari formula ini. Room menggunakan kolom JSON `supported_instruments` (pengganti boolean `has_piano`/`has_drum` yang sudah dihapus).
-
-### Langkah 6 — Inti Sistem: `Student` & `Enrollment`
-`Student` (fan-in 56, tertinggi di seluruh codebase) adalah model sentral. `Enrollment` menghubungkan murid ke paket + guru + ruang, menggantikan kolom-kolom langsung di `students` yang dihapus di migrasi multi-kelas Mei 2026. Satu murid bisa punya banyak enrollment aktif sekaligus.
-
-### Langkah 7 — State Machine Lifecycle Murid
-`StudentLifecycleService` mengimplementasikan state machine lengkap dengan side effect di setiap transisi. `StudentController` adalah HTTP adapter yang memanggil service ini dari form actions. Pola Service Layer memisahkan business logic dari HTTP concern.
-
-### Langkah 8 — Jadwal & Generator Sesi Otomatis
-`Schedule` (jadwal mingguan tetap) → `SessionGeneratorService` (berjalan tgl 25 via `GenerateMonthlySessions`) → `ClassSession` (sesi konkret per tanggal). Generator menangani libur, replacement session, pembatasan 3–4 sesi/bulan, dan conflict detection.
-
-> **Perintah manual:** `php artisan sessions:generate 2026 06`
-
-### Langkah 9 — Absensi & Reschedule Harian
-`ClassSession` adalah hasil materialisasi jadwal — setiap sesi konkret dengan 9 status absensi. `AttendanceService` memproses setiap update status dan menghitung `honor_code` + `honor_amount` secara langsung. `AbsensiController` menyediakan interface AJAX (dual response HTML/JSON via `expectsJson()`). `RescheduleService` membuat sesi pengganti dengan conflict detection.
-
-### Langkah 10 — Engine Tagihan & Pembayaran
-`Invoice` (fan-in 19) adalah model keuangan inti. `InvoiceService` menangani siklus lengkap: generate SPP tgl 1, hitung denda tgl 11+, buat invoice cicilan 3-termin Kids Bundle. `PaymentController` mencatat pembayaran + upload bukti — hanya Owner yang bisa void. Self-referencing FK di `invoice_items.parent_item_id` memungkinkan item DISKON melampirkan diri ke item yang didiskon.
-
-### Langkah 11 — Kalkulasi & Slip Honor Guru
-`HonorCalculationService` mengimplementasikan 10 skenario honor_code dengan cut-off H-2 sebelum akhir bulan. `EventHonorService` menambahkan honor guru pendamping Konser KITA ke slip yang sama. `PayrollConfig` menyimpan formula honor sebagai string di database — bisa diubah Owner tanpa deploy ulang.
-
-> **Penting:** Honor Kids Class dihitung dari `jumlah murid terdaftar × Rp 42.500`, bukan formula `harga × 50% / 4`.
-
-### Langkah 12 — Event: Mini Concert & Ujian Grade
-`EventController` mengelola siklus lengkap event: buat event → daftarkan murid → auto-generate invoice → catat hasil ujian → grade naik otomatis → selesai. Saat selesai, `EventHonorService` menyuntikkan honor ke slip guru pengawas dan pendamping.
-
-### Langkah 13 — Dashboard & Notifikasi Auto-Mundur
-`DashboardController` mengagregasi P&L bulan berjalan, statistik murid, dan piutang menunggak. `CheckOverdueStudents` (Artisan command terjadwal) mengirim Laravel Database Notification ke Owner/Admin saat ada murid tunggakan >1 bulan. `AppServiceProvider` mendaftarkan View Composer global yang menyuntikkan data notifikasi ke semua view.
-
-### Langkah 14 — UI System: Layout & Tema Mahogany
-`resources/views/layouts/app.blade.php` adalah shell visual: sidebar mahoni gelap, topbar dengan jam digital real-time (Alpine.js), dan notifikasi overdue. `resources/css/app.css` mendefinisikan tema dengan scoping `.dark-content`/`.light-content`. Token warna `mk.*` di `tailwind.config.js` (`bg-mk-sidebar`, `mk-accent` gold) dipakai di seluruh Blade template.
-
-> **Aturan penting:** Selalu pakai class Tailwind standar (`bg-white`, `bg-gray-50`) di template baru — sudah di-override otomatis oleh `.dark-content`/`.light-content`. Jangan hardcode warna cold/navy.
-
-### Langkah 15 — Database & Seeder
-`config/database.php` mendefinisikan dua koneksi: MySQL `mk_operasional` untuk produksi dan SQLite in-memory untuk testing. `DatabaseSeeder` membuat tiga user default dan menjalankan semua seeder secara idempoten via `firstOrCreate`.
-
-> **PERINGATAN KRITIS:** Jangan jalankan `php artisan migrate:fresh` tanpa konfirmasi eksplisit — akan menghapus semua data. `php artisan test` aman hanya jika `phpunit.xml` sudah mengoverride ke SQLite in-memory.
-
----
-
-## 5. File Map
-
-### Routing & Entry
-```
-routes/web.php                      → Semua route M01–M09, middleware auth + role
-routes/auth.php                     → Route login, register, password reset (Breeze)
-routes/console.php                  → Artisan schedule (cron job terdaftar)
-public/index.php                    → Front controller entry point
-bootstrap/app.php                   → Konfigurasi middleware & routing Laravel 11
-```
-
-### Controllers (app/Http/Controllers/)
-```
-StudentController.php               → M02: CRUD + lifecycle murid
-EnrollmentController.php            → M02: Multi-kelas, set primary, stop
-ScheduleController.php              → M03: Jadwal mingguan tetap
-AbsensiController.php               → M04: Absensi harian + reschedule modal
-InvoiceController.php               → M05: Invoice SPP + diskon
-PaymentController.php               → M05: Pembayaran + void
-HonorController.php                 → M06: Slip honor guru
-EventController.php                 → M08: Mini Concert + Ujian
-DashboardController.php             → M09: P&L + statistik
-HolidayController.php               → M01: Hari libur + replacement date
-PackageController.php               → M01: Katalog paket kelas
-TeacherController.php               → M01: Master data guru
-RoomController.php                  → M01: Master data ruang
-InstrumentController.php            → M01: Master data instrumen
-KalenderController.php              → Kalender jadwal mingguan visual
-ReportController.php                → Laporan PDF & Excel
-ImportController.php                → Import data murid dari Excel
-AuditLogController.php              → Audit log viewer (Owner only)
-```
-
-### Services (app/Services/)
-```
-StudentLifecycleService.php         → State machine murid (paling kritis)
-SessionGeneratorService.php         → Generate sesi bulanan otomatis
-HonorCalculationService.php         → Kalkulasi 10 skenario honor
-AttendanceService.php               → Proses absensi + hitung honor_code
-InvoiceService.php                  → Siklus invoice: generate, denda, cicilan
-RescheduleService.php               → Buat sesi pengganti + conflict detection
-EventHonorService.php               → Honor guru event ke slip utama
-DiscountService.php                 → Terapkan diskon NOMINAL/PERCENT
-ScheduleConflictDetector.php        → Deteksi double-booking
-StudentImportService.php            → Import Excel 300+ murid
-```
-
-### Models (app/Models/)
-```
-Student.php                         → Entitas sentral (fan-in 56)
-Enrollment.php                      → Multi-kelas hub
-ClassSession.php                    → Sesi konkret, 9 status, honor_code
-Schedule.php                        → Jadwal mingguan tetap
-Invoice.php                         → Tagihan (fan-in 19)
-InvoiceItem.php                     → Baris tagihan + diskon (self-referencing)
-Payment.php                         → Pembayaran
-HonorSlip.php                       → Slip honor guru per bulan
-Package.php                         → Katalog paket kelas
-Teacher.php                         → Data guru + info bank
-Room.php                            → Ruang + supported_instruments JSON
-Holiday.php                         → Hari libur + replacement_date
-Event.php                           → Event Mini Concert / Ujian
-EventParticipant.php                → Peserta event + accompanying_teacher
-PayrollConfig.php                   → Formula honor (diubah Owner dari UI)
-```
-
-### Views (resources/views/)
-```
-layouts/app.blade.php               → Shell visual: sidebar, topbar, notifikasi
-dashboard.blade.php                 → P&L + grafik ApexCharts
-students/                           → CRUD murid + tab multi-enrollment
-absensi/                            → Input absensi harian (AJAX)
-honors/                             → Slip honor + halaman cetak
-invoices/                           → Invoice + cetak kuitansi
-events/                             → Mini Concert + Ujian Grade
-kalender/                           → Kalender jadwal visual
-reports/                            → Laporan PDF & Excel
-```
-
----
-
-## 6. Complexity Hotspots
-
-Area-area berikut adalah yang paling kompleks dalam codebase — pendekati dengan hati-hati:
-
-### Kritis (Business Logic Terdalam)
-
-| File | Mengapa Kompleks |
+### M02 — Pendaftaran & Trial
+| File | Purpose |
 |---|---|
-| `app/Services/StudentLifecycleService.php` | Service terbesar: 6 status, 12 transisi, setiap transisi punya side effect (buat enrollment, generate invoice, ubah status relasi) |
-| `app/Services/SessionGeneratorService.php` | Mengorkestrasi 1.200+ sesi/bulan: iterasi jadwal mingguan, handle libur + replacement, counter 3–4 sesi, conflict detection |
-| `app/Services/HonorCalculationService.php` | 10 skenario honor_code yang saling eksklusif; Kids Class pakai formula berbeda; cut-off H-2 butuh kalkulasi tanggal akurat |
-| `app/Services/InvoiceService.php` | Siklus invoice lengkap: SPP auto, denda harian, cicilan 3-termin Kids Bundle (3 invoice diikat `installment_group_id`) |
-| `app/Services/AttendanceService.php` | Satu method memproses 9 status berbeda dan menentukan honor_code yang berbeda — satu kesalahan kondisional berdampak ke payroll |
+| `app/Http/Controllers/StudentController.php` | Student CRUD, lifecycle actions (trial, activate, skip-trial) |
+| `app/Services/StudentLifecycleService.php` | State machine transitions |
+| `app/Services/TrialManagementService.php` | Trial session creation, honor handling |
+| `app/Models/Student.php`, `StudentStatusHistory.php` | Student data + lifecycle audit trail |
 
-### Penting (Banyak Dependent)
-
-| File | Mengapa Penting |
+### M03 — Penjadwalan
+| File | Purpose |
 |---|---|
-| `app/Models/Student.php` | Fan-in 56 — hampir seluruh codebase bergantung padanya; jangan ubah tanpa menelusuri semua penggunaan |
-| `routes/web.php` | 416 baris, 26 outgoing edge — perubahan route berpotensi memutus banyak fitur |
-| `app/Http/Controllers/AbsensiController.php` | Dual-response (HTML + JSON), modal reschedule, split session — logika UI paling rumit |
-| `app/Services/RescheduleService.php` | Buat sesi pengganti dengan conflict detection ganda (guru + ruang) di tanggal konkret |
+| `app/Http/Controllers/ScheduleController.php` | Weekly schedule CRUD |
+| `app/Http/Controllers/SessionController.php` | Session listing, manual generation |
+| `app/Http/Controllers/KalenderController.php` | Weekly calendar view |
+| `app/Services/SessionGeneratorService.php` | Monthly session generation engine |
+| `app/Services/ScheduleConflictDetector.php` | Teacher/room conflict detection |
+| `app/Services/ManualSessionService.php` | Manual session creation |
+| `app/Models/Schedule.php`, `ClassSession.php`, `Enrollment.php` | Scheduling data models |
+| `app/Console/Commands/GenerateMonthlySessions.php` | Cron trigger |
 
-### Jebakan Umum untuk Developer Baru
+### M04 — Absensi
+| File | Purpose |
+|---|---|
+| `app/Http/Controllers/AbsensiController.php` | Daily attendance page with AJAX |
+| `app/Services/AttendanceService.php` | Honor code assignment, attendance rules |
+| `app/Services/RescheduleService.php` | Replacement session creation |
+| `resources/views/absensi/_row.blade.php` | Inline attendance row with Alpine.js |
+| `resources/views/absensi/index.blade.php` | Attendance dashboard |
+| `resources/views/absensi/open-slots.blade.php` | Open slot board for pending reschedules |
 
-1. **Jangan akses `$student->package` atau `$student->teacher`** — accessor lama ini sudah dihapus. Gunakan `$student->primaryEnrollment->package`.
-2. **`session_date` di `ClassSession` tidak punya cast `date`** — gunakan `Carbon::parse($session->session_date)`, jangan akses `->format()` langsung.
-3. **`class_type` harus KAPITAL SEMUA** — `'REGULER'` bukan `'Reguler'`, `'KIDS_CLASS'` bukan `'Kids Class'`.
-4. **Honor Kids Class pakai formula berbeda** — selalu cek `class_type` sebelum memilih formula kalkulasi.
-5. **Void payment hanya Owner** — jangan beri akses ini ke Admin meskipun tampak logis.
-6. **`php artisan migrate:fresh` menghapus semua data** — selalu konfirmasi eksplisit sebelum dijalankan.
+### M05 — Keuangan Murid
+| File | Purpose |
+|---|---|
+| `app/Http/Controllers/InvoiceController.php` | Invoice management |
+| `app/Http/Controllers/PaymentController.php` | Payment recording, receipt generation |
+| `app/Http/Controllers/DiscountController.php` | Invoice discount management |
+| `app/Services/InvoiceService.php` | SPP generation, installment logic |
+| `app/Services/DiscountService.php` | NOMINAL/PERCENT discount logic |
+| `app/Services/InvoiceReminderService.php` | WhatsApp payment reminders |
+| `app/Models/Invoice.php`, `InvoiceItem.php`, `Payment.php` | Finance data models |
+| `app/Console/Commands/GenerateMonthlySpp.php` | Cron: SPP generation |
+| `app/Console/Commands/ApplyLateFines.php` | Cron: daily fines |
+
+### M06 — Honor Guru
+| File | Purpose |
+|---|---|
+| `app/Http/Controllers/HonorController.php` | Honor slip management |
+| `app/Services/HonorCalculationService.php` | Monthly honor calculation |
+| `app/Models/HonorSlip.php`, `PayrollConfig.php` | Honor data models |
+| `app/Console/Commands/CalculateHonor.php` | Cron: honor calculation |
+
+### M07 — Pengeluaran & Kas
+| File | Purpose |
+|---|---|
+| `app/Http/Controllers/ExpenseController.php` | Expense CRUD |
+| `app/Http/Controllers/ExpenseCategoryController.php` | Expense category CRUD |
+| `app/Models/Expense.php`, `ExpenseCategory.php` | Expense data models |
+
+### M08 — Event (Mini Concert & Ujian)
+| File | Purpose |
+|---|---|
+| `app/Http/Controllers/EventController.php` | Event management |
+| `app/Services/EventHonorService.php` | Honor injection for accompanying teachers |
+| `app/Models/Event.php`, `EventParticipant.php` | Event data models |
+
+### M09 — Laporan & Notifikasi
+| File | Purpose |
+|---|---|
+| `app/Http/Controllers/DashboardController.php` | P&L dashboard |
+| `app/Http/Controllers/ReportController.php` | Financial reports |
+| `app/Services/ScheduleReminderService.php` | WhatsApp schedule reminders |
+| `app/Models/WhatsappMessageTemplate.php` | Template management |
+| `app/Models/ScheduleReminderLog.php` | Reminder delivery log |
+
+### M10 — Guru Portal
+| File | Purpose |
+|---|---|
+| `app/Http/Controllers/GuruController.php` | Teacher portal (19 methods) |
+| `resources/views/guru/dashboard.blade.php` | Mobile-first teacher dashboard |
+| `resources/views/guru/jadwal.blade.php` | 2-week calendar view |
+| `resources/views/guru/laporan-form.blade.php` | Progress report creation |
+| `app/View/Components/GuruLayout.php` | Teacher portal layout |
+
+### M11 — Laporan Progres Murid
+| File | Purpose |
+|---|---|
+| `app/Services/ProgressReportService.php` | Progress report generation |
+| `app/Services/ReportTemplateResolverService.php` | Template resolution by instrument |
+| `app/Services/ProgressReportPdfService.php` | PDF generation |
+| `app/Models/ReportTemplate.php`, `ProgressReport.php` | Report data models |
 
 ---
 
-## 7. Setup Development
+## Quick Reference — Common Patterns
 
+### Accessing Student Data
+```php
+// CORRECT: via enrollment
+$student->primaryEnrollment->package->price_per_month;
+$student->primaryEnrollment->teacher->name;
+$student->primaryEnrollment->room->code;
+
+// WRONG — columns deleted in May 2026:
+// $student->package_id
+// $student->assigned_teacher_id
+// $student->assigned_room_id
+```
+
+### Session Date Handling
+```php
+// ClassSession has NO 'date' cast on session_date
+// Always use Carbon::parse()
+Carbon::parse($session->session_date)->format('Y-m-d');
+```
+
+### RBAC Checks
+```php
+// In routes: middleware(['role:Owner'])
+// In controllers: $request->user()->hasRole('Owner')
+// In Blade: @role('Owner') ... @endrole
+// 4 valid roles: Owner, Admin, Auditor, Guru
+```
+
+### Audit Logging
+```php
+use App\Models\AuditLog;
+AuditLog::record('CREATE', Student::class, $student->id, $oldValues, $newValues);
+```
+
+---
+
+## Getting Started — Development Workflow
+
+1. **Start the dev server:** `composer run dev` (starts both `php artisan serve` and `npm run dev` via Vite)
+2. **Run migrations:** `php artisan migrate` (NEVER `migrate:fresh` without explicit confirmation)
+3. **Seed the database:** `php artisan db:seed` (creates default roles + Owner/Admin/Auditor accounts)
+4. **Run tests:** `php artisan test` (uses SQLite in-memory — safe, no database impact)
+5. **Build assets:** `npm run build` (production build for Tailwind CSS)
+
+### Default Login Accounts
+```
+owner@musikkita.local   / password   → role Owner
+admin@musikkita.local   / password   → role Admin
+auditor@musikkita.local / password   → role Auditor
+```
+**Change these passwords before going live.**
+
+### Key Artisan Commands
 ```bash
-# Clone & install dependensi
-git clone <repo-url> musik-kita-ops
-cd musik-kita-ops
-composer install
-npm install
-
-# Konfigurasi environment
-cp .env.example .env
-php artisan key:generate
-# Edit .env: DB_DATABASE=mk_operasional, DB_USERNAME=root, DB_PASSWORD=
-
-# Setup database
-php artisan migrate
-php artisan db:seed
-
-# Jalankan development server
-php artisan serve        # Backend di http://127.0.0.1:8000
-npm run dev              # Frontend Vite (hot reload)
-
-# Jalankan test (aman — pakai SQLite in-memory)
-php artisan test
+php artisan schedule:work       # Run scheduled tasks (local dev)
+php artisan generate:sessions   # Manual session generation for next month
+php artisan generate:spp        # Manual SPP invoice generation
+php artisan honor:calculate     # Manual honor calculation
+php artisan guru:create-accounts # Create teacher login accounts
 ```
 
 ---
 
-## 8. Modules Quick Reference
-
-| Modul | Area | Fitur Utama |
-|---|---|---|
-| M01 | Master Data | Instrumen, paket, guru, ruang, hari libur, formula honor |
-| M02 | Pendaftaran & Trial | Form murid baru, schedule trial, konversi aktif, skip trial |
-| M03 | Penjadwalan | Jadwal mingguan, generator sesi otomatis, kalender akademik |
-| M04 | Absensi | Input 9 status, reschedule modal, guru pengganti |
-| M05 | Keuangan Murid | Invoice SPP, denda, pembayaran, diskon, kuitansi cetak |
-| M06 | Honor Guru | Kalkulasi otomatis, slip honor, cetak, tandai dibayar |
-| M07 | Pengeluaran & Kas | Catat pengeluaran per kategori, petty cash |
-| M08 | Event | Mini Concert, ujian grade, honor pengawas + pendamping |
-| M09 | Laporan & Notifikasi | Dashboard P&L, laporan PDF/Excel, audit log, WA template |
-
----
-
-*Onboarding guide ini dibuat dari knowledge graph `/understand-anything` yang menganalisis 339 file kode. Perbarui dengan menjalankan `/understand` ulang setelah perubahan arsitektur besar.*
+*Last updated: 2026-06-09 · Based on commit `f4a0b02` · 626 files analyzed*
+*To regenerate after major changes: run `/understand --full` then `/understand-onboard`*
