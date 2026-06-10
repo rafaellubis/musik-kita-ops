@@ -1,11 +1,30 @@
 <x-guru-layout title="Jadwal Saya">
 
-<div class="px-4 pt-5 pb-2">
+<div class="px-4 pt-5 pb-2 space-y-3">
     <h1 class="text-lg font-semibold text-mk-text">Jadwal Saya</h1>
-    <p class="text-sm text-mk-muted">
-        {{ \Carbon\Carbon::parse($mulai)->locale('id')->isoFormat('D MMM') }} –
-        {{ \Carbon\Carbon::parse($akhir)->locale('id')->isoFormat('D MMM Y') }}
-    </p>
+
+    {{-- Navigasi minggu — pola sama dengan kalender staff --}}
+    <div class="flex flex-wrap items-center gap-2">
+        <a href="{{ route('guru.jadwal', $prevWeek) }}"
+           class="px-3 py-2 min-h-[40px] inline-flex items-center rounded-lg text-sm border border-mk-border hover:bg-mk-surface transition-colors">
+            ← Minggu Lalu
+        </a>
+        <span class="px-3 py-2 text-sm font-semibold text-mk-text whitespace-nowrap">
+            {{ \Carbon\Carbon::parse($mulai)->locale('id')->isoFormat('D MMM') }}
+            –
+            {{ \Carbon\Carbon::parse($akhir)->locale('id')->isoFormat('D MMM Y') }}
+        </span>
+        <a href="{{ route('guru.jadwal', $nextWeek) }}"
+           class="px-3 py-2 min-h-[40px] inline-flex items-center rounded-lg text-sm border border-mk-border hover:bg-mk-surface transition-colors">
+            Minggu Depan →
+        </a>
+        @unless($isCurrentWeek)
+            <a href="{{ route('guru.jadwal', $currentWeek) }}"
+               class="px-3 py-2 min-h-[40px] inline-flex items-center rounded-lg text-sm border border-mk-border text-mk-muted hover:bg-mk-surface transition-colors">
+                Minggu Ini
+            </a>
+        @endunless
+    </div>
 </div>
 
 {{-- ===== MOBILE: Kartu per hari ===== --}}

@@ -101,16 +101,23 @@ class GuruController extends Controller
     }
 
     /**
-     * Jadwal guru: sesi minggu ini + minggu depan.
+     * Jadwal guru: sesi 1 minggu (Senin–Minggu), navigasi via ?week=YYYY-MM-DD.
      */
-    public function jadwal()
+    public function jadwal(Request $request)
     {
         $teacher = auth()->user()->teacher;
         abort_if(!$teacher, 403);
 
-        // Tampilkan minggu berjalan (Senin s/d Minggu) + minggu depan
-        $mulai = now()->startOfWeek(Carbon::MONDAY)->toDateString();
-        $akhir = now()->addWeek()->endOfWeek(Carbon::SUNDAY)->toDateString();
+        try {
+            $weekStart = $request->filled('week')
+                ? Carbon::parse($request->input('week'))->startOfWeek(Carbon::MONDAY)
+                : Carbon::now()->startOfWeek(Carbon::MONDAY);
+        } catch (\Exception $e) {
+            $weekStart = Carbon::now()->startOfWeek(Carbon::MONDAY);
+        }
+
+        $mulai = $weekStart->toDateString();
+        $akhir = $weekStart->copy()->endOfWeek(Carbon::SUNDAY)->toDateString();
 
         $sesi = ClassSession::where(function ($q) use ($teacher) {
                 $q->where('teacher_id', $teacher->id)
@@ -124,7 +131,15 @@ class GuruController extends Controller
 
         $today = today()->toDateString();
 
-        return view('guru.jadwal', compact('teacher', 'sesi', 'today', 'mulai', 'akhir'));
+        $prevWeek    = ['week' => $weekStart->copy()->subWeek()->format('Y-m-d')];
+        $nextWeek    = ['week' => $weekStart->copy()->addWeek()->format('Y-m-d')];
+        $currentWeek = ['week' => Carbon::now()->startOfWeek(Carbon::MONDAY)->format('Y-m-d')];
+        $isCurrentWeek = $weekStart->isSameWeek(Carbon::now());
+
+        return view('guru.jadwal', compact(
+            'teacher', 'sesi', 'today', 'mulai', 'akhir',
+            'weekStart', 'prevWeek', 'nextWeek', 'currentWeek', 'isCurrentWeek',
+        ));
     }
 
     /**
