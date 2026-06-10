@@ -181,7 +181,7 @@ class StaffPayrollService
     {
         $monthStr = str_pad((string) $month, 2, '0', STR_PAD_LEFT);
 
-        $latest = StaffPayrollSlip::where('slip_number', 'like', "GAJI/{$year}/{$monthStr}/%")
+        $latest = StaffPayrollSlip::where('slip_number', 'like', "LMK/SLIP/{$year}/{$monthStr}/%")
             ->orderBy('slip_number', 'desc')
             ->value('slip_number');
 
@@ -191,7 +191,7 @@ class StaffPayrollService
             $nextSeq = ((int) end($parts)) + 1;
         }
 
-        return sprintf('GAJI/%d/%s/%04d', $year, $monthStr, $nextSeq);
+        return sprintf('GAJI/%d/%s/%03d', $year, $monthStr, $nextSeq);
     }
 
     public function generateEmployeeCode(): string
