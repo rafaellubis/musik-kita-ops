@@ -50,7 +50,7 @@ Honor per sesi **TIDAK** disimpan di `packages` — hitung via PayrollConfig: `p
 
 **employees (M12):** id, employee_code (STAFF-NNN), full_name, position, user_id (nullable FK users), base_salary, bank_name/account/account_holder, joined_date, is_active, notes — **bukan** guru pengajar
 
-**staff_payroll_slips (M12):** id, slip_number (GAJI/YYYY/MM/NNNN), employee_id, month, year, base_salary, total_allowances, total_deductions, net_salary, status (`DRAFT|CALCULATED|PAID`), paid_at, paid_by, expense_id (FK expenses), created_by, notes — unique (employee_id, year, month)
+**staff_payroll_slips (M12):** id, slip_number (LMK/SLIP/YYYY/MM/NNN), employee_id, month, year, base_salary, total_allowances, total_deductions, net_salary, status (`DRAFT|CALCULATED|PAID`), paid_at, paid_by, expense_id (FK expenses), created_by, notes — unique (employee_id, year, month)
 
 **staff_payroll_items (M12):** id, staff_payroll_slip_id, item_type (`ALLOWANCE|OVERTIME|DEDUCTION`), item_code, description, amount, metadata
 

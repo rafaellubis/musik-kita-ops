@@ -4,7 +4,7 @@
 
 ## Ringkasan
 
-Modul M12 menambahkan payroll karyawan non-guru (admin, staff operasional) dengan pola mirror M06 Honor Guru: master karyawan, slip bulanan `GAJI/YYYY/MM/NNNN`, komponen variabel/potongan manual, dan auto-post ke pengeluaran kategori `GAJI_STAFF` saat ditandai dibayar.
+Modul M12 menambahkan payroll karyawan non-guru (admin, staff operasional) dengan pola mirror M06 Honor Guru: master karyawan, slip bulanan `LMK/SLIP/YYYY/MM/NNN`, komponen variabel/potongan manual, dan auto-post ke pengeluaran kategori `GAJI_STAFF` saat ditandai dibayar.
 
 ## Scope Fase 1
 

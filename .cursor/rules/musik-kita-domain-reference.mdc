@@ -48,7 +48,7 @@ alwaysApply: true
 - **M07 Pengeluaran & Kas:** Kategori expense, petty cash, P&L. Kategori `GAJI_STAFF` untuk posting M12.
 - **M08 Event:** Mini Concert/Ujian, guru pendamping Konser KITA (DRAFT only).
 - **M09 Laporan:** Dashboard P&L, export, audit log Owner.
-- **M12 Gaji Staff:** Master `employees`, slip `GAJI/YYYY/MM/NNNN`, komponen manual, mark paid → expense `GAJI_STAFF`, void paid Owner. SRS: `docs/srs/modules/M12-staff-payroll.md`.
+- **M12 Gaji Staff:** Master `employees`, slip `LMK/SLIP/YYYY/MM/NNN`, komponen manual, mark paid → expense `GAJI_STAFF`, void paid Owner. SRS: `docs/srs/modules/M12-staff-payroll.md`.
 
 ## Services
 

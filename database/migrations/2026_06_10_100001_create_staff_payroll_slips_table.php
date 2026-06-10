@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('staff_payroll_slips', function (Blueprint $table) {
             $table->id();
 
-            // Format GAJI/YYYY/MM/NNNN (reset per bulan)
+            // Format LMK/SLIP/YYYY/MM/NNN (reset per bulan)
             $table->string('slip_number', 30)->unique();
 
             $table->foreignId('employee_id')->constrained('employees')->restrictOnDelete();

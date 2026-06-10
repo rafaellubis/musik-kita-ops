@@ -61,7 +61,7 @@ Route sensitif (harga, honor payroll, staff-payrolls write, invoice-component) �
 - [ ] Relasi murid via enrollment / primaryEnrollment
 - [ ] Diskon: parent_item_id + discount_reason wajib
 - [ ] Komentar ID, pesan UI ID
-- [ ] Gaji staff: slip `GAJI/YYYY/MM/NNNN` (bukan `SLIP/` honor guru)
+- [ ] Gaji staff: slip `LMK/SLIP/YYYY/MM/NNN` (bukan `SLIP/` honor guru M06)
 - [ ] Guru tidak masuk `employees` — honor via M06
 - [ ] Mark/void paid gaji staff → Owner; expense kategori `GAJI_STAFF`
 

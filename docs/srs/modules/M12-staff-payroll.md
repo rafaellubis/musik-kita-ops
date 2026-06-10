@@ -30,7 +30,7 @@ Kelola gaji bulanan karyawan non-guru (admin, staff operasional): master data, s
 
 ### staff_payroll_slips
 
-`slip_number` GAJI/YYYY/MM/NNNN, `employee_id`, `month`, `year`, `base_salary`, `total_allowances`, `total_deductions`, `net_salary`, `status` DRAFT\|CALCULATED\|PAID, `paid_at`, `paid_by`, `expense_id`, `created_by`
+`slip_number` LMK/SLIP/YYYY/MM/NNN, `employee_id`, `month`, `year`, `base_salary`, `total_allowances`, `total_deductions`, `net_salary`, `status` DRAFT\|CALCULATED\|PAID, `paid_at`, `paid_by`, `expense_id`, `created_by`
 
 ### staff_payroll_items
 

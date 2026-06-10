@@ -70,7 +70,7 @@ class StaffPayrollTest extends TestCase
         $this->assertEquals(4_500_000, $slip->base_salary);
         $this->assertEquals(4_500_000, $slip->net_salary);
         $this->assertEquals(StaffPayrollSlip::STATUS_CALCULATED, $slip->status);
-        $this->assertStringStartsWith('GAJI/2026/06/', $slip->slip_number);
+        $this->assertStringStartsWith('LMK/SLIP/2026/06/', $slip->slip_number);
     }
 
     public function test_add_items_recalculates_net_salary(): void

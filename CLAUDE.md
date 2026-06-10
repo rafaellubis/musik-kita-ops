@@ -6,7 +6,7 @@
 > Update v1.3 (2026-05-23): multi-kelas, diskon invoice, cuti, reschedule Fase 2, QRIS/DEBIT, slip honor unifikasi, ruangan fleksibel.
 > Update v1.4 (2026-05-23): jadwal otomatis dengan kalender akademik — replacement_date pada holidays, honor LIBUR logic, H_IZIN honor code, guru pendamping event.
 > Update v1.5 (2026-05-31): sinkronisasi BR-MK.4 — SPP auto-generate per enrollment ACTIVE (multi-kelas), bukan hanya primary.
-> Update v1.6 (2026-06-10): modul M12 Gaji Staff Non-Guru — master karyawan, slip GAJI/YYYY/MM/NNNN, mark paid → expense GAJI_STAFF, integrasi P&L.
+> Update v1.6 (2026-06-10): modul M12 Gaji Staff Non-Guru — master karyawan, slip LMK/SLIP/YYYY/MM/NNN, mark paid → expense GAJI_STAFF, integrasi P&L.
 > **SRS kode aktual:** `docs/srs/SRS-musik-kita-ops-2026-05-31.md` + modul per `docs/srs/modules/` (prioritas saat prompt ke AI, termasuk `M12-staff-payroll.md`).
 > Tanggal: Mei 2026
 
@@ -394,7 +394,7 @@ CATATAN: 18 guru di tabel `teachers` — JANGAN masukkan ke `employees`. Honor g
 
 **staff_payroll_slips** (slip gaji staff bulanan — M12)
 ```
-id, slip_number (GAJI/YYYY/MM/NNNN, reset per bulan),
+id, slip_number (LMK/SLIP/YYYY/MM/NNN, reset per bulan),
 employee_id, month, year,
 base_salary (snapshot saat generate),
 total_allowances, total_deductions, net_salary,
@@ -605,7 +605,7 @@ BR-M12.3 : Slip PAID terkunci; void paid hanya Owner (kembalikan ke CALCULATED)
 BR-M12.4 : Mark paid membuat Expense kategori GAJI_STAFF + link expense_id
 BR-M12.5 : Potongan/tunjangan/lembur input manual Owner (item_type ALLOWANCE|OVERTIME|DEDUCTION)
 BR-M12.6 : net_salary = base_salary + total_allowances - total_deductions
-BR-M12.7 : Nomor slip: GAJI/YYYY/MM/NNNN (bukan SLIP/ — itu honor guru M06)
+BR-M12.7 : Nomor slip: LMK/SLIP/YYYY/MM/NNN (bukan SLIP/YYYY/MM/NNNN honor guru M06)
 ```
 
 ---
@@ -725,7 +725,7 @@ DISKON   | Diskon manual           | NOMINAL (Rp flat) atau PERCENT (% dari item
 
 ### M12 -- Gaji Staff Non-Guru [v1.6]
 - Master karyawan non-guru (`employees`) — CRUD Owner, read Owner|Admin|Auditor
-- Generate slip bulanan `GAJI/YYYY/MM/NNNN` per karyawan aktif (Owner)
+- Generate slip bulanan `LMK/SLIP/YYYY/MM/NNN` per karyawan aktif (Owner)
 - Komponen manual: tunjangan, lembur, potongan (Owner)
 - Cetak slip A4 | Mark paid → buat expense GAJI_STAFF otomatis (Owner)
 - Void paid → hapus expense terlink, slip kembali CALCULATED (Owner)
@@ -827,7 +827,7 @@ X php artisan migrate:fresh pada database utama (mk_operasional) TANPA konfirmas
 [ ] Invoice SPP auto-generate per enrollment ACTIVE (bukan hanya is_primary)
 [ ] Diskon invoice: wajib parent_item_id + discount_reason
 [ ] Metode bayar: CASH|TRANSFER|QRIS|DEBIT (bukan hanya CASH|TRANSFER)
-[ ] Gaji staff: slip GAJI/YYYY/MM/NNNN (bukan SLIP/ honor guru)
+[ ] Gaji staff: slip LMK/SLIP/YYYY/MM/NNN (bukan SLIP/ honor guru M06)
 [ ] Guru tidak masuk tabel employees — honor via M06
 [ ] Mark/void paid gaji staff → Owner only; expense kategori GAJI_STAFF
 ```
