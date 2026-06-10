@@ -158,6 +158,12 @@ class Invoice extends Model
         return $query->whereIn('status', [self::STATUS_UNPAID, self::STATUS_PARTIAL]);
     }
 
+    /** Invoice yang belum di-void — dipakai guard idempotency regenerate. */
+    public function scopeNotVoid($query)
+    {
+        return $query->where('status', '!=', self::STATUS_VOID);
+    }
+
     public function scopeForMonth($query, int $year, int $month)
     {
         return $query->where('year', $year)->where('month', $month);

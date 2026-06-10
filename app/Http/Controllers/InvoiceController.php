@@ -210,6 +210,7 @@ class InvoiceController extends Controller
 
         $alreadyExists = Invoice::where('enrollment_id', $enrollment->id)
             ->where('payment_mode', Invoice::MODE_INSTALLMENT)
+            ->notVoid()
             ->exists();
         abort_if($alreadyExists, 422, 'Invoice cicilan sudah pernah dibuat untuk murid ini.');
 
@@ -269,7 +270,7 @@ class InvoiceController extends Controller
 
         // Guard 2: cegah double generate
         $sudahAda = InvoiceItem::whereHas('invoice', fn ($q) =>
-            $q->where('student_id', $student->id)
+            $q->where('student_id', $student->id)->notVoid()
         )->where('item_code', 'KIDS_FP')->exists();
 
         if ($sudahAda) {

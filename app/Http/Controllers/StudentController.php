@@ -163,6 +163,7 @@ class StudentController extends Controller
             $latestGroup = \App\Models\Invoice::where('student_id', $student->id)
                 ->where('payment_mode', 'INSTALLMENT')
                 ->whereNotNull('installment_group_id')
+                ->notVoid()
                 ->latest('id')
                 ->value('installment_group_id');
 
@@ -199,7 +200,7 @@ class StudentController extends Controller
         // Hanya untuk murid KIDS_CLASS yang belum punya invoice KIDS_FP
         $tampilKidsFpButton = $student->primaryEnrollment?->package?->class_type === 'KIDS_CLASS'
             && ! InvoiceItem::whereHas('invoice', fn ($q) =>
-                $q->where('student_id', $student->id)
+                $q->where('student_id', $student->id)->notVoid()
             )->where('item_code', 'KIDS_FP')->exists();
 
         // Ambil fee KIDS_FP dari konstanta InvoiceService (BR: Rp 140.000)

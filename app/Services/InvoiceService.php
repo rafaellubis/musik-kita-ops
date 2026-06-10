@@ -445,6 +445,7 @@ class InvoiceService
             ->where('enrollment_id', $enrollment->id)
             ->where('year', $year)
             ->where('month', $month)
+            ->notVoid()
             ->whereHas('items', $hasSppItem)
             ->exists();
 
@@ -456,6 +457,7 @@ class InvoiceService
             ->whereNull('enrollment_id')
             ->where('year', $year)
             ->where('month', $month)
+            ->notVoid()
             ->whereHas('items', fn ($q) => $q->where('item_code', 'SPP')
                 ->whereJsonContains('metadata->package_id', $enrollment->package_id))
             ->exists();
