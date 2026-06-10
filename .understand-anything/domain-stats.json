@@ -1,0 +1,163 @@
+{
+  "timestamp": "2026-06-09T07:57:18.093Z",
+  "fileSizeKB": 98,
+  "projectInfo": {
+    "name": "musik-kita-ops",
+    "languages": [
+      "PHP",
+      "JavaScript",
+      "Blade/HTML",
+      "CSS"
+    ],
+    "frameworks": [
+      "Laravel",
+      "Tailwind CSS",
+      "Alpine.js",
+      "Spatie Permission",
+      "DomPDF"
+    ],
+    "description": "Studio music school administration and finance management system — student lifecycle, scheduling, attendance, billing, payments, teacher honoraria, and events for ~300 students and 18 teachers",
+    "analyzedAt": "2026-06-09T08:00:00.000Z",
+    "gitCommitHash": "18a4fbb01633772b45ec5fd465d171ed4f381560"
+  },
+  "nodeStats": {
+    "total": 141,
+    "byType": {
+      "domain": 7,
+      "flow": 24,
+      "step": 110
+    },
+    "topDomains": [
+      {
+        "id": "domain:student-lifecycle",
+        "name": "Student Lifecycle Management",
+        "complexity": "moderate",
+        "flowCount": 0
+      },
+      {
+        "id": "domain:scheduling-attendance",
+        "name": "Penjadwalan & Absensi",
+        "complexity": "moderate",
+        "flowCount": 0
+      },
+      {
+        "id": "domain:billing-payments",
+        "name": "Keuangan Murid (Billing & Payments)",
+        "complexity": "moderate",
+        "flowCount": 0
+      },
+      {
+        "id": "domain:teacher-honoraria",
+        "name": "Honor Guru",
+        "complexity": "moderate",
+        "flowCount": 0
+      },
+      {
+        "id": "domain:event-management",
+        "name": "Manajemen Event",
+        "complexity": "moderate",
+        "flowCount": 0
+      },
+      {
+        "id": "domain:master-data",
+        "name": "Master Data",
+        "complexity": "moderate",
+        "flowCount": 0
+      },
+      {
+        "id": "domain:reports-notifications",
+        "name": "Laporan & Notifikasi",
+        "complexity": "moderate",
+        "flowCount": 0
+      }
+    ],
+    "topFlows": [
+      {
+        "id": "flow:student-lifecycle:registrasi-murid-baru",
+        "name": "Registrasi Murid Baru",
+        "complexity": "moderate",
+        "entryPoint": "POST /students"
+      },
+      {
+        "id": "flow:student-lifecycle:trial-class",
+        "name": "Trial Class",
+        "complexity": "moderate",
+        "entryPoint": "POST /students/{id}/trial"
+      },
+      {
+        "id": "flow:student-lifecycle:aktivasi-murid-(trial-→-aktif)",
+        "name": "Aktivasi Murid (Trial → Aktif)",
+        "complexity": "moderate",
+        "entryPoint": "POST /students/{id}/activate"
+      },
+      {
+        "id": "flow:student-lifecycle:pengajuan-cuti",
+        "name": "Pengajuan Cuti",
+        "complexity": "moderate",
+        "entryPoint": "POST /students/{id}/cuti"
+      },
+      {
+        "id": "flow:student-lifecycle:pengunduran-diri-(mundur)",
+        "name": "Pengunduran Diri (Mundur)",
+        "complexity": "moderate",
+        "entryPoint": "POST /students/{id}/withdraw"
+      },
+      {
+        "id": "flow:scheduling-attendance:buat-jadwal-mingguan",
+        "name": "Buat Jadwal Mingguan",
+        "complexity": "moderate",
+        "entryPoint": "POST /enrollments/{id}/schedule"
+      },
+      {
+        "id": "flow:scheduling-attendance:generate-sesi-bulanan",
+        "name": "Generate Sesi Bulanan",
+        "complexity": "moderate",
+        "entryPoint": "php artisan sessions:generate"
+      },
+      {
+        "id": "flow:scheduling-attendance:catat-absensi-harian",
+        "name": "Catat Absensi Harian",
+        "complexity": "moderate",
+        "entryPoint": "PATCH /absensi/{session}/status"
+      },
+      {
+        "id": "flow:scheduling-attendance:reschedule-sesi",
+        "name": "Reschedule Sesi",
+        "complexity": "moderate",
+        "entryPoint": "POST /absensi/{session}/reschedule"
+      },
+      {
+        "id": "flow:billing-payments:generate-invoice-spp-bulanan",
+        "name": "Generate Invoice SPP Bulanan",
+        "complexity": "moderate",
+        "entryPoint": "php artisan invoice:generate"
+      }
+    ],
+    "topEntities": [],
+    "stepsWithFilePath": 0
+  },
+  "edgeStats": {
+    "total": 145,
+    "byType": {
+      "contains_flow": 24,
+      "cross_domain": 11,
+      "flow_step": 110
+    }
+  },
+  "domainAnalysis": {
+    "domains": 7,
+    "totalFlowsPerDomain": 24,
+    "totalStepsPerDomain": 110,
+    "crossDomainInteractions": 16
+  },
+  "complexity": {
+    "simple": 110,
+    "moderate": 31,
+    "complex": 0
+  },
+  "coverage": {
+    "stepsWithFilePath": 110,
+    "stepsWithoutFilePath": 0,
+    "entitiesReferencedInFlows": 0
+  }
+}

@@ -1,0 +1,3289 @@
+{
+  "generatedAt": "2026-06-09T08:05:09.066Z",
+  "classIndex": {
+    "class:app/Console/Commands/GenerateMonthlySessions.php:GenerateMonthlySessions": {
+      "id": "class:app/Console/Commands/GenerateMonthlySessions.php:GenerateMonthlySessions",
+      "namespace": "unknown"
+    },
+    "class:app/Exports/XlsxBuilder.php:XlsxBuilder": {
+      "id": "class:app/Exports/XlsxBuilder.php:XlsxBuilder",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/AbsensiController.php:AbsensiController": {
+      "id": "class:app/Http/Controllers/AbsensiController.php:AbsensiController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/EnrollmentController.php:EnrollmentController": {
+      "id": "class:app/Http/Controllers/EnrollmentController.php:EnrollmentController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/ImportController.php:ImportController": {
+      "id": "class:app/Http/Controllers/ImportController.php:ImportController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/KalenderController.php:KalenderController": {
+      "id": "class:app/Http/Controllers/KalenderController.php:KalenderController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/RoomController.php:RoomController": {
+      "id": "class:app/Http/Controllers/RoomController.php:RoomController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/ScheduleController.php:ScheduleController": {
+      "id": "class:app/Http/Controllers/ScheduleController.php:ScheduleController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/SessionController.php:SessionController": {
+      "id": "class:app/Http/Controllers/SessionController.php:SessionController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/StoreEnrollmentRequest.php:StoreEnrollmentRequest": {
+      "id": "class:app/Http/Requests/StoreEnrollmentRequest.php:StoreEnrollmentRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/StoreSplitPartRequest.php:StoreSplitPartRequest": {
+      "id": "class:app/Http/Requests/StoreSplitPartRequest.php:StoreSplitPartRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/UpdateAbsensiRequest.php:UpdateAbsensiRequest": {
+      "id": "class:app/Http/Requests/UpdateAbsensiRequest.php:UpdateAbsensiRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Models/ClassSession.php:ClassSession": {
+      "id": "class:app/Models/ClassSession.php:ClassSession",
+      "namespace": "unknown"
+    },
+    "class:app/Models/Enrollment.php:Enrollment": {
+      "id": "class:app/Models/Enrollment.php:Enrollment",
+      "namespace": "unknown"
+    },
+    "class:app/Models/Package.php:Package": {
+      "id": "class:app/Models/Package.php:Package",
+      "namespace": "unknown"
+    },
+    "class:app/Models/Room.php:Room": {
+      "id": "class:app/Models/Room.php:Room",
+      "namespace": "unknown"
+    },
+    "class:app/Models/Schedule.php:Schedule": {
+      "id": "class:app/Models/Schedule.php:Schedule",
+      "namespace": "unknown"
+    },
+    "class:app/Models/Student.php:Student": {
+      "id": "class:app/Models/Student.php:Student",
+      "namespace": "unknown"
+    },
+    "class:app/Models/Teacher.php:Teacher": {
+      "id": "class:app/Models/Teacher.php:Teacher",
+      "namespace": "unknown"
+    },
+    "class:app/Services/AttendanceService.php:AttendanceService": {
+      "id": "class:app/Services/AttendanceService.php:AttendanceService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/EnrollmentSessionCleanupService.php:EnrollmentSessionCleanupService": {
+      "id": "class:app/Services/EnrollmentSessionCleanupService.php:EnrollmentSessionCleanupService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/ManualSessionService.php:ManualSessionService": {
+      "id": "class:app/Services/ManualSessionService.php:ManualSessionService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/RescheduleService.php:RescheduleService": {
+      "id": "class:app/Services/RescheduleService.php:RescheduleService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/ScheduleConflictDetector.php:ScheduleConflictDetector": {
+      "id": "class:app/Services/ScheduleConflictDetector.php:ScheduleConflictDetector",
+      "namespace": "unknown"
+    },
+    "class:app/Services/SessionGeneratorService.php:SessionGeneratorService": {
+      "id": "class:app/Services/SessionGeneratorService.php:SessionGeneratorService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/StudentImportService.php:StudentImportService": {
+      "id": "class:app/Services/StudentImportService.php:StudentImportService",
+      "namespace": "unknown"
+    },
+    "class:database/factories/ClassSessionFactory.php:ClassSessionFactory": {
+      "id": "class:database/factories/ClassSessionFactory.php:ClassSessionFactory",
+      "namespace": "unknown"
+    },
+    "class:database/factories/EnrollmentFactory.php:EnrollmentFactory": {
+      "id": "class:database/factories/EnrollmentFactory.php:EnrollmentFactory",
+      "namespace": "unknown"
+    },
+    "class:database/factories/RoomFactory.php:RoomFactory": {
+      "id": "class:database/factories/RoomFactory.php:RoomFactory",
+      "namespace": "unknown"
+    },
+    "class:database/factories/ScheduleFactory.php:ScheduleFactory": {
+      "id": "class:database/factories/ScheduleFactory.php:ScheduleFactory",
+      "namespace": "unknown"
+    },
+    "class:database/factories/StudentFactory.php:StudentFactory": {
+      "id": "class:database/factories/StudentFactory.php:StudentFactory",
+      "namespace": "unknown"
+    },
+    "class:database/factories/TeacherFactory.php:TeacherFactory": {
+      "id": "class:database/factories/TeacherFactory.php:TeacherFactory",
+      "namespace": "unknown"
+    },
+    "class:database/seeders/RoomSeeder.php:RoomSeeder": {
+      "id": "class:database/seeders/RoomSeeder.php:RoomSeeder",
+      "namespace": "unknown"
+    },
+    "class:database/seeders/StudentSeeder.php:StudentSeeder": {
+      "id": "class:database/seeders/StudentSeeder.php:StudentSeeder",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Admin/AbsensiControllerTest.php:AbsensiControllerTest": {
+      "id": "class:tests/Feature/Admin/AbsensiControllerTest.php:AbsensiControllerTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Admin/RescheduleTest.php:RescheduleTest": {
+      "id": "class:tests/Feature/Admin/RescheduleTest.php:RescheduleTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Admin/SplitRescheduleTest.php:SplitRescheduleTest": {
+      "id": "class:tests/Feature/Admin/SplitRescheduleTest.php:SplitRescheduleTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/DuoClassConflictTest.php:DuoClassConflictTest": {
+      "id": "class:tests/Feature/DuoClassConflictTest.php:DuoClassConflictTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/DuoClassHonorTest.php:DuoClassHonorTest": {
+      "id": "class:tests/Feature/DuoClassHonorTest.php:DuoClassHonorTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/EnrollmentControllerTest.php:EnrollmentControllerTest": {
+      "id": "class:tests/Feature/EnrollmentControllerTest.php:EnrollmentControllerTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/GuruUpdateAbsensiTest.php:GuruUpdateAbsensiTest": {
+      "id": "class:tests/Feature/GuruUpdateAbsensiTest.php:GuruUpdateAbsensiTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/IzinPendingTest.php:IzinPendingTest": {
+      "id": "class:tests/Feature/IzinPendingTest.php:IzinPendingTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/KalenderControllerTest.php:KalenderControllerTest": {
+      "id": "class:tests/Feature/KalenderControllerTest.php:KalenderControllerTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/KidsClassRescheduleTest.php:KidsClassRescheduleTest": {
+      "id": "class:tests/Feature/KidsClassRescheduleTest.php:KidsClassRescheduleTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/KidsClassScheduleConflictTest.php:KidsClassScheduleConflictTest": {
+      "id": "class:tests/Feature/KidsClassScheduleConflictTest.php:KidsClassScheduleConflictTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/ManualSessionControllerTest.php:ManualSessionControllerTest": {
+      "id": "class:tests/Feature/ManualSessionControllerTest.php:ManualSessionControllerTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/MultiKelasModelTest.php:MultiKelasModelTest": {
+      "id": "class:tests/Feature/MultiKelasModelTest.php:MultiKelasModelTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/ScheduleInstrumentCheckTest.php:ScheduleInstrumentCheckTest": {
+      "id": "class:tests/Feature/ScheduleInstrumentCheckTest.php:ScheduleInstrumentCheckTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/ScheduleMultiEnrollmentTest.php:ScheduleMultiEnrollmentTest": {
+      "id": "class:tests/Feature/ScheduleMultiEnrollmentTest.php:ScheduleMultiEnrollmentTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/ScheduleReminderTest.php:ScheduleReminderTest": {
+      "id": "class:tests/Feature/ScheduleReminderTest.php:ScheduleReminderTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Services/AttendanceServiceDigantiConflictTest.php:AttendanceServiceDigantiConflictTest": {
+      "id": "class:tests/Feature/Services/AttendanceServiceDigantiConflictTest.php:AttendanceServiceDigantiConflictTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Services/AttendanceServiceIzinRescheduleTest.php:AttendanceServiceIzinRescheduleTest": {
+      "id": "class:tests/Feature/Services/AttendanceServiceIzinRescheduleTest.php:AttendanceServiceIzinRescheduleTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Services/ManualSessionServiceTest.php:ManualSessionServiceTest": {
+      "id": "class:tests/Feature/Services/ManualSessionServiceTest.php:ManualSessionServiceTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Services/SessionGeneratorSequenceTest.php:SessionGeneratorSequenceTest": {
+      "id": "class:tests/Feature/Services/SessionGeneratorSequenceTest.php:SessionGeneratorSequenceTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Services/SessionGeneratorServiceTest.php:SessionGeneratorServiceTest": {
+      "id": "class:tests/Feature/Services/SessionGeneratorServiceTest.php:SessionGeneratorServiceTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/SessionEditTest.php:SessionEditTest": {
+      "id": "class:tests/Feature/SessionEditTest.php:SessionEditTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/SessionGeneratorConflictTest.php:SessionGeneratorConflictTest": {
+      "id": "class:tests/Feature/SessionGeneratorConflictTest.php:SessionGeneratorConflictTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/SessionLabelTest.php:SessionLabelTest": {
+      "id": "class:tests/Feature/SessionLabelTest.php:SessionLabelTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/SessionTeacherNoteTest.php:SessionTeacherNoteTest": {
+      "id": "class:tests/Feature/SessionTeacherNoteTest.php:SessionTeacherNoteTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/StudentCutiTest.php:StudentCutiTest": {
+      "id": "class:tests/Feature/StudentCutiTest.php:StudentCutiTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/TrialEnrollmentTest.php:TrialEnrollmentTest": {
+      "id": "class:tests/Feature/TrialEnrollmentTest.php:TrialEnrollmentTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/TrialSessionCreationTest.php:TrialSessionCreationTest": {
+      "id": "class:tests/Feature/TrialSessionCreationTest.php:TrialSessionCreationTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Unit/EnrollmentSessionCleanupServiceTest.php:EnrollmentSessionCleanupServiceTest": {
+      "id": "class:tests/Unit/EnrollmentSessionCleanupServiceTest.php:EnrollmentSessionCleanupServiceTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Unit/Models/RoomTest.php:RoomTest": {
+      "id": "class:tests/Unit/Models/RoomTest.php:RoomTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Unit/Services/HonorCalculationServiceStudentBreakdownTest.php:HonorCalculationServiceStudentBreakdownTest": {
+      "id": "class:tests/Unit/Services/HonorCalculationServiceStudentBreakdownTest.php:HonorCalculationServiceStudentBreakdownTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Unit/StudentImportConflictTest.php:StudentImportConflictTest": {
+      "id": "class:tests/Unit/StudentImportConflictTest.php:StudentImportConflictTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Unit/StudentImportCutiTest.php:StudentImportCutiTest": {
+      "id": "class:tests/Unit/StudentImportCutiTest.php:StudentImportCutiTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Unit/StudentImportServiceTest.php:StudentImportServiceTest": {
+      "id": "class:tests/Unit/StudentImportServiceTest.php:StudentImportServiceTest",
+      "namespace": "unknown"
+    },
+    "class:app/Console/Commands/CheckOverdueStudents.php:CheckOverdueStudents": {
+      "id": "class:app/Console/Commands/CheckOverdueStudents.php:CheckOverdueStudents",
+      "namespace": "unknown"
+    },
+    "class:app/Console/Commands/GuruCreateAccounts.php:GuruCreateAccounts": {
+      "id": "class:app/Console/Commands/GuruCreateAccounts.php:GuruCreateAccounts",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/UserController.php:UserController": {
+      "id": "class:app/Http/Controllers/UserController.php:UserController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/ResetPasswordRequest.php:ResetPasswordRequest": {
+      "id": "class:app/Http/Requests/ResetPasswordRequest.php:ResetPasswordRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/StoreUserRequest.php:StoreUserRequest": {
+      "id": "class:app/Http/Requests/StoreUserRequest.php:StoreUserRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/UpdateUserRequest.php:UpdateUserRequest": {
+      "id": "class:app/Http/Requests/UpdateUserRequest.php:UpdateUserRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Models/User.php:User": {
+      "id": "class:app/Models/User.php:User",
+      "namespace": "unknown"
+    },
+    "class:app/Notifications/MuridOverdueNotification.php:MuridOverdueNotification": {
+      "id": "class:app/Notifications/MuridOverdueNotification.php:MuridOverdueNotification",
+      "namespace": "unknown"
+    },
+    "class:app/Providers/AppServiceProvider.php:AppServiceProvider": {
+      "id": "class:app/Providers/AppServiceProvider.php:AppServiceProvider",
+      "namespace": "unknown"
+    },
+    "class:app/Services/UserUsernameService.php:UserUsernameService": {
+      "id": "class:app/Services/UserUsernameService.php:UserUsernameService",
+      "namespace": "unknown"
+    },
+    "class:database/factories/UserFactory.php:UserFactory": {
+      "id": "class:database/factories/UserFactory.php:UserFactory",
+      "namespace": "unknown"
+    },
+    "class:database/seeders/DatabaseSeeder.php:DatabaseSeeder": {
+      "id": "class:database/seeders/DatabaseSeeder.php:DatabaseSeeder",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Admin/CheckOverdueStudentsTest.php:CheckOverdueStudentsTest": {
+      "id": "class:tests/Feature/Admin/CheckOverdueStudentsTest.php:CheckOverdueStudentsTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Admin/NotificationControllerTest.php:NotificationControllerTest": {
+      "id": "class:tests/Feature/Admin/NotificationControllerTest.php:NotificationControllerTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Admin/ViewComposerTest.php:ViewComposerTest": {
+      "id": "class:tests/Feature/Admin/ViewComposerTest.php:ViewComposerTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Auth/AuthenticationTest.php:AuthenticationTest": {
+      "id": "class:tests/Feature/Auth/AuthenticationTest.php:AuthenticationTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Auth/EmailVerificationTest.php:EmailVerificationTest": {
+      "id": "class:tests/Feature/Auth/EmailVerificationTest.php:EmailVerificationTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Auth/LoginWithUsernameTest.php:LoginWithUsernameTest": {
+      "id": "class:tests/Feature/Auth/LoginWithUsernameTest.php:LoginWithUsernameTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Auth/PasswordConfirmationTest.php:PasswordConfirmationTest": {
+      "id": "class:tests/Feature/Auth/PasswordConfirmationTest.php:PasswordConfirmationTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Auth/PasswordResetTest.php:PasswordResetTest": {
+      "id": "class:tests/Feature/Auth/PasswordResetTest.php:PasswordResetTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Auth/PasswordUpdateTest.php:PasswordUpdateTest": {
+      "id": "class:tests/Feature/Auth/PasswordUpdateTest.php:PasswordUpdateTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/GuruControllerAccessTest.php:GuruControllerAccessTest": {
+      "id": "class:tests/Feature/GuruControllerAccessTest.php:GuruControllerAccessTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/GuruCreateAccountsCommandTest.php:GuruCreateAccountsCommandTest": {
+      "id": "class:tests/Feature/GuruCreateAccountsCommandTest.php:GuruCreateAccountsCommandTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/GuruLoginRedirectTest.php:GuruLoginRedirectTest": {
+      "id": "class:tests/Feature/GuruLoginRedirectTest.php:GuruLoginRedirectTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/GuruModelRelationTest.php:GuruModelRelationTest": {
+      "id": "class:tests/Feature/GuruModelRelationTest.php:GuruModelRelationTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/GuruNavigationTest.php:GuruNavigationTest": {
+      "id": "class:tests/Feature/GuruNavigationTest.php:GuruNavigationTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/ImportControllerTest.php:ImportControllerTest": {
+      "id": "class:tests/Feature/ImportControllerTest.php:ImportControllerTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/NicknameUniqueTest.php:NicknameUniqueTest": {
+      "id": "class:tests/Feature/NicknameUniqueTest.php:NicknameUniqueTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/ProfileTest.php:ProfileTest": {
+      "id": "class:tests/Feature/ProfileTest.php:ProfileTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Unit/MuridOverdueNotificationTest.php:MuridOverdueNotificationTest": {
+      "id": "class:tests/Unit/MuridOverdueNotificationTest.php:MuridOverdueNotificationTest",
+      "namespace": "unknown"
+    },
+    "class:app/Console/Commands/ApplyLateFines.php:ApplyLateFines": {
+      "id": "class:app/Console/Commands/ApplyLateFines.php:ApplyLateFines",
+      "namespace": "unknown"
+    },
+    "class:app/Console/Commands/GenerateMonthlySpp.php:GenerateMonthlySpp": {
+      "id": "class:app/Console/Commands/GenerateMonthlySpp.php:GenerateMonthlySpp",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/AuditLogController.php:AuditLogController": {
+      "id": "class:app/Http/Controllers/AuditLogController.php:AuditLogController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/DashboardController.php:DashboardController": {
+      "id": "class:app/Http/Controllers/DashboardController.php:DashboardController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/DiscountController.php:DiscountController": {
+      "id": "class:app/Http/Controllers/DiscountController.php:DiscountController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/ExpenseCategoryController.php:ExpenseCategoryController": {
+      "id": "class:app/Http/Controllers/ExpenseCategoryController.php:ExpenseCategoryController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/ExpenseController.php:ExpenseController": {
+      "id": "class:app/Http/Controllers/ExpenseController.php:ExpenseController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/InstrumentController.php:InstrumentController": {
+      "id": "class:app/Http/Controllers/InstrumentController.php:InstrumentController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/InvoiceComponentController.php:InvoiceComponentController": {
+      "id": "class:app/Http/Controllers/InvoiceComponentController.php:InvoiceComponentController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/InvoiceController.php:InvoiceController": {
+      "id": "class:app/Http/Controllers/InvoiceController.php:InvoiceController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/InvoiceItemController.php:InvoiceItemController": {
+      "id": "class:app/Http/Controllers/InvoiceItemController.php:InvoiceItemController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/InvoiceReminderController.php:InvoiceReminderController": {
+      "id": "class:app/Http/Controllers/InvoiceReminderController.php:InvoiceReminderController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/ManualSessionController.php:ManualSessionController": {
+      "id": "class:app/Http/Controllers/ManualSessionController.php:ManualSessionController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/NotificationController.php:NotificationController": {
+      "id": "class:app/Http/Controllers/NotificationController.php:NotificationController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/PackageController.php:PackageController": {
+      "id": "class:app/Http/Controllers/PackageController.php:PackageController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/PaymentController.php:PaymentController": {
+      "id": "class:app/Http/Controllers/PaymentController.php:PaymentController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/ProfileController.php:ProfileController": {
+      "id": "class:app/Http/Controllers/ProfileController.php:ProfileController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/ReportController.php:ReportController": {
+      "id": "class:app/Http/Controllers/ReportController.php:ReportController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/StudentController.php:StudentController": {
+      "id": "class:app/Http/Controllers/StudentController.php:StudentController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/ProfileUpdateRequest.php:ProfileUpdateRequest": {
+      "id": "class:app/Http/Requests/ProfileUpdateRequest.php:ProfileUpdateRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/SendInvoiceReminderRequest.php:SendInvoiceReminderRequest": {
+      "id": "class:app/Http/Requests/SendInvoiceReminderRequest.php:SendInvoiceReminderRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/StoreDiscountRequest.php:StoreDiscountRequest": {
+      "id": "class:app/Http/Requests/StoreDiscountRequest.php:StoreDiscountRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/StoreInstrumentRequest.php:StoreInstrumentRequest": {
+      "id": "class:app/Http/Requests/StoreInstrumentRequest.php:StoreInstrumentRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/StoreManualSessionRequest.php:StoreManualSessionRequest": {
+      "id": "class:app/Http/Requests/StoreManualSessionRequest.php:StoreManualSessionRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/StoreStudentRequest.php:StoreStudentRequest": {
+      "id": "class:app/Http/Requests/StoreStudentRequest.php:StoreStudentRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/UpdateInstrumentRequest.php:UpdateInstrumentRequest": {
+      "id": "class:app/Http/Requests/UpdateInstrumentRequest.php:UpdateInstrumentRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/UpdateStudentRequest.php:UpdateStudentRequest": {
+      "id": "class:app/Http/Requests/UpdateStudentRequest.php:UpdateStudentRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/VoidInvoiceRequest.php:VoidInvoiceRequest": {
+      "id": "class:app/Http/Requests/VoidInvoiceRequest.php:VoidInvoiceRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Models/AuditLog.php:AuditLog": {
+      "id": "class:app/Models/AuditLog.php:AuditLog",
+      "namespace": "unknown"
+    },
+    "class:app/Models/Expense.php:Expense": {
+      "id": "class:app/Models/Expense.php:Expense",
+      "namespace": "unknown"
+    },
+    "class:app/Models/ExpenseCategory.php:ExpenseCategory": {
+      "id": "class:app/Models/ExpenseCategory.php:ExpenseCategory",
+      "namespace": "unknown"
+    },
+    "class:app/Models/Invoice.php:Invoice": {
+      "id": "class:app/Models/Invoice.php:Invoice",
+      "namespace": "unknown"
+    },
+    "class:app/Models/InvoiceComponent.php:InvoiceComponent": {
+      "id": "class:app/Models/InvoiceComponent.php:InvoiceComponent",
+      "namespace": "unknown"
+    },
+    "class:app/Models/InvoiceItem.php:InvoiceItem": {
+      "id": "class:app/Models/InvoiceItem.php:InvoiceItem",
+      "namespace": "unknown"
+    },
+    "class:app/Models/InvoiceReminderLog.php:InvoiceReminderLog": {
+      "id": "class:app/Models/InvoiceReminderLog.php:InvoiceReminderLog",
+      "namespace": "unknown"
+    },
+    "class:app/Models/Payment.php:Payment": {
+      "id": "class:app/Models/Payment.php:Payment",
+      "namespace": "unknown"
+    },
+    "class:app/Models/StudentStatusHistory.php:StudentStatusHistory": {
+      "id": "class:app/Models/StudentStatusHistory.php:StudentStatusHistory",
+      "namespace": "unknown"
+    },
+    "class:app/Services/DiscountService.php:DiscountService": {
+      "id": "class:app/Services/DiscountService.php:DiscountService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/InvoicePdfService.php:InvoicePdfService": {
+      "id": "class:app/Services/InvoicePdfService.php:InvoicePdfService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/InvoiceReminderService.php:InvoiceReminderService": {
+      "id": "class:app/Services/InvoiceReminderService.php:InvoiceReminderService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/InvoiceService.php:InvoiceService": {
+      "id": "class:app/Services/InvoiceService.php:InvoiceService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/PaymentService.php:PaymentService": {
+      "id": "class:app/Services/PaymentService.php:PaymentService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/StudentLifecycleService.php:StudentLifecycleService": {
+      "id": "class:app/Services/StudentLifecycleService.php:StudentLifecycleService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/WablasService.php:WablasService": {
+      "id": "class:app/Services/WablasService.php:WablasService",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/DashboardRoleViewTest.php:DashboardRoleViewTest": {
+      "id": "class:tests/Feature/DashboardRoleViewTest.php:DashboardRoleViewTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/DiscountTest.php:DiscountTest": {
+      "id": "class:tests/Feature/DiscountTest.php:DiscountTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/InvoiceReminderTest.php:InvoiceReminderTest": {
+      "id": "class:tests/Feature/InvoiceReminderTest.php:InvoiceReminderTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/InvoiceVoidTest.php:InvoiceVoidTest": {
+      "id": "class:tests/Feature/InvoiceVoidTest.php:InvoiceVoidTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/KidsBundleInstallmentUiTest.php:KidsBundleInstallmentUiTest": {
+      "id": "class:tests/Feature/KidsBundleInstallmentUiTest.php:KidsBundleInstallmentUiTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/KidsFpInvoiceTest.php:KidsFpInvoiceTest": {
+      "id": "class:tests/Feature/KidsFpInvoiceTest.php:KidsFpInvoiceTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/MultiKelasInvoiceTest.php:MultiKelasInvoiceTest": {
+      "id": "class:tests/Feature/MultiKelasInvoiceTest.php:MultiKelasInvoiceTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/ReportFinanceMethodTest.php:ReportFinanceMethodTest": {
+      "id": "class:tests/Feature/ReportFinanceMethodTest.php:ReportFinanceMethodTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/UserManagementTest.php:UserManagementTest": {
+      "id": "class:tests/Feature/UserManagementTest.php:UserManagementTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Unit/WablasPhoneNormalizeTest.php:WablasPhoneNormalizeTest": {
+      "id": "class:tests/Unit/WablasPhoneNormalizeTest.php:WablasPhoneNormalizeTest",
+      "namespace": "unknown"
+    },
+    "class:app/Console/Commands/CalculateHonor.php:CalculateHonor": {
+      "id": "class:app/Console/Commands/CalculateHonor.php:CalculateHonor",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/EventController.php:EventController": {
+      "id": "class:app/Http/Controllers/EventController.php:EventController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/HolidayController.php:HolidayController": {
+      "id": "class:app/Http/Controllers/HolidayController.php:HolidayController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/HonorController.php:HonorController": {
+      "id": "class:app/Http/Controllers/HonorController.php:HonorController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/PayrollConfigController.php:PayrollConfigController": {
+      "id": "class:app/Http/Controllers/PayrollConfigController.php:PayrollConfigController",
+      "namespace": "unknown"
+    },
+    "class:app/Models/Event.php:Event": {
+      "id": "class:app/Models/Event.php:Event",
+      "namespace": "unknown"
+    },
+    "class:app/Models/EventParticipant.php:EventParticipant": {
+      "id": "class:app/Models/EventParticipant.php:EventParticipant",
+      "namespace": "unknown"
+    },
+    "class:app/Models/Holiday.php:Holiday": {
+      "id": "class:app/Models/Holiday.php:Holiday",
+      "namespace": "unknown"
+    },
+    "class:app/Models/HonorSlip.php:HonorSlip": {
+      "id": "class:app/Models/HonorSlip.php:HonorSlip",
+      "namespace": "unknown"
+    },
+    "class:app/Models/PayrollConfig.php:PayrollConfig": {
+      "id": "class:app/Models/PayrollConfig.php:PayrollConfig",
+      "namespace": "unknown"
+    },
+    "class:app/Services/EventHonorService.php:EventHonorService": {
+      "id": "class:app/Services/EventHonorService.php:EventHonorService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/HonorCalculationService.php:HonorCalculationService": {
+      "id": "class:app/Services/HonorCalculationService.php:HonorCalculationService",
+      "namespace": "unknown"
+    },
+    "class:database/factories/EventFactory.php:EventFactory": {
+      "id": "class:database/factories/EventFactory.php:EventFactory",
+      "namespace": "unknown"
+    },
+    "class:database/factories/EventParticipantFactory.php:EventParticipantFactory": {
+      "id": "class:database/factories/EventParticipantFactory.php:EventParticipantFactory",
+      "namespace": "unknown"
+    },
+    "class:database/factories/HolidayFactory.php:HolidayFactory": {
+      "id": "class:database/factories/HolidayFactory.php:HolidayFactory",
+      "namespace": "unknown"
+    },
+    "class:database/factories/HonorSlipFactory.php:HonorSlipFactory": {
+      "id": "class:database/factories/HonorSlipFactory.php:HonorSlipFactory",
+      "namespace": "unknown"
+    },
+    "class:database/factories/PayrollConfigFactory.php:PayrollConfigFactory": {
+      "id": "class:database/factories/PayrollConfigFactory.php:PayrollConfigFactory",
+      "namespace": "unknown"
+    },
+    "class:database/seeders/HolidaySeeder.php:HolidaySeeder": {
+      "id": "class:database/seeders/HolidaySeeder.php:HolidaySeeder",
+      "namespace": "unknown"
+    },
+    "class:database/seeders/PayrollConfigSeeder.php:PayrollConfigSeeder": {
+      "id": "class:database/seeders/PayrollConfigSeeder.php:PayrollConfigSeeder",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/EventCompleteControllerTest.php:EventCompleteControllerTest": {
+      "id": "class:tests/Feature/EventCompleteControllerTest.php:EventCompleteControllerTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/EventHonorServiceTest.php:EventHonorServiceTest": {
+      "id": "class:tests/Feature/EventHonorServiceTest.php:EventHonorServiceTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/HonorControllerEventHonorTest.php:HonorControllerEventHonorTest": {
+      "id": "class:tests/Feature/HonorControllerEventHonorTest.php:HonorControllerEventHonorTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Unit/Models/HonorSlipTest.php:HonorSlipTest": {
+      "id": "class:tests/Unit/Models/HonorSlipTest.php:HonorSlipTest",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/GuruController.php:GuruController": {
+      "id": "class:app/Http/Controllers/GuruController.php:GuruController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/ProgressReportController.php:ProgressReportController": {
+      "id": "class:app/Http/Controllers/ProgressReportController.php:ProgressReportController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/ReportTemplateController.php:ReportTemplateController": {
+      "id": "class:app/Http/Controllers/ReportTemplateController.php:ReportTemplateController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/SessionReportWaLogController.php:SessionReportWaLogController": {
+      "id": "class:app/Http/Controllers/SessionReportWaLogController.php:SessionReportWaLogController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/TeacherController.php:TeacherController": {
+      "id": "class:app/Http/Controllers/TeacherController.php:TeacherController",
+      "namespace": "unknown"
+    },
+    "class:app/Jobs/SendSessionReportWaJob.php:SendSessionReportWaJob": {
+      "id": "class:app/Jobs/SendSessionReportWaJob.php:SendSessionReportWaJob",
+      "namespace": "unknown"
+    },
+    "class:app/Models/Instrument.php:Instrument": {
+      "id": "class:app/Models/Instrument.php:Instrument",
+      "namespace": "unknown"
+    },
+    "class:app/Models/ProgressReport.php:ProgressReport": {
+      "id": "class:app/Models/ProgressReport.php:ProgressReport",
+      "namespace": "unknown"
+    },
+    "class:app/Models/ProgressReportItem.php:ProgressReportItem": {
+      "id": "class:app/Models/ProgressReportItem.php:ProgressReportItem",
+      "namespace": "unknown"
+    },
+    "class:app/Models/ProgressReportSection.php:ProgressReportSection": {
+      "id": "class:app/Models/ProgressReportSection.php:ProgressReportSection",
+      "namespace": "unknown"
+    },
+    "class:app/Models/ProgressReportSessionNote.php:ProgressReportSessionNote": {
+      "id": "class:app/Models/ProgressReportSessionNote.php:ProgressReportSessionNote",
+      "namespace": "unknown"
+    },
+    "class:app/Models/ReportTemplate.php:ReportTemplate": {
+      "id": "class:app/Models/ReportTemplate.php:ReportTemplate",
+      "namespace": "unknown"
+    },
+    "class:app/Models/ReportTemplateItem.php:ReportTemplateItem": {
+      "id": "class:app/Models/ReportTemplateItem.php:ReportTemplateItem",
+      "namespace": "unknown"
+    },
+    "class:app/Models/ReportTemplateSection.php:ReportTemplateSection": {
+      "id": "class:app/Models/ReportTemplateSection.php:ReportTemplateSection",
+      "namespace": "unknown"
+    },
+    "class:app/Models/SessionReportWaLog.php:SessionReportWaLog": {
+      "id": "class:app/Models/SessionReportWaLog.php:SessionReportWaLog",
+      "namespace": "unknown"
+    },
+    "class:app/Models/SessionTeacherNote.php:SessionTeacherNote": {
+      "id": "class:app/Models/SessionTeacherNote.php:SessionTeacherNote",
+      "namespace": "unknown"
+    },
+    "class:app/Services/ProgressReportPdfService.php:ProgressReportPdfService": {
+      "id": "class:app/Services/ProgressReportPdfService.php:ProgressReportPdfService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/ProgressReportService.php:ProgressReportService": {
+      "id": "class:app/Services/ProgressReportService.php:ProgressReportService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/ReportTemplateResolverService.php:ReportTemplateResolverService": {
+      "id": "class:app/Services/ReportTemplateResolverService.php:ReportTemplateResolverService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/SessionNoteSyncService.php:SessionNoteSyncService": {
+      "id": "class:app/Services/SessionNoteSyncService.php:SessionNoteSyncService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/SessionReportWaService.php:SessionReportWaService": {
+      "id": "class:app/Services/SessionReportWaService.php:SessionReportWaService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/TeacherService.php:TeacherService": {
+      "id": "class:app/Services/TeacherService.php:TeacherService",
+      "namespace": "unknown"
+    },
+    "class:database/factories/InstrumentFactory.php:InstrumentFactory": {
+      "id": "class:database/factories/InstrumentFactory.php:InstrumentFactory",
+      "namespace": "unknown"
+    },
+    "class:database/factories/PackageFactory.php:PackageFactory": {
+      "id": "class:database/factories/PackageFactory.php:PackageFactory",
+      "namespace": "unknown"
+    },
+    "class:database/seeders/InstrumentSeeder.php:InstrumentSeeder": {
+      "id": "class:database/seeders/InstrumentSeeder.php:InstrumentSeeder",
+      "namespace": "unknown"
+    },
+    "class:database/seeders/PackageSeeder.php:PackageSeeder": {
+      "id": "class:database/seeders/PackageSeeder.php:PackageSeeder",
+      "namespace": "unknown"
+    },
+    "class:database/seeders/ReportTemplateSeeder.php:ReportTemplateSeeder": {
+      "id": "class:database/seeders/ReportTemplateSeeder.php:ReportTemplateSeeder",
+      "namespace": "unknown"
+    },
+    "class:database/seeders/TeacherSeeder.php:TeacherSeeder": {
+      "id": "class:database/seeders/TeacherSeeder.php:TeacherSeeder",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/ProgressReportAdminTest.php:ProgressReportAdminTest": {
+      "id": "class:tests/Feature/ProgressReportAdminTest.php:ProgressReportAdminTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/ProgressReportGuruTest.php:ProgressReportGuruTest": {
+      "id": "class:tests/Feature/ProgressReportGuruTest.php:ProgressReportGuruTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/ReportTemplateResolverTest.php:ReportTemplateResolverTest": {
+      "id": "class:tests/Feature/ReportTemplateResolverTest.php:ReportTemplateResolverTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/ReportTemplateTest.php:ReportTemplateTest": {
+      "id": "class:tests/Feature/ReportTemplateTest.php:ReportTemplateTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/RoomControllerTest.php:RoomControllerTest": {
+      "id": "class:tests/Feature/RoomControllerTest.php:RoomControllerTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Services/SessionNoteSyncAttributionTest.php:SessionNoteSyncAttributionTest": {
+      "id": "class:tests/Feature/Services/SessionNoteSyncAttributionTest.php:SessionNoteSyncAttributionTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/SessionReportWaTest.php:SessionReportWaTest": {
+      "id": "class:tests/Feature/SessionReportWaTest.php:SessionReportWaTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Unit/PackageReportLabelTest.php:PackageReportLabelTest": {
+      "id": "class:tests/Unit/PackageReportLabelTest.php:PackageReportLabelTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Unit/ProgressReportHelpersTest.php:ProgressReportHelpersTest": {
+      "id": "class:tests/Unit/ProgressReportHelpersTest.php:ProgressReportHelpersTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Unit/ProgressReportServiceTest.php:ProgressReportServiceTest": {
+      "id": "class:tests/Unit/ProgressReportServiceTest.php:ProgressReportServiceTest",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/Auth/AuthenticatedSessionController.php:AuthenticatedSessionController": {
+      "id": "class:app/Http/Controllers/Auth/AuthenticatedSessionController.php:AuthenticatedSessionController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/Auth/ConfirmablePasswordController.php:ConfirmablePasswordController": {
+      "id": "class:app/Http/Controllers/Auth/ConfirmablePasswordController.php:ConfirmablePasswordController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/Auth/EmailVerificationNotificationController.php:EmailVerificationNotificationController": {
+      "id": "class:app/Http/Controllers/Auth/EmailVerificationNotificationController.php:EmailVerificationNotificationController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/Auth/EmailVerificationPromptController.php:EmailVerificationPromptController": {
+      "id": "class:app/Http/Controllers/Auth/EmailVerificationPromptController.php:EmailVerificationPromptController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/Auth/NewPasswordController.php:NewPasswordController": {
+      "id": "class:app/Http/Controllers/Auth/NewPasswordController.php:NewPasswordController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/Auth/PasswordController.php:PasswordController": {
+      "id": "class:app/Http/Controllers/Auth/PasswordController.php:PasswordController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/Auth/PasswordResetLinkController.php:PasswordResetLinkController": {
+      "id": "class:app/Http/Controllers/Auth/PasswordResetLinkController.php:PasswordResetLinkController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/Auth/RegisteredUserController.php:RegisteredUserController": {
+      "id": "class:app/Http/Controllers/Auth/RegisteredUserController.php:RegisteredUserController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/Auth/VerifyEmailController.php:VerifyEmailController": {
+      "id": "class:app/Http/Controllers/Auth/VerifyEmailController.php:VerifyEmailController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/Controller.php:Controller": {
+      "id": "class:app/Http/Controllers/Controller.php:Controller",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/Auth/LoginRequest.php:LoginRequest": {
+      "id": "class:app/Http/Requests/Auth/LoginRequest.php:LoginRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Console/Commands/SendScheduleReminders.php:SendScheduleReminders": {
+      "id": "class:app/Console/Commands/SendScheduleReminders.php:SendScheduleReminders",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Controllers/WhatsappMessageTemplateController.php:WhatsappMessageTemplateController": {
+      "id": "class:app/Http/Controllers/WhatsappMessageTemplateController.php:WhatsappMessageTemplateController",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/StoreWhatsappMessageTemplateRequest.php:StoreWhatsappMessageTemplateRequest": {
+      "id": "class:app/Http/Requests/StoreWhatsappMessageTemplateRequest.php:StoreWhatsappMessageTemplateRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/UpdateWhatsappMessageTemplateRequest.php:UpdateWhatsappMessageTemplateRequest": {
+      "id": "class:app/Http/Requests/UpdateWhatsappMessageTemplateRequest.php:UpdateWhatsappMessageTemplateRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Models/ScheduleReminderLog.php:ScheduleReminderLog": {
+      "id": "class:app/Models/ScheduleReminderLog.php:ScheduleReminderLog",
+      "namespace": "unknown"
+    },
+    "class:app/Models/WhatsappMessageTemplate.php:WhatsappMessageTemplate": {
+      "id": "class:app/Models/WhatsappMessageTemplate.php:WhatsappMessageTemplate",
+      "namespace": "unknown"
+    },
+    "class:app/Services/ScheduleReminderService.php:ScheduleReminderService": {
+      "id": "class:app/Services/ScheduleReminderService.php:ScheduleReminderService",
+      "namespace": "unknown"
+    },
+    "class:database/seeders/WhatsappMessageTemplateSeeder.php:WhatsappMessageTemplateSeeder": {
+      "id": "class:database/seeders/WhatsappMessageTemplateSeeder.php:WhatsappMessageTemplateSeeder",
+      "namespace": "unknown"
+    },
+    "class:app/Exports/Sheets/DataMuridSheet.php:DataMuridSheet": {
+      "id": "class:app/Exports/Sheets/DataMuridSheet.php:DataMuridSheet",
+      "namespace": "unknown"
+    },
+    "class:app/Exports/Sheets/ReferensiKodeSheet.php:ReferensiKodeSheet": {
+      "id": "class:app/Exports/Sheets/ReferensiKodeSheet.php:ReferensiKodeSheet",
+      "namespace": "unknown"
+    },
+    "class:app/Exports/StudentTemplateExport.php:StudentTemplateExport": {
+      "id": "class:app/Exports/StudentTemplateExport.php:StudentTemplateExport",
+      "namespace": "unknown"
+    },
+    "class:app/Console/Commands/ClearStudentData.php:ClearStudentData": {
+      "id": "class:app/Console/Commands/ClearStudentData.php:ClearStudentData",
+      "namespace": "unknown"
+    },
+    "class:app/Http/Requests/UpdateSessionRequest.php:UpdateSessionRequest": {
+      "id": "class:app/Http/Requests/UpdateSessionRequest.php:UpdateSessionRequest",
+      "namespace": "unknown"
+    },
+    "class:app/Services/FonnteService.php:FonnteService": {
+      "id": "class:app/Services/FonnteService.php:FonnteService",
+      "namespace": "unknown"
+    },
+    "class:app/Services/ProgressReportPdfAssetService.php:ProgressReportPdfAssetService": {
+      "id": "class:app/Services/ProgressReportPdfAssetService.php:ProgressReportPdfAssetService",
+      "namespace": "unknown"
+    },
+    "class:app/View/Components/AppLayout.php:AppLayout": {
+      "id": "class:app/View/Components/AppLayout.php:AppLayout",
+      "namespace": "unknown"
+    },
+    "class:app/View/Components/GuestLayout.php:GuestLayout": {
+      "id": "class:app/View/Components/GuestLayout.php:GuestLayout",
+      "namespace": "unknown"
+    },
+    "class:app/View/Components/GuruLayout.php:GuruLayout": {
+      "id": "class:app/View/Components/GuruLayout.php:GuruLayout",
+      "namespace": "unknown"
+    },
+    "class:database/seeders/RoleSeeder.php:RoleSeeder": {
+      "id": "class:database/seeders/RoleSeeder.php:RoleSeeder",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/Auth/RegistrationTest.php:RegistrationTest": {
+      "id": "class:tests/Feature/Auth/RegistrationTest.php:RegistrationTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Feature/ExampleTest.php:ExampleTest": {
+      "id": "class:tests/Feature/ExampleTest.php:ExampleTest",
+      "namespace": "unknown"
+    },
+    "class:tests/TestCase.php:TestCase": {
+      "id": "class:tests/TestCase.php:TestCase",
+      "namespace": "unknown"
+    },
+    "class:tests/Unit/ExampleTest.php:ExampleTest": {
+      "id": "class:tests/Unit/ExampleTest.php:ExampleTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Unit/FonntePhoneNormalizeTest.php:FonntePhoneNormalizeTest": {
+      "id": "class:tests/Unit/FonntePhoneNormalizeTest.php:FonntePhoneNormalizeTest",
+      "namespace": "unknown"
+    },
+    "class:tests/Unit/ProgressReportPdfAssetServiceTest.php:ProgressReportPdfAssetServiceTest": {
+      "id": "class:tests/Unit/ProgressReportPdfAssetServiceTest.php:ProgressReportPdfAssetServiceTest",
+      "namespace": "unknown"
+    }
+  },
+  "functionIndex": {
+    "function:app/Console/Commands/GenerateMonthlySessions.php:handle": {
+      "id": "function:app/Console/Commands/GenerateMonthlySessions.php:handle"
+    },
+    "function:app/Exports/XlsxBuilder.php:build": {
+      "id": "function:app/Exports/XlsxBuilder.php:build"
+    },
+    "function:app/Exports/XlsxBuilder.php:colLetter": {
+      "id": "function:app/Exports/XlsxBuilder.php:colLetter"
+    },
+    "function:app/Exports/XlsxBuilder.php:buildContentTypes": {
+      "id": "function:app/Exports/XlsxBuilder.php:buildContentTypes"
+    },
+    "function:app/Exports/XlsxBuilder.php:buildWorkbook": {
+      "id": "function:app/Exports/XlsxBuilder.php:buildWorkbook"
+    },
+    "function:app/Exports/XlsxBuilder.php:buildWorkbookRels": {
+      "id": "function:app/Exports/XlsxBuilder.php:buildWorkbookRels"
+    },
+    "function:app/Exports/XlsxBuilder.php:buildStyles": {
+      "id": "function:app/Exports/XlsxBuilder.php:buildStyles"
+    },
+    "function:app/Exports/XlsxBuilder.php:buildSharedStrings": {
+      "id": "function:app/Exports/XlsxBuilder.php:buildSharedStrings"
+    },
+    "function:app/Exports/XlsxBuilder.php:buildSheet": {
+      "id": "function:app/Exports/XlsxBuilder.php:buildSheet"
+    },
+    "function:app/Http/Controllers/AbsensiController.php:index": {
+      "id": "function:app/Http/Controllers/AbsensiController.php:index"
+    },
+    "function:app/Http/Controllers/AbsensiController.php:update": {
+      "id": "function:app/Http/Controllers/AbsensiController.php:update"
+    },
+    "function:app/Http/Controllers/AbsensiController.php:storeSplitPart": {
+      "id": "function:app/Http/Controllers/AbsensiController.php:storeSplitPart"
+    },
+    "function:app/Http/Controllers/AbsensiController.php:openSlotBoard": {
+      "id": "function:app/Http/Controllers/AbsensiController.php:openSlotBoard"
+    },
+    "function:app/Http/Controllers/AbsensiController.php:assignOpenSlot": {
+      "id": "function:app/Http/Controllers/AbsensiController.php:assignOpenSlot"
+    },
+    "function:app/Http/Controllers/AbsensiController.php:scheduleReplacement": {
+      "id": "function:app/Http/Controllers/AbsensiController.php:scheduleReplacement"
+    },
+    "function:app/Http/Controllers/AbsensiController.php:cancelPending": {
+      "id": "function:app/Http/Controllers/AbsensiController.php:cancelPending"
+    },
+    "function:app/Http/Controllers/AbsensiController.php:validateSplitGuards": {
+      "id": "function:app/Http/Controllers/AbsensiController.php:validateSplitGuards"
+    },
+    "function:app/Http/Controllers/AbsensiController.php:confirmSubstitute": {
+      "id": "function:app/Http/Controllers/AbsensiController.php:confirmSubstitute"
+    },
+    "function:app/Http/Controllers/EnrollmentController.php:store": {
+      "id": "function:app/Http/Controllers/EnrollmentController.php:store"
+    },
+    "function:app/Http/Controllers/EnrollmentController.php:setPrimary": {
+      "id": "function:app/Http/Controllers/EnrollmentController.php:setPrimary"
+    },
+    "function:app/Http/Controllers/EnrollmentController.php:destroy": {
+      "id": "function:app/Http/Controllers/EnrollmentController.php:destroy"
+    },
+    "function:app/Http/Controllers/EnrollmentController.php:hentikanEnrollment": {
+      "id": "function:app/Http/Controllers/EnrollmentController.php:hentikanEnrollment"
+    },
+    "function:app/Http/Controllers/ImportController.php:downloadTemplate": {
+      "id": "function:app/Http/Controllers/ImportController.php:downloadTemplate"
+    },
+    "function:app/Http/Controllers/ImportController.php:validate": {
+      "id": "function:app/Http/Controllers/ImportController.php:validate"
+    },
+    "function:app/Http/Controllers/ImportController.php:confirm": {
+      "id": "function:app/Http/Controllers/ImportController.php:confirm"
+    },
+    "function:app/Http/Controllers/ImportController.php:formatConfirmError": {
+      "id": "function:app/Http/Controllers/ImportController.php:formatConfirmError"
+    },
+    "function:app/Http/Controllers/ImportController.php:dataMuridRows": {
+      "id": "function:app/Http/Controllers/ImportController.php:dataMuridRows"
+    },
+    "function:app/Http/Controllers/ImportController.php:referensiKodeRows": {
+      "id": "function:app/Http/Controllers/ImportController.php:referensiKodeRows"
+    },
+    "function:app/Http/Controllers/KalenderController.php:index": {
+      "id": "function:app/Http/Controllers/KalenderController.php:index"
+    },
+    "function:app/Http/Controllers/RoomController.php:store": {
+      "id": "function:app/Http/Controllers/RoomController.php:store"
+    },
+    "function:app/Http/Controllers/RoomController.php:update": {
+      "id": "function:app/Http/Controllers/RoomController.php:update"
+    },
+    "function:app/Http/Controllers/RoomController.php:destroy": {
+      "id": "function:app/Http/Controllers/RoomController.php:destroy"
+    },
+    "function:app/Http/Controllers/ScheduleController.php:store": {
+      "id": "function:app/Http/Controllers/ScheduleController.php:store"
+    },
+    "function:app/Http/Controllers/ScheduleController.php:update": {
+      "id": "function:app/Http/Controllers/ScheduleController.php:update"
+    },
+    "function:app/Http/Controllers/ScheduleController.php:destroy": {
+      "id": "function:app/Http/Controllers/ScheduleController.php:destroy"
+    },
+    "function:app/Http/Controllers/ScheduleController.php:toggleActive": {
+      "id": "function:app/Http/Controllers/ScheduleController.php:toggleActive"
+    },
+    "function:app/Http/Controllers/SessionController.php:index": {
+      "id": "function:app/Http/Controllers/SessionController.php:index"
+    },
+    "function:app/Http/Controllers/SessionController.php:generate": {
+      "id": "function:app/Http/Controllers/SessionController.php:generate"
+    },
+    "function:app/Http/Controllers/SessionController.php:update": {
+      "id": "function:app/Http/Controllers/SessionController.php:update"
+    },
+    "function:app/Http/Controllers/SessionController.php:destroy": {
+      "id": "function:app/Http/Controllers/SessionController.php:destroy"
+    },
+    "function:app/Http/Requests/StoreEnrollmentRequest.php:rules": {
+      "id": "function:app/Http/Requests/StoreEnrollmentRequest.php:rules"
+    },
+    "function:app/Http/Requests/StoreEnrollmentRequest.php:messages": {
+      "id": "function:app/Http/Requests/StoreEnrollmentRequest.php:messages"
+    },
+    "function:app/Http/Requests/StoreSplitPartRequest.php:messages": {
+      "id": "function:app/Http/Requests/StoreSplitPartRequest.php:messages"
+    },
+    "function:app/Http/Requests/UpdateAbsensiRequest.php:rules": {
+      "id": "function:app/Http/Requests/UpdateAbsensiRequest.php:rules"
+    },
+    "function:app/Http/Requests/UpdateAbsensiRequest.php:messages": {
+      "id": "function:app/Http/Requests/UpdateAbsensiRequest.php:messages"
+    },
+    "function:app/Models/ClassSession.php:booted": {
+      "id": "function:app/Models/ClassSession.php:booted"
+    },
+    "function:app/Models/ClassSession.php:getSessionLabel": {
+      "id": "function:app/Models/ClassSession.php:getSessionLabel"
+    },
+    "function:app/Models/ClassSession.php:getGuruSessionIdentity": {
+      "id": "function:app/Models/ClassSession.php:getGuruSessionIdentity"
+    },
+    "function:app/Models/Package.php:getLevelLabel": {
+      "id": "function:app/Models/Package.php:getLevelLabel"
+    },
+    "function:app/Models/Package.php:getReportInstrumentLabel": {
+      "id": "function:app/Models/Package.php:getReportInstrumentLabel"
+    },
+    "function:app/Models/Package.php:getReportLevelSuffix": {
+      "id": "function:app/Models/Package.php:getReportLevelSuffix"
+    },
+    "function:app/Models/Student.php:generateCode": {
+      "id": "function:app/Models/Student.php:generateCode"
+    },
+    "function:app/Services/AttendanceService.php:recordAttendance": {
+      "id": "function:app/Services/AttendanceService.php:recordAttendance"
+    },
+    "function:app/Services/AttendanceService.php:scheduleReplacement": {
+      "id": "function:app/Services/AttendanceService.php:scheduleReplacement"
+    },
+    "function:app/Services/AttendanceService.php:validateStatusFields": {
+      "id": "function:app/Services/AttendanceService.php:validateStatusFields"
+    },
+    "function:app/Services/AttendanceService.php:calculateHonor": {
+      "id": "function:app/Services/AttendanceService.php:calculateHonor"
+    },
+    "function:app/Services/AttendanceService.php:calculateSubstituteHonor": {
+      "id": "function:app/Services/AttendanceService.php:calculateSubstituteHonor"
+    },
+    "function:app/Services/EnrollmentSessionCleanupService.php:purgeFutureSessions": {
+      "id": "function:app/Services/EnrollmentSessionCleanupService.php:purgeFutureSessions"
+    },
+    "function:app/Services/ManualSessionService.php:slotSummary": {
+      "id": "function:app/Services/ManualSessionService.php:slotSummary"
+    },
+    "function:app/Services/ManualSessionService.php:suggestNextSequence": {
+      "id": "function:app/Services/ManualSessionService.php:suggestNextSequence"
+    },
+    "function:app/Services/ManualSessionService.php:create": {
+      "id": "function:app/Services/ManualSessionService.php:create"
+    },
+    "function:app/Services/ManualSessionService.php:sequenceTaken": {
+      "id": "function:app/Services/ManualSessionService.php:sequenceTaken"
+    },
+    "function:app/Services/ManualSessionService.php:assertNoConflict": {
+      "id": "function:app/Services/ManualSessionService.php:assertNoConflict"
+    },
+    "function:app/Services/ManualSessionService.php:findDuoSlotConflict": {
+      "id": "function:app/Services/ManualSessionService.php:findDuoSlotConflict"
+    },
+    "function:app/Services/RescheduleService.php:createReplacement": {
+      "id": "function:app/Services/RescheduleService.php:createReplacement"
+    },
+    "function:app/Services/RescheduleService.php:createSplitPart": {
+      "id": "function:app/Services/RescheduleService.php:createSplitPart"
+    },
+    "function:app/Services/RescheduleService.php:assertNoTeacherConflict": {
+      "id": "function:app/Services/RescheduleService.php:assertNoTeacherConflict"
+    },
+    "function:app/Services/RescheduleService.php:assertNoRoomConflict": {
+      "id": "function:app/Services/RescheduleService.php:assertNoRoomConflict"
+    },
+    "function:app/Services/RescheduleService.php:throwTeacherConflictException": {
+      "id": "function:app/Services/RescheduleService.php:throwTeacherConflictException"
+    },
+    "function:app/Services/RescheduleService.php:throwRoomConflictException": {
+      "id": "function:app/Services/RescheduleService.php:throwRoomConflictException"
+    },
+    "function:app/Services/RescheduleService.php:overlappingSessionsQuery": {
+      "id": "function:app/Services/RescheduleService.php:overlappingSessionsQuery"
+    },
+    "function:app/Services/RescheduleService.php:findDuoSlotConflict": {
+      "id": "function:app/Services/RescheduleService.php:findDuoSlotConflict"
+    },
+    "function:app/Services/ScheduleConflictDetector.php:findTeacherConflicts": {
+      "id": "function:app/Services/ScheduleConflictDetector.php:findTeacherConflicts"
+    },
+    "function:app/Services/ScheduleConflictDetector.php:findBlockingTeacherConflicts": {
+      "id": "function:app/Services/ScheduleConflictDetector.php:findBlockingTeacherConflicts"
+    },
+    "function:app/Services/ScheduleConflictDetector.php:findRoomConflicts": {
+      "id": "function:app/Services/ScheduleConflictDetector.php:findRoomConflicts"
+    },
+    "function:app/Services/ScheduleConflictDetector.php:isRoomFull": {
+      "id": "function:app/Services/ScheduleConflictDetector.php:isRoomFull"
+    },
+    "function:app/Services/SessionGeneratorService.php:generateForMonth": {
+      "id": "function:app/Services/SessionGeneratorService.php:generateForMonth"
+    },
+    "function:app/Services/SessionGeneratorService.php:generateForSchedule": {
+      "id": "function:app/Services/SessionGeneratorService.php:generateForSchedule"
+    },
+    "function:app/Services/SessionGeneratorService.php:resolveLiburHonor": {
+      "id": "function:app/Services/SessionGeneratorService.php:resolveLiburHonor"
+    },
+    "function:app/Services/SessionGeneratorService.php:calculateBaseHonor": {
+      "id": "function:app/Services/SessionGeneratorService.php:calculateBaseHonor"
+    },
+    "function:app/Services/SessionGeneratorService.php:findConflictOnDate": {
+      "id": "function:app/Services/SessionGeneratorService.php:findConflictOnDate"
+    },
+    "function:app/Services/SessionGeneratorService.php:buildConflictDetail": {
+      "id": "function:app/Services/SessionGeneratorService.php:buildConflictDetail"
+    },
+    "function:app/Services/StudentImportService.php:validate": {
+      "id": "function:app/Services/StudentImportService.php:validate"
+    },
+    "function:app/Services/StudentImportService.php:confirm": {
+      "id": "function:app/Services/StudentImportService.php:confirm"
+    },
+    "function:app/Services/StudentImportService.php:validateRow": {
+      "id": "function:app/Services/StudentImportService.php:validateRow"
+    },
+    "function:app/Services/StudentImportService.php:findExisting": {
+      "id": "function:app/Services/StudentImportService.php:findExisting"
+    },
+    "function:app/Services/StudentImportService.php:normalizeExcelDateFields": {
+      "id": "function:app/Services/StudentImportService.php:normalizeExcelDateFields"
+    },
+    "function:app/Services/StudentImportService.php:normalizeDateValue": {
+      "id": "function:app/Services/StudentImportService.php:normalizeDateValue"
+    },
+    "function:app/Services/StudentImportService.php:normalizeTimeValue": {
+      "id": "function:app/Services/StudentImportService.php:normalizeTimeValue"
+    },
+    "function:app/Services/StudentImportService.php:normalizePhone": {
+      "id": "function:app/Services/StudentImportService.php:normalizePhone"
+    },
+    "function:app/Services/StudentImportService.php:parseDayOfWeek": {
+      "id": "function:app/Services/StudentImportService.php:parseDayOfWeek"
+    },
+    "function:app/Services/StudentImportService.php:createEnrollmentAndSchedule": {
+      "id": "function:app/Services/StudentImportService.php:createEnrollmentAndSchedule"
+    },
+    "function:app/Services/StudentImportService.php:upsertStudent": {
+      "id": "function:app/Services/StudentImportService.php:upsertStudent"
+    },
+    "function:database/factories/ClassSessionFactory.php:definition": {
+      "id": "function:database/factories/ClassSessionFactory.php:definition"
+    },
+    "function:database/factories/EnrollmentFactory.php:definition": {
+      "id": "function:database/factories/EnrollmentFactory.php:definition"
+    },
+    "function:database/factories/RoomFactory.php:definition": {
+      "id": "function:database/factories/RoomFactory.php:definition"
+    },
+    "function:database/factories/ScheduleFactory.php:definition": {
+      "id": "function:database/factories/ScheduleFactory.php:definition"
+    },
+    "function:database/factories/StudentFactory.php:definition": {
+      "id": "function:database/factories/StudentFactory.php:definition"
+    },
+    "function:database/factories/TeacherFactory.php:definition": {
+      "id": "function:database/factories/TeacherFactory.php:definition"
+    },
+    "function:database/seeders/RoomSeeder.php:run": {
+      "id": "function:database/seeders/RoomSeeder.php:run"
+    }
+  },
+  "fileIndex": {
+    "file:app/Console/Commands/GenerateMonthlySessions.php": {
+      "path": "file:app/Console/Commands/GenerateMonthlySessions.php",
+      "language": "php"
+    },
+    "file:app/Exports/XlsxBuilder.php": {
+      "path": "file:app/Exports/XlsxBuilder.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/AbsensiController.php": {
+      "path": "file:app/Http/Controllers/AbsensiController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/EnrollmentController.php": {
+      "path": "file:app/Http/Controllers/EnrollmentController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/ImportController.php": {
+      "path": "file:app/Http/Controllers/ImportController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/KalenderController.php": {
+      "path": "file:app/Http/Controllers/KalenderController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/RoomController.php": {
+      "path": "file:app/Http/Controllers/RoomController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/ScheduleController.php": {
+      "path": "file:app/Http/Controllers/ScheduleController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/SessionController.php": {
+      "path": "file:app/Http/Controllers/SessionController.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/StoreEnrollmentRequest.php": {
+      "path": "file:app/Http/Requests/StoreEnrollmentRequest.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/StoreSplitPartRequest.php": {
+      "path": "file:app/Http/Requests/StoreSplitPartRequest.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/UpdateAbsensiRequest.php": {
+      "path": "file:app/Http/Requests/UpdateAbsensiRequest.php",
+      "language": "php"
+    },
+    "file:app/Models/ClassSession.php": {
+      "path": "file:app/Models/ClassSession.php",
+      "language": "php"
+    },
+    "file:app/Models/Enrollment.php": {
+      "path": "file:app/Models/Enrollment.php",
+      "language": "php"
+    },
+    "file:app/Models/Package.php": {
+      "path": "file:app/Models/Package.php",
+      "language": "php"
+    },
+    "file:app/Models/Room.php": {
+      "path": "file:app/Models/Room.php",
+      "language": "php"
+    },
+    "file:app/Models/Schedule.php": {
+      "path": "file:app/Models/Schedule.php",
+      "language": "php"
+    },
+    "file:app/Models/Student.php": {
+      "path": "file:app/Models/Student.php",
+      "language": "php"
+    },
+    "file:app/Models/Teacher.php": {
+      "path": "file:app/Models/Teacher.php",
+      "language": "php"
+    },
+    "file:app/Services/AttendanceService.php": {
+      "path": "file:app/Services/AttendanceService.php",
+      "language": "php"
+    },
+    "file:app/Services/EnrollmentSessionCleanupService.php": {
+      "path": "file:app/Services/EnrollmentSessionCleanupService.php",
+      "language": "php"
+    },
+    "file:app/Services/ManualSessionService.php": {
+      "path": "file:app/Services/ManualSessionService.php",
+      "language": "php"
+    },
+    "file:app/Services/RescheduleService.php": {
+      "path": "file:app/Services/RescheduleService.php",
+      "language": "php"
+    },
+    "file:app/Services/ScheduleConflictDetector.php": {
+      "path": "file:app/Services/ScheduleConflictDetector.php",
+      "language": "php"
+    },
+    "file:app/Services/SessionGeneratorService.php": {
+      "path": "file:app/Services/SessionGeneratorService.php",
+      "language": "php"
+    },
+    "file:app/Services/StudentImportService.php": {
+      "path": "file:app/Services/StudentImportService.php",
+      "language": "php"
+    },
+    "file:database/factories/ClassSessionFactory.php": {
+      "path": "file:database/factories/ClassSessionFactory.php",
+      "language": "php"
+    },
+    "file:database/factories/EnrollmentFactory.php": {
+      "path": "file:database/factories/EnrollmentFactory.php",
+      "language": "php"
+    },
+    "file:database/factories/RoomFactory.php": {
+      "path": "file:database/factories/RoomFactory.php",
+      "language": "php"
+    },
+    "file:database/factories/ScheduleFactory.php": {
+      "path": "file:database/factories/ScheduleFactory.php",
+      "language": "php"
+    },
+    "file:database/factories/StudentFactory.php": {
+      "path": "file:database/factories/StudentFactory.php",
+      "language": "php"
+    },
+    "file:database/factories/TeacherFactory.php": {
+      "path": "file:database/factories/TeacherFactory.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_23_215414_backfill_honor_libur_sessions.php": {
+      "path": "file:database/migrations/2026_05_23_215414_backfill_honor_libur_sessions.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_06_02_000001_clear_honor_scheduled_calendar_replacements.php": {
+      "path": "file:database/migrations/2026_06_02_000001_clear_honor_scheduled_calendar_replacements.php",
+      "language": "php"
+    },
+    "file:database/seeders/RoomSeeder.php": {
+      "path": "file:database/seeders/RoomSeeder.php",
+      "language": "php"
+    },
+    "file:database/seeders/StudentSeeder.php": {
+      "path": "file:database/seeders/StudentSeeder.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Admin/AbsensiControllerTest.php": {
+      "path": "file:tests/Feature/Admin/AbsensiControllerTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Admin/RescheduleTest.php": {
+      "path": "file:tests/Feature/Admin/RescheduleTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Admin/SplitRescheduleTest.php": {
+      "path": "file:tests/Feature/Admin/SplitRescheduleTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/DuoClassConflictTest.php": {
+      "path": "file:tests/Feature/DuoClassConflictTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/DuoClassHonorTest.php": {
+      "path": "file:tests/Feature/DuoClassHonorTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/EnrollmentControllerTest.php": {
+      "path": "file:tests/Feature/EnrollmentControllerTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/GuruUpdateAbsensiTest.php": {
+      "path": "file:tests/Feature/GuruUpdateAbsensiTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/IzinPendingTest.php": {
+      "path": "file:tests/Feature/IzinPendingTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/KalenderControllerTest.php": {
+      "path": "file:tests/Feature/KalenderControllerTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/KidsClassRescheduleTest.php": {
+      "path": "file:tests/Feature/KidsClassRescheduleTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/KidsClassScheduleConflictTest.php": {
+      "path": "file:tests/Feature/KidsClassScheduleConflictTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/ManualSessionControllerTest.php": {
+      "path": "file:tests/Feature/ManualSessionControllerTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/MultiKelasModelTest.php": {
+      "path": "file:tests/Feature/MultiKelasModelTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/ScheduleInstrumentCheckTest.php": {
+      "path": "file:tests/Feature/ScheduleInstrumentCheckTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/ScheduleMultiEnrollmentTest.php": {
+      "path": "file:tests/Feature/ScheduleMultiEnrollmentTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/ScheduleReminderTest.php": {
+      "path": "file:tests/Feature/ScheduleReminderTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Services/AttendanceServiceDigantiConflictTest.php": {
+      "path": "file:tests/Feature/Services/AttendanceServiceDigantiConflictTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Services/AttendanceServiceIzinRescheduleTest.php": {
+      "path": "file:tests/Feature/Services/AttendanceServiceIzinRescheduleTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Services/ManualSessionServiceTest.php": {
+      "path": "file:tests/Feature/Services/ManualSessionServiceTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Services/SessionGeneratorSequenceTest.php": {
+      "path": "file:tests/Feature/Services/SessionGeneratorSequenceTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Services/SessionGeneratorServiceTest.php": {
+      "path": "file:tests/Feature/Services/SessionGeneratorServiceTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/SessionEditTest.php": {
+      "path": "file:tests/Feature/SessionEditTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/SessionGeneratorConflictTest.php": {
+      "path": "file:tests/Feature/SessionGeneratorConflictTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/SessionLabelTest.php": {
+      "path": "file:tests/Feature/SessionLabelTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/SessionTeacherNoteTest.php": {
+      "path": "file:tests/Feature/SessionTeacherNoteTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/StudentCutiTest.php": {
+      "path": "file:tests/Feature/StudentCutiTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/TrialEnrollmentTest.php": {
+      "path": "file:tests/Feature/TrialEnrollmentTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/TrialSessionCreationTest.php": {
+      "path": "file:tests/Feature/TrialSessionCreationTest.php",
+      "language": "php"
+    },
+    "file:tests/Unit/EnrollmentSessionCleanupServiceTest.php": {
+      "path": "file:tests/Unit/EnrollmentSessionCleanupServiceTest.php",
+      "language": "php"
+    },
+    "file:tests/Unit/Models/RoomTest.php": {
+      "path": "file:tests/Unit/Models/RoomTest.php",
+      "language": "php"
+    },
+    "file:tests/Unit/Services/HonorCalculationServiceStudentBreakdownTest.php": {
+      "path": "file:tests/Unit/Services/HonorCalculationServiceStudentBreakdownTest.php",
+      "language": "php"
+    },
+    "file:tests/Unit/StudentImportConflictTest.php": {
+      "path": "file:tests/Unit/StudentImportConflictTest.php",
+      "language": "php"
+    },
+    "file:tests/Unit/StudentImportCutiTest.php": {
+      "path": "file:tests/Unit/StudentImportCutiTest.php",
+      "language": "php"
+    },
+    "file:tests/Unit/StudentImportServiceTest.php": {
+      "path": "file:tests/Unit/StudentImportServiceTest.php",
+      "language": "php"
+    },
+    "file:database/factories/UserFactory.php": {
+      "path": "file:database/factories/UserFactory.php",
+      "language": "php"
+    },
+    "file:app/Console/Commands/CheckOverdueStudents.php": {
+      "path": "file:app/Console/Commands/CheckOverdueStudents.php",
+      "language": "php"
+    },
+    "file:app/Console/Commands/GuruCreateAccounts.php": {
+      "path": "file:app/Console/Commands/GuruCreateAccounts.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/UserController.php": {
+      "path": "file:app/Http/Controllers/UserController.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/ResetPasswordRequest.php": {
+      "path": "file:app/Http/Requests/ResetPasswordRequest.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/StoreUserRequest.php": {
+      "path": "file:app/Http/Requests/StoreUserRequest.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/UpdateUserRequest.php": {
+      "path": "file:app/Http/Requests/UpdateUserRequest.php",
+      "language": "php"
+    },
+    "file:app/Models/User.php": {
+      "path": "file:app/Models/User.php",
+      "language": "php"
+    },
+    "file:app/Notifications/MuridOverdueNotification.php": {
+      "path": "file:app/Notifications/MuridOverdueNotification.php",
+      "language": "php"
+    },
+    "file:app/Providers/AppServiceProvider.php": {
+      "path": "file:app/Providers/AppServiceProvider.php",
+      "language": "php"
+    },
+    "file:app/Services/UserUsernameService.php": {
+      "path": "file:app/Services/UserUsernameService.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_29_100000_add_username_to_users_table.php": {
+      "path": "file:database/migrations/2026_05_29_100000_add_username_to_users_table.php",
+      "language": "php"
+    },
+    "file:database/seeders/DatabaseSeeder.php": {
+      "path": "file:database/seeders/DatabaseSeeder.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Admin/CheckOverdueStudentsTest.php": {
+      "path": "file:tests/Feature/Admin/CheckOverdueStudentsTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Admin/NotificationControllerTest.php": {
+      "path": "file:tests/Feature/Admin/NotificationControllerTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Admin/ViewComposerTest.php": {
+      "path": "file:tests/Feature/Admin/ViewComposerTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Auth/AuthenticationTest.php": {
+      "path": "file:tests/Feature/Auth/AuthenticationTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Auth/EmailVerificationTest.php": {
+      "path": "file:tests/Feature/Auth/EmailVerificationTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Auth/LoginWithUsernameTest.php": {
+      "path": "file:tests/Feature/Auth/LoginWithUsernameTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Auth/PasswordConfirmationTest.php": {
+      "path": "file:tests/Feature/Auth/PasswordConfirmationTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Auth/PasswordResetTest.php": {
+      "path": "file:tests/Feature/Auth/PasswordResetTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Auth/PasswordUpdateTest.php": {
+      "path": "file:tests/Feature/Auth/PasswordUpdateTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/GuruControllerAccessTest.php": {
+      "path": "file:tests/Feature/GuruControllerAccessTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/GuruCreateAccountsCommandTest.php": {
+      "path": "file:tests/Feature/GuruCreateAccountsCommandTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/GuruLoginRedirectTest.php": {
+      "path": "file:tests/Feature/GuruLoginRedirectTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/GuruModelRelationTest.php": {
+      "path": "file:tests/Feature/GuruModelRelationTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/GuruNavigationTest.php": {
+      "path": "file:tests/Feature/GuruNavigationTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/ImportControllerTest.php": {
+      "path": "file:tests/Feature/ImportControllerTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/NicknameUniqueTest.php": {
+      "path": "file:tests/Feature/NicknameUniqueTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/ProfileTest.php": {
+      "path": "file:tests/Feature/ProfileTest.php",
+      "language": "php"
+    },
+    "file:tests/Unit/MuridOverdueNotificationTest.php": {
+      "path": "file:tests/Unit/MuridOverdueNotificationTest.php",
+      "language": "php"
+    },
+    "file:app/Console/Commands/ApplyLateFines.php": {
+      "path": "file:app/Console/Commands/ApplyLateFines.php",
+      "language": "php"
+    },
+    "file:app/Console/Commands/GenerateMonthlySpp.php": {
+      "path": "file:app/Console/Commands/GenerateMonthlySpp.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/AuditLogController.php": {
+      "path": "file:app/Http/Controllers/AuditLogController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/DashboardController.php": {
+      "path": "file:app/Http/Controllers/DashboardController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/DiscountController.php": {
+      "path": "file:app/Http/Controllers/DiscountController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/ExpenseCategoryController.php": {
+      "path": "file:app/Http/Controllers/ExpenseCategoryController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/ExpenseController.php": {
+      "path": "file:app/Http/Controllers/ExpenseController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/InstrumentController.php": {
+      "path": "file:app/Http/Controllers/InstrumentController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/InvoiceComponentController.php": {
+      "path": "file:app/Http/Controllers/InvoiceComponentController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/InvoiceController.php": {
+      "path": "file:app/Http/Controllers/InvoiceController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/InvoiceItemController.php": {
+      "path": "file:app/Http/Controllers/InvoiceItemController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/InvoiceReminderController.php": {
+      "path": "file:app/Http/Controllers/InvoiceReminderController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/ManualSessionController.php": {
+      "path": "file:app/Http/Controllers/ManualSessionController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/NotificationController.php": {
+      "path": "file:app/Http/Controllers/NotificationController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/PackageController.php": {
+      "path": "file:app/Http/Controllers/PackageController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/PaymentController.php": {
+      "path": "file:app/Http/Controllers/PaymentController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/ProfileController.php": {
+      "path": "file:app/Http/Controllers/ProfileController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/ReportController.php": {
+      "path": "file:app/Http/Controllers/ReportController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/StudentController.php": {
+      "path": "file:app/Http/Controllers/StudentController.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/ProfileUpdateRequest.php": {
+      "path": "file:app/Http/Requests/ProfileUpdateRequest.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/SendInvoiceReminderRequest.php": {
+      "path": "file:app/Http/Requests/SendInvoiceReminderRequest.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/StoreDiscountRequest.php": {
+      "path": "file:app/Http/Requests/StoreDiscountRequest.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/StoreInstrumentRequest.php": {
+      "path": "file:app/Http/Requests/StoreInstrumentRequest.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/StoreManualSessionRequest.php": {
+      "path": "file:app/Http/Requests/StoreManualSessionRequest.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/StoreStudentRequest.php": {
+      "path": "file:app/Http/Requests/StoreStudentRequest.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/UpdateInstrumentRequest.php": {
+      "path": "file:app/Http/Requests/UpdateInstrumentRequest.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/UpdateStudentRequest.php": {
+      "path": "file:app/Http/Requests/UpdateStudentRequest.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/VoidInvoiceRequest.php": {
+      "path": "file:app/Http/Requests/VoidInvoiceRequest.php",
+      "language": "php"
+    },
+    "file:app/Models/AuditLog.php": {
+      "path": "file:app/Models/AuditLog.php",
+      "language": "php"
+    },
+    "file:app/Models/Expense.php": {
+      "path": "file:app/Models/Expense.php",
+      "language": "php"
+    },
+    "file:app/Models/ExpenseCategory.php": {
+      "path": "file:app/Models/ExpenseCategory.php",
+      "language": "php"
+    },
+    "file:app/Models/Invoice.php": {
+      "path": "file:app/Models/Invoice.php",
+      "language": "php"
+    },
+    "file:app/Models/InvoiceComponent.php": {
+      "path": "file:app/Models/InvoiceComponent.php",
+      "language": "php"
+    },
+    "file:app/Models/InvoiceItem.php": {
+      "path": "file:app/Models/InvoiceItem.php",
+      "language": "php"
+    },
+    "file:app/Models/InvoiceReminderLog.php": {
+      "path": "file:app/Models/InvoiceReminderLog.php",
+      "language": "php"
+    },
+    "file:app/Models/Payment.php": {
+      "path": "file:app/Models/Payment.php",
+      "language": "php"
+    },
+    "file:app/Models/StudentStatusHistory.php": {
+      "path": "file:app/Models/StudentStatusHistory.php",
+      "language": "php"
+    },
+    "file:app/Services/DiscountService.php": {
+      "path": "file:app/Services/DiscountService.php",
+      "language": "php"
+    },
+    "file:app/Services/InvoicePdfService.php": {
+      "path": "file:app/Services/InvoicePdfService.php",
+      "language": "php"
+    },
+    "file:app/Services/InvoiceReminderService.php": {
+      "path": "file:app/Services/InvoiceReminderService.php",
+      "language": "php"
+    },
+    "file:app/Services/InvoiceService.php": {
+      "path": "file:app/Services/InvoiceService.php",
+      "language": "php"
+    },
+    "file:app/Services/PaymentService.php": {
+      "path": "file:app/Services/PaymentService.php",
+      "language": "php"
+    },
+    "file:app/Services/StudentLifecycleService.php": {
+      "path": "file:app/Services/StudentLifecycleService.php",
+      "language": "php"
+    },
+    "file:app/Services/WablasService.php": {
+      "path": "file:app/Services/WablasService.php",
+      "language": "php"
+    },
+    "file:database/factories/InvoiceFactory.php": {
+      "path": "file:database/factories/InvoiceFactory.php",
+      "language": "php"
+    },
+    "file:database/factories/PaymentFactory.php": {
+      "path": "file:database/factories/PaymentFactory.php",
+      "language": "php"
+    },
+    "file:database/seeders/ExpenseCategorySeeder.php": {
+      "path": "file:database/seeders/ExpenseCategorySeeder.php",
+      "language": "php"
+    },
+    "file:database/seeders/InvoiceComponentSeeder.php": {
+      "path": "file:database/seeders/InvoiceComponentSeeder.php",
+      "language": "php"
+    },
+    "file:routes/web.php": {
+      "path": "file:routes/web.php",
+      "language": "php"
+    },
+    "file:tests/Feature/DashboardRoleViewTest.php": {
+      "path": "file:tests/Feature/DashboardRoleViewTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/DiscountTest.php": {
+      "path": "file:tests/Feature/DiscountTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/InvoiceReminderTest.php": {
+      "path": "file:tests/Feature/InvoiceReminderTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/InvoiceVoidTest.php": {
+      "path": "file:tests/Feature/InvoiceVoidTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/KidsBundleInstallmentUiTest.php": {
+      "path": "file:tests/Feature/KidsBundleInstallmentUiTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/KidsFpInvoiceTest.php": {
+      "path": "file:tests/Feature/KidsFpInvoiceTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/MultiKelasInvoiceTest.php": {
+      "path": "file:tests/Feature/MultiKelasInvoiceTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/ReportFinanceMethodTest.php": {
+      "path": "file:tests/Feature/ReportFinanceMethodTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/UserManagementTest.php": {
+      "path": "file:tests/Feature/UserManagementTest.php",
+      "language": "php"
+    },
+    "file:tests/Unit/WablasPhoneNormalizeTest.php": {
+      "path": "file:tests/Unit/WablasPhoneNormalizeTest.php",
+      "language": "php"
+    },
+    "file:app/Console/Commands/CalculateHonor.php": {
+      "path": "file:app/Console/Commands/CalculateHonor.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/EventController.php": {
+      "path": "file:app/Http/Controllers/EventController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/HolidayController.php": {
+      "path": "file:app/Http/Controllers/HolidayController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/HonorController.php": {
+      "path": "file:app/Http/Controllers/HonorController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/PayrollConfigController.php": {
+      "path": "file:app/Http/Controllers/PayrollConfigController.php",
+      "language": "php"
+    },
+    "file:app/Models/Event.php": {
+      "path": "file:app/Models/Event.php",
+      "language": "php"
+    },
+    "file:app/Models/EventParticipant.php": {
+      "path": "file:app/Models/EventParticipant.php",
+      "language": "php"
+    },
+    "file:app/Models/Holiday.php": {
+      "path": "file:app/Models/Holiday.php",
+      "language": "php"
+    },
+    "file:app/Models/HonorSlip.php": {
+      "path": "file:app/Models/HonorSlip.php",
+      "language": "php"
+    },
+    "file:app/Models/PayrollConfig.php": {
+      "path": "file:app/Models/PayrollConfig.php",
+      "language": "php"
+    },
+    "file:app/Services/EventHonorService.php": {
+      "path": "file:app/Services/EventHonorService.php",
+      "language": "php"
+    },
+    "file:app/Services/HonorCalculationService.php": {
+      "path": "file:app/Services/HonorCalculationService.php",
+      "language": "php"
+    },
+    "file:database/factories/EventFactory.php": {
+      "path": "file:database/factories/EventFactory.php",
+      "language": "php"
+    },
+    "file:database/factories/EventParticipantFactory.php": {
+      "path": "file:database/factories/EventParticipantFactory.php",
+      "language": "php"
+    },
+    "file:database/factories/HolidayFactory.php": {
+      "path": "file:database/factories/HolidayFactory.php",
+      "language": "php"
+    },
+    "file:database/factories/HonorSlipFactory.php": {
+      "path": "file:database/factories/HonorSlipFactory.php",
+      "language": "php"
+    },
+    "file:database/factories/PayrollConfigFactory.php": {
+      "path": "file:database/factories/PayrollConfigFactory.php",
+      "language": "php"
+    },
+    "file:database/seeders/HolidaySeeder.php": {
+      "path": "file:database/seeders/HolidaySeeder.php",
+      "language": "php"
+    },
+    "file:database/seeders/PayrollConfigSeeder.php": {
+      "path": "file:database/seeders/PayrollConfigSeeder.php",
+      "language": "php"
+    },
+    "file:tests/Feature/EventCompleteControllerTest.php": {
+      "path": "file:tests/Feature/EventCompleteControllerTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/EventHonorServiceTest.php": {
+      "path": "file:tests/Feature/EventHonorServiceTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/HonorControllerEventHonorTest.php": {
+      "path": "file:tests/Feature/HonorControllerEventHonorTest.php",
+      "language": "php"
+    },
+    "file:tests/Unit/Models/HonorSlipTest.php": {
+      "path": "file:tests/Unit/Models/HonorSlipTest.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/GuruController.php": {
+      "path": "file:app/Http/Controllers/GuruController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/ProgressReportController.php": {
+      "path": "file:app/Http/Controllers/ProgressReportController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/ReportTemplateController.php": {
+      "path": "file:app/Http/Controllers/ReportTemplateController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/SessionReportWaLogController.php": {
+      "path": "file:app/Http/Controllers/SessionReportWaLogController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/TeacherController.php": {
+      "path": "file:app/Http/Controllers/TeacherController.php",
+      "language": "php"
+    },
+    "file:app/Jobs/SendSessionReportWaJob.php": {
+      "path": "file:app/Jobs/SendSessionReportWaJob.php",
+      "language": "php"
+    },
+    "file:app/Models/Instrument.php": {
+      "path": "file:app/Models/Instrument.php",
+      "language": "php"
+    },
+    "file:app/Models/ProgressReport.php": {
+      "path": "file:app/Models/ProgressReport.php",
+      "language": "php"
+    },
+    "file:app/Models/ProgressReportItem.php": {
+      "path": "file:app/Models/ProgressReportItem.php",
+      "language": "php"
+    },
+    "file:app/Models/ProgressReportSection.php": {
+      "path": "file:app/Models/ProgressReportSection.php",
+      "language": "php"
+    },
+    "file:app/Models/ProgressReportSessionNote.php": {
+      "path": "file:app/Models/ProgressReportSessionNote.php",
+      "language": "php"
+    },
+    "file:app/Models/ReportTemplate.php": {
+      "path": "file:app/Models/ReportTemplate.php",
+      "language": "php"
+    },
+    "file:app/Models/ReportTemplateItem.php": {
+      "path": "file:app/Models/ReportTemplateItem.php",
+      "language": "php"
+    },
+    "file:app/Models/ReportTemplateSection.php": {
+      "path": "file:app/Models/ReportTemplateSection.php",
+      "language": "php"
+    },
+    "file:app/Models/SessionReportWaLog.php": {
+      "path": "file:app/Models/SessionReportWaLog.php",
+      "language": "php"
+    },
+    "file:app/Models/SessionTeacherNote.php": {
+      "path": "file:app/Models/SessionTeacherNote.php",
+      "language": "php"
+    },
+    "file:app/Services/ProgressReportPdfService.php": {
+      "path": "file:app/Services/ProgressReportPdfService.php",
+      "language": "php"
+    },
+    "file:app/Services/ProgressReportService.php": {
+      "path": "file:app/Services/ProgressReportService.php",
+      "language": "php"
+    },
+    "file:app/Services/ReportTemplateResolverService.php": {
+      "path": "file:app/Services/ReportTemplateResolverService.php",
+      "language": "php"
+    },
+    "file:app/Services/SessionNoteSyncService.php": {
+      "path": "file:app/Services/SessionNoteSyncService.php",
+      "language": "php"
+    },
+    "file:app/Services/SessionReportWaService.php": {
+      "path": "file:app/Services/SessionReportWaService.php",
+      "language": "php"
+    },
+    "file:app/Services/TeacherService.php": {
+      "path": "file:app/Services/TeacherService.php",
+      "language": "php"
+    },
+    "file:database/factories/InstrumentFactory.php": {
+      "path": "file:database/factories/InstrumentFactory.php",
+      "language": "php"
+    },
+    "file:database/factories/PackageFactory.php": {
+      "path": "file:database/factories/PackageFactory.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_06_07_130000_backfill_progress_report_numbers.php": {
+      "path": "file:database/migrations/2026_06_07_130000_backfill_progress_report_numbers.php",
+      "language": "php"
+    },
+    "file:database/seeders/InstrumentSeeder.php": {
+      "path": "file:database/seeders/InstrumentSeeder.php",
+      "language": "php"
+    },
+    "file:database/seeders/PackageSeeder.php": {
+      "path": "file:database/seeders/PackageSeeder.php",
+      "language": "php"
+    },
+    "file:database/seeders/ReportTemplateSeeder.php": {
+      "path": "file:database/seeders/ReportTemplateSeeder.php",
+      "language": "php"
+    },
+    "file:database/seeders/TeacherSeeder.php": {
+      "path": "file:database/seeders/TeacherSeeder.php",
+      "language": "php"
+    },
+    "file:tests/Feature/ProgressReportAdminTest.php": {
+      "path": "file:tests/Feature/ProgressReportAdminTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/ProgressReportGuruTest.php": {
+      "path": "file:tests/Feature/ProgressReportGuruTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/ReportTemplateResolverTest.php": {
+      "path": "file:tests/Feature/ReportTemplateResolverTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/ReportTemplateTest.php": {
+      "path": "file:tests/Feature/ReportTemplateTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/RoomControllerTest.php": {
+      "path": "file:tests/Feature/RoomControllerTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/Services/SessionNoteSyncAttributionTest.php": {
+      "path": "file:tests/Feature/Services/SessionNoteSyncAttributionTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/SessionReportWaTest.php": {
+      "path": "file:tests/Feature/SessionReportWaTest.php",
+      "language": "php"
+    },
+    "file:tests/Unit/PackageReportLabelTest.php": {
+      "path": "file:tests/Unit/PackageReportLabelTest.php",
+      "language": "php"
+    },
+    "file:tests/Unit/ProgressReportHelpersTest.php": {
+      "path": "file:tests/Unit/ProgressReportHelpersTest.php",
+      "language": "php"
+    },
+    "file:tests/Unit/ProgressReportServiceTest.php": {
+      "path": "file:tests/Unit/ProgressReportServiceTest.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/Auth/AuthenticatedSessionController.php": {
+      "path": "file:app/Http/Controllers/Auth/AuthenticatedSessionController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/Auth/ConfirmablePasswordController.php": {
+      "path": "file:app/Http/Controllers/Auth/ConfirmablePasswordController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/Auth/EmailVerificationNotificationController.php": {
+      "path": "file:app/Http/Controllers/Auth/EmailVerificationNotificationController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/Auth/EmailVerificationPromptController.php": {
+      "path": "file:app/Http/Controllers/Auth/EmailVerificationPromptController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/Auth/NewPasswordController.php": {
+      "path": "file:app/Http/Controllers/Auth/NewPasswordController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/Auth/PasswordController.php": {
+      "path": "file:app/Http/Controllers/Auth/PasswordController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/Auth/PasswordResetLinkController.php": {
+      "path": "file:app/Http/Controllers/Auth/PasswordResetLinkController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/Auth/RegisteredUserController.php": {
+      "path": "file:app/Http/Controllers/Auth/RegisteredUserController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/Auth/VerifyEmailController.php": {
+      "path": "file:app/Http/Controllers/Auth/VerifyEmailController.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/Controller.php": {
+      "path": "file:app/Http/Controllers/Controller.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/Auth/LoginRequest.php": {
+      "path": "file:app/Http/Requests/Auth/LoginRequest.php",
+      "language": "php"
+    },
+    "file:routes/auth.php": {
+      "path": "file:routes/auth.php",
+      "language": "php"
+    },
+    "file:app/Console/Commands/SendScheduleReminders.php": {
+      "path": "file:app/Console/Commands/SendScheduleReminders.php",
+      "language": "php"
+    },
+    "file:app/Http/Controllers/WhatsappMessageTemplateController.php": {
+      "path": "file:app/Http/Controllers/WhatsappMessageTemplateController.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/StoreWhatsappMessageTemplateRequest.php": {
+      "path": "file:app/Http/Requests/StoreWhatsappMessageTemplateRequest.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/UpdateWhatsappMessageTemplateRequest.php": {
+      "path": "file:app/Http/Requests/UpdateWhatsappMessageTemplateRequest.php",
+      "language": "php"
+    },
+    "file:app/Models/ScheduleReminderLog.php": {
+      "path": "file:app/Models/ScheduleReminderLog.php",
+      "language": "php"
+    },
+    "file:app/Models/WhatsappMessageTemplate.php": {
+      "path": "file:app/Models/WhatsappMessageTemplate.php",
+      "language": "php"
+    },
+    "file:app/Services/ScheduleReminderService.php": {
+      "path": "file:app/Services/ScheduleReminderService.php",
+      "language": "php"
+    },
+    "file:database/seeders/WhatsappMessageTemplateSeeder.php": {
+      "path": "file:database/seeders/WhatsappMessageTemplateSeeder.php",
+      "language": "php"
+    },
+    "file:app/Exports/Sheets/DataMuridSheet.php": {
+      "path": "file:app/Exports/Sheets/DataMuridSheet.php",
+      "language": "php"
+    },
+    "file:app/Exports/Sheets/ReferensiKodeSheet.php": {
+      "path": "file:app/Exports/Sheets/ReferensiKodeSheet.php",
+      "language": "php"
+    },
+    "file:app/Exports/StudentTemplateExport.php": {
+      "path": "file:app/Exports/StudentTemplateExport.php",
+      "language": "php"
+    },
+    "file:start-viet.bat": {
+      "path": "file:start-viet.bat",
+      "language": "bat"
+    },
+    "file:.cursor/rules/musik-kita-business-rules.mdc": {
+      "path": "file:.cursor/rules/musik-kita-business-rules.mdc",
+      "language": "mdc"
+    },
+    "file:.cursor/rules/musik-kita-core.mdc": {
+      "path": "file:.cursor/rules/musik-kita-core.mdc",
+      "language": "mdc"
+    },
+    "file:.cursor/rules/musik-kita-database.mdc": {
+      "path": "file:.cursor/rules/musik-kita-database.mdc",
+      "language": "mdc"
+    },
+    "file:.cursor/rules/musik-kita-domain-reference.mdc": {
+      "path": "file:.cursor/rules/musik-kita-domain-reference.mdc",
+      "language": "mdc"
+    },
+    "file:app/Console/Commands/ClearStudentData.php": {
+      "path": "file:app/Console/Commands/ClearStudentData.php",
+      "language": "php"
+    },
+    "file:app/Http/Requests/UpdateSessionRequest.php": {
+      "path": "file:app/Http/Requests/UpdateSessionRequest.php",
+      "language": "php"
+    },
+    "file:app/Services/FonnteService.php": {
+      "path": "file:app/Services/FonnteService.php",
+      "language": "php"
+    },
+    "file:app/Services/ProgressReportPdfAssetService.php": {
+      "path": "file:app/Services/ProgressReportPdfAssetService.php",
+      "language": "php"
+    },
+    "file:app/View/Components/AppLayout.php": {
+      "path": "file:app/View/Components/AppLayout.php",
+      "language": "php"
+    },
+    "file:app/View/Components/GuestLayout.php": {
+      "path": "file:app/View/Components/GuestLayout.php",
+      "language": "php"
+    },
+    "file:app/View/Components/GuruLayout.php": {
+      "path": "file:app/View/Components/GuruLayout.php",
+      "language": "php"
+    },
+    "file:artisan": {
+      "path": "file:artisan",
+      "language": "file:artisan"
+    },
+    "file:bootstrap/app.php": {
+      "path": "file:bootstrap/app.php",
+      "language": "php"
+    },
+    "file:bootstrap/providers.php": {
+      "path": "file:bootstrap/providers.php",
+      "language": "php"
+    },
+    "file:config/logging.php": {
+      "path": "file:config/logging.php",
+      "language": "php"
+    },
+    "file:config/mail.php": {
+      "path": "file:config/mail.php",
+      "language": "php"
+    },
+    "file:config/permission.php": {
+      "path": "file:config/permission.php",
+      "language": "php"
+    },
+    "file:config/queue.php": {
+      "path": "file:config/queue.php",
+      "language": "php"
+    },
+    "file:config/schedule_reminder.php": {
+      "path": "file:config/schedule_reminder.php",
+      "language": "php"
+    },
+    "file:config/services.php": {
+      "path": "file:config/services.php",
+      "language": "php"
+    },
+    "file:config/session_report_wa.php": {
+      "path": "file:config/session_report_wa.php",
+      "language": "php"
+    },
+    "file:config/session.php": {
+      "path": "file:config/session.php",
+      "language": "php"
+    },
+    "file:config/studio.php": {
+      "path": "file:config/studio.php",
+      "language": "php"
+    },
+    "file:database/migrations/0001_01_01_000000_create_users_table.php": {
+      "path": "file:database/migrations/0001_01_01_000000_create_users_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/0001_01_01_000001_create_cache_table.php": {
+      "path": "file:database/migrations/0001_01_01_000001_create_cache_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/0001_01_01_000002_create_jobs_table.php": {
+      "path": "file:database/migrations/0001_01_01_000002_create_jobs_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_03_054903_create_permission_tables.php": {
+      "path": "file:database/migrations/2026_05_03_054903_create_permission_tables.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_03_163519_create_instruments_table.php": {
+      "path": "file:database/migrations/2026_05_03_163519_create_instruments_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_04_002937_create_packages_table.php": {
+      "path": "file:database/migrations/2026_05_04_002937_create_packages_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_04_015912_create_teachers_table.php": {
+      "path": "file:database/migrations/2026_05_04_015912_create_teachers_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_04_015920_create_teacher_instruments_table.php": {
+      "path": "file:database/migrations/2026_05_04_015920_create_teacher_instruments_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_04_035649_create_payroll_configs_table.php": {
+      "path": "file:database/migrations/2026_05_04_035649_create_payroll_configs_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_04_054823_create_holidays_table.php": {
+      "path": "file:database/migrations/2026_05_04_054823_create_holidays_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_04_062957_add_internal_holidays_type_enum.php": {
+      "path": "file:database/migrations/2026_05_04_062957_add_internal_holidays_type_enum.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_04_185906_create_invoice_components_table.php": {
+      "path": "file:database/migrations/2026_05_04_185906_create_invoice_components_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_04_201856_create_rooms_table.php": {
+      "path": "file:database/migrations/2026_05_04_201856_create_rooms_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_04_214205_create_students_table.php": {
+      "path": "file:database/migrations/2026_05_04_214205_create_students_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_07_120000_create_student_status_histories_table.php": {
+      "path": "file:database/migrations/2026_05_07_120000_create_student_status_histories_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_07_130000_create_enrollments_table.php": {
+      "path": "file:database/migrations/2026_05_07_130000_create_enrollments_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_07_130100_create_schedules_table.php": {
+      "path": "file:database/migrations/2026_05_07_130100_create_schedules_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_07_130200_create_class_sessions_table.php": {
+      "path": "file:database/migrations/2026_05_07_130200_create_class_sessions_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_07_140000_create_invoices_table.php": {
+      "path": "file:database/migrations/2026_05_07_140000_create_invoices_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_07_140100_create_invoice_items_table.php": {
+      "path": "file:database/migrations/2026_05_07_140100_create_invoice_items_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_07_140200_create_payments_table.php": {
+      "path": "file:database/migrations/2026_05_07_140200_create_payments_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_07_150000_add_qris_debit_to_payments_method.php": {
+      "path": "file:database/migrations/2026_05_07_150000_add_qris_debit_to_payments_method.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_07_160000_alter_invoice_components_add_default_price.php": {
+      "path": "file:database/migrations/2026_05_07_160000_alter_invoice_components_add_default_price.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_07_160100_alter_invoice_items_add_manual_fields.php": {
+      "path": "file:database/migrations/2026_05_07_160100_alter_invoice_items_add_manual_fields.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_08_193748_create_teacher_honor_slips_table.php": {
+      "path": "file:database/migrations/2026_05_08_193748_create_teacher_honor_slips_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_08_201905_create_expense_categories_table.php": {
+      "path": "file:database/migrations/2026_05_08_201905_create_expense_categories_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_08_201905_create_expenses_table.php": {
+      "path": "file:database/migrations/2026_05_08_201905_create_expenses_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_08_220000_create_events_table.php": {
+      "path": "file:database/migrations/2026_05_08_220000_create_events_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_08_220100_create_event_participants_table.php": {
+      "path": "file:database/migrations/2026_05_08_220100_create_event_participants_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_08_220200_create_event_honor_slips_table.php": {
+      "path": "file:database/migrations/2026_05_08_220200_create_event_honor_slips_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_08_230000_create_audit_logs_table.php": {
+      "path": "file:database/migrations/2026_05_08_230000_create_audit_logs_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_15_210608_add_installment_fields_to_invoices_table.php": {
+      "path": "file:database/migrations/2026_05_15_210608_add_installment_fields_to_invoices_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_15_233801_add_cancelled_status_to_class_sessions.php": {
+      "path": "file:database/migrations/2026_05_15_233801_add_cancelled_status_to_class_sessions.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_16_222826_add_supported_instruments_to_rooms_table.php": {
+      "path": "file:database/migrations/2026_05_16_222826_add_supported_instruments_to_rooms_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_20_030804_add_event_honor_to_teacher_honor_slips.php": {
+      "path": "file:database/migrations/2026_05_20_030804_add_event_honor_to_teacher_honor_slips.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_20_034015_drop_event_honor_slips_table.php": {
+      "path": "file:database/migrations/2026_05_20_034015_drop_event_honor_slips_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_22_013620_add_discount_fields_to_invoice_items_table.php": {
+      "path": "file:database/migrations/2026_05_22_013620_add_discount_fields_to_invoice_items_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_22_045126_add_cuti_columns_to_students_table.php": {
+      "path": "file:database/migrations/2026_05_22_045126_add_cuti_columns_to_students_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_22_060000_multi_kelas_schema.php": {
+      "path": "file:database/migrations/2026_05_22_060000_multi_kelas_schema.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_23_054415_add_bank_account_holder_to_teachers.php": {
+      "path": "file:database/migrations/2026_05_23_054415_add_bank_account_holder_to_teachers.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_23_075009_create_notifications_table.php": {
+      "path": "file:database/migrations/2026_05_23_075009_create_notifications_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_23_214332_add_replacement_date_is_honor_paid_to_holidays.php": {
+      "path": "file:database/migrations/2026_05_23_214332_add_replacement_date_is_honor_paid_to_holidays.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_23_214830_add_accompanying_teacher_to_event_participants.php": {
+      "path": "file:database/migrations/2026_05_23_214830_add_accompanying_teacher_to_event_participants.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_24_000001_add_session_sequence_to_class_sessions.php": {
+      "path": "file:database/migrations/2026_05_24_000001_add_session_sequence_to_class_sessions.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_24_000002_add_split_part_to_class_sessions.php": {
+      "path": "file:database/migrations/2026_05_24_000002_add_split_part_to_class_sessions.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_24_000849_add_trial_to_enrollments_status.php": {
+      "path": "file:database/migrations/2026_05_24_000849_add_trial_to_enrollments_status.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_26_010144_add_unique_nickname_to_students.php": {
+      "path": "file:database/migrations/2026_05_26_010144_add_unique_nickname_to_students.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_28_000001_add_duo_to_packages_class_type_enum.php": {
+      "path": "file:database/migrations/2026_05_28_000001_add_duo_to_packages_class_type_enum.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_28_100000_add_user_id_to_teachers.php": {
+      "path": "file:database/migrations/2026_05_28_100000_add_user_id_to_teachers.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_28_215411_add_izin_pending_to_class_sessions.php": {
+      "path": "file:database/migrations/2026_05_28_215411_add_izin_pending_to_class_sessions.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_28_225921_add_is_active_to_users_table.php": {
+      "path": "file:database/migrations/2026_05_28_225921_add_is_active_to_users_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_29_081049_create_report_templates_table.php": {
+      "path": "file:database/migrations/2026_05_29_081049_create_report_templates_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_29_081054_create_report_template_sections_table.php": {
+      "path": "file:database/migrations/2026_05_29_081054_create_report_template_sections_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_29_081100_create_report_template_items_table.php": {
+      "path": "file:database/migrations/2026_05_29_081100_create_report_template_items_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_29_081102_create_progress_reports_table.php": {
+      "path": "file:database/migrations/2026_05_29_081102_create_progress_reports_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_29_081104_create_progress_report_sections_table.php": {
+      "path": "file:database/migrations/2026_05_29_081104_create_progress_report_sections_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_29_081106_create_progress_report_items_table.php": {
+      "path": "file:database/migrations/2026_05_29_081106_create_progress_report_items_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_29_081109_create_progress_report_session_notes_table.php": {
+      "path": "file:database/migrations/2026_05_29_081109_create_progress_report_session_notes_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_05_31_134501_add_template_kind_to_report_templates_table.php": {
+      "path": "file:database/migrations/2026_05_31_134501_add_template_kind_to_report_templates_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_06_02_235941_add_void_fields_to_invoices_table.php": {
+      "path": "file:database/migrations/2026_06_02_235941_add_void_fields_to_invoices_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_06_03_010114_create_whatsapp_message_templates_table.php": {
+      "path": "file:database/migrations/2026_06_03_010114_create_whatsapp_message_templates_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_06_03_010116_create_invoice_reminder_logs_table.php": {
+      "path": "file:database/migrations/2026_06_03_010116_create_invoice_reminder_logs_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_06_03_120000_create_schedule_reminder_logs_table.php": {
+      "path": "file:database/migrations/2026_06_03_120000_create_schedule_reminder_logs_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_06_06_100001_create_session_teacher_notes_table.php": {
+      "path": "file:database/migrations/2026_06_06_100001_create_session_teacher_notes_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_06_06_100002_add_structured_fields_to_progress_report_session_notes_table.php": {
+      "path": "file:database/migrations/2026_06_06_100002_add_structured_fields_to_progress_report_session_notes_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_06_06_120001_add_session_rating_to_session_notes_tables.php": {
+      "path": "file:database/migrations/2026_06_06_120001_add_session_rating_to_session_notes_tables.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_06_07_100000_create_session_report_wa_logs_table.php": {
+      "path": "file:database/migrations/2026_06_07_100000_create_session_report_wa_logs_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_06_07_100001_add_substitute_teacher_name_to_progress_report_session_notes.php": {
+      "path": "file:database/migrations/2026_06_07_100001_add_substitute_teacher_name_to_progress_report_session_notes.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_06_07_100002_add_redesign_fields_to_progress_reports_table.php": {
+      "path": "file:database/migrations/2026_06_07_100002_add_redesign_fields_to_progress_reports_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_06_07_120000_add_attribution_to_class_sessions_table.php": {
+      "path": "file:database/migrations/2026_06_07_120000_add_attribution_to_class_sessions_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_06_07_120000_add_report_number_to_progress_reports_table.php": {
+      "path": "file:database/migrations/2026_06_07_120000_add_report_number_to_progress_reports_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_06_07_140000_add_rating_notes_to_progress_reports_table.php": {
+      "path": "file:database/migrations/2026_06_07_140000_add_rating_notes_to_progress_reports_table.php",
+      "language": "php"
+    },
+    "file:database/migrations/2026_06_08_100000_add_encouragement_lines_to_whatsapp_message_templates_table.php": {
+      "path": "file:database/migrations/2026_06_08_100000_add_encouragement_lines_to_whatsapp_message_templates_table.php",
+      "language": "php"
+    },
+    "file:database/seeders/RoleSeeder.php": {
+      "path": "file:database/seeders/RoleSeeder.php",
+      "language": "php"
+    },
+    "file:docs/generate-docs/generate_manual.py": {
+      "path": "file:docs/generate-docs/generate_manual.py",
+      "language": "py"
+    },
+    "file:docs/generate-docs/generate_uat.py": {
+      "path": "file:docs/generate-docs/generate_uat.py",
+      "language": "py"
+    },
+    "file:docs/superpowers/auto-mundur-full-mockup.html": {
+      "path": "file:docs/superpowers/auto-mundur-full-mockup.html",
+      "language": "html"
+    },
+    "file:docs/superpowers/auto-mundur-mockup.html": {
+      "path": "file:docs/superpowers/auto-mundur-mockup.html",
+      "language": "html"
+    },
+    "file:generate_admin_manual_v2.cjs": {
+      "path": "file:generate_admin_manual_v2.cjs",
+      "language": "cjs"
+    },
+    "file:generate_guru_manual.cjs": {
+      "path": "file:generate_guru_manual.cjs",
+      "language": "cjs"
+    },
+    "file:generate_owner_manual.cjs": {
+      "path": "file:generate_owner_manual.cjs",
+      "language": "cjs"
+    },
+    "file:index.php": {
+      "path": "file:index.php",
+      "language": "php"
+    },
+    "file:postcss.config.js": {
+      "path": "file:postcss.config.js",
+      "language": "js"
+    },
+    "file:public/.htaccess": {
+      "path": "file:public/.htaccess",
+      "language": "htaccess"
+    },
+    "file:public/index.php": {
+      "path": "file:public/index.php",
+      "language": "php"
+    },
+    "file:public/mockups/2026-06-07-progress-report-pdf-polish.html": {
+      "path": "file:public/mockups/2026-06-07-progress-report-pdf-polish.html",
+      "language": "html"
+    },
+    "file:public/query": {
+      "path": "file:public/query",
+      "language": "file:public/query"
+    },
+    "file:resources/css/app.css": {
+      "path": "file:resources/css/app.css",
+      "language": "css"
+    },
+    "file:resources/js/app.js": {
+      "path": "file:resources/js/app.js",
+      "language": "js"
+    },
+    "file:resources/js/bootstrap.js": {
+      "path": "file:resources/js/bootstrap.js",
+      "language": "js"
+    },
+    "file:resources/views/absensi/_row.blade.php": {
+      "path": "file:resources/views/absensi/_row.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/absensi/index.blade.php": {
+      "path": "file:resources/views/absensi/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/absensi/open-slots.blade.php": {
+      "path": "file:resources/views/absensi/open-slots.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/audit-logs/index.blade.php": {
+      "path": "file:resources/views/audit-logs/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/auth/confirm-password.blade.php": {
+      "path": "file:resources/views/auth/confirm-password.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/auth/forgot-password.blade.php": {
+      "path": "file:resources/views/auth/forgot-password.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/auth/login.blade.php": {
+      "path": "file:resources/views/auth/login.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/auth/register.blade.php": {
+      "path": "file:resources/views/auth/register.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/auth/reset-password.blade.php": {
+      "path": "file:resources/views/auth/reset-password.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/auth/verify-email.blade.php": {
+      "path": "file:resources/views/auth/verify-email.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/application-logo.blade.php": {
+      "path": "file:resources/views/components/application-logo.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/auth-session-status.blade.php": {
+      "path": "file:resources/views/components/auth-session-status.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/danger-button.blade.php": {
+      "path": "file:resources/views/components/danger-button.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/dropdown-link.blade.php": {
+      "path": "file:resources/views/components/dropdown-link.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/dropdown.blade.php": {
+      "path": "file:resources/views/components/dropdown.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/input-error.blade.php": {
+      "path": "file:resources/views/components/input-error.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/input-label.blade.php": {
+      "path": "file:resources/views/components/input-label.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/kesimpulan-progress-select.blade.php": {
+      "path": "file:resources/views/components/kesimpulan-progress-select.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/modal.blade.php": {
+      "path": "file:resources/views/components/modal.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/nav-link.blade.php": {
+      "path": "file:resources/views/components/nav-link.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/primary-button.blade.php": {
+      "path": "file:resources/views/components/primary-button.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/responsive-nav-link.blade.php": {
+      "path": "file:resources/views/components/responsive-nav-link.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/searchable-select.blade.php": {
+      "path": "file:resources/views/components/searchable-select.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/secondary-button.blade.php": {
+      "path": "file:resources/views/components/secondary-button.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/session-note-card.blade.php": {
+      "path": "file:resources/views/components/session-note-card.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/sidebar-item.blade.php": {
+      "path": "file:resources/views/components/sidebar-item.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/star-rating-select.blade.php": {
+      "path": "file:resources/views/components/star-rating-select.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/components/text-input.blade.php": {
+      "path": "file:resources/views/components/text-input.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/dashboard.blade.php": {
+      "path": "file:resources/views/dashboard.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/events/create.blade.php": {
+      "path": "file:resources/views/events/create.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/events/edit.blade.php": {
+      "path": "file:resources/views/events/edit.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/events/index.blade.php": {
+      "path": "file:resources/views/events/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/events/show.blade.php": {
+      "path": "file:resources/views/events/show.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/expense-categories/create.blade.php": {
+      "path": "file:resources/views/expense-categories/create.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/expense-categories/edit.blade.php": {
+      "path": "file:resources/views/expense-categories/edit.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/expense-categories/index.blade.php": {
+      "path": "file:resources/views/expense-categories/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/expenses/create.blade.php": {
+      "path": "file:resources/views/expenses/create.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/expenses/edit.blade.php": {
+      "path": "file:resources/views/expenses/edit.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/expenses/index.blade.php": {
+      "path": "file:resources/views/expenses/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/expenses/show.blade.php": {
+      "path": "file:resources/views/expenses/show.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/guru/_badge-status.blade.php": {
+      "path": "file:resources/views/guru/_badge-status.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/guru/_sesi-absensi-actions.blade.php": {
+      "path": "file:resources/views/guru/_sesi-absensi-actions.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/guru/_sesi-identitas.blade.php": {
+      "path": "file:resources/views/guru/_sesi-identitas.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/guru/dashboard.blade.php": {
+      "path": "file:resources/views/guru/dashboard.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/guru/honor-show.blade.php": {
+      "path": "file:resources/views/guru/honor-show.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/guru/honor.blade.php": {
+      "path": "file:resources/views/guru/honor.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/guru/jadwal.blade.php": {
+      "path": "file:resources/views/guru/jadwal.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/guru/laporan-form.blade.php": {
+      "path": "file:resources/views/guru/laporan-form.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/guru/laporan.blade.php": {
+      "path": "file:resources/views/guru/laporan.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/guru/profil.blade.php": {
+      "path": "file:resources/views/guru/profil.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/guru/sesi-pending.blade.php": {
+      "path": "file:resources/views/guru/sesi-pending.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/holidays/_form.blade.php": {
+      "path": "file:resources/views/holidays/_form.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/holidays/create.blade.php": {
+      "path": "file:resources/views/holidays/create.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/holidays/edit.blade.php": {
+      "path": "file:resources/views/holidays/edit.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/holidays/index.blade.php": {
+      "path": "file:resources/views/holidays/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/honors/edit.blade.php": {
+      "path": "file:resources/views/honors/edit.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/honors/index.blade.php": {
+      "path": "file:resources/views/honors/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/honors/print.blade.php": {
+      "path": "file:resources/views/honors/print.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/honors/show.blade.php": {
+      "path": "file:resources/views/honors/show.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/imports/index.blade.php": {
+      "path": "file:resources/views/imports/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/instruments/create.blade.php": {
+      "path": "file:resources/views/instruments/create.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/instruments/edit.blade.php": {
+      "path": "file:resources/views/instruments/edit.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/instruments/index.blade.php": {
+      "path": "file:resources/views/instruments/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/invoice-components/_form.blade.php": {
+      "path": "file:resources/views/invoice-components/_form.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/invoice-components/create.blade.php": {
+      "path": "file:resources/views/invoice-components/create.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/invoice-components/edit.blade.php": {
+      "path": "file:resources/views/invoice-components/edit.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/invoice-components/index.blade.php": {
+      "path": "file:resources/views/invoice-components/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/invoice-reminders/index.blade.php": {
+      "path": "file:resources/views/invoice-reminders/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/invoices/index.blade.php": {
+      "path": "file:resources/views/invoices/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/invoices/pdf.blade.php": {
+      "path": "file:resources/views/invoices/pdf.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/invoices/print.blade.php": {
+      "path": "file:resources/views/invoices/print.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/invoices/show.blade.php": {
+      "path": "file:resources/views/invoices/show.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/kalender/index.blade.php": {
+      "path": "file:resources/views/kalender/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/layouts/app.blade.php": {
+      "path": "file:resources/views/layouts/app.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/layouts/guest.blade.php": {
+      "path": "file:resources/views/layouts/guest.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/layouts/guru.blade.php": {
+      "path": "file:resources/views/layouts/guru.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/layouts/navigation.blade.php": {
+      "path": "file:resources/views/layouts/navigation.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/packages/_form.blade.php": {
+      "path": "file:resources/views/packages/_form.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/packages/create.blade.php": {
+      "path": "file:resources/views/packages/create.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/packages/edit.blade.php": {
+      "path": "file:resources/views/packages/edit.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/packages/index.blade.php": {
+      "path": "file:resources/views/packages/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/payments/receipt.blade.php": {
+      "path": "file:resources/views/payments/receipt.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/payroll-configs/_form.blade.php": {
+      "path": "file:resources/views/payroll-configs/_form.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/payroll-configs/create.blade.php": {
+      "path": "file:resources/views/payroll-configs/create.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/payroll-configs/edit.blade.php": {
+      "path": "file:resources/views/payroll-configs/edit.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/payroll-configs/index.blade.php": {
+      "path": "file:resources/views/payroll-configs/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/profile/edit.blade.php": {
+      "path": "file:resources/views/profile/edit.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/profile/partials/delete-user-form.blade.php": {
+      "path": "file:resources/views/profile/partials/delete-user-form.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/profile/partials/update-password-form.blade.php": {
+      "path": "file:resources/views/profile/partials/update-password-form.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/profile/partials/update-profile-information-form.blade.php": {
+      "path": "file:resources/views/profile/partials/update-profile-information-form.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/progress-reports/index.blade.php": {
+      "path": "file:resources/views/progress-reports/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/progress-reports/pdf-viewer.blade.php": {
+      "path": "file:resources/views/progress-reports/pdf-viewer.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/progress-reports/pdf.blade copy.php": {
+      "path": "file:resources/views/progress-reports/pdf.blade copy.php",
+      "language": "php"
+    },
+    "file:resources/views/progress-reports/pdf.blade.php": {
+      "path": "file:resources/views/progress-reports/pdf.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/progress-reports/show.blade.php": {
+      "path": "file:resources/views/progress-reports/show.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/report-templates/_form.blade.php": {
+      "path": "file:resources/views/report-templates/_form.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/report-templates/create.blade.php": {
+      "path": "file:resources/views/report-templates/create.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/report-templates/edit.blade.php": {
+      "path": "file:resources/views/report-templates/edit.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/report-templates/index.blade.php": {
+      "path": "file:resources/views/report-templates/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/report-templates/show.blade.php": {
+      "path": "file:resources/views/report-templates/show.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/reports/finance.blade.php": {
+      "path": "file:resources/views/reports/finance.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/reports/students.blade.php": {
+      "path": "file:resources/views/reports/students.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/rooms/_form.blade.php": {
+      "path": "file:resources/views/rooms/_form.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/rooms/create.blade.php": {
+      "path": "file:resources/views/rooms/create.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/rooms/edit.blade.php": {
+      "path": "file:resources/views/rooms/edit.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/rooms/index.blade.php": {
+      "path": "file:resources/views/rooms/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/session-report-wa-logs/index.blade.php": {
+      "path": "file:resources/views/session-report-wa-logs/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/sessions/index.blade.php": {
+      "path": "file:resources/views/sessions/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/students/_form.blade.php": {
+      "path": "file:resources/views/students/_form.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/students/create.blade.php": {
+      "path": "file:resources/views/students/create.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/students/edit.blade.php": {
+      "path": "file:resources/views/students/edit.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/students/index.blade.php": {
+      "path": "file:resources/views/students/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/students/partials/tab-kelas.blade.php": {
+      "path": "file:resources/views/students/partials/tab-kelas.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/students/show.blade.php": {
+      "path": "file:resources/views/students/show.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/teachers/_form.blade.php": {
+      "path": "file:resources/views/teachers/_form.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/teachers/create.blade.php": {
+      "path": "file:resources/views/teachers/create.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/teachers/edit.blade.php": {
+      "path": "file:resources/views/teachers/edit.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/teachers/index.blade.php": {
+      "path": "file:resources/views/teachers/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/users/_form_fields.blade.php": {
+      "path": "file:resources/views/users/_form_fields.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/users/index.blade.php": {
+      "path": "file:resources/views/users/index.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/welcome.blade.php": {
+      "path": "file:resources/views/welcome.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/whatsapp-templates/_form.blade.php": {
+      "path": "file:resources/views/whatsapp-templates/_form.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/whatsapp-templates/create.blade.php": {
+      "path": "file:resources/views/whatsapp-templates/create.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/whatsapp-templates/edit.blade.php": {
+      "path": "file:resources/views/whatsapp-templates/edit.blade.php",
+      "language": "php"
+    },
+    "file:resources/views/whatsapp-templates/index.blade.php": {
+      "path": "file:resources/views/whatsapp-templates/index.blade.php",
+      "language": "php"
+    },
+    "file:routes/console.php": {
+      "path": "file:routes/console.php",
+      "language": "php"
+    },
+    "file:scripts/measure-pdf-size.php": {
+      "path": "file:scripts/measure-pdf-size.php",
+      "language": "php"
+    },
+    "file:tailwind.config.js": {
+      "path": "file:tailwind.config.js",
+      "language": "js"
+    },
+    "file:tests/Feature/Auth/RegistrationTest.php": {
+      "path": "file:tests/Feature/Auth/RegistrationTest.php",
+      "language": "php"
+    },
+    "file:tests/Feature/ExampleTest.php": {
+      "path": "file:tests/Feature/ExampleTest.php",
+      "language": "php"
+    },
+    "file:tests/TestCase.php": {
+      "path": "file:tests/TestCase.php",
+      "language": "php"
+    },
+    "file:tests/Unit/ExampleTest.php": {
+      "path": "file:tests/Unit/ExampleTest.php",
+      "language": "php"
+    },
+    "file:tests/Unit/FonntePhoneNormalizeTest.php": {
+      "path": "file:tests/Unit/FonntePhoneNormalizeTest.php",
+      "language": "php"
+    },
+    "file:tests/Unit/ProgressReportPdfAssetServiceTest.php": {
+      "path": "file:tests/Unit/ProgressReportPdfAssetServiceTest.php",
+      "language": "php"
+    },
+    "file:UAT-Musik-KITA-v1.0.docx": {
+      "path": "file:UAT-Musik-KITA-v1.0.docx",
+      "language": "docx"
+    },
+    "file:UserManual-Admin-Musik-KITA-v1.0.docx": {
+      "path": "file:UserManual-Admin-Musik-KITA-v1.0.docx",
+      "language": "docx"
+    },
+    "file:vite.config.js": {
+      "path": "file:vite.config.js",
+      "language": "js"
+    }
+  }
+}

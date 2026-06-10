@@ -1,0 +1,3556 @@
+{
+  "file:app/Console/Commands/GenerateMonthlySessions.php": [
+    {
+      "to": "file:app/Services/SessionGeneratorService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/AbsensiController.php": [
+    {
+      "to": "file:app/Http/Requests/StoreSplitPartRequest.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Requests/UpdateAbsensiRequest.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/AttendanceService.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/RescheduleService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/EnrollmentController.php": [
+    {
+      "to": "file:app/Http/Requests/StoreEnrollmentRequest.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/EnrollmentSessionCleanupService.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/ScheduleConflictDetector.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/ImportController.php": [
+    {
+      "to": "file:app/Exports/XlsxBuilder.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/AuditLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/StudentImportService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/KalenderController.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/RoomController.php": [
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/ScheduleController.php": [
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/ScheduleConflictDetector.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/SessionController.php": [
+    {
+      "to": "file:app/Models/AuditLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/SessionGeneratorService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Requests/UpdateAbsensiRequest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/AttendanceService.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/PayrollConfig.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/EnrollmentSessionCleanupService.php": [
+    {
+      "to": "file:app/Models/AuditLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/ManualSessionService.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/RescheduleService.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/PayrollConfig.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/ScheduleConflictDetector.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/SessionGeneratorService.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Holiday.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/PayrollConfig.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/StudentImportService.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/ScheduleConflictDetector.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/StudentStatusHistory.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/factories/ClassSessionFactory.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/factories/EnrollmentFactory.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/factories/RoomFactory.php": [
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/factories/ScheduleFactory.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/factories/StudentFactory.php": [
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/factories/TeacherFactory.php": [
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/migrations/2026_05_23_215414_backfill_honor_libur_sessions.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/migrations/2026_06_02_000001_clear_honor_scheduled_calendar_replacements.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/seeders/RoomSeeder.php": [
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/seeders/StudentSeeder.php": [
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Admin/AbsensiControllerTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Admin/RescheduleTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Admin/SplitRescheduleTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/DuoClassConflictTest.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/PayrollConfig.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/SessionGeneratorService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/DuoClassHonorTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/PayrollConfig.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/AttendanceService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/EnrollmentControllerTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/GuruUpdateAbsensiTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/IzinPendingTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/AttendanceService.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/HonorCalculationService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/KalenderControllerTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/KidsClassRescheduleTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/RescheduleService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/KidsClassScheduleConflictTest.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/ManualSessionControllerTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/MultiKelasModelTest.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/ScheduleInstrumentCheckTest.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/ScheduleMultiEnrollmentTest.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/ScheduleReminderTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ScheduleReminderLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/WhatsappMessageTemplate.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Services/AttendanceServiceDigantiConflictTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/AttendanceService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Services/AttendanceServiceIzinRescheduleTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/AttendanceService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Services/ManualSessionServiceTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/ManualSessionService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Services/SessionGeneratorSequenceTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Holiday.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/SessionGeneratorService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Services/SessionGeneratorServiceTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Holiday.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/SessionGeneratorService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/SessionEditTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/SessionGeneratorConflictTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Holiday.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/SessionGeneratorService.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/StudentImportService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/SessionLabelTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/SessionTeacherNoteTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ProgressReport.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplate.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/StudentCutiTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/EnrollmentSessionCleanupService.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/InvoiceService.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/StudentLifecycleService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/TrialEnrollmentTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/TrialSessionCreationTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Unit/EnrollmentSessionCleanupServiceTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/EnrollmentSessionCleanupService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Unit/Models/RoomTest.php": [
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Unit/Services/HonorCalculationServiceStudentBreakdownTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/HonorSlip.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/HonorCalculationService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Unit/StudentImportConflictTest.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/StudentImportService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Unit/StudentImportCutiTest.php": [
+    {
+      "to": "file:app/Services/StudentImportService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Unit/StudentImportServiceTest.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/StudentStatusHistory.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/StudentImportService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Console/Commands/CheckOverdueStudents.php": [
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Notifications/MuridOverdueNotification.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Console/Commands/GuruCreateAccounts.php": [
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/UserUsernameService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/UserController.php": [
+    {
+      "to": "file:app/Http/Requests/ResetPasswordRequest.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Requests/StoreUserRequest.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Requests/UpdateUserRequest.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/AuditLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/UserUsernameService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Notifications/MuridOverdueNotification.php": [
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Providers/AppServiceProvider.php": [
+    {
+      "to": "file:app/Notifications/MuridOverdueNotification.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/UserUsernameService.php": [
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/factories/UserFactory.php": [
+    {
+      "to": "file:app/Services/UserUsernameService.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/migrations/2026_05_29_100000_add_username_to_users_table.php": [
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/UserUsernameService.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/seeders/DatabaseSeeder.php": [
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Admin/CheckOverdueStudentsTest.php": [
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Notifications/MuridOverdueNotification.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Admin/NotificationControllerTest.php": [
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Notifications/MuridOverdueNotification.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Admin/ViewComposerTest.php": [
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Notifications/MuridOverdueNotification.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Auth/AuthenticationTest.php": [
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Auth/EmailVerificationTest.php": [
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Auth/LoginWithUsernameTest.php": [
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Auth/PasswordConfirmationTest.php": [
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Auth/PasswordResetTest.php": [
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Auth/PasswordUpdateTest.php": [
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/GuruControllerAccessTest.php": [
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/GuruCreateAccountsCommandTest.php": [
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/GuruLoginRedirectTest.php": [
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/GuruModelRelationTest.php": [
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/GuruNavigationTest.php": [
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/ImportControllerTest.php": [
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/NicknameUniqueTest.php": [
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/ProfileTest.php": [
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Unit/MuridOverdueNotificationTest.php": [
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Notifications/MuridOverdueNotification.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Console/Commands/ApplyLateFines.php": [
+    {
+      "to": "file:app/Services/InvoiceService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Console/Commands/GenerateMonthlySpp.php": [
+    {
+      "to": "file:app/Services/InvoiceService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/AuditLogController.php": [
+    {
+      "to": "file:app/Models/AuditLog.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/DashboardController.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Expense.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/HonorSlip.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Payment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/DiscountController.php": [
+    {
+      "to": "file:app/Http/Requests/StoreDiscountRequest.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/InvoiceItem.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/DiscountService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/ExpenseCategoryController.php": [
+    {
+      "to": "file:app/Models/ExpenseCategory.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/ExpenseController.php": [
+    {
+      "to": "file:app/Models/Expense.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ExpenseCategory.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Payment.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/InstrumentController.php": [
+    {
+      "to": "file:app/Http/Requests/StoreInstrumentRequest.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Requests/UpdateInstrumentRequest.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/InvoiceComponentController.php": [
+    {
+      "to": "file:app/Models/InvoiceComponent.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/InvoiceController.php": [
+    {
+      "to": "file:app/Http/Requests/VoidInvoiceRequest.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/AuditLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/InvoiceItem.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/InvoiceService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/InvoiceItemController.php": [
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/InvoiceItem.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/InvoiceService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/InvoiceReminderController.php": [
+    {
+      "to": "file:app/Http/Requests/SendInvoiceReminderRequest.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/AuditLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/WhatsappMessageTemplate.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/InvoiceReminderService.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/WablasService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/ManualSessionController.php": [
+    {
+      "to": "file:app/Http/Requests/StoreManualSessionRequest.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/AuditLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/ManualSessionService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/PackageController.php": [
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/PaymentController.php": [
+    {
+      "to": "file:app/Models/AuditLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Payment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/PaymentService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/ProfileController.php": [
+    {
+      "to": "file:app/Http/Requests/ProfileUpdateRequest.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/ReportController.php": [
+    {
+      "to": "file:app/Models/Expense.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/HonorSlip.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Payment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/StudentController.php": [
+    {
+      "to": "file:app/Http/Requests/StoreStudentRequest.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Requests/UpdateStudentRequest.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/AuditLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/InvoiceItem.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Schedule.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/InvoiceService.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/ManualSessionService.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/StudentLifecycleService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Requests/ProfileUpdateRequest.php": [
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Requests/SendInvoiceReminderRequest.php": [
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/WablasService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Requests/UpdateStudentRequest.php": [
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/DiscountService.php": [
+    {
+      "to": "file:app/Models/AuditLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/InvoiceItem.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/InvoicePdfService.php": [
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/InvoiceReminderService.php": [
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/InvoiceReminderLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/WhatsappMessageTemplate.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/InvoiceService.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/InvoiceItem.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/PaymentService.php": [
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Payment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/StudentLifecycleService.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/StudentStatusHistory.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/factories/InvoiceFactory.php": [
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/factories/PaymentFactory.php": [
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Payment.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/seeders/ExpenseCategorySeeder.php": [
+    {
+      "to": "file:app/Models/ExpenseCategory.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/seeders/InvoiceComponentSeeder.php": [
+    {
+      "to": "file:app/Models/InvoiceComponent.php",
+      "type": "imports"
+    }
+  ],
+  "file:routes/web.php": [
+    {
+      "to": "file:app/Http/Controllers/AbsensiController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/AuditLogController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/DashboardController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/EnrollmentController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/EventController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/ExpenseCategoryController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/ExpenseController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/GuruController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/HolidayController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/HonorController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/ImportController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/InstrumentController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/InvoiceComponentController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/InvoiceController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/InvoiceItemController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/InvoiceReminderController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/KalenderController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/ManualSessionController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/NotificationController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/PackageController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/PaymentController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/PayrollConfigController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/ProfileController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/ProgressReportController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/ReportController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/ReportTemplateController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/RoomController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/ScheduleController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/SessionController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/SessionReportWaLogController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/StudentController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/TeacherController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/UserController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/WhatsappMessageTemplateController.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/DashboardRoleViewTest.php": [
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/DiscountTest.php": [
+    {
+      "to": "file:app/Models/AuditLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/InvoiceItem.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/DiscountService.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/InvoiceService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/InvoiceReminderTest.php": [
+    {
+      "to": "file:app/Models/AuditLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/InvoiceItem.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/InvoiceReminderLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/WhatsappMessageTemplate.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/InvoicePdfService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/InvoiceVoidTest.php": [
+    {
+      "to": "file:app/Models/AuditLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/InvoiceItem.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Payment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/KidsBundleInstallmentUiTest.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/KidsFpInvoiceTest.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/InvoiceItem.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/InvoiceService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/MultiKelasInvoiceTest.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/InvoiceService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/ReportFinanceMethodTest.php": [
+    {
+      "to": "file:app/Models/Payment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/UserManagementTest.php": [
+    {
+      "to": "file:app/Models/AuditLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Unit/WablasPhoneNormalizeTest.php": [
+    {
+      "to": "file:app/Services/WablasService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Console/Commands/CalculateHonor.php": [
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/HonorCalculationService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/EventController.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Event.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/EventParticipant.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Invoice.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/InvoiceItem.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/EventHonorService.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/InvoiceService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/HolidayController.php": [
+    {
+      "to": "file:app/Models/AuditLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Holiday.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/HonorController.php": [
+    {
+      "to": "file:app/Models/HonorSlip.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/HonorCalculationService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/PayrollConfigController.php": [
+    {
+      "to": "file:app/Models/PayrollConfig.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/EventHonorService.php": [
+    {
+      "to": "file:app/Models/Event.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Holiday.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/HonorSlip.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/PayrollConfig.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/HonorCalculationService.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/HonorSlip.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/factories/EventFactory.php": [
+    {
+      "to": "file:app/Models/Event.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/factories/EventParticipantFactory.php": [
+    {
+      "to": "file:app/Models/Event.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/EventParticipant.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/factories/HolidayFactory.php": [
+    {
+      "to": "file:app/Models/Holiday.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/factories/HonorSlipFactory.php": [
+    {
+      "to": "file:app/Models/HonorSlip.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/factories/PayrollConfigFactory.php": [
+    {
+      "to": "file:app/Models/PayrollConfig.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/seeders/HolidaySeeder.php": [
+    {
+      "to": "file:app/Models/Holiday.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/seeders/PayrollConfigSeeder.php": [
+    {
+      "to": "file:app/Models/PayrollConfig.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/EventCompleteControllerTest.php": [
+    {
+      "to": "file:app/Models/Event.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/EventParticipant.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/HonorSlip.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/EventHonorServiceTest.php": [
+    {
+      "to": "file:app/Models/Event.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/EventParticipant.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Holiday.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/HonorSlip.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/PayrollConfig.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/EventHonorService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/HonorControllerEventHonorTest.php": [
+    {
+      "to": "file:app/Models/HonorSlip.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Unit/Models/HonorSlipTest.php": [
+    {
+      "to": "file:app/Models/HonorSlip.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/GuruController.php": [
+    {
+      "to": "file:app/Jobs/SendSessionReportWaJob.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/HonorSlip.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ProgressReport.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ProgressReportItem.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ProgressReportSection.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/SessionTeacherNote.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/AttendanceService.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/ProgressReportPdfService.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/ProgressReportService.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/ReportTemplateResolverService.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/SessionNoteSyncService.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/SessionReportWaService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/ProgressReportController.php": [
+    {
+      "to": "file:app/Models/ProgressReport.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/ProgressReportPdfService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/ReportTemplateController.php": [
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplate.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplateItem.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplateSection.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/SessionReportWaLogController.php": [
+    {
+      "to": "file:app/Models/SessionReportWaLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/SessionReportWaService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/TeacherController.php": [
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/TeacherService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Jobs/SendSessionReportWaJob.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/SessionReportWaService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/ProgressReportPdfService.php": [
+    {
+      "to": "file:app/Models/ProgressReport.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/ProgressReportService.php": [
+    {
+      "to": "file:app/Models/ProgressReport.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/ReportTemplateResolverService.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplate.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/SessionNoteSyncService.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ProgressReport.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ProgressReportSessionNote.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/SessionTeacherNote.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/SessionReportWaService.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/SessionReportWaLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/SessionTeacherNote.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/WhatsappMessageTemplate.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/TeacherService.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/factories/InstrumentFactory.php": [
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/factories/PackageFactory.php": [
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/migrations/2026_06_07_130000_backfill_progress_report_numbers.php": [
+    {
+      "to": "file:app/Services/ProgressReportService.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/seeders/InstrumentSeeder.php": [
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/seeders/PackageSeeder.php": [
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/seeders/ReportTemplateSeeder.php": [
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplate.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplateItem.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplateSection.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/seeders/TeacherSeeder.php": [
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/ProgressReportAdminTest.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ProgressReport.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplate.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/ProgressReportGuruTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ProgressReport.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ProgressReportSessionNote.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplate.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplateItem.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplateSection.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/SessionTeacherNote.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/ReportTemplateResolverTest.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplate.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/ReportTemplateResolverService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/ReportTemplateTest.php": [
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplate.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplateItem.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplateSection.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/RoomControllerTest.php": [
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Room.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/Services/SessionNoteSyncAttributionTest.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ProgressReport.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplate.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/SessionTeacherNote.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/SessionNoteSyncService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Feature/SessionReportWaTest.php": [
+    {
+      "to": "file:app/Jobs/SendSessionReportWaJob.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/SessionReportWaLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/SessionTeacherNote.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/WhatsappMessageTemplate.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/SessionReportWaService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Unit/PackageReportLabelTest.php": [
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Unit/ProgressReportHelpersTest.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ProgressReport.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ProgressReportSessionNote.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplate.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Unit/ProgressReportServiceTest.php": [
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Instrument.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ProgressReport.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ReportTemplate.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Services/ProgressReportService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/Auth/AuthenticatedSessionController.php": [
+    {
+      "to": "file:app/Http/Controllers/Controller.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Requests/Auth/LoginRequest.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/Auth/ConfirmablePasswordController.php": [
+    {
+      "to": "file:app/Http/Controllers/Controller.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/Auth/EmailVerificationNotificationController.php": [
+    {
+      "to": "file:app/Http/Controllers/Controller.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/Auth/EmailVerificationPromptController.php": [
+    {
+      "to": "file:app/Http/Controllers/Controller.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/Auth/NewPasswordController.php": [
+    {
+      "to": "file:app/Http/Controllers/Controller.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/Auth/PasswordController.php": [
+    {
+      "to": "file:app/Http/Controllers/Controller.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/Auth/PasswordResetLinkController.php": [
+    {
+      "to": "file:app/Http/Controllers/Controller.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/Auth/RegisteredUserController.php": [
+    {
+      "to": "file:app/Http/Controllers/Controller.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/User.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/Auth/VerifyEmailController.php": [
+    {
+      "to": "file:app/Http/Controllers/Controller.php",
+      "type": "imports"
+    }
+  ],
+  "file:routes/auth.php": [
+    {
+      "to": "file:app/Http/Controllers/Auth/AuthenticatedSessionController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/Auth/ConfirmablePasswordController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/Auth/EmailVerificationNotificationController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/Auth/EmailVerificationPromptController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/Auth/NewPasswordController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/Auth/PasswordController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/Auth/PasswordResetLinkController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/Auth/RegisteredUserController.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Controllers/Auth/VerifyEmailController.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Console/Commands/SendScheduleReminders.php": [
+    {
+      "to": "file:app/Services/ScheduleReminderService.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Http/Controllers/WhatsappMessageTemplateController.php": [
+    {
+      "to": "file:app/Http/Requests/StoreWhatsappMessageTemplateRequest.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Http/Requests/UpdateWhatsappMessageTemplateRequest.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/WhatsappMessageTemplate.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Services/ScheduleReminderService.php": [
+    {
+      "to": "file:app/Models/ClassSession.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Enrollment.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/ScheduleReminderLog.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Student.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/WhatsappMessageTemplate.php",
+      "type": "imports"
+    }
+  ],
+  "file:database/seeders/WhatsappMessageTemplateSeeder.php": [
+    {
+      "to": "file:app/Models/WhatsappMessageTemplate.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Exports/Sheets/ReferensiKodeSheet.php": [
+    {
+      "to": "file:app/Models/Package.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Models/Teacher.php",
+      "type": "imports"
+    }
+  ],
+  "file:app/Exports/StudentTemplateExport.php": [
+    {
+      "to": "file:app/Exports/Sheets/DataMuridSheet.php",
+      "type": "imports"
+    },
+    {
+      "to": "file:app/Exports/Sheets/ReferensiKodeSheet.php",
+      "type": "imports"
+    }
+  ],
+  "file:resources/js/app.js": [
+    {
+      "to": "file:resources/js/bootstrap.js",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Unit/FonntePhoneNormalizeTest.php": [
+    {
+      "to": "file:app/Services/FonnteService.php",
+      "type": "imports"
+    }
+  ],
+  "file:tests/Unit/ProgressReportPdfAssetServiceTest.php": [
+    {
+      "to": "file:app/Services/ProgressReportPdfAssetService.php",
+      "type": "imports"
+    }
+  ]
+}

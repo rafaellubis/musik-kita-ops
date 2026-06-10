@@ -1,0 +1,2499 @@
+{
+  "undefined": [
+    {
+      "name": "function:app/Console/Commands/GenerateMonthlySessions.php:handle",
+      "id": "function:app/Console/Commands/GenerateMonthlySessions.php:handle",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Exports/XlsxBuilder.php:build",
+      "id": "function:app/Exports/XlsxBuilder.php:build",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Exports/XlsxBuilder.php:colLetter",
+      "id": "function:app/Exports/XlsxBuilder.php:colLetter",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Exports/XlsxBuilder.php:buildContentTypes",
+      "id": "function:app/Exports/XlsxBuilder.php:buildContentTypes",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Exports/XlsxBuilder.php:buildWorkbook",
+      "id": "function:app/Exports/XlsxBuilder.php:buildWorkbook",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Exports/XlsxBuilder.php:buildWorkbookRels",
+      "id": "function:app/Exports/XlsxBuilder.php:buildWorkbookRels",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Exports/XlsxBuilder.php:buildStyles",
+      "id": "function:app/Exports/XlsxBuilder.php:buildStyles",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Exports/XlsxBuilder.php:buildSharedStrings",
+      "id": "function:app/Exports/XlsxBuilder.php:buildSharedStrings",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Exports/XlsxBuilder.php:buildSheet",
+      "id": "function:app/Exports/XlsxBuilder.php:buildSheet",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/AbsensiController.php:index",
+      "id": "function:app/Http/Controllers/AbsensiController.php:index",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/AbsensiController.php:update",
+      "id": "function:app/Http/Controllers/AbsensiController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/AbsensiController.php:storeSplitPart",
+      "id": "function:app/Http/Controllers/AbsensiController.php:storeSplitPart",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/AbsensiController.php:openSlotBoard",
+      "id": "function:app/Http/Controllers/AbsensiController.php:openSlotBoard",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/AbsensiController.php:assignOpenSlot",
+      "id": "function:app/Http/Controllers/AbsensiController.php:assignOpenSlot",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/AbsensiController.php:scheduleReplacement",
+      "id": "function:app/Http/Controllers/AbsensiController.php:scheduleReplacement",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/AbsensiController.php:cancelPending",
+      "id": "function:app/Http/Controllers/AbsensiController.php:cancelPending",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/AbsensiController.php:validateSplitGuards",
+      "id": "function:app/Http/Controllers/AbsensiController.php:validateSplitGuards",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/AbsensiController.php:confirmSubstitute",
+      "id": "function:app/Http/Controllers/AbsensiController.php:confirmSubstitute",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/EnrollmentController.php:store",
+      "id": "function:app/Http/Controllers/EnrollmentController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/EnrollmentController.php:setPrimary",
+      "id": "function:app/Http/Controllers/EnrollmentController.php:setPrimary",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/EnrollmentController.php:destroy",
+      "id": "function:app/Http/Controllers/EnrollmentController.php:destroy",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/EnrollmentController.php:hentikanEnrollment",
+      "id": "function:app/Http/Controllers/EnrollmentController.php:hentikanEnrollment",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ImportController.php:downloadTemplate",
+      "id": "function:app/Http/Controllers/ImportController.php:downloadTemplate",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ImportController.php:validate",
+      "id": "function:app/Http/Controllers/ImportController.php:validate",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ImportController.php:confirm",
+      "id": "function:app/Http/Controllers/ImportController.php:confirm",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ImportController.php:formatConfirmError",
+      "id": "function:app/Http/Controllers/ImportController.php:formatConfirmError",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ImportController.php:dataMuridRows",
+      "id": "function:app/Http/Controllers/ImportController.php:dataMuridRows",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ImportController.php:referensiKodeRows",
+      "id": "function:app/Http/Controllers/ImportController.php:referensiKodeRows",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/KalenderController.php:index",
+      "id": "function:app/Http/Controllers/KalenderController.php:index",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/RoomController.php:store",
+      "id": "function:app/Http/Controllers/RoomController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/RoomController.php:update",
+      "id": "function:app/Http/Controllers/RoomController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/RoomController.php:destroy",
+      "id": "function:app/Http/Controllers/RoomController.php:destroy",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ScheduleController.php:store",
+      "id": "function:app/Http/Controllers/ScheduleController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ScheduleController.php:update",
+      "id": "function:app/Http/Controllers/ScheduleController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ScheduleController.php:destroy",
+      "id": "function:app/Http/Controllers/ScheduleController.php:destroy",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ScheduleController.php:toggleActive",
+      "id": "function:app/Http/Controllers/ScheduleController.php:toggleActive",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/SessionController.php:index",
+      "id": "function:app/Http/Controllers/SessionController.php:index",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/SessionController.php:generate",
+      "id": "function:app/Http/Controllers/SessionController.php:generate",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/SessionController.php:update",
+      "id": "function:app/Http/Controllers/SessionController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/SessionController.php:destroy",
+      "id": "function:app/Http/Controllers/SessionController.php:destroy",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/StoreEnrollmentRequest.php:rules",
+      "id": "function:app/Http/Requests/StoreEnrollmentRequest.php:rules",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/StoreEnrollmentRequest.php:messages",
+      "id": "function:app/Http/Requests/StoreEnrollmentRequest.php:messages",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/StoreSplitPartRequest.php:messages",
+      "id": "function:app/Http/Requests/StoreSplitPartRequest.php:messages",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/UpdateAbsensiRequest.php:rules",
+      "id": "function:app/Http/Requests/UpdateAbsensiRequest.php:rules",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/UpdateAbsensiRequest.php:messages",
+      "id": "function:app/Http/Requests/UpdateAbsensiRequest.php:messages",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Models/ClassSession.php:booted",
+      "id": "function:app/Models/ClassSession.php:booted",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Models/ClassSession.php:getSessionLabel",
+      "id": "function:app/Models/ClassSession.php:getSessionLabel",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Models/ClassSession.php:getGuruSessionIdentity",
+      "id": "function:app/Models/ClassSession.php:getGuruSessionIdentity",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Models/Package.php:getLevelLabel",
+      "id": "function:app/Models/Package.php:getLevelLabel",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Models/Package.php:getReportInstrumentLabel",
+      "id": "function:app/Models/Package.php:getReportInstrumentLabel",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Models/Package.php:getReportLevelSuffix",
+      "id": "function:app/Models/Package.php:getReportLevelSuffix",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Models/Student.php:generateCode",
+      "id": "function:app/Models/Student.php:generateCode",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/AttendanceService.php:recordAttendance",
+      "id": "function:app/Services/AttendanceService.php:recordAttendance",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/AttendanceService.php:scheduleReplacement",
+      "id": "function:app/Services/AttendanceService.php:scheduleReplacement",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/AttendanceService.php:validateStatusFields",
+      "id": "function:app/Services/AttendanceService.php:validateStatusFields",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/AttendanceService.php:calculateHonor",
+      "id": "function:app/Services/AttendanceService.php:calculateHonor",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/AttendanceService.php:calculateSubstituteHonor",
+      "id": "function:app/Services/AttendanceService.php:calculateSubstituteHonor",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/EnrollmentSessionCleanupService.php:purgeFutureSessions",
+      "id": "function:app/Services/EnrollmentSessionCleanupService.php:purgeFutureSessions",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ManualSessionService.php:slotSummary",
+      "id": "function:app/Services/ManualSessionService.php:slotSummary",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ManualSessionService.php:suggestNextSequence",
+      "id": "function:app/Services/ManualSessionService.php:suggestNextSequence",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ManualSessionService.php:create",
+      "id": "function:app/Services/ManualSessionService.php:create",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ManualSessionService.php:sequenceTaken",
+      "id": "function:app/Services/ManualSessionService.php:sequenceTaken",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ManualSessionService.php:assertNoConflict",
+      "id": "function:app/Services/ManualSessionService.php:assertNoConflict",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ManualSessionService.php:findDuoSlotConflict",
+      "id": "function:app/Services/ManualSessionService.php:findDuoSlotConflict",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/RescheduleService.php:createReplacement",
+      "id": "function:app/Services/RescheduleService.php:createReplacement",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/RescheduleService.php:createSplitPart",
+      "id": "function:app/Services/RescheduleService.php:createSplitPart",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/RescheduleService.php:assertNoTeacherConflict",
+      "id": "function:app/Services/RescheduleService.php:assertNoTeacherConflict",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/RescheduleService.php:assertNoRoomConflict",
+      "id": "function:app/Services/RescheduleService.php:assertNoRoomConflict",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/RescheduleService.php:throwTeacherConflictException",
+      "id": "function:app/Services/RescheduleService.php:throwTeacherConflictException",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/RescheduleService.php:throwRoomConflictException",
+      "id": "function:app/Services/RescheduleService.php:throwRoomConflictException",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/RescheduleService.php:overlappingSessionsQuery",
+      "id": "function:app/Services/RescheduleService.php:overlappingSessionsQuery",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/RescheduleService.php:findDuoSlotConflict",
+      "id": "function:app/Services/RescheduleService.php:findDuoSlotConflict",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ScheduleConflictDetector.php:findTeacherConflicts",
+      "id": "function:app/Services/ScheduleConflictDetector.php:findTeacherConflicts",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ScheduleConflictDetector.php:findBlockingTeacherConflicts",
+      "id": "function:app/Services/ScheduleConflictDetector.php:findBlockingTeacherConflicts",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ScheduleConflictDetector.php:findRoomConflicts",
+      "id": "function:app/Services/ScheduleConflictDetector.php:findRoomConflicts",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ScheduleConflictDetector.php:isRoomFull",
+      "id": "function:app/Services/ScheduleConflictDetector.php:isRoomFull",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/SessionGeneratorService.php:generateForMonth",
+      "id": "function:app/Services/SessionGeneratorService.php:generateForMonth",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/SessionGeneratorService.php:generateForSchedule",
+      "id": "function:app/Services/SessionGeneratorService.php:generateForSchedule",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/SessionGeneratorService.php:resolveLiburHonor",
+      "id": "function:app/Services/SessionGeneratorService.php:resolveLiburHonor",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/SessionGeneratorService.php:calculateBaseHonor",
+      "id": "function:app/Services/SessionGeneratorService.php:calculateBaseHonor",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/SessionGeneratorService.php:findConflictOnDate",
+      "id": "function:app/Services/SessionGeneratorService.php:findConflictOnDate",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/SessionGeneratorService.php:buildConflictDetail",
+      "id": "function:app/Services/SessionGeneratorService.php:buildConflictDetail",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentImportService.php:validate",
+      "id": "function:app/Services/StudentImportService.php:validate",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentImportService.php:confirm",
+      "id": "function:app/Services/StudentImportService.php:confirm",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentImportService.php:validateRow",
+      "id": "function:app/Services/StudentImportService.php:validateRow",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentImportService.php:findExisting",
+      "id": "function:app/Services/StudentImportService.php:findExisting",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentImportService.php:normalizeExcelDateFields",
+      "id": "function:app/Services/StudentImportService.php:normalizeExcelDateFields",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentImportService.php:normalizeDateValue",
+      "id": "function:app/Services/StudentImportService.php:normalizeDateValue",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentImportService.php:normalizeTimeValue",
+      "id": "function:app/Services/StudentImportService.php:normalizeTimeValue",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentImportService.php:normalizePhone",
+      "id": "function:app/Services/StudentImportService.php:normalizePhone",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentImportService.php:parseDayOfWeek",
+      "id": "function:app/Services/StudentImportService.php:parseDayOfWeek",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentImportService.php:createEnrollmentAndSchedule",
+      "id": "function:app/Services/StudentImportService.php:createEnrollmentAndSchedule",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentImportService.php:upsertStudent",
+      "id": "function:app/Services/StudentImportService.php:upsertStudent",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/factories/ClassSessionFactory.php:definition",
+      "id": "function:database/factories/ClassSessionFactory.php:definition",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/factories/EnrollmentFactory.php:definition",
+      "id": "function:database/factories/EnrollmentFactory.php:definition",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/factories/RoomFactory.php:definition",
+      "id": "function:database/factories/RoomFactory.php:definition",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/factories/ScheduleFactory.php:definition",
+      "id": "function:database/factories/ScheduleFactory.php:definition",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/factories/StudentFactory.php:definition",
+      "id": "function:database/factories/StudentFactory.php:definition",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/factories/TeacherFactory.php:definition",
+      "id": "function:database/factories/TeacherFactory.php:definition",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/seeders/RoomSeeder.php:run",
+      "id": "function:database/seeders/RoomSeeder.php:run",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Console/Commands/CheckOverdueStudents.php:handle",
+      "id": "function:app/Console/Commands/CheckOverdueStudents.php:handle",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Console/Commands/GuruCreateAccounts.php:handle",
+      "id": "function:app/Console/Commands/GuruCreateAccounts.php:handle",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/UserController.php:index",
+      "id": "function:app/Http/Controllers/UserController.php:index",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/UserController.php:store",
+      "id": "function:app/Http/Controllers/UserController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/UserController.php:update",
+      "id": "function:app/Http/Controllers/UserController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/UserController.php:resetPassword",
+      "id": "function:app/Http/Controllers/UserController.php:resetPassword",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/UserController.php:toggleActive",
+      "id": "function:app/Http/Controllers/UserController.php:toggleActive",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/UserController.php:destroy",
+      "id": "function:app/Http/Controllers/UserController.php:destroy",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/UpdateUserRequest.php:rules",
+      "id": "function:app/Http/Requests/UpdateUserRequest.php:rules",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Notifications/MuridOverdueNotification.php:toDatabase",
+      "id": "function:app/Notifications/MuridOverdueNotification.php:toDatabase",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Providers/AppServiceProvider.php:boot",
+      "id": "function:app/Providers/AppServiceProvider.php:boot",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/UserUsernameService.php:generateUnique",
+      "id": "function:app/Services/UserUsernameService.php:generateUnique",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/factories/UserFactory.php:definition",
+      "id": "function:database/factories/UserFactory.php:definition",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/seeders/DatabaseSeeder.php:run",
+      "id": "function:database/seeders/DatabaseSeeder.php:run",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Admin/CheckOverdueStudentsTest.php:test_murid_aktif_dengan_tunggakan_mendapat_notifikasi",
+      "id": "function:tests/Feature/Admin/CheckOverdueStudentsTest.php:test_murid_aktif_dengan_tunggakan_mendapat_notifikasi",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Admin/CheckOverdueStudentsTest.php:test_murid_tidak_aktif_diabaikan",
+      "id": "function:tests/Feature/Admin/CheckOverdueStudentsTest.php:test_murid_tidak_aktif_diabaikan",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Admin/CheckOverdueStudentsTest.php:test_tunggakan_bulan_ini_tidak_trigger",
+      "id": "function:tests/Feature/Admin/CheckOverdueStudentsTest.php:test_tunggakan_bulan_ini_tidak_trigger",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Admin/CheckOverdueStudentsTest.php:test_idempotent_tidak_kirim_notif_duplikat",
+      "id": "function:tests/Feature/Admin/CheckOverdueStudentsTest.php:test_idempotent_tidak_kirim_notif_duplikat",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Admin/CheckOverdueStudentsTest.php:test_invoice_partial_juga_trigger",
+      "id": "function:tests/Feature/Admin/CheckOverdueStudentsTest.php:test_invoice_partial_juga_trigger",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Admin/NotificationControllerTest.php:test_mark_satu_notif_as_read",
+      "id": "function:tests/Feature/Admin/NotificationControllerTest.php:test_mark_satu_notif_as_read",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Admin/NotificationControllerTest.php:test_mark_semua_notif_as_read",
+      "id": "function:tests/Feature/Admin/NotificationControllerTest.php:test_mark_semua_notif_as_read",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Admin/NotificationControllerTest.php:test_tidak_bisa_mark_notif_user_lain",
+      "id": "function:tests/Feature/Admin/NotificationControllerTest.php:test_tidak_bisa_mark_notif_user_lain",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Admin/ViewComposerTest.php:test_topbar_menerima_overdueNotifs_saat_ada_notifikasi",
+      "id": "function:tests/Feature/Admin/ViewComposerTest.php:test_topbar_menerima_overdueNotifs_saat_ada_notifikasi",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Admin/ViewComposerTest.php:test_notif_yang_sudah_dibaca_tidak_dihitung",
+      "id": "function:tests/Feature/Admin/ViewComposerTest.php:test_notif_yang_sudah_dibaca_tidak_dihitung",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Auth/LoginWithUsernameTest.php:test_login_dengan_username_berhasil",
+      "id": "function:tests/Feature/Auth/LoginWithUsernameTest.php:test_login_dengan_username_berhasil",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Auth/LoginWithUsernameTest.php:test_login_dengan_email_masih_berhasil",
+      "id": "function:tests/Feature/Auth/LoginWithUsernameTest.php:test_login_dengan_email_masih_berhasil",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Auth/LoginWithUsernameTest.php:test_login_username_salah_gagal",
+      "id": "function:tests/Feature/Auth/LoginWithUsernameTest.php:test_login_username_salah_gagal",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Auth/PasswordUpdateTest.php:test_password_can_be_updated",
+      "id": "function:tests/Feature/Auth/PasswordUpdateTest.php:test_password_can_be_updated",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Auth/PasswordUpdateTest.php:test_correct_password_must_be_provided_to_update_password",
+      "id": "function:tests/Feature/Auth/PasswordUpdateTest.php:test_correct_password_must_be_provided_to_update_password",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/GuruCreateAccountsCommandTest.php:test_buat_akun_untuk_guru_aktif",
+      "id": "function:tests/Feature/GuruCreateAccountsCommandTest.php:test_buat_akun_untuk_guru_aktif",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/GuruCreateAccountsCommandTest.php:test_generate_email_dummy_jika_email_null",
+      "id": "function:tests/Feature/GuruCreateAccountsCommandTest.php:test_generate_email_dummy_jika_email_null",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/GuruCreateAccountsCommandTest.php:test_password_format_nama_lowercase_tanpa_spasi",
+      "id": "function:tests/Feature/GuruCreateAccountsCommandTest.php:test_password_format_nama_lowercase_tanpa_spasi",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/GuruLoginRedirectTest.php:test_guru_redirect_ke_guru_dashboard",
+      "id": "function:tests/Feature/GuruLoginRedirectTest.php:test_guru_redirect_ke_guru_dashboard",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/GuruLoginRedirectTest.php:test_owner_redirect_ke_dashboard",
+      "id": "function:tests/Feature/GuruLoginRedirectTest.php:test_owner_redirect_ke_dashboard",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/GuruLoginRedirectTest.php:test_admin_redirect_ke_dashboard",
+      "id": "function:tests/Feature/GuruLoginRedirectTest.php:test_admin_redirect_ke_dashboard",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/GuruNavigationTest.php:test_bottom_nav_tidak_punya_tombol_keluar",
+      "id": "function:tests/Feature/GuruNavigationTest.php:test_bottom_nav_tidak_punya_tombol_keluar",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/GuruNavigationTest.php:test_topbar_mobile_punya_tombol_keluar",
+      "id": "function:tests/Feature/GuruNavigationTest.php:test_topbar_mobile_punya_tombol_keluar",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ImportControllerTest.php:test_download_template_returns_xlsx",
+      "id": "function:tests/Feature/ImportControllerTest.php:test_download_template_returns_xlsx",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ImportControllerTest.php:test_cancel_clears_session_and_redirects",
+      "id": "function:tests/Feature/ImportControllerTest.php:test_cancel_clears_session_and_redirects",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ImportControllerTest.php:test_template_berisi_kolom_kode_ruangan",
+      "id": "function:tests/Feature/ImportControllerTest.php:test_template_berisi_kolom_kode_ruangan",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ImportControllerTest.php:test_confirm_buat_schedules_di_db",
+      "id": "function:tests/Feature/ImportControllerTest.php:test_confirm_buat_schedules_di_db",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ImportControllerTest.php:test_confirm_buat_status_history_migrasi",
+      "id": "function:tests/Feature/ImportControllerTest.php:test_confirm_buat_status_history_migrasi",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/NicknameUniqueTest.php:test_store_nickname_kosong_boleh_banyak",
+      "id": "function:tests/Feature/NicknameUniqueTest.php:test_store_nickname_kosong_boleh_banyak",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/NicknameUniqueTest.php:test_update_nickname_sendiri_berhasil",
+      "id": "function:tests/Feature/NicknameUniqueTest.php:test_update_nickname_sendiri_berhasil",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/NicknameUniqueTest.php:test_update_nickname_milik_murid_lain_gagal",
+      "id": "function:tests/Feature/NicknameUniqueTest.php:test_update_nickname_milik_murid_lain_gagal",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/NicknameUniqueTest.php:test_update_hapus_nickname_berhasil",
+      "id": "function:tests/Feature/NicknameUniqueTest.php:test_update_hapus_nickname_berhasil",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ProfileTest.php:test_profile_information_can_be_updated",
+      "id": "function:tests/Feature/ProfileTest.php:test_profile_information_can_be_updated",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ProfileTest.php:test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged",
+      "id": "function:tests/Feature/ProfileTest.php:test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ProfileTest.php:test_user_can_delete_their_account",
+      "id": "function:tests/Feature/ProfileTest.php:test_user_can_delete_their_account",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ProfileTest.php:test_correct_password_must_be_provided_to_delete_account",
+      "id": "function:tests/Feature/ProfileTest.php:test_correct_password_must_be_provided_to_delete_account",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Unit/MuridOverdueNotificationTest.php:test_via_returns_database_channel",
+      "id": "function:tests/Unit/MuridOverdueNotificationTest.php:test_via_returns_database_channel",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Unit/MuridOverdueNotificationTest.php:test_to_database_returns_correct_payload",
+      "id": "function:tests/Unit/MuridOverdueNotificationTest.php:test_to_database_returns_correct_payload",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Console/Commands/ApplyLateFines.php:handle",
+      "id": "function:app/Console/Commands/ApplyLateFines.php:handle",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Console/Commands/GenerateMonthlySpp.php:handle",
+      "id": "function:app/Console/Commands/GenerateMonthlySpp.php:handle",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/AuditLogController.php:index",
+      "id": "function:app/Http/Controllers/AuditLogController.php:index",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/DashboardController.php:index",
+      "id": "function:app/Http/Controllers/DashboardController.php:index",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/DiscountController.php:store",
+      "id": "function:app/Http/Controllers/DiscountController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/DiscountController.php:destroy",
+      "id": "function:app/Http/Controllers/DiscountController.php:destroy",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ExpenseCategoryController.php:store",
+      "id": "function:app/Http/Controllers/ExpenseCategoryController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ExpenseCategoryController.php:update",
+      "id": "function:app/Http/Controllers/ExpenseCategoryController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ExpenseCategoryController.php:destroy",
+      "id": "function:app/Http/Controllers/ExpenseCategoryController.php:destroy",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ExpenseController.php:index",
+      "id": "function:app/Http/Controllers/ExpenseController.php:index",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ExpenseController.php:store",
+      "id": "function:app/Http/Controllers/ExpenseController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ExpenseController.php:update",
+      "id": "function:app/Http/Controllers/ExpenseController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ExpenseController.php:destroy",
+      "id": "function:app/Http/Controllers/ExpenseController.php:destroy",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ExpenseController.php:generateNumber",
+      "id": "function:app/Http/Controllers/ExpenseController.php:generateNumber",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/InvoiceComponentController.php:store",
+      "id": "function:app/Http/Controllers/InvoiceComponentController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/InvoiceComponentController.php:update",
+      "id": "function:app/Http/Controllers/InvoiceComponentController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/InvoiceComponentController.php:destroy",
+      "id": "function:app/Http/Controllers/InvoiceComponentController.php:destroy",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/InvoiceController.php:index",
+      "id": "function:app/Http/Controllers/InvoiceController.php:index",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/InvoiceController.php:show",
+      "id": "function:app/Http/Controllers/InvoiceController.php:show",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/InvoiceController.php:void",
+      "id": "function:app/Http/Controllers/InvoiceController.php:void",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/InvoiceController.php:generateSpp",
+      "id": "function:app/Http/Controllers/InvoiceController.php:generateSpp",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/InvoiceController.php:applyFines",
+      "id": "function:app/Http/Controllers/InvoiceController.php:applyFines",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/InvoiceController.php:generateBundle",
+      "id": "function:app/Http/Controllers/InvoiceController.php:generateBundle",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/InvoiceController.php:print",
+      "id": "function:app/Http/Controllers/InvoiceController.php:print",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/InvoiceController.php:generateKidsFp",
+      "id": "function:app/Http/Controllers/InvoiceController.php:generateKidsFp",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/InvoiceItemController.php:store",
+      "id": "function:app/Http/Controllers/InvoiceItemController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/InvoiceItemController.php:destroy",
+      "id": "function:app/Http/Controllers/InvoiceItemController.php:destroy",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/InvoiceReminderController.php:index",
+      "id": "function:app/Http/Controllers/InvoiceReminderController.php:index",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/InvoiceReminderController.php:send",
+      "id": "function:app/Http/Controllers/InvoiceReminderController.php:send",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ManualSessionController.php:store",
+      "id": "function:app/Http/Controllers/ManualSessionController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/NotificationController.php:markRead",
+      "id": "function:app/Http/Controllers/NotificationController.php:markRead",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/PackageController.php:store",
+      "id": "function:app/Http/Controllers/PackageController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/PackageController.php:update",
+      "id": "function:app/Http/Controllers/PackageController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/PaymentController.php:store",
+      "id": "function:app/Http/Controllers/PaymentController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/PaymentController.php:void",
+      "id": "function:app/Http/Controllers/PaymentController.php:void",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ProfileController.php:update",
+      "id": "function:app/Http/Controllers/ProfileController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ProfileController.php:destroy",
+      "id": "function:app/Http/Controllers/ProfileController.php:destroy",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ReportController.php:finance",
+      "id": "function:app/Http/Controllers/ReportController.php:finance",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ReportController.php:students",
+      "id": "function:app/Http/Controllers/ReportController.php:students",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/StudentController.php:index",
+      "id": "function:app/Http/Controllers/StudentController.php:index",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/StudentController.php:show",
+      "id": "function:app/Http/Controllers/StudentController.php:show",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/StudentController.php:store",
+      "id": "function:app/Http/Controllers/StudentController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/StudentController.php:edit",
+      "id": "function:app/Http/Controllers/StudentController.php:edit",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/StudentController.php:update",
+      "id": "function:app/Http/Controllers/StudentController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/StudentController.php:teachersByInstrument",
+      "id": "function:app/Http/Controllers/StudentController.php:teachersByInstrument",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/StudentController.php:startTrial",
+      "id": "function:app/Http/Controllers/StudentController.php:startTrial",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/StudentController.php:convertActive",
+      "id": "function:app/Http/Controllers/StudentController.php:convertActive",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/StudentController.php:skipTrial",
+      "id": "function:app/Http/Controllers/StudentController.php:skipTrial",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/StudentController.php:startCuti",
+      "id": "function:app/Http/Controllers/StudentController.php:startCuti",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/StudentController.php:withdraw",
+      "id": "function:app/Http/Controllers/StudentController.php:withdraw",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/StudentController.php:complete",
+      "id": "function:app/Http/Controllers/StudentController.php:complete",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/StudentController.php:returnFromCuti",
+      "id": "function:app/Http/Controllers/StudentController.php:returnFromCuti",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/StudentController.php:reactivate",
+      "id": "function:app/Http/Controllers/StudentController.php:reactivate",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/StudentController.php:runLifecycle",
+      "id": "function:app/Http/Controllers/StudentController.php:runLifecycle",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/ProfileUpdateRequest.php:rules",
+      "id": "function:app/Http/Requests/ProfileUpdateRequest.php:rules",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/SendInvoiceReminderRequest.php:messages",
+      "id": "function:app/Http/Requests/SendInvoiceReminderRequest.php:messages",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/SendInvoiceReminderRequest.php:withValidator",
+      "id": "function:app/Http/Requests/SendInvoiceReminderRequest.php:withValidator",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/StoreDiscountRequest.php:messages",
+      "id": "function:app/Http/Requests/StoreDiscountRequest.php:messages",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/StoreInstrumentRequest.php:rules",
+      "id": "function:app/Http/Requests/StoreInstrumentRequest.php:rules",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/StoreInstrumentRequest.php:messages",
+      "id": "function:app/Http/Requests/StoreInstrumentRequest.php:messages",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/StoreManualSessionRequest.php:rules",
+      "id": "function:app/Http/Requests/StoreManualSessionRequest.php:rules",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/StoreStudentRequest.php:prepareForValidation",
+      "id": "function:app/Http/Requests/StoreStudentRequest.php:prepareForValidation",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/StoreStudentRequest.php:normalizePhone",
+      "id": "function:app/Http/Requests/StoreStudentRequest.php:normalizePhone",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/StoreStudentRequest.php:rules",
+      "id": "function:app/Http/Requests/StoreStudentRequest.php:rules",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/StoreStudentRequest.php:messages",
+      "id": "function:app/Http/Requests/StoreStudentRequest.php:messages",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/UpdateInstrumentRequest.php:rules",
+      "id": "function:app/Http/Requests/UpdateInstrumentRequest.php:rules",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/UpdateStudentRequest.php:prepareForValidation",
+      "id": "function:app/Http/Requests/UpdateStudentRequest.php:prepareForValidation",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/UpdateStudentRequest.php:normalizePhone",
+      "id": "function:app/Http/Requests/UpdateStudentRequest.php:normalizePhone",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/UpdateStudentRequest.php:rules",
+      "id": "function:app/Http/Requests/UpdateStudentRequest.php:rules",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/UpdateStudentRequest.php:messages",
+      "id": "function:app/Http/Requests/UpdateStudentRequest.php:messages",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/UpdateStudentRequest.php:withValidator",
+      "id": "function:app/Http/Requests/UpdateStudentRequest.php:withValidator",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Models/AuditLog.php:record",
+      "id": "function:app/Models/AuditLog.php:record",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/DiscountService.php:applyDiscount",
+      "id": "function:app/Services/DiscountService.php:applyDiscount",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/DiscountService.php:removeDiscount",
+      "id": "function:app/Services/DiscountService.php:removeDiscount",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/InvoiceService.php:generateNumber",
+      "id": "function:app/Services/InvoiceService.php:generateNumber",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/InvoiceService.php:createOneOff",
+      "id": "function:app/Services/InvoiceService.php:createOneOff",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/InvoiceService.php:generateMonthlySPP",
+      "id": "function:app/Services/InvoiceService.php:generateMonthlySPP",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/InvoiceService.php:voidInvoice",
+      "id": "function:app/Services/InvoiceService.php:voidInvoice",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/InvoiceService.php:recalcStatus",
+      "id": "function:app/Services/InvoiceService.php:recalcStatus",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/InvoiceService.php:applyLateFinesForMonth",
+      "id": "function:app/Services/InvoiceService.php:applyLateFinesForMonth",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/InvoiceService.php:createKidsBundleInstallments",
+      "id": "function:app/Services/InvoiceService.php:createKidsBundleInstallments",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/InvoiceService.php:sppInvoiceExistsForEnrollment",
+      "id": "function:app/Services/InvoiceService.php:sppInvoiceExistsForEnrollment",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/PaymentService.php:recordPayment",
+      "id": "function:app/Services/PaymentService.php:recordPayment",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/PaymentService.php:voidPayment",
+      "id": "function:app/Services/PaymentService.php:voidPayment",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/PaymentService.php:generateReceiptNumber",
+      "id": "function:app/Services/PaymentService.php:generateReceiptNumber",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/InvoiceReminderService.php:sendReminder",
+      "id": "function:app/Services/InvoiceReminderService.php:sendReminder",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/InvoiceReminderService.php:sendBatch",
+      "id": "function:app/Services/InvoiceReminderService.php:sendBatch",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/InvoiceReminderService.php:getUnpaidGroupedByStudent",
+      "id": "function:app/Services/InvoiceReminderService.php:getUnpaidGroupedByStudent",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/InvoiceReminderService.php:composeMessage",
+      "id": "function:app/Services/InvoiceReminderService.php:composeMessage",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentLifecycleService.php:mulaiTrial",
+      "id": "function:app/Services/StudentLifecycleService.php:mulaiTrial",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentLifecycleService.php:konversiAktif",
+      "id": "function:app/Services/StudentLifecycleService.php:konversiAktif",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentLifecycleService.php:skipTrial",
+      "id": "function:app/Services/StudentLifecycleService.php:skipTrial",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentLifecycleService.php:ajukanCuti",
+      "id": "function:app/Services/StudentLifecycleService.php:ajukanCuti",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentLifecycleService.php:mundurkan",
+      "id": "function:app/Services/StudentLifecycleService.php:mundurkan",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentLifecycleService.php:selesai",
+      "id": "function:app/Services/StudentLifecycleService.php:selesai",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentLifecycleService.php:aktifkanKembali",
+      "id": "function:app/Services/StudentLifecycleService.php:aktifkanKembali",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentLifecycleService.php:aktifkanDariCuti",
+      "id": "function:app/Services/StudentLifecycleService.php:aktifkanDariCuti",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentLifecycleService.php:issueActivationInvoice",
+      "id": "function:app/Services/StudentLifecycleService.php:issueActivationInvoice",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/StudentLifecycleService.php:openEnrollment",
+      "id": "function:app/Services/StudentLifecycleService.php:openEnrollment",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/InvoicePdfService.php:renderPdf",
+      "id": "function:app/Services/InvoicePdfService.php:renderPdf",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/WablasService.php:post",
+      "id": "function:app/Services/WablasService.php:post",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/WablasService.php:normalizePhone",
+      "id": "function:app/Services/WablasService.php:normalizePhone",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/WablasService.php:sendDocumentFromLocal",
+      "id": "function:app/Services/WablasService.php:sendDocumentFromLocal",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Console/Commands/CalculateHonor.php:handle",
+      "id": "function:app/Console/Commands/CalculateHonor.php:handle",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/EventController.php:store",
+      "id": "function:app/Http/Controllers/EventController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/EventController.php:show",
+      "id": "function:app/Http/Controllers/EventController.php:show",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/EventController.php:update",
+      "id": "function:app/Http/Controllers/EventController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/EventController.php:addParticipant",
+      "id": "function:app/Http/Controllers/EventController.php:addParticipant",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/EventController.php:removeParticipant",
+      "id": "function:app/Http/Controllers/EventController.php:removeParticipant",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/EventController.php:updateParticipantTeacher",
+      "id": "function:app/Http/Controllers/EventController.php:updateParticipantTeacher",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/EventController.php:saveExamResults",
+      "id": "function:app/Http/Controllers/EventController.php:saveExamResults",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/EventController.php:complete",
+      "id": "function:app/Http/Controllers/EventController.php:complete",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/EventController.php:generateEventNumber",
+      "id": "function:app/Http/Controllers/EventController.php:generateEventNumber",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/HolidayController.php:index",
+      "id": "function:app/Http/Controllers/HolidayController.php:index",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/HolidayController.php:store",
+      "id": "function:app/Http/Controllers/HolidayController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/HolidayController.php:update",
+      "id": "function:app/Http/Controllers/HolidayController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/HolidayController.php:destroy",
+      "id": "function:app/Http/Controllers/HolidayController.php:destroy",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/HonorController.php:index",
+      "id": "function:app/Http/Controllers/HonorController.php:index",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/HonorController.php:show",
+      "id": "function:app/Http/Controllers/HonorController.php:show",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/HonorController.php:edit",
+      "id": "function:app/Http/Controllers/HonorController.php:edit",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/HonorController.php:update",
+      "id": "function:app/Http/Controllers/HonorController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/HonorController.php:calculate",
+      "id": "function:app/Http/Controllers/HonorController.php:calculate",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/HonorController.php:markPaid",
+      "id": "function:app/Http/Controllers/HonorController.php:markPaid",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/HonorController.php:print",
+      "id": "function:app/Http/Controllers/HonorController.php:print",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/PayrollConfigController.php:store",
+      "id": "function:app/Http/Controllers/PayrollConfigController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/PayrollConfigController.php:update",
+      "id": "function:app/Http/Controllers/PayrollConfigController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/EventHonorService.php:processEventCompletion",
+      "id": "function:app/Services/EventHonorService.php:processEventCompletion",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/EventHonorService.php:generateSlipNumber",
+      "id": "function:app/Services/EventHonorService.php:generateSlipNumber",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/HonorCalculationService.php:generateAllSlips",
+      "id": "function:app/Services/HonorCalculationService.php:generateAllSlips",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/HonorCalculationService.php:calculateForTeacher",
+      "id": "function:app/Services/HonorCalculationService.php:calculateForTeacher",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/HonorCalculationService.php:getSessionBreakdown",
+      "id": "function:app/Services/HonorCalculationService.php:getSessionBreakdown",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/HonorCalculationService.php:countPendingSubstituteSessions",
+      "id": "function:app/Services/HonorCalculationService.php:countPendingSubstituteSessions",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/HonorCalculationService.php:getStudentBreakdown",
+      "id": "function:app/Services/HonorCalculationService.php:getStudentBreakdown",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/HonorCalculationService.php:markPaid",
+      "id": "function:app/Services/HonorCalculationService.php:markPaid",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/HonorCalculationService.php:generateSlipNumber",
+      "id": "function:app/Services/HonorCalculationService.php:generateSlipNumber",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/factories/EventFactory.php:definition",
+      "id": "function:database/factories/EventFactory.php:definition",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/factories/EventParticipantFactory.php:definition",
+      "id": "function:database/factories/EventParticipantFactory.php:definition",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/factories/HolidayFactory.php:definition",
+      "id": "function:database/factories/HolidayFactory.php:definition",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/factories/HonorSlipFactory.php:definition",
+      "id": "function:database/factories/HonorSlipFactory.php:definition",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/factories/PayrollConfigFactory.php:definition",
+      "id": "function:database/factories/PayrollConfigFactory.php:definition",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/seeders/HolidaySeeder.php:run",
+      "id": "function:database/seeders/HolidaySeeder.php:run",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/seeders/PayrollConfigSeeder.php:run",
+      "id": "function:database/seeders/PayrollConfigSeeder.php:run",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/EventCompleteControllerTest.php:test_complete_event_injects_honor_and_shows_flash",
+      "id": "function:tests/Feature/EventCompleteControllerTest.php:test_complete_event_injects_honor_and_shows_flash",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/EventCompleteControllerTest.php:test_complete_already_completed_event_returns_error",
+      "id": "function:tests/Feature/EventCompleteControllerTest.php:test_complete_already_completed_event_returns_error",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/EventHonorServiceTest.php:test_inject_honor_into_existing_slip",
+      "id": "function:tests/Feature/EventHonorServiceTest.php:test_inject_honor_into_existing_slip",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/EventHonorServiceTest.php:test_create_new_slip_when_none_exists",
+      "id": "function:tests/Feature/EventHonorServiceTest.php:test_create_new_slip_when_none_exists",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/EventHonorServiceTest.php:test_skip_locked_slip",
+      "id": "function:tests/Feature/EventHonorServiceTest.php:test_skip_locked_slip",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/EventHonorServiceTest.php:test_no_warning_when_internal_holiday_exists",
+      "id": "function:tests/Feature/EventHonorServiceTest.php:test_no_warning_when_internal_holiday_exists",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/EventHonorServiceTest.php:test_multiple_teachers_get_separate_honor",
+      "id": "function:tests/Feature/EventHonorServiceTest.php:test_multiple_teachers_get_separate_honor",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/EventHonorServiceTest.php:test_teacher_accompanying_multiple_students_gets_honor_once",
+      "id": "function:tests/Feature/EventHonorServiceTest.php:test_teacher_accompanying_multiple_students_gets_honor_once",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/EventHonorServiceTest.php:test_honor_amount_read_from_payroll_config",
+      "id": "function:tests/Feature/EventHonorServiceTest.php:test_honor_amount_read_from_payroll_config",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/EventHonorServiceTest.php:test_note_appended_when_existing_event_honor_note",
+      "id": "function:tests/Feature/EventHonorServiceTest.php:test_note_appended_when_existing_event_honor_note",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/EventHonorServiceTest.php:test_no_accompanying_teachers_returns_zero_updated",
+      "id": "function:tests/Feature/EventHonorServiceTest.php:test_no_accompanying_teachers_returns_zero_updated",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/HonorControllerEventHonorTest.php:buatSlip",
+      "id": "function:tests/Feature/HonorControllerEventHonorTest.php:buatSlip",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/HonorControllerEventHonorTest.php:test_owner_dapat_simpan_event_honor_ke_slip",
+      "id": "function:tests/Feature/HonorControllerEventHonorTest.php:test_owner_dapat_simpan_event_honor_ke_slip",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/HonorControllerEventHonorTest.php:test_event_honor_lebih_dari_nol_tanpa_keterangan_ditolak",
+      "id": "function:tests/Feature/HonorControllerEventHonorTest.php:test_event_honor_lebih_dari_nol_tanpa_keterangan_ditolak",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/HonorControllerEventHonorTest.php:test_event_honor_nol_tanpa_keterangan_diterima",
+      "id": "function:tests/Feature/HonorControllerEventHonorTest.php:test_event_honor_nol_tanpa_keterangan_diterima",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/HonorControllerEventHonorTest.php:test_slip_paid_tidak_bisa_diupdate",
+      "id": "function:tests/Feature/HonorControllerEventHonorTest.php:test_slip_paid_tidak_bisa_diupdate",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Unit/Models/HonorSlipTest.php:test_recalc_total_menyertakan_event_honor",
+      "id": "function:tests/Unit/Models/HonorSlipTest.php:test_recalc_total_menyertakan_event_honor",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Unit/Models/HonorSlipTest.php:test_recalc_total_tanpa_event_honor_tetap_benar",
+      "id": "function:tests/Unit/Models/HonorSlipTest.php:test_recalc_total_tanpa_event_honor_tetap_benar",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/GuruController.php:confirmSubstitute",
+      "id": "function:app/Http/Controllers/GuruController.php:confirmSubstitute",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/GuruController.php:dashboard",
+      "id": "function:app/Http/Controllers/GuruController.php:dashboard",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/GuruController.php:honor",
+      "id": "function:app/Http/Controllers/GuruController.php:honor",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/GuruController.php:honorShow",
+      "id": "function:app/Http/Controllers/GuruController.php:honorShow",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/GuruController.php:jadwal",
+      "id": "function:app/Http/Controllers/GuruController.php:jadwal",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/GuruController.php:laporan",
+      "id": "function:app/Http/Controllers/GuruController.php:laporan",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/GuruController.php:laporanEdit",
+      "id": "function:app/Http/Controllers/GuruController.php:laporanEdit",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/GuruController.php:laporanPdfView",
+      "id": "function:app/Http/Controllers/GuruController.php:laporanPdfView",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/GuruController.php:laporanStore",
+      "id": "function:app/Http/Controllers/GuruController.php:laporanStore",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/GuruController.php:laporanUpdate",
+      "id": "function:app/Http/Controllers/GuruController.php:laporanUpdate",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/GuruController.php:sesiPending",
+      "id": "function:app/Http/Controllers/GuruController.php:sesiPending",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/GuruController.php:suggestDate",
+      "id": "function:app/Http/Controllers/GuruController.php:suggestDate",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/GuruController.php:updateAbsensi",
+      "id": "function:app/Http/Controllers/GuruController.php:updateAbsensi",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/GuruController.php:updateSessionNotes",
+      "id": "function:app/Http/Controllers/GuruController.php:updateSessionNotes",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ProgressReportController.php:index",
+      "id": "function:app/Http/Controllers/ProgressReportController.php:index",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ProgressReportController.php:show",
+      "id": "function:app/Http/Controllers/ProgressReportController.php:show",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ProgressReportController.php:viewerData",
+      "id": "function:app/Http/Controllers/ProgressReportController.php:viewerData",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ReportTemplateController.php:destroy",
+      "id": "function:app/Http/Controllers/ReportTemplateController.php:destroy",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ReportTemplateController.php:store",
+      "id": "function:app/Http/Controllers/ReportTemplateController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ReportTemplateController.php:storeItem",
+      "id": "function:app/Http/Controllers/ReportTemplateController.php:storeItem",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ReportTemplateController.php:storeSection",
+      "id": "function:app/Http/Controllers/ReportTemplateController.php:storeSection",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/ReportTemplateController.php:update",
+      "id": "function:app/Http/Controllers/ReportTemplateController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/SessionReportWaLogController.php:index",
+      "id": "function:app/Http/Controllers/SessionReportWaLogController.php:index",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/SessionReportWaLogController.php:resend",
+      "id": "function:app/Http/Controllers/SessionReportWaLogController.php:resend",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/TeacherController.php:store",
+      "id": "function:app/Http/Controllers/TeacherController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/TeacherController.php:update",
+      "id": "function:app/Http/Controllers/TeacherController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Jobs/SendSessionReportWaJob.php:handle",
+      "id": "function:app/Jobs/SendSessionReportWaJob.php:handle",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ProgressReportPdfService.php:loadReport",
+      "id": "function:app/Services/ProgressReportPdfService.php:loadReport",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ProgressReportService.php:backfillReportNumbers",
+      "id": "function:app/Services/ProgressReportService.php:backfillReportNumbers",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ProgressReportService.php:generateReportNumber",
+      "id": "function:app/Services/ProgressReportService.php:generateReportNumber",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ReportTemplateResolverService.php:previewForEnrollment",
+      "id": "function:app/Services/ReportTemplateResolverService.php:previewForEnrollment",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ReportTemplateResolverService.php:resolveForEnrollment",
+      "id": "function:app/Services/ReportTemplateResolverService.php:resolveForEnrollment",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ReportTemplateResolverService.php:templateKindForPackage",
+      "id": "function:app/Services/ReportTemplateResolverService.php:templateKindForPackage",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/SessionNoteSyncService.php:noteHasContent",
+      "id": "function:app/Services/SessionNoteSyncService.php:noteHasContent",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/SessionNoteSyncService.php:sync",
+      "id": "function:app/Services/SessionNoteSyncService.php:sync",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/SessionReportWaService.php:deliveryState",
+      "id": "function:app/Services/SessionReportWaService.php:deliveryState",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/SessionReportWaService.php:resolveRecipientType",
+      "id": "function:app/Services/SessionReportWaService.php:resolveRecipientType",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/SessionReportWaService.php:composeMessage",
+      "id": "function:app/Services/SessionReportWaService.php:composeMessage",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/SessionReportWaService.php:sendForSession",
+      "id": "function:app/Services/SessionReportWaService.php:sendForSession",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/SessionReportWaService.php:resolveRecipientPhone",
+      "id": "function:app/Services/SessionReportWaService.php:resolveRecipientPhone",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/SessionReportWaService.php:persistLog",
+      "id": "function:app/Services/SessionReportWaService.php:persistLog",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/TeacherService.php:deactivate",
+      "id": "function:app/Services/TeacherService.php:deactivate",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/seeders/ReportTemplateSeeder.php:run",
+      "id": "function:database/seeders/ReportTemplateSeeder.php:run",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/seeders/ReportTemplateSeeder.php:instrumentLabel",
+      "id": "function:database/seeders/ReportTemplateSeeder.php:instrumentLabel",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/seeders/ReportTemplateSeeder.php:seedTemplate",
+      "id": "function:database/seeders/ReportTemplateSeeder.php:seedTemplate",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/seeders/ReportTemplateSeeder.php:regulerTemplates",
+      "id": "function:database/seeders/ReportTemplateSeeder.php:regulerTemplates",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/seeders/ReportTemplateSeeder.php:hobbyTemplates",
+      "id": "function:database/seeders/ReportTemplateSeeder.php:hobbyTemplates",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/seeders/ReportTemplateSeeder.php:kidsSections",
+      "id": "function:database/seeders/ReportTemplateSeeder.php:kidsSections",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ProgressReportAdminTest.php:setUp",
+      "id": "function:tests/Feature/ProgressReportAdminTest.php:setUp",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ProgressReportGuruTest.php:setUp",
+      "id": "function:tests/Feature/ProgressReportGuruTest.php:setUp",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ReportTemplateResolverTest.php:test_resolve_hobby_package",
+      "id": "function:tests/Feature/ReportTemplateResolverTest.php:test_resolve_hobby_package",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ReportTemplateResolverTest.php:test_resolve_kids_class_package",
+      "id": "function:tests/Feature/ReportTemplateResolverTest.php:test_resolve_kids_class_package",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ReportTemplateTest.php:setUp",
+      "id": "function:tests/Feature/ReportTemplateTest.php:setUp",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ReportTemplateTest.php:test_owner_bisa_buat_template",
+      "id": "function:tests/Feature/ReportTemplateTest.php:test_owner_bisa_buat_template",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ReportTemplateTest.php:test_owner_bisa_tambah_section",
+      "id": "function:tests/Feature/ReportTemplateTest.php:test_owner_bisa_tambah_section",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/ReportTemplateTest.php:test_owner_bisa_tambah_item_ke_section",
+      "id": "function:tests/Feature/ReportTemplateTest.php:test_owner_bisa_tambah_item_ke_section",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/RoomControllerTest.php:test_owner_dapat_buat_ruangan_dengan_supported_instruments",
+      "id": "function:tests/Feature/RoomControllerTest.php:test_owner_dapat_buat_ruangan_dengan_supported_instruments",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/RoomControllerTest.php:test_supported_instruments_tersimpan_sebagai_array_bukan_string",
+      "id": "function:tests/Feature/RoomControllerTest.php:test_supported_instruments_tersimpan_sebagai_array_bukan_string",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/RoomControllerTest.php:test_update_ruangan_hapus_instrumen_tidak_trigger_warning_tanpa_jadwal",
+      "id": "function:tests/Feature/RoomControllerTest.php:test_update_ruangan_hapus_instrumen_tidak_trigger_warning_tanpa_jadwal",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/RoomControllerTest.php:test_kolom_boolean_lama_tidak_ada_lagi",
+      "id": "function:tests/Feature/RoomControllerTest.php:test_kolom_boolean_lama_tidak_ada_lagi",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Services/SessionNoteSyncAttributionTest.php:test_sync_includes_manual_session_by_attribution_not_session_date",
+      "id": "function:tests/Feature/Services/SessionNoteSyncAttributionTest.php:test_sync_includes_manual_session_by_attribution_not_session_date",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/SessionReportWaTest.php:seedSessionReportTemplate",
+      "id": "function:tests/Feature/SessionReportWaTest.php:seedSessionReportTemplate",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/SessionReportWaTest.php:buildSessionWithNote",
+      "id": "function:tests/Feature/SessionReportWaTest.php:buildSessionWithNote",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Unit/PackageReportLabelTest.php:makePackage",
+      "id": "function:tests/Unit/PackageReportLabelTest.php:makePackage",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Unit/ProgressReportHelpersTest.php:makeReport",
+      "id": "function:tests/Unit/ProgressReportHelpersTest.php:makeReport",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Unit/ProgressReportServiceTest.php:seedReport",
+      "id": "function:tests/Unit/ProgressReportServiceTest.php:seedReport",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/Auth/AuthenticatedSessionController.php:store",
+      "id": "function:app/Http/Controllers/Auth/AuthenticatedSessionController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/Auth/AuthenticatedSessionController.php:destroy",
+      "id": "function:app/Http/Controllers/Auth/AuthenticatedSessionController.php:destroy",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/Auth/ConfirmablePasswordController.php:store",
+      "id": "function:app/Http/Controllers/Auth/ConfirmablePasswordController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/Auth/EmailVerificationNotificationController.php:store",
+      "id": "function:app/Http/Controllers/Auth/EmailVerificationNotificationController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/Auth/NewPasswordController.php:store",
+      "id": "function:app/Http/Controllers/Auth/NewPasswordController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/Auth/PasswordController.php:update",
+      "id": "function:app/Http/Controllers/Auth/PasswordController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/Auth/PasswordResetLinkController.php:store",
+      "id": "function:app/Http/Controllers/Auth/PasswordResetLinkController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/Auth/RegisteredUserController.php:store",
+      "id": "function:app/Http/Controllers/Auth/RegisteredUserController.php:store",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/Auth/VerifyEmailController.php:__invoke",
+      "id": "function:app/Http/Controllers/Auth/VerifyEmailController.php:__invoke",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/Auth/LoginRequest.php:authenticate",
+      "id": "function:app/Http/Requests/Auth/LoginRequest.php:authenticate",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/Auth/LoginRequest.php:ensureIsNotRateLimited",
+      "id": "function:app/Http/Requests/Auth/LoginRequest.php:ensureIsNotRateLimited",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Console/Commands/SendScheduleReminders.php:handle",
+      "id": "function:app/Console/Commands/SendScheduleReminders.php:handle",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/WhatsappMessageTemplateController.php:update",
+      "id": "function:app/Http/Controllers/WhatsappMessageTemplateController.php:update",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Controllers/WhatsappMessageTemplateController.php:destroy",
+      "id": "function:app/Http/Controllers/WhatsappMessageTemplateController.php:destroy",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/UpdateWhatsappMessageTemplateRequest.php:rules",
+      "id": "function:app/Http/Requests/UpdateWhatsappMessageTemplateRequest.php:rules",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Models/WhatsappMessageTemplate.php:defaultEncouragementLines",
+      "id": "function:app/Models/WhatsappMessageTemplate.php:defaultEncouragementLines",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Models/WhatsappMessageTemplate.php:encouragementForRating",
+      "id": "function:app/Models/WhatsappMessageTemplate.php:encouragementForRating",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Models/WhatsappMessageTemplate.php:ensureSystemDefaults",
+      "id": "function:app/Models/WhatsappMessageTemplate.php:ensureSystemDefaults",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ScheduleReminderService.php:shouldRunAt",
+      "id": "function:app/Services/ScheduleReminderService.php:shouldRunAt",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ScheduleReminderService.php:sendDueReminders",
+      "id": "function:app/Services/ScheduleReminderService.php:sendDueReminders",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ScheduleReminderService.php:groupSessionsForReminder",
+      "id": "function:app/Services/ScheduleReminderService.php:groupSessionsForReminder",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ScheduleReminderService.php:groupByStudent",
+      "id": "function:app/Services/ScheduleReminderService.php:groupByStudent",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ScheduleReminderService.php:groupHoursBeforeSessions",
+      "id": "function:app/Services/ScheduleReminderService.php:groupHoursBeforeSessions",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ScheduleReminderService.php:baseSessionQuery",
+      "id": "function:app/Services/ScheduleReminderService.php:baseSessionQuery",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ScheduleReminderService.php:alreadyReminded",
+      "id": "function:app/Services/ScheduleReminderService.php:alreadyReminded",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ScheduleReminderService.php:composeMessage",
+      "id": "function:app/Services/ScheduleReminderService.php:composeMessage",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ScheduleReminderService.php:persistLog",
+      "id": "function:app/Services/ScheduleReminderService.php:persistLog",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ScheduleReminderService.php:resolveReminderPhone",
+      "id": "function:app/Services/ScheduleReminderService.php:resolveReminderPhone",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ScheduleReminderService.php:humanizeError",
+      "id": "function:app/Services/ScheduleReminderService.php:humanizeError",
+      "line": "unknown"
+    },
+    {
+      "name": "function:database/seeders/WhatsappMessageTemplateSeeder.php:run",
+      "id": "function:database/seeders/WhatsappMessageTemplateSeeder.php:run",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Exports/Sheets/DataMuridSheet.php:array",
+      "id": "function:app/Exports/Sheets/DataMuridSheet.php:array",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Exports/Sheets/ReferensiKodeSheet.php:array",
+      "id": "function:app/Exports/Sheets/ReferensiKodeSheet.php:array",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Console/Commands/ClearStudentData.php:handle",
+      "id": "function:app/Console/Commands/ClearStudentData.php:handle",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Http/Requests/UpdateSessionRequest.php:messages",
+      "id": "function:app/Http/Requests/UpdateSessionRequest.php:messages",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/FonnteService.php:normalizePhone",
+      "id": "function:app/Services/FonnteService.php:normalizePhone",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/FonnteService.php:formatForTarget",
+      "id": "function:app/Services/FonnteService.php:formatForTarget",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/FonnteService.php:sendText",
+      "id": "function:app/Services/FonnteService.php:sendText",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/FonnteService.php:post",
+      "id": "function:app/Services/FonnteService.php:post",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/FonnteService.php:extractMessageIds",
+      "id": "function:app/Services/FonnteService.php:extractMessageIds",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/FonnteService.php:fail",
+      "id": "function:app/Services/FonnteService.php:fail",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ProgressReportPdfAssetService.php:optimizedLogoPath",
+      "id": "function:app/Services/ProgressReportPdfAssetService.php:optimizedLogoPath",
+      "line": "unknown"
+    },
+    {
+      "name": "function:app/Services/ProgressReportPdfAssetService.php:resolveSourceLogoPath",
+      "id": "function:app/Services/ProgressReportPdfAssetService.php:resolveSourceLogoPath",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_manual.py:set_font",
+      "id": "function:docs/generate-docs/generate_manual.py:set_font",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_manual.py:add_heading",
+      "id": "function:docs/generate-docs/generate_manual.py:add_heading",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_manual.py:add_body",
+      "id": "function:docs/generate-docs/generate_manual.py:add_body",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_manual.py:add_step",
+      "id": "function:docs/generate-docs/generate_manual.py:add_step",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_manual.py:add_note",
+      "id": "function:docs/generate-docs/generate_manual.py:add_note",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_manual.py:add_warning",
+      "id": "function:docs/generate-docs/generate_manual.py:add_warning",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_manual.py:shade_header_row",
+      "id": "function:docs/generate-docs/generate_manual.py:shade_header_row",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_manual.py:add_simple_table",
+      "id": "function:docs/generate-docs/generate_manual.py:add_simple_table",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_manual.py:bab1_memulai",
+      "id": "function:docs/generate-docs/generate_manual.py:bab1_memulai",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_manual.py:bab2_harian",
+      "id": "function:docs/generate-docs/generate_manual.py:bab2_harian",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_manual.py:bab3_awal_bulan",
+      "id": "function:docs/generate-docs/generate_manual.py:bab3_awal_bulan",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_manual.py:bab4_insidental",
+      "id": "function:docs/generate-docs/generate_manual.py:bab4_insidental",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_manual.py:bab5_referensi",
+      "id": "function:docs/generate-docs/generate_manual.py:bab5_referensi",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_manual.py:build_document",
+      "id": "function:docs/generate-docs/generate_manual.py:build_document",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_uat.py:set_font",
+      "id": "function:docs/generate-docs/generate_uat.py:set_font",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_uat.py:add_heading",
+      "id": "function:docs/generate-docs/generate_uat.py:add_heading",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_uat.py:set_col_width",
+      "id": "function:docs/generate-docs/generate_uat.py:set_col_width",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_uat.py:shade_header_row",
+      "id": "function:docs/generate-docs/generate_uat.py:shade_header_row",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_uat.py:add_scenario_table",
+      "id": "function:docs/generate-docs/generate_uat.py:add_scenario_table",
+      "line": "unknown"
+    },
+    {
+      "name": "function:docs/generate-docs/generate_uat.py:build_document",
+      "id": "function:docs/generate-docs/generate_uat.py:build_document",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:h1",
+      "id": "function:generate_admin_manual_v2.cjs:h1",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:h2",
+      "id": "function:generate_admin_manual_v2.cjs:h2",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:h3",
+      "id": "function:generate_admin_manual_v2.cjs:h3",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:para",
+      "id": "function:generate_admin_manual_v2.cjs:para",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:bullet",
+      "id": "function:generate_admin_manual_v2.cjs:bullet",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:numbered",
+      "id": "function:generate_admin_manual_v2.cjs:numbered",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:note",
+      "id": "function:generate_admin_manual_v2.cjs:note",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:warning",
+      "id": "function:generate_admin_manual_v2.cjs:warning",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:makeTable",
+      "id": "function:generate_admin_manual_v2.cjs:makeTable",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:buildCoverPage",
+      "id": "function:generate_admin_manual_v2.cjs:buildCoverPage",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:buildDaftarIsi",
+      "id": "function:generate_admin_manual_v2.cjs:buildDaftarIsi",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:buildBab1",
+      "id": "function:generate_admin_manual_v2.cjs:buildBab1",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:buildBab2",
+      "id": "function:generate_admin_manual_v2.cjs:buildBab2",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:buildBab3",
+      "id": "function:generate_admin_manual_v2.cjs:buildBab3",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:buildBab4",
+      "id": "function:generate_admin_manual_v2.cjs:buildBab4",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:buildBab5",
+      "id": "function:generate_admin_manual_v2.cjs:buildBab5",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:buildBab6",
+      "id": "function:generate_admin_manual_v2.cjs:buildBab6",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:buildBab7",
+      "id": "function:generate_admin_manual_v2.cjs:buildBab7",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:buildBab8",
+      "id": "function:generate_admin_manual_v2.cjs:buildBab8",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:buildBab9",
+      "id": "function:generate_admin_manual_v2.cjs:buildBab9",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:buildBab10",
+      "id": "function:generate_admin_manual_v2.cjs:buildBab10",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:buildBab11",
+      "id": "function:generate_admin_manual_v2.cjs:buildBab11",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:buildBab12",
+      "id": "function:generate_admin_manual_v2.cjs:buildBab12",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:buildLampiran",
+      "id": "function:generate_admin_manual_v2.cjs:buildLampiran",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_admin_manual_v2.cjs:generateDocument",
+      "id": "function:generate_admin_manual_v2.cjs:generateDocument",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_guru_manual.cjs:h1",
+      "id": "function:generate_guru_manual.cjs:h1",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_guru_manual.cjs:h2",
+      "id": "function:generate_guru_manual.cjs:h2",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_guru_manual.cjs:h3",
+      "id": "function:generate_guru_manual.cjs:h3",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_guru_manual.cjs:para",
+      "id": "function:generate_guru_manual.cjs:para",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_guru_manual.cjs:bullet",
+      "id": "function:generate_guru_manual.cjs:bullet",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_guru_manual.cjs:bulletBold",
+      "id": "function:generate_guru_manual.cjs:bulletBold",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_guru_manual.cjs:note",
+      "id": "function:generate_guru_manual.cjs:note",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_guru_manual.cjs:warning",
+      "id": "function:generate_guru_manual.cjs:warning",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_guru_manual.cjs:tip",
+      "id": "function:generate_guru_manual.cjs:tip",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_guru_manual.cjs:makeTable",
+      "id": "function:generate_guru_manual.cjs:makeTable",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_guru_manual.cjs:generateDocument",
+      "id": "function:generate_guru_manual.cjs:generateDocument",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeTable",
+      "id": "function:generate_owner_manual.cjs:makeTable",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeCover",
+      "id": "function:generate_owner_manual.cjs:makeCover",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeTOC",
+      "id": "function:generate_owner_manual.cjs:makeTOC",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeBab1",
+      "id": "function:generate_owner_manual.cjs:makeBab1",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeBab2",
+      "id": "function:generate_owner_manual.cjs:makeBab2",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeBab3",
+      "id": "function:generate_owner_manual.cjs:makeBab3",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeBab4",
+      "id": "function:generate_owner_manual.cjs:makeBab4",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeBab5",
+      "id": "function:generate_owner_manual.cjs:makeBab5",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeBab6",
+      "id": "function:generate_owner_manual.cjs:makeBab6",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeBab7",
+      "id": "function:generate_owner_manual.cjs:makeBab7",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeBab8",
+      "id": "function:generate_owner_manual.cjs:makeBab8",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeBab9",
+      "id": "function:generate_owner_manual.cjs:makeBab9",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeBab10",
+      "id": "function:generate_owner_manual.cjs:makeBab10",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeBab11",
+      "id": "function:generate_owner_manual.cjs:makeBab11",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeBab12",
+      "id": "function:generate_owner_manual.cjs:makeBab12",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeBab13",
+      "id": "function:generate_owner_manual.cjs:makeBab13",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeBab14",
+      "id": "function:generate_owner_manual.cjs:makeBab14",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeBab15",
+      "id": "function:generate_owner_manual.cjs:makeBab15",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:makeLampiran",
+      "id": "function:generate_owner_manual.cjs:makeLampiran",
+      "line": "unknown"
+    },
+    {
+      "name": "function:generate_owner_manual.cjs:main",
+      "id": "function:generate_owner_manual.cjs:main",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Feature/Auth/RegistrationTest.php:test_new_users_can_register",
+      "id": "function:tests/Feature/Auth/RegistrationTest.php:test_new_users_can_register",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Unit/FonntePhoneNormalizeTest.php:phoneProvider",
+      "id": "function:tests/Unit/FonntePhoneNormalizeTest.php:phoneProvider",
+      "line": "unknown"
+    },
+    {
+      "name": "function:tests/Unit/ProgressReportPdfAssetServiceTest.php:test_optimized_logo_is_smaller_than_source_when_gd_available",
+      "id": "function:tests/Unit/ProgressReportPdfAssetServiceTest.php:test_optimized_logo_is_smaller_than_source_when_gd_available",
+      "line": "unknown"
+    }
+  ]
+}

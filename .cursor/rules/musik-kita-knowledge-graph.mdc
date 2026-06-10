@@ -1,0 +1,67 @@
+---
+description: >-
+  Musik KITA knowledge graph — arsitektur, lokasi class/function, dependency map.
+  Gunakan saat pertanyaan struktur codebase, "di mana X?", refactor multi-file, atau trace import.
+alwaysApply: true
+---
+
+# Musik KITA Knowledge Graph Reference
+
+> author: Musik KITA Development | version: 1.0
+
+## IMPORTANT: Use This for Architecture & Dependency Questions
+
+When questions are about codebase structure, dependencies, or where something lives:
+
+1. **FIRST** consult the knowledge graph references below
+2. **ONLY THEN** open full source files (saves ~70–80% tokens)
+
+## Architecture Overview
+
+@.understand-anything/reference-architecture.json
+
+**Layer summary:** `app/` (142 files) · `database/` (106) · `resources/views/` (128) · `tests/` (82) · `routes/` (9)
+**Stats:** 496 files · 499 functions · 249 classes · 791 imports
+
+## Quick Index (Classes & Functions)
+
+`reference-index.json` is ~139 KB — **do not load the whole file**. Use targeted lookup:
+
+- Grep: `rg "Enrollment" .understand-anything/reference-index.json`
+- CLI: `node scripts/extract-graph.js --query classes --filter "Enrollment"`
+
+## When You Need More Details
+
+| Pertanyaan | Sumber |
+|---|---|
+| "Where is function X?" | Read `.understand-anything/reference-functions.json` |
+| "What imports what?" | Read `.understand-anything/reference-dependencies.json` |
+| "Directory structure?" | `node scripts/extract-graph.js --query structure` |
+| "Who calls this function?" | `node scripts/extract-graph.js --query relationships --filter "<name>"` |
+| Domain flows | `.understand-anything/reference-domain-index.json` |
+| Panduan lengkap | `.understand-anything/REFERENCE-GUIDE.md` |
+
+## Stack Info (from graph)
+
+- Architecture: Laravel 11 + Livewire 3 (target Phase 2)
+- Frontend: Blade + Alpine.js 3.x + Tailwind CSS 3.x
+- Database: MySQL via Laragon
+- Current state: ~80–90% complete Phase 1
+- Team size: solo dev + 18 music teachers + <300 students
+
+## For Code Changes
+
+Before changes that affect multiple files:
+
+1. `reference-dependencies.json` — what else might break
+2. `reference-functions.json` — all related functions
+3. `reference-architecture.json` — layer compliance
+4. **THEN** ask for specific code snippets (not full files)
+
+## Regenerate References
+
+After updating the knowledge graph (`/understand`):
+
+```bash
+node scripts/create-reference.js
+```

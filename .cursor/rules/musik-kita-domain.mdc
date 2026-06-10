@@ -1,0 +1,93 @@
+﻿---
+description: >-
+  Musik KITA domain-aware development — domain dulu, kode kemudian. Gunakan domain graph
+  untuk fitur, flow, business rules, dampak lintas-domain, dan lokasi filePath.
+alwaysApply: true
+---
+
+# Musik KITA Domain-Aware Development
+
+> author: Musik KITA | version: 2.0
+
+## Golden Rule
+
+**Saat menjawab pertanyaan fitur, flow, atau lokasi kode:**
+
+1. **DOMAIN dulu** — business logic, rules, flows
+2. **CODE kemudian** — filePath dari steps, entity mapping
+3. **Jangan load file penuh** — pakai graph references + targeted lookup
+
+**Urutan lookup:** domain graph (ini) → knowledge graph (`musik-kita-knowledge-graph.mdc`) → snippet kode spesifik.
+
+## Domain References
+
+@.understand-anything/reference-domain-index.json
+
+**7 domain:** Student Lifecycle · Penjadwalan & Absensi · Billing & Payments · Honor Guru · Event · Master Data · Laporan & Notifikasi
+
+**Stats:** 24 flows · 110 steps · 96% steps punya `filePath` (di `domain-graph.json`)
+
+## Cross-Domain Impact
+
+@.understand-anything/reference-cross-domain-impact.json
+
+## Quick Index (Code)
+
+`reference-index.json` (~142 KB) — **jangan load seluruh file**. Targeted lookup:
+
+- Grep: `rg "Enrollment" .understand-anything/reference-index.json`
+- CLI: `node scripts/extract-graph.js --query classes --filter "Enrollment"`
+
+## Entity → Code Mapping
+
+`.understand-anything/reference-domain-to-code-mapper.json` — jika kosong, regenerate:
+
+```bash
+node scripts/create-domain-references.js
+```
+
+## Domain Query CLI
+
+Full flows + `filePath` per step ada di `domain-graph.json`. Pakai:
+
+```bash
+node scripts/query-domain-code.js --domain "student-lifecycle" --list-steps
+node scripts/query-domain-code.js --entity "Student" --show-impact
+node scripts/query-domain-code.js --search "honor"
+```
+
+## Workflow
+
+| Situasi | Langkah |
+|---|---|
+| Tambah fitur X | Domain → business rules → `filePath` dari steps |
+| Bug di X | Domain → cross-domain impact → file terkait |
+| Refactor sistem X | Affected flows → semua `filePath` → test plan |
+| Apa yang break jika ubah X? | `reference-cross-domain-impact.json` + `--show-impact` |
+
+## Quick Commands (untuk user)
+
+- "Show me [domain] domain" → `reference-domain-index.json` atau `--domain`
+- "What entities are in [flow]?" → `--domain ... --list-steps`
+- "What code files for [entity]?" → `reference-domain-to-code-mapper.json` atau `--entity`
+- "What's impacted by changing [X]?" → `reference-cross-domain-impact.json`
+- "Where is [business rule] implemented?" → `filePath` di step flow (`domain-graph.json`)
+
+## Stack (konteks)
+
+- Laravel 11 ERP · 7 domain · 24 flows · 110 steps
+- Coverage: 96% steps mapped ke `filePath`
+
+## Token Efficiency
+
+- Tanpa graph: ~50–75K tokens/query
+- Dengan graph: ~5–15K tokens/query
+- Hemat: **80–90%**
+
+## Regenerate
+
+Setelah update domain graph (`/understand-domain`):
+
+```bash
+node scripts/create-domain-references.js
+```

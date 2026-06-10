@@ -1,0 +1,142 @@
+{
+  "timestamp": "2026-06-09T08:03:12.826Z",
+  "graphPath": "C:\\laragon\\www\\musik-kita-ops\\.understand-anything\\knowledge-graph.json",
+  "fileSizeKB": 1218,
+  "totalNodes": 1371,
+  "totalEdges": 2076,
+  "nodesByType": {
+    "file": 496,
+    "class": 249,
+    "function": 499,
+    "config": 19,
+    "document": 108
+  },
+  "edgesByType": {
+    "imports": 791,
+    "contains": 748,
+    "exports": 210,
+    "calls": 74,
+    "depends_on": 12,
+    "routes": 7,
+    "related": 106,
+    "inherits": 9,
+    "documents": 98,
+    "configures": 10,
+    "migrates": 11
+  },
+  "fileLanguages": {
+    "php": 472,
+    "bat": 1,
+    "mdc": 4,
+    "file:artisan": 1,
+    "py": 2,
+    "html": 3,
+    "cjs": 3,
+    "js": 5,
+    "htaccess": 1,
+    "file:public/query": 1,
+    "css": 1,
+    "docx": 2
+  },
+  "tokenEstimates": {
+    "fullCodebaseTokens": 4872,
+    "graphOnlyTokens": 730.8,
+    "graphPlusSelectiveTokens": 1218,
+    "estimatedSavings": "75%"
+  },
+  "topFilesByComplexity": [],
+  "topFunctionsByRelationships": [
+    {
+      "name": "class:app/Services/InvoiceService.php:InvoiceService",
+      "type": "class",
+      "relationshipCount": 13
+    },
+    {
+      "name": "class:app/Services/StudentLifecycleService.php:StudentLifecycleService",
+      "type": "class",
+      "relationshipCount": 13
+    },
+    {
+      "name": "class:app/Models/ProgressReport.php:ProgressReport",
+      "type": "class",
+      "relationshipCount": 11
+    },
+    {
+      "name": "class:app/Http/Controllers/Controller.php:Controller",
+      "type": "class",
+      "relationshipCount": 11
+    },
+    {
+      "name": "class:app/Services/InvoiceReminderService.php:InvoiceReminderService",
+      "type": "class",
+      "relationshipCount": 8
+    },
+    {
+      "name": "class:app/Services/SessionReportWaService.php:SessionReportWaService",
+      "type": "class",
+      "relationshipCount": 8
+    },
+    {
+      "name": "class:database/seeders/ReportTemplateSeeder.php:ReportTemplateSeeder",
+      "type": "class",
+      "relationshipCount": 8
+    },
+    {
+      "name": "class:app/Models/Student.php:Student",
+      "type": "class",
+      "relationshipCount": 7
+    },
+    {
+      "name": "class:app/Http/Controllers/UserController.php:UserController",
+      "type": "class",
+      "relationshipCount": 7
+    },
+    {
+      "name": "class:app/Models/Invoice.php:Invoice",
+      "type": "class",
+      "relationshipCount": 7
+    }
+  ],
+  "topImportedModules": [
+    {
+      "module": "file:app/Models/Student.php",
+      "importCount": 76
+    },
+    {
+      "module": "file:app/Models/Teacher.php",
+      "importCount": 68
+    },
+    {
+      "module": "file:app/Models/User.php",
+      "importCount": 63
+    },
+    {
+      "module": "file:app/Models/Enrollment.php",
+      "importCount": 61
+    },
+    {
+      "module": "file:app/Models/Package.php",
+      "importCount": 55
+    },
+    {
+      "module": "file:app/Models/ClassSession.php",
+      "importCount": 49
+    },
+    {
+      "module": "file:app/Models/Room.php",
+      "importCount": 40
+    },
+    {
+      "module": "file:app/Models/Instrument.php",
+      "importCount": 34
+    },
+    {
+      "module": "file:app/Models/Invoice.php",
+      "importCount": 23
+    },
+    {
+      "module": "file:app/Models/Schedule.php",
+      "importCount": 21
+    }
+  ]
+}

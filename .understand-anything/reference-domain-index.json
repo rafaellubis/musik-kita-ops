@@ -1,0 +1,162 @@
+{
+  "generatedAt": "2026-06-09T08:06:07.246Z",
+  "project": "musik-kita-ops",
+  "totalDomains": 7,
+  "totalFlows": 24,
+  "totalSteps": 110,
+  "domains": [
+    {
+      "id": "domain:student-lifecycle",
+      "name": "Student Lifecycle Management",
+      "summary": "Mengelola perjalanan lengkap murid dari pendaftaran, trial class, aktivasi dengan registrasi, multi-kelas enrollment, pengajuan cuti berbayar, hingga pengunduran diri atau kelulusan Kids Class. Menerapkan 6-status state machine.",
+      "complexity": "moderate",
+      "businessRules": [
+        "Trial gratis 1 sesi, durasi 30 menit untuk semua tipe paket",
+        "Honor trial: hadir = bayar penuh, no-show = Rp 0",
+        "Registrasi Rp 250.000 wajib saat lanjut aktif",
+        "Skip trial wajib isi reason (walk_in/migrasi/reaktivasi/lulus_kids)",
+        "Multi-kelas: murid boleh >1 enrollment ACTIVE",
+        "Setiap murid punya tepat satu primary enrollment",
+        "Cuti Rp 100.000/pengajuan, maks 1 bulan + perpanjang 1x",
+        "Mundur otomatis jika tunggakan >1 bulan tanpa konfirmasi"
+      ],
+      "crossDomainInteractions": [
+        "Billing: aktivasi trigger invoice registrasi + SPP pertama",
+        "Scheduling: enrollment menentukan jadwal mingguan",
+        "Attendance: enrollment status menentukan apakah sesi digenerate"
+      ],
+      "flows": []
+    },
+    {
+      "id": "domain:scheduling-attendance",
+      "name": "Penjadwalan & Absensi",
+      "summary": "Mengelola jadwal mingguan tetap per enrollment, generate sesi bulanan otomatis dengan kalender akademik (hari libur + tanggal pengganti), pencatatan absensi harian dengan 9 status, serta reschedule sesi yang diizinkan.",
+      "complexity": "moderate",
+      "businessRules": [
+        "Generate sesi otomatis berdasarkan jadwal mingguan (cron tanggal 25)",
+        "Min 3, maks 4 sesi per murid per bulan",
+        "Minggu ke-5 tidak dilaksanakan reguler (kecuali replacement session)",
+        "Hari libur nasional dgn replacement_date → sesi LIBUR + sesi pengganti",
+        "Hari libur nasional TANPA replacement_date → sesi LIBUR saja (honor tetap dibayar)",
+        "Holiday tipe Internal (Konser KITA) → honor Rp 0, TIDAK boleh ada replacement_date",
+        "Izin berhak reschedule jika info ≥5 jam + izin PERTAMA di bulan tsb",
+        "Izin ke-2+ = video pengganti (sesi dianggap MASUK)",
+        "Info <5 jam atau tanpa info = HANGUS",
+        "Conflict detection: 1 guru tidak boleh 2 sesi bersamaan, 1 ruang tidak boleh 2 sesi bersamaan"
+      ],
+      "crossDomainInteractions": [
+        "Student Lifecycle: enrollment status menentukan apakah sesi digenerate",
+        "Teacher Honoraria: sesi HADIR/HANGUS/IZIN menentukan honor_code dan honor_amount",
+        "Billing: jumlah sesi tidak mempengaruhi tagihan SPP (tetap bayar penuh)"
+      ],
+      "flows": []
+    },
+    {
+      "id": "domain:billing-payments",
+      "name": "Keuangan Murid (Billing & Payments)",
+      "summary": "Mengelola seluruh aspek keuangan murid: generate invoice SPP otomatis per enrollment ACTIVE setiap tanggal 1, pencatatan pembayaran (CASH/TRANSFER/QRIS/DEBIT), penerapan diskon manual per item, denda keterlambatan harian, dan pencetakan kuitansi KW/YYYY/MM/NNNN.",
+      "complexity": "moderate",
+      "businessRules": [
+        "Invoice SPP auto-generate untuk SETIAP enrollment ACTIVE (multi-kelas)",
+        "Invoice per enrollment, bukan per murid",
+        "Tempo bayar tanggal 1-10, denda Rp 5.000/hari mulai tanggal 11",
+        "Denda dihitung per invoice secara independen",
+        "Diskon: NOMINAL (Rp flat) atau PERCENT (% dari item parent)",
+        "Diskon WAJIB isi parent_item_id + discount_reason",
+        "Void pembayaran hanya oleh Owner",
+        "KIDS_CLASS_BUNDLE: cicil 3 termin (bulan 1, 2, 4) dengan installment_group_id",
+        "Nomor invoice: INV/YYYY/MM/NNNN (reset per bulan)",
+        "Nomor kuitansi: KW/YYYY/MM/NNNN (reset per bulan)",
+        "Item DISKON tidak bisa dihapus Admin (hanya Owner)"
+      ],
+      "crossDomainInteractions": [
+        "Student Lifecycle: aktivasi dan cuti trigger invoice REG/CUTI",
+        "Events: pendaftaran event trigger invoice UJI/MC",
+        "Scheduling: invoice SPP tidak terpengaruh jumlah sesi (tetap bayar penuh)"
+      ],
+      "flows": []
+    },
+    {
+      "id": "domain:teacher-honoraria",
+      "name": "Honor Guru",
+      "summary": "Kalkulasi honor guru otomatis H-2 sebelum akhir bulan berdasarkan 10 skenario kode honor, generate slip SLIP/YYYY/MM/NNNN per guru, review dan edit komponen manual (event, transport, lain-lain), dan tandai dibayar.",
+      "complexity": "moderate",
+      "businessRules": [
+        "Formula dasar: harga_paket × 50% / 4",
+        "Cut-off honor: H-2 sebelum akhir bulan (bukan tanggal terakhir)",
+        "10 skenario honor: H_REG, H_TRIAL, TRIAL_NS, H_VIDEO, H_LIBUR, H_HANGUS, H_PENG, H_KIDS, H_UJIAN, H_IZIN",
+        "Guru pengganti (H_PENG) menerima honor, guru utama tidak",
+        "Sesi IZIN_RESCHEDULE: honor Rp 0 (dibayar via sesi pengganti)",
+        "Honor LIBUR: hari libur nasional TANPA replacement = tetap dibayar penuh",
+        "Honor LIBUR: hari libur Internal (Konser KITA) = Rp 0",
+        "Slip honor terdiri: base_honor (auto) + event_honor (manual) + transport_honor (manual) + other_honor (manual + notes)",
+        "Slip berstatus DRAFT → CALCULATED → PAID (terkunci setelah PAID)",
+        "Honor per sesi TIDAK disimpan di packages — dihitung dari PayrollConfig"
+      ],
+      "crossDomainInteractions": [
+        "Scheduling & Attendance: status absensi menentukan honor_code dan honor_amount",
+        "Events: event completion trigger inject honor pengawas (H_UJIAN) dan pendamping (H_PENDAMPING)"
+      ],
+      "flows": []
+    },
+    {
+      "id": "domain:event-management",
+      "name": "Manajemen Event",
+      "summary": "Mengelola event studio (Mini Concert, Ujian) termasuk pendaftaran peserta, biaya Ujian+Tampil (Rp 395.000) atau Tampil saja (Rp 295.000), input hasil ujian dengan kenaikan grade otomatis, guru pendamping per peserta, dan honor pengawas.",
+      "complexity": "moderate",
+      "businessRules": [
+        "Event types: MINI_CONCERT, UJIAN, MINI_CONCERT_UJIAN",
+        "Biaya Ujian+Tampil = Rp 395.000/murid",
+        "Biaya Tampil saja (Mini Concert) = Rp 295.000/murid",
+        "Honor pengawas ujian: Rp 250.000 flat/ujian (H_UJIAN)",
+        "Guru pendamping per peserta di Konser KITA (H_PENDAMPING Rp 250.000)",
+        "Hasil ujian Lulus → grade naik otomatis",
+        "Event completion: inject honor guru ke HonorSlip",
+        "Guru pendamping hanya bisa diubah saat event masih DRAFT"
+      ],
+      "crossDomainInteractions": [
+        "Billing: pendaftaran event trigger invoice UJI/MC",
+        "Teacher Honoraria: event completion inject honor H_UJIAN/H_PENDAMPING",
+        "Student Lifecycle: hasil ujian Lulus → grade naik di enrollment"
+      ],
+      "flows": []
+    },
+    {
+      "id": "domain:master-data",
+      "name": "Master Data",
+      "summary": "Mengelola seluruh data master: instrumen musik, paket pembelajaran (Reguler, Hobby, DUO, Kids Class), data guru dengan matriks instrumen, ruangan studio dengan fasilitas, kalender akademik (hari libur + tanggal pengganti), dan katalog komponen tagihan manual.",
+      "complexity": "moderate",
+      "businessRules": [
+        "Hanya Owner yang boleh ubah harga paket",
+        "Hapus guru dengan sesi historis → DITOLAK, gunakan nonaktifkan",
+        "Paket otomatis nonaktif jika tidak ada guru aktif untuk instrumen tsb",
+        "Holiday tipe Internal TIDAK boleh punya replacement_date",
+        "replacement_date wajib dalam bulan yang sama dengan tanggal libur",
+        "Ruangan: supported_instruments JSON untuk fleksibilitas",
+        "Katalog invoice_components: dikelola Owner, dipilih Admin saat tambah item manual"
+      ],
+      "crossDomainInteractions": [
+        "Semua domain lain bergantung pada master data untuk referensi"
+      ],
+      "flows": []
+    },
+    {
+      "id": "domain:reports-notifications",
+      "name": "Laporan & Notifikasi",
+      "summary": "Menyediakan dashboard P&L real-time, laporan keuangan (revenue, expense, honor), laporan progres murid bulanan per instrumen, export PDF/Excel, WhatsApp reminder (jadwal, tagihan, sesi), dan audit log viewer untuk Owner.",
+      "complexity": "moderate",
+      "businessRules": [
+        "Dashboard P&L real-time: revenue, expense, aging receivable, unpaid honor",
+        "Laporan P&L dengan breakdown per item type dan payment method",
+        "Laporan progres murid: per instrumen, diisi guru via portal",
+        "WhatsApp reminder terjadwal: jadwal (day-before/same-day), tagihan",
+        "Audit log immutable — tidak bisa dihapus via UI",
+        "Export Excel & PDF untuk semua laporan"
+      ],
+      "crossDomainInteractions": [
+        "Semua domain lain: dashboard dan laporan membaca data dari seluruh modul"
+      ],
+      "flows": []
+    }
+  ]
+}

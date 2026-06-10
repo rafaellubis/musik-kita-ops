@@ -1,0 +1,201 @@
+{
+  "generatedAt": "2026-06-09T08:06:07.255Z",
+  "scenarios": [
+    {
+      "domain": "Student Lifecycle Management",
+      "domainId": "domain:student-lifecycle",
+      "businessRules": [
+        "Trial gratis 1 sesi, durasi 30 menit untuk semua tipe paket",
+        "Honor trial: hadir = bayar penuh, no-show = Rp 0",
+        "Registrasi Rp 250.000 wajib saat lanjut aktif",
+        "Skip trial wajib isi reason (walk_in/migrasi/reaktivasi/lulus_kids)",
+        "Multi-kelas: murid boleh >1 enrollment ACTIVE",
+        "Setiap murid punya tepat satu primary enrollment",
+        "Cuti Rp 100.000/pengajuan, maks 1 bulan + perpanjang 1x",
+        "Mundur otomatis jika tunggakan >1 bulan tanpa konfirmasi"
+      ],
+      "impacts": [
+        {
+          "description": "Billing: aktivasi trigger invoice registrasi + SPP pertama",
+          "affectedDomains": [],
+          "affectedFlows": []
+        },
+        {
+          "description": "Scheduling: enrollment menentukan jadwal mingguan",
+          "affectedDomains": [],
+          "affectedFlows": []
+        },
+        {
+          "description": "Attendance: enrollment status menentukan apakah sesi digenerate",
+          "affectedDomains": [],
+          "affectedFlows": []
+        }
+      ]
+    },
+    {
+      "domain": "Penjadwalan & Absensi",
+      "domainId": "domain:scheduling-attendance",
+      "businessRules": [
+        "Generate sesi otomatis berdasarkan jadwal mingguan (cron tanggal 25)",
+        "Min 3, maks 4 sesi per murid per bulan",
+        "Minggu ke-5 tidak dilaksanakan reguler (kecuali replacement session)",
+        "Hari libur nasional dgn replacement_date → sesi LIBUR + sesi pengganti",
+        "Hari libur nasional TANPA replacement_date → sesi LIBUR saja (honor tetap dibayar)",
+        "Holiday tipe Internal (Konser KITA) → honor Rp 0, TIDAK boleh ada replacement_date",
+        "Izin berhak reschedule jika info ≥5 jam + izin PERTAMA di bulan tsb",
+        "Izin ke-2+ = video pengganti (sesi dianggap MASUK)",
+        "Info <5 jam atau tanpa info = HANGUS",
+        "Conflict detection: 1 guru tidak boleh 2 sesi bersamaan, 1 ruang tidak boleh 2 sesi bersamaan"
+      ],
+      "impacts": [
+        {
+          "description": "Student Lifecycle: enrollment status menentukan apakah sesi digenerate",
+          "affectedDomains": [],
+          "affectedFlows": []
+        },
+        {
+          "description": "Teacher Honoraria: sesi HADIR/HANGUS/IZIN menentukan honor_code dan honor_amount",
+          "affectedDomains": [],
+          "affectedFlows": []
+        },
+        {
+          "description": "Billing: jumlah sesi tidak mempengaruhi tagihan SPP (tetap bayar penuh)",
+          "affectedDomains": [],
+          "affectedFlows": []
+        }
+      ]
+    },
+    {
+      "domain": "Keuangan Murid (Billing & Payments)",
+      "domainId": "domain:billing-payments",
+      "businessRules": [
+        "Invoice SPP auto-generate untuk SETIAP enrollment ACTIVE (multi-kelas)",
+        "Invoice per enrollment, bukan per murid",
+        "Tempo bayar tanggal 1-10, denda Rp 5.000/hari mulai tanggal 11",
+        "Denda dihitung per invoice secara independen",
+        "Diskon: NOMINAL (Rp flat) atau PERCENT (% dari item parent)",
+        "Diskon WAJIB isi parent_item_id + discount_reason",
+        "Void pembayaran hanya oleh Owner",
+        "KIDS_CLASS_BUNDLE: cicil 3 termin (bulan 1, 2, 4) dengan installment_group_id",
+        "Nomor invoice: INV/YYYY/MM/NNNN (reset per bulan)",
+        "Nomor kuitansi: KW/YYYY/MM/NNNN (reset per bulan)",
+        "Item DISKON tidak bisa dihapus Admin (hanya Owner)"
+      ],
+      "impacts": [
+        {
+          "description": "Student Lifecycle: aktivasi dan cuti trigger invoice REG/CUTI",
+          "affectedDomains": [],
+          "affectedFlows": []
+        },
+        {
+          "description": "Events: pendaftaran event trigger invoice UJI/MC",
+          "affectedDomains": [],
+          "affectedFlows": []
+        },
+        {
+          "description": "Scheduling: invoice SPP tidak terpengaruh jumlah sesi (tetap bayar penuh)",
+          "affectedDomains": [],
+          "affectedFlows": []
+        }
+      ]
+    },
+    {
+      "domain": "Honor Guru",
+      "domainId": "domain:teacher-honoraria",
+      "businessRules": [
+        "Formula dasar: harga_paket × 50% / 4",
+        "Cut-off honor: H-2 sebelum akhir bulan (bukan tanggal terakhir)",
+        "10 skenario honor: H_REG, H_TRIAL, TRIAL_NS, H_VIDEO, H_LIBUR, H_HANGUS, H_PENG, H_KIDS, H_UJIAN, H_IZIN",
+        "Guru pengganti (H_PENG) menerima honor, guru utama tidak",
+        "Sesi IZIN_RESCHEDULE: honor Rp 0 (dibayar via sesi pengganti)",
+        "Honor LIBUR: hari libur nasional TANPA replacement = tetap dibayar penuh",
+        "Honor LIBUR: hari libur Internal (Konser KITA) = Rp 0",
+        "Slip honor terdiri: base_honor (auto) + event_honor (manual) + transport_honor (manual) + other_honor (manual + notes)",
+        "Slip berstatus DRAFT → CALCULATED → PAID (terkunci setelah PAID)",
+        "Honor per sesi TIDAK disimpan di packages — dihitung dari PayrollConfig"
+      ],
+      "impacts": [
+        {
+          "description": "Scheduling & Attendance: status absensi menentukan honor_code dan honor_amount",
+          "affectedDomains": [],
+          "affectedFlows": []
+        },
+        {
+          "description": "Events: event completion trigger inject honor pengawas (H_UJIAN) dan pendamping (H_PENDAMPING)",
+          "affectedDomains": [],
+          "affectedFlows": []
+        }
+      ]
+    },
+    {
+      "domain": "Manajemen Event",
+      "domainId": "domain:event-management",
+      "businessRules": [
+        "Event types: MINI_CONCERT, UJIAN, MINI_CONCERT_UJIAN",
+        "Biaya Ujian+Tampil = Rp 395.000/murid",
+        "Biaya Tampil saja (Mini Concert) = Rp 295.000/murid",
+        "Honor pengawas ujian: Rp 250.000 flat/ujian (H_UJIAN)",
+        "Guru pendamping per peserta di Konser KITA (H_PENDAMPING Rp 250.000)",
+        "Hasil ujian Lulus → grade naik otomatis",
+        "Event completion: inject honor guru ke HonorSlip",
+        "Guru pendamping hanya bisa diubah saat event masih DRAFT"
+      ],
+      "impacts": [
+        {
+          "description": "Billing: pendaftaran event trigger invoice UJI/MC",
+          "affectedDomains": [],
+          "affectedFlows": []
+        },
+        {
+          "description": "Teacher Honoraria: event completion inject honor H_UJIAN/H_PENDAMPING",
+          "affectedDomains": [],
+          "affectedFlows": []
+        },
+        {
+          "description": "Student Lifecycle: hasil ujian Lulus → grade naik di enrollment",
+          "affectedDomains": [],
+          "affectedFlows": []
+        }
+      ]
+    },
+    {
+      "domain": "Master Data",
+      "domainId": "domain:master-data",
+      "businessRules": [
+        "Hanya Owner yang boleh ubah harga paket",
+        "Hapus guru dengan sesi historis → DITOLAK, gunakan nonaktifkan",
+        "Paket otomatis nonaktif jika tidak ada guru aktif untuk instrumen tsb",
+        "Holiday tipe Internal TIDAK boleh punya replacement_date",
+        "replacement_date wajib dalam bulan yang sama dengan tanggal libur",
+        "Ruangan: supported_instruments JSON untuk fleksibilitas",
+        "Katalog invoice_components: dikelola Owner, dipilih Admin saat tambah item manual"
+      ],
+      "impacts": [
+        {
+          "description": "Semua domain lain bergantung pada master data untuk referensi",
+          "affectedDomains": [],
+          "affectedFlows": []
+        }
+      ]
+    },
+    {
+      "domain": "Laporan & Notifikasi",
+      "domainId": "domain:reports-notifications",
+      "businessRules": [
+        "Dashboard P&L real-time: revenue, expense, aging receivable, unpaid honor",
+        "Laporan P&L dengan breakdown per item type dan payment method",
+        "Laporan progres murid: per instrumen, diisi guru via portal",
+        "WhatsApp reminder terjadwal: jadwal (day-before/same-day), tagihan",
+        "Audit log immutable — tidak bisa dihapus via UI",
+        "Export Excel & PDF untuk semua laporan"
+      ],
+      "impacts": [
+        {
+          "description": "Semua domain lain: dashboard dan laporan membaca data dari seluruh modul",
+          "affectedDomains": [],
+          "affectedFlows": []
+        }
+      ]
+    }
+  ]
+}
