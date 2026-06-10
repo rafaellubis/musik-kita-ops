@@ -82,7 +82,7 @@
     @role('Owner|Auditor')
     <x-sidebar-item route="packages.index" icon="📦" label="Packages Class"
         :active="request()->routeIs('packages.*')" />
-    @endrole
+        @endrole
     <x-sidebar-item route="rooms.index" icon="🚪" label="Rooms"
         :active="request()->routeIs('rooms.*')" />
     <x-sidebar-item route="holidays.index" icon="📅" label="Kalender Akademik"
@@ -98,6 +98,8 @@
     @role('Owner|Auditor')
     <x-sidebar-item route="invoice-components.index" icon="🧾" label="Komponen Invoice"
         :active="request()->routeIs('invoice-components.*')" />
+    <x-sidebar-item route="expense-categories.index" icon="📦" label="Kategori Pengeluaran"
+        :active="request()->routeIs('expense-categories.*')" />
     <x-sidebar-item route="payroll-configs.index" icon="⚙️" label="Config Honor"
         :active="request()->routeIs('payroll-configs.*')" />
     @endrole
