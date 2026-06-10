@@ -45,10 +45,11 @@ alwaysApply: true
 - **M04 Absensi:** 9 status sesi, RescheduleService, guru pengganti.
 - **M05 Keuangan:** Invoice SPP, denda cron, pembayaran, diskon, kuitansi PDF.
 - **M06 Honor:** Kalkulasi H-2, slip SLIP/YYYY/MM/NNNN, tandai dibayar Owner.
-- **M07 Pengeluaran & Kas:** Kategori expense, petty cash, P&L.
+- **M07 Pengeluaran & Kas:** Kategori expense, petty cash, P&L. Kategori `GAJI_STAFF` untuk posting M12.
 - **M08 Event:** Mini Concert/Ujian, guru pendamping Konser KITA (DRAFT only).
 - **M09 Laporan:** Dashboard P&L, export, audit log Owner.
+- **M12 Gaji Staff:** Master `employees`, slip `GAJI/YYYY/MM/NNNN`, komponen manual, mark paid → expense `GAJI_STAFF`, void paid Owner. SRS: `docs/srs/modules/M12-staff-payroll.md`.
 
 ## Services
 
-`HonorCalculationService`, `SessionGeneratorService`, `InvoiceGeneratorService`, `AutoMundurService`, `TrialManagementService`, `RescheduleService`
+`HonorCalculationService`, `SessionGeneratorService`, `InvoiceGeneratorService`, `AutoMundurService`, `TrialManagementService`, `RescheduleService`, `StaffPayrollService`

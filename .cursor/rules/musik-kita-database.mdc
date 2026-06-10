@@ -48,6 +48,12 @@ Honor per sesi **TIDAK** disimpan di `packages` — hitung via PayrollConfig: `p
 
 **teacher_honor_slips:** id, slip_number (SLIP/YYYY/MM/NNNN), teacher_id, month, year, base_honor, event_honor/note, transport_honor, other_honor/note, total_honor, status (`DRAFT|CALCULATED|PAID`), paid_at, paid_by, created_by
 
+**employees (M12):** id, employee_code (STAFF-NNN), full_name, position, user_id (nullable FK users), base_salary, bank_name/account/account_holder, joined_date, is_active, notes — **bukan** guru pengajar
+
+**staff_payroll_slips (M12):** id, slip_number (GAJI/YYYY/MM/NNNN), employee_id, month, year, base_salary, total_allowances, total_deductions, net_salary, status (`DRAFT|CALCULATED|PAID`), paid_at, paid_by, expense_id (FK expenses), created_by, notes — unique (employee_id, year, month)
+
+**staff_payroll_items (M12):** id, staff_payroll_slip_id, item_type (`ALLOWANCE|OVERTIME|DEDUCTION`), item_code, description, amount, metadata
+
 **holidays:** id, date, name, type (`Nasional|Cuti Bersama|Internal`), replacement_date (nullable, unique, bulan sama), is_honor_paid (false untuk Internal), is_active, notes — Internal TIDAK boleh replacement_date
 
 **event_participants:** id, event_id, student_id, enrollment_id, accompanying_teacher_id (nullable), participation_type, fee_amount, invoice_id, invoice_item_id, exam_result, grade_before/after, exam_notes

@@ -1,12 +1,13 @@
 # MUSIK KITA — Operations System (musik-kita-ops)
-## Briefing Document untuk Claude Code — v1.5
+## Briefing Document untuk Claude Code — v1.6
 
 > Dibuat berdasarkan: BRD-Final-Musik-KITA-v1.0.md + Revisi-BRD-SAD-v1.0-ke-v1.1.md
 > Update v1.2 (2026-05-07): sinkronisasi tech stack & schema dengan kondisi kode aktual.
 > Update v1.3 (2026-05-23): multi-kelas, diskon invoice, cuti, reschedule Fase 2, QRIS/DEBIT, slip honor unifikasi, ruangan fleksibel.
 > Update v1.4 (2026-05-23): jadwal otomatis dengan kalender akademik — replacement_date pada holidays, honor LIBUR logic, H_IZIN honor code, guru pendamping event.
 > Update v1.5 (2026-05-31): sinkronisasi BR-MK.4 — SPP auto-generate per enrollment ACTIVE (multi-kelas), bukan hanya primary.
-> **SRS kode aktual:** `docs/srs/SRS-musik-kita-ops-2026-05-31.md` + modul per `docs/srs/modules/` (prioritas saat prompt ke AI).
+> Update v1.6 (2026-06-10): modul M12 Gaji Staff Non-Guru — master karyawan, slip GAJI/YYYY/MM/NNNN, mark paid → expense GAJI_STAFF, integrasi P&L.
+> **SRS kode aktual:** `docs/srs/SRS-musik-kita-ops-2026-05-31.md` + modul per `docs/srs/modules/` (prioritas saat prompt ke AI, termasuk `M12-staff-payroll.md`).
 > Tanggal: Mei 2026
 
 ---
@@ -121,6 +122,7 @@ OWNER
 -> Void pembayaran
 -> Lihat audit log mentah
 -> Tandai honor dibayar
+-> CRUD karyawan non-guru, generate slip gaji staff, mark/void paid gaji staff
 
 ADMIN
 -> Operasional harian
@@ -379,6 +381,37 @@ paid_at, paid_by (FK → users), created_by (FK → users), timestamps
 CATATAN: Kolom `event_honor` dan `event_honor_note` ditambah Mei 2026 saat tabel
 `event_honor_slips` dihapus — honor event digabungkan ke slip honor utama guru.
 
+**employees** (karyawan non-guru — M12, BUKAN guru pengajar)
+```
+id, employee_code (STAFF-NNN, unique — auto-generate via StaffPayrollService),
+full_name, position,
+user_id (FK → users, nullable unique — link akun login staff jika ada),
+base_salary (unsigned integer Rp/bulan),
+bank_name, bank_account, bank_account_holder (nullable),
+joined_date, is_active, notes, timestamps
+```
+CATATAN: 18 guru di tabel `teachers` — JANGAN masukkan ke `employees`. Honor guru tetap via M06.
+
+**staff_payroll_slips** (slip gaji staff bulanan — M12)
+```
+id, slip_number (GAJI/YYYY/MM/NNNN, reset per bulan),
+employee_id, month, year,
+base_salary (snapshot saat generate),
+total_allowances, total_deductions, net_salary,
+status (enum: DRAFT|CALCULATED|PAID),
+paid_at, paid_by (FK → users), expense_id (FK → expenses, nullable),
+created_by (FK → users), notes, timestamps
+```
+UNIQUE: (employee_id, year, month). Slip PAID terkunci edit; void paid hanya Owner.
+
+**staff_payroll_items** (komponen variabel slip gaji staff)
+```
+id, staff_payroll_slip_id,
+item_type (enum: ALLOWANCE|OVERTIME|DEDUCTION),
+item_code, description, amount, metadata (JSON, nullable), timestamps
+```
+CATATAN: Tunjangan/lembur/potongan (BPJS, kasbon, dll) input manual Owner.
+
 **student_status_histories** (audit trail lifecycle murid)
 ```
 id, student_id, from_status, to_status,
@@ -564,6 +597,17 @@ BR-DSK.5 : Hapus/void item DISKON hanya Owner
 BR-DSK.6 : item_code untuk diskon: 'DISKON'
 ```
 
+### Gaji Staff Non-Guru (M12) [v1.6]
+```
+BR-M12.1 : Guru (tabel teachers) TIDAK masuk employees — honor guru via M06
+BR-M12.2 : Satu slip per karyawan per bulan (unique employee_id + year + month)
+BR-M12.3 : Slip PAID terkunci; void paid hanya Owner (kembalikan ke CALCULATED)
+BR-M12.4 : Mark paid membuat Expense kategori GAJI_STAFF + link expense_id
+BR-M12.5 : Potongan/tunjangan/lembur input manual Owner (item_type ALLOWANCE|OVERTIME|DEDUCTION)
+BR-M12.6 : net_salary = base_salary + total_allowances - total_deductions
+BR-M12.7 : Nomor slip: GAJI/YYYY/MM/NNNN (bukan SLIP/ — itu honor guru M06)
+```
+
 ---
 
 ## 🔄 STATUS MURID (6 Status dengan State Machine)
@@ -676,6 +720,17 @@ DISKON   | Diskon manual           | NOMINAL (Rp flat) atau PERCENT (% dari item
 - Catat pengeluaran per kategori (Sewa, Listrik, Gaji Staff, Peralatan, dll)
 - Petty cash harian dengan saldo berjalan
 - Masuk laporan P&L otomatis sesuai kategori dan periode
+- Kategori `GAJI_STAFF` wajib ada di `expense_categories` (seeder `ExpenseCategorySeeder`)
+- Expense dari M12 mark-paid terlink `staff_payroll_slips.expense_id` (tampil link balik di halaman expense)
+
+### M12 -- Gaji Staff Non-Guru [v1.6]
+- Master karyawan non-guru (`employees`) — CRUD Owner, read Owner|Admin|Auditor
+- Generate slip bulanan `GAJI/YYYY/MM/NNNN` per karyawan aktif (Owner)
+- Komponen manual: tunjangan, lembur, potongan (Owner)
+- Cetak slip A4 | Mark paid → buat expense GAJI_STAFF otomatis (Owner)
+- Void paid → hapus expense terlink, slip kembali CALCULATED (Owner)
+- Laporan P&L (`reports/finance`) menampilkan breakdown gaji staff
+- SRS detail: `docs/srs/modules/M12-staff-payroll.md`
 
 ### M08 -- Event (Mini Concert & Ujian)
 - Buat event Mini Concert (2x/tahun)
@@ -772,6 +827,9 @@ X php artisan migrate:fresh pada database utama (mk_operasional) TANPA konfirmas
 [ ] Invoice SPP auto-generate per enrollment ACTIVE (bukan hanya is_primary)
 [ ] Diskon invoice: wajib parent_item_id + discount_reason
 [ ] Metode bayar: CASH|TRANSFER|QRIS|DEBIT (bukan hanya CASH|TRANSFER)
+[ ] Gaji staff: slip GAJI/YYYY/MM/NNNN (bukan SLIP/ honor guru)
+[ ] Guru tidak masuk tabel employees — honor via M06
+[ ] Mark/void paid gaji staff → Owner only; expense kategori GAJI_STAFF
 ```
 
 ---
@@ -927,7 +985,8 @@ Validasi       : Bahasa Indonesia
 ```
 Models:
 Student, Teacher, Package, Enrollment, Schedule,
-Session, Invoice, InvoiceItem, Payment, HonorSlip, AuditLog
+Session, Invoice, InvoiceItem, Payment, HonorSlip, AuditLog,
+Employee, StaffPayrollSlip, StaffPayrollItem
 
 Controllers (semua di root namespace App\Http\Controllers):
 App\Http\Controllers\StudentController
@@ -948,6 +1007,8 @@ App\Http\Controllers\EnrollmentController
 App\Http\Controllers\DashboardController
 App\Http\Controllers\ReportController
 App\Http\Controllers\AuditLogController
+App\Http\Controllers\EmployeeController
+App\Http\Controllers\StaffPayrollController
 
 Services:
 App\Services\HonorCalculationService
@@ -956,6 +1017,7 @@ App\Services\InvoiceGeneratorService
 App\Services\AutoMundurService
 App\Services\TrialManagementService
 App\Services\RescheduleService
+App\Services\StaffPayrollService
 ```
 
 ### Struktur Folder
@@ -972,9 +1034,11 @@ resources/views/
   absensi/            <- Halaman absensi harian (M04)
   audit-logs/
   events/
+  employees/          <- Master karyawan non-guru (M12)
   expenses/
   holidays/
   honors/
+  staff-payrolls/     <- Slip gaji staff (M12)
   imports/
   instruments/
   invoices/

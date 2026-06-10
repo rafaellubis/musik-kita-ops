@@ -26,7 +26,7 @@ Kelola gaji bulanan karyawan non-guru (admin, staff operasional): master data, s
 
 ### employees
 
-`employee_code` STF-NNNN, `full_name`, `position`, `user_id` (nullable FK users), `base_salary`, bank fields, `joined_date`, `is_active`, `notes`
+`employee_code` STAFF-NNN (auto-generate), `full_name`, `position`, `user_id` (nullable FK users), `base_salary`, bank fields, `joined_date`, `is_active`, `notes`
 
 ### staff_payroll_slips
 

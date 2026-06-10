@@ -76,6 +76,15 @@ Cut-off honor: **H-2 sebelum akhir bulan**. Slip event: honor event + transport 
 - DISKON ke invoice UNPAID/PARTIAL | Wajib parent_item_id + discount_reason
 - NOMINAL atau PERCENT | Hapus diskon → Owner only
 
+## Gaji Staff Non-Guru (M12)
+
+- Guru (`teachers`) **tidak** masuk `employees` — honor via M06
+- Satu slip per karyawan per bulan | Nomor `GAJI/YYYY/MM/NNNN`
+- `net_salary` = base_salary + allowances + overtime - deductions
+- Komponen manual Owner: ALLOWANCE | OVERTIME | DEDUCTION
+- Mark paid → Expense kategori `GAJI_STAFF` + link `expense_id` | Slip PAID terkunci
+- Void paid → Owner only; hapus expense terlink, status kembali CALCULATED
+
 ## Status Murid (State Machine)
 
 `Calon → Trial → Aktif → Cuti/Selesai/Mengundurkan Diri`
