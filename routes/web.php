@@ -9,6 +9,8 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\HonorController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\StaffPayrollController;
 use App\Http\Controllers\InstrumentController;
 use App\Http\Controllers\InvoiceComponentController;
 use App\Http\Controllers\InvoiceItemController;
@@ -342,6 +344,25 @@ Route::middleware('auth')->group(function () {
             [HonorController::class, 'markPaid']
         )->name('honors.mark-paid');
 
+        // ===== M12: Gaji Staff — aksi sensitif (Owner only) =====
+        Route::post('staff-payrolls/generate',
+            [StaffPayrollController::class, 'generate']
+        )->name('staff-payrolls.generate');
+        Route::post('staff-payrolls/{staffPayroll}/items',
+            [StaffPayrollController::class, 'storeItem']
+        )->name('staff-payrolls.items.store');
+        Route::delete('staff-payrolls/{staffPayroll}/items/{item}',
+            [StaffPayrollController::class, 'destroyItem']
+        )->name('staff-payrolls.items.destroy');
+        Route::post('staff-payrolls/{staffPayroll}/mark-paid',
+            [StaffPayrollController::class, 'markPaid']
+        )->name('staff-payrolls.mark-paid');
+        Route::post('staff-payrolls/{staffPayroll}/void-paid',
+            [StaffPayrollController::class, 'voidPaid']
+        )->name('staff-payrolls.void-paid');
+
+        Route::resource('employees', EmployeeController::class)->except(['index', 'show']);
+
         // ===== M08: Event — write sensitif (Owner only) =====
         // Buat/edit event, input hasil ujian, tandai selesai, kelola slip honor.
         Route::resource('events', EventController::class)->except(['index', 'show', 'destroy']);
@@ -464,6 +485,19 @@ Route::middleware('auth')->group(function () {
         Route::get('honors/{honor}',
             [HonorController::class, 'show']
         )->name('honors.show');
+
+        // ===== M12: Gaji Staff — read-only =====
+        Route::get('staff-payrolls',
+            [StaffPayrollController::class, 'index']
+        )->name('staff-payrolls.index');
+        Route::get('staff-payrolls/{staffPayroll}/print',
+            [StaffPayrollController::class, 'print']
+        )->name('staff-payrolls.print');
+        Route::get('staff-payrolls/{staffPayroll}',
+            [StaffPayrollController::class, 'show']
+        )->name('staff-payrolls.show');
+
+        Route::resource('employees', EmployeeController::class)->only(['index']);
 
         // ===== M05: List & detail invoice (read-only) =====
         Route::get('invoices',

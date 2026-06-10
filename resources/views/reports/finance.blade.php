@@ -74,6 +74,12 @@
                     </span>
                 </div>
                 <div class="flex justify-between text-sm">
+                    <span class="text-mk-muted">Total Gaji Staff (dibayar)</span>
+                    <span class="font-medium text-red-600">
+                        (Rp {{ number_format($staffPayrollPaid, 0, ',', '.') }})
+                    </span>
+                </div>
+                <div class="flex justify-between text-sm">
                     <span class="text-mk-muted">Total Pengeluaran</span>
                     <span class="font-medium text-red-600">
                         (Rp {{ number_format($totalPengeluaran, 0, ',', '.') }})
@@ -183,6 +189,74 @@
                             <td colspan="3" class="px-4 py-2 text-sm font-medium">Total Honor</td>
                             <td class="px-4 py-2 text-right font-bold font-mono text-sm">
                                 Rp {{ number_format($totalHonor, 0, ',', '.') }}
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        @endif
+
+        {{-- ===== GAJI STAFF ===== --}}
+        @if($staffPayrollSlips->count() > 0)
+        <div class="bg-mk-card shadow-sm rounded-lg overflow-hidden">
+            <div class="px-4 py-3 bg-mk-surface border-b flex justify-between">
+                <h3 class="font-semibold text-sm text-mk-muted">Gaji Staff Non-Guru</h3>
+                <span class="text-sm font-semibold">
+                    Total: Rp {{ number_format($totalStaffPayroll, 0, ',', '.') }}
+                    @if($staffPayrollPaid < $totalStaffPayroll)
+                        <span class="text-xs text-orange-600 ml-2">
+                            (dibayar: Rp {{ number_format($staffPayrollPaid, 0, ',', '.') }})
+                        </span>
+                    @endif
+                </span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="border-b text-xs text-mk-dim uppercase">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Karyawan</th>
+                            <th class="px-4 py-2 text-left">Posisi</th>
+                            <th class="px-4 py-2 text-right">Gaji Pokok</th>
+                            <th class="px-4 py-2 text-right">Tunjangan</th>
+                            <th class="px-4 py-2 text-right">Potongan</th>
+                            <th class="px-4 py-2 text-right">Bersih</th>
+                            <th class="px-4 py-2 text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($staffPayrollSlips as $slip)
+                        <tr class="border-b">
+                            <td class="px-4 py-2 font-medium">{{ $slip->employee->full_name }}</td>
+                            <td class="px-4 py-2 text-mk-muted text-xs">{{ $slip->employee->position }}</td>
+                            <td class="px-4 py-2 text-right font-mono text-xs">
+                                Rp {{ number_format($slip->base_salary, 0, ',', '.') }}
+                            </td>
+                            <td class="px-4 py-2 text-right font-mono text-xs text-green-700">
+                                Rp {{ number_format($slip->total_allowances, 0, ',', '.') }}
+                            </td>
+                            <td class="px-4 py-2 text-right font-mono text-xs text-red-600">
+                                Rp {{ number_format($slip->total_deductions, 0, ',', '.') }}
+                            </td>
+                            <td class="px-4 py-2 text-right font-mono text-xs font-semibold">
+                                Rp {{ number_format($slip->net_salary, 0, ',', '.') }}
+                            </td>
+                            <td class="px-4 py-2 text-center">
+                                @if($slip->status === 'PAID')
+                                    <span class="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">Dibayar</span>
+                                @else
+                                    <span class="px-2 py-0.5 rounded text-xs bg-yellow-100 text-yellow-700">{{ $slip->status_label }}</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot class="bg-mk-surface">
+                        <tr>
+                            <td colspan="5" class="px-4 py-2 text-sm font-medium">Total Gaji Staff</td>
+                            <td class="px-4 py-2 text-right font-bold font-mono text-sm">
+                                Rp {{ number_format($totalStaffPayroll, 0, ',', '.') }}
                             </td>
                             <td></td>
                         </tr>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use App\Models\HonorSlip;
+use App\Models\StaffPayrollSlip;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Student;
@@ -67,6 +68,17 @@ class ReportController extends Controller
         $totalHonor = $honorSlips->sum('total_honor');
         $honorPaid  = $honorSlips->where('status', HonorSlip::STATUS_PAID)->sum('total_honor');
 
+        // ===== GAJI STAFF (M12) =====
+        $staffPayrollSlips = StaffPayrollSlip::where('year', $year)
+            ->where('month', $month)
+            ->with('employee:id,full_name,position')
+            ->orderBy('net_salary', 'desc')
+            ->get();
+        $totalStaffPayroll = $staffPayrollSlips->sum('net_salary');
+        $staffPayrollPaid  = $staffPayrollSlips
+            ->where('status', StaffPayrollSlip::STATUS_PAID)
+            ->sum('net_salary');
+
         // ===== PENGELUARAN — breakdown per kategori =====
         $expenseByCategory = Expense::forMonth($year, $month)
             ->join('expense_categories', 'expenses.expense_category_id', '=', 'expense_categories.id')
@@ -104,6 +116,7 @@ class ReportController extends Controller
             'year', 'month', 'monthName',
             'revenueByType', 'totalRevenue', 'revenueByMethod',
             'honorSlips', 'totalHonor', 'honorPaid',
+            'staffPayrollSlips', 'totalStaffPayroll', 'staffPayrollPaid',
             'expenseByCategory', 'totalPengeluaran',
             'labaBersih',
             'invoiceStats',

@@ -47,6 +47,8 @@
     @endhasanyrole
     <x-sidebar-item route="honors.index" icon="💰" label="Slip Honor"
         :active="request()->routeIs('honors.*')" />
+    <x-sidebar-item route="staff-payrolls.index" icon="💵" label="Gaji Staff"
+        :active="request()->routeIs('staff-payrolls.*')" />
     <x-sidebar-item route="expenses.index" icon="📊" label="Pengeluaran"
         :active="request()->routeIs('expenses.*') || request()->routeIs('expense-categories.*')" />
     <x-sidebar-item route="events.index" icon="🎤" label="Event"
@@ -77,6 +79,8 @@
 
     <x-sidebar-item route="teachers.index" icon="👨‍🏫" label="Guru"
         :active="request()->routeIs('teachers.*')" />
+    <x-sidebar-item route="employees.index" icon="👥" label="Karyawan"
+        :active="request()->routeIs('employees.*')" />
     <x-sidebar-item route="instruments.index" icon="🎸" label="Instrumen"
         :active="request()->routeIs('instruments.*')" />
     @role('Owner|Auditor')

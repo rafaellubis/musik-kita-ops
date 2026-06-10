@@ -152,7 +152,7 @@ class ExpenseController extends Controller
 
     public function show(Expense $expense)
     {
-        $expense->load('category', 'createdBy');
+        $expense->load('category', 'createdBy', 'staffPayrollSlip.employee');
         return view('expenses.show', compact('expense'));
     }
 

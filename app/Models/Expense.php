@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Pengeluaran studio (M07).
@@ -51,6 +52,12 @@ class Expense extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /** Slip gaji staff yang membuat pengeluaran ini (M12). */
+    public function staffPayrollSlip(): HasOne
+    {
+        return $this->hasOne(StaffPayrollSlip::class, 'expense_id');
     }
 
     // ============= SCOPES =============

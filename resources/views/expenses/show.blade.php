@@ -56,6 +56,17 @@
                 </div>
             </div>
 
+            @if($expense->staffPayrollSlip)
+                <div class="text-sm mb-4 p-3 bg-mk-surface rounded border border-mk-border">
+                    <span class="text-mk-dim">Sumber:</span>
+                    <a href="{{ route('staff-payrolls.show', $expense->staffPayrollSlip) }}"
+                       class="text-indigo-600 hover:underline ml-1">
+                        Slip gaji {{ $expense->staffPayrollSlip->slip_number }}
+                        ({{ $expense->staffPayrollSlip->employee->full_name ?? '—' }})
+                    </a>
+                </div>
+            @endif
+
             @if($expense->notes)
                 <div class="text-sm text-mk-muted mb-4 p-3 bg-mk-surface rounded">
                     {{ $expense->notes }}
