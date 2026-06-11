@@ -201,21 +201,91 @@ class IzinPendingTest extends TestCase
 
         $response = $this->actingAs($guruUser)->postJson(
             route('guru.sesi-pending.suggest', $session),
-            ['tanggal' => '2026-06-10', 'jam' => '09:00', 'catatan' => 'Murid bilang bisa Rabu']
+            ['tanggal' => today()->addDays(3)->toDateString(), 'jam' => '09:00', 'catatan' => 'Murid bilang bisa Rabu']
         );
 
         $response->assertOk()->assertJson(['success' => true]);
         $this->assertStringContainsString(
-            '[SARAN GURU: 2026-06-10 09:00',
+            '[SARAN GURU: ' . today()->addDays(3)->toDateString() . ' 09:00',
             \App\Models\ClassSession::find($session->id)->notes
         );
+    }
+
+    /** @test */
+    public function guru_suggest_kedua_kali_menambah_catatan_baru(): void
+    {
+        Role::firstOrCreate(['name' => 'Guru', 'guard_name' => 'web']);
+        $guruUser = User::factory()->create(['email_verified_at' => now()]);
+        $guruUser->assignRole('Guru');
+        $teacher = Teacher::factory()->create(['user_id' => $guruUser->id]);
+
+        $session = $this->makeSession([
+            'status'       => 'IZIN_PENDING',
+            'honor_code'   => 'H_IZIN',
+            'honor_amount' => 0,
+            'teacher_id'   => $teacher->id,
+        ]);
+
+        $tanggal1 = today()->addDays(3)->toDateString();
+        $tanggal2 = today()->addDays(7)->toDateString();
+
+        $this->actingAs($guruUser)->postJson(
+            route('guru.sesi-pending.suggest', $session),
+            ['tanggal' => $tanggal1, 'jam' => '09:00', 'catatan' => 'Saran pertama']
+        )->assertOk();
+
+        $response = $this->actingAs($guruUser)->postJson(
+            route('guru.sesi-pending.suggest', $session),
+            ['tanggal' => $tanggal2, 'jam' => '10:00', 'catatan' => 'Saran kedua']
+        );
+
+        $response->assertOk()
+            ->assertJson([
+                'success'          => true,
+                'suggestion_count' => 2,
+            ])
+            ->assertJsonPath('latest.tanggal', $tanggal2)
+            ->assertJsonPath('latest.jam', '10:00');
+
+        $fresh = ClassSession::find($session->id);
+        $this->assertStringContainsString("[SARAN GURU: {$tanggal1} 09:00", $fresh->notes);
+        $this->assertStringContainsString("[SARAN GURU: {$tanggal2} 10:00", $fresh->notes);
+        $this->assertSame(2, $fresh->teacherSuggestionCount());
+        $this->assertSame($tanggal2, $fresh->latestTeacherSuggestion()['tanggal']);
+    }
+
+    /** @test */
+    public function admin_open_slots_menampilkan_saran_terbaru_dan_counter(): void
+    {
+        Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $admin = User::factory()->create();
+        $admin->assignRole('Admin');
+
+        $tanggal1 = today()->addDays(3)->toDateString();
+        $tanggal2 = today()->addDays(7)->toDateString();
+
+        $session = $this->makeSession([
+            'status'       => 'IZIN_PENDING',
+            'honor_code'   => 'H_IZIN',
+            'honor_amount' => 0,
+            'notes'        => "Catatan admin\n[SARAN GURU: {$tanggal1} 09:00 — Saran pertama]\n[SARAN GURU: {$tanggal2} 10:00 — Saran kedua]",
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('absensi.open-slots'));
+
+        $response->assertOk()
+            ->assertSee("{$tanggal2} 10:00 — Saran kedua")
+            ->assertSee('Saran ke-2')
+            ->assertSee('Catatan admin')
+            ->assertSee('#1')
+            ->assertSee("{$tanggal1} 09:00 — Saran pertama");
     }
 
     /** @test */
     public function admin_dapat_isi_slot_dengan_murid_lain(): void
     {
         Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
-        $admin = \App\Models\User::factory()->create();
+        $admin = User::factory()->create();
         $admin->assignRole('Admin');
 
         // Sesi IZIN_PENDING milik Budi

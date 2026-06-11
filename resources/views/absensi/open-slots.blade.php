@@ -43,27 +43,20 @@
                     @foreach($slots as $slot)
                     @php
                         $hariLalu = (int) \Carbon\Carbon::parse($slot->session_date)->diffInDays(today());
-                        // Pisahkan catatan admin dan saran guru dari kolom notes
-                        $saranGuru = null;
-                        $catatanAdmin = null;
-                        if ($slot->notes) {
-                            if (preg_match('/\[SARAN GURU: (.+?)\]/', $slot->notes, $m)) {
-                                $saranGuru = $m[1];
-                            }
-                            $catatanAdmin = trim(preg_replace('/\[SARAN GURU: [^\]]+\]/', '', $slot->notes));
-                            if ($catatanAdmin === '') {
-                                $catatanAdmin = null;
-                            }
-                        }
+                        $suggestions = $slot->parseTeacherSuggestions();
+                        $latest = $slot->latestTeacherSuggestion();
+                        $catatanAdmin = $slot->adminNotesWithoutSuggestions();
+                        $suggestCount = count($suggestions);
                     @endphp
                     <tbody x-data="{
                                 showAction: null,
+                                showHistory: false,
                                 loading: false,
                                 errorMsg: '',
                                 isiEnrollmentId: '',
                                 isiRoomId: '',
-                                jadwalDate: '{{ $saranGuru ? explode(' ', $saranGuru)[0] : '' }}',
-                                jadwalTime: '{{ $saranGuru ? (explode(' ', $saranGuru)[1] ?? '') : '' }}',
+                                jadwalDate: '{{ $latest['tanggal'] ?? '' }}',
+                                jadwalTime: '{{ $latest['jam'] ?? '' }}',
                                 jadwalRoomId: '',
                                 async postAction(url, payload) {
                                     this.loading  = true;
@@ -167,11 +160,32 @@
 
                             {{-- Saran Guru --}}
                             <td class="px-4 py-3 text-xs">
-                                @if($saranGuru)
-                                    <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700
-                                                 border border-amber-200 rounded px-2 py-1 font-medium">
-                                        💬 {{ $saranGuru }}
-                                    </span>
+                                @if($latest)
+                                    <div class="space-y-1">
+                                        <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700
+                                                     border border-amber-200 rounded px-2 py-1 font-medium">
+                                            💬 {{ $latest['label'] }}
+                                        </span>
+                                        @if($suggestCount > 1)
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold
+                                                         bg-amber-100 text-amber-800 border border-amber-200">
+                                                Saran ke-{{ $suggestCount }}
+                                            </span>
+                                            <button type="button"
+                                                    @click="showHistory = !showHistory"
+                                                    class="block text-[10px] text-mk-muted hover:text-mk-accent underline">
+                                                <span x-text="showHistory ? 'Sembunyikan riwayat' : 'Lihat riwayat'"></span>
+                                            </button>
+                                            <ul x-show="showHistory" x-cloak class="mt-1 space-y-1 pl-1 border-l-2 border-amber-200">
+                                                @foreach($suggestions as $saran)
+                                                    <li class="text-mk-muted pl-2">
+                                                        <span class="font-medium text-amber-700">#{{ $saran['index'] }}</span>
+                                                        {{ $saran['label'] }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        @endif
+                                    </div>
                                 @else
                                     <span class="text-mk-dim">—</span>
                                 @endif
@@ -256,9 +270,10 @@
                                     📝 <strong>Catatan Admin:</strong> {{ $catatanAdmin }}
                                 </div>
                                 @endif
-                                @if($saranGuru)
+                                @if($latest)
                                 <div class="mb-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700">
-                                    💬 <strong>Saran dari Guru:</strong> {{ $saranGuru }} — sudah diisi otomatis di bawah
+                                    💬 <strong>Saran terbaru dari Guru{{ $suggestCount > 1 ? ' (ke-' . $suggestCount . ')' : '' }}:</strong>
+                                    {{ $latest['label'] }} — sudah diisi otomatis di bawah
                                 </div>
                                 @endif
                                 <div class="flex flex-wrap items-end gap-3">

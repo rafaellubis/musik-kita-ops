@@ -153,6 +153,70 @@ class ClassSession extends Model
         return $this->hasOne(SessionTeacherNote::class);
     }
 
+    /** Pola blok saran tanggal guru di kolom notes (IZIN_PENDING). */
+    private const TEACHER_SUGGESTION_PATTERN = '/\[SARAN GURU: (\d{4}-\d{2}-\d{2}) (\d{2}:\d{2})(?: — (.+?))?\]/u';
+
+    /**
+     * Parse semua saran guru dari kolom notes.
+     *
+     * @return array<int, array{index: int, label: string, tanggal: string, jam: string, catatan: ?string}>
+     */
+    public function parseTeacherSuggestions(): array
+    {
+        if (! $this->notes) {
+            return [];
+        }
+
+        if (! preg_match_all(self::TEACHER_SUGGESTION_PATTERN, $this->notes, $matches, PREG_SET_ORDER)) {
+            return [];
+        }
+
+        $suggestions = [];
+
+        foreach ($matches as $i => $match) {
+            $tanggal = $match[1];
+            $jam     = $match[2];
+            $catatan = isset($match[3]) ? trim($match[3]) : null;
+            $label   = $tanggal . ' ' . $jam . ($catatan ? ' — ' . $catatan : '');
+
+            $suggestions[] = [
+                'index'   => $i + 1,
+                'label'   => $label,
+                'tanggal' => $tanggal,
+                'jam'     => $jam,
+                'catatan' => $catatan ?: null,
+            ];
+        }
+
+        return $suggestions;
+    }
+
+    /** Saran guru terakhir (paling baru), atau null jika belum ada. */
+    public function latestTeacherSuggestion(): ?array
+    {
+        $suggestions = $this->parseTeacherSuggestions();
+
+        return $suggestions === [] ? null : $suggestions[array_key_last($suggestions)];
+    }
+
+    /** Jumlah kali guru sudah suggest tanggal. */
+    public function teacherSuggestionCount(): int
+    {
+        return count($this->parseTeacherSuggestions());
+    }
+
+    /** Catatan admin saja — tanpa blok [SARAN GURU: ...]. */
+    public function adminNotesWithoutSuggestions(): ?string
+    {
+        if (! $this->notes) {
+            return null;
+        }
+
+        $adminNotes = trim(preg_replace('/\[SARAN GURU: [^\]]+\]/u', '', $this->notes));
+
+        return $adminNotes === '' ? null : $adminNotes;
+    }
+
     /**
      * Format label urutan sesi untuk ditampilkan di UI.
      *

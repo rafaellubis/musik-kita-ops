@@ -229,7 +229,14 @@ class GuruController extends Controller
 
         $session->update(['notes' => $notes]);
 
-        return response()->json(['success' => true, 'message' => 'Saran terkirim ke Admin.']);
+        $session->refresh();
+
+        return response()->json([
+            'success'            => true,
+            'message'            => 'Saran terkirim ke Admin.',
+            'suggestion_count'   => $session->teacherSuggestionCount(),
+            'latest'             => $session->latestTeacherSuggestion(),
+        ]);
     }
 
     /**
