@@ -553,4 +553,32 @@ class IzinPendingTest extends TestCase
 
         app(AttendanceService::class)->finalizePendingAsVideo($session);
     }
-}
+    /** @test */
+    public function admin_dapat_convert_izin_pending_ke_video_dari_open_slot_board(): void
+    {
+        Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $admin   = User::factory()->create();
+        $admin->assignRole('Admin');
+        $session = $this->makeSession([
+            'status'       => 'IZIN_PENDING',
+            'honor_code'   => 'H_IZIN',
+            'honor_amount' => 0,
+        ]);
+
+        $response = $this->actingAs($admin)->postJson(
+            route('absensi.open-slots.video', $session),
+            ['notes' => 'Murid minta video pengganti']
+        );
+
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $this->assertDatabaseHas('class_sessions', [
+            'id'           => $session->id,
+            'status'       => 'IZIN_VIDEO',
+            'honor_code'   => 'H_VIDEO',
+            'honor_amount' => 50000,
+        ]);
+    }

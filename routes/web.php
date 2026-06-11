@@ -197,6 +197,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/absensi/open-slots/{session}/cancel',
             [AbsensiController::class, 'cancelPending']
         )->name('absensi.open-slots.cancel');
+        Route::post('/absensi/open-slots/{session}/video',
+            [AbsensiController::class, 'convertPendingToVideo']
+        )->name('absensi.open-slots.video');
 
         // ===== M04: Absensi Harian — update inline per sesi via AJAX =====
         Route::patch('/absensi/{classSession}',

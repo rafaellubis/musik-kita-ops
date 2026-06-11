@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ConvertPendingToVideoRequest;
 use App\Http\Requests\StoreSplitPartRequest;
 use App\Http\Requests\UpdateAbsensiRequest;
 use App\Models\ClassSession;
@@ -403,6 +404,46 @@ class AbsensiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Izin pending dibatalkan. Sesi kembali ke belum diinput.',
+        ]);
+    }
+
+    /**
+     * Ubah IZIN_PENDING menjadi IZIN_VIDEO — murid pakai video pengganti, tanpa sesi fisik baru.
+     */
+    public function convertPendingToVideo(
+        ConvertPendingToVideoRequest $request,
+        ClassSession $session,
+    ): JsonResponse {
+        abort_if($session->status !== ClassSession::STATUS_IZIN_PENDING, 422, 'Sesi bukan IZIN_PENDING.');
+
+        $hasReplacement = ClassSession::where('origin_session_id', $session->id)
+            ->whereNull('split_part')
+            ->exists();
+
+        if ($hasReplacement) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sesi ini sudah punya sesi pengganti/isian slot dan tidak bisa diubah ke video dari sini.',
+            ], 422);
+        }
+
+        try {
+            $this->attendanceService->finalizePendingAsVideo(
+                $session,
+                $request->validated('notes'),
+            );
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+
+        $session->loadMissing('student');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sesi ' . ($session->student->full_name ?? '') . ' dicatat sebagai Izin Video.',
         ]);
     }
 
