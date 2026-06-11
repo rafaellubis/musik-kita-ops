@@ -581,4 +581,98 @@ class IzinPendingTest extends TestCase
             'honor_code'   => 'H_VIDEO',
             'honor_amount' => 50000,
         ]);
+    /** @test */
+    public function convert_video_ditolak_jika_bukan_izin_pending(): void
+    {
+        Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $admin   = User::factory()->create();
+        $admin->assignRole('Admin');
+        $session = $this->makeSession(['status' => 'SCHEDULED']);
+
+        $response = $this->actingAs($admin)->postJson(
+            route('absensi.open-slots.video', $session)
+        );
+
+        $response->assertStatus(422);
+    }
+
+    /** @test */
+    public function convert_video_ditolak_jika_sudah_punya_replacement(): void
+    {
+        Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $admin   = User::factory()->create();
+        $admin->assignRole('Admin');
+        $session = $this->makeSession(['status' => 'IZIN_PENDING']);
+
+        ClassSession::factory()->create([
+            'origin_session_id' => $session->id,
+            'status'            => 'SCHEDULED',
+            'teacher_id'        => $session->teacher_id,
+            'student_id'        => $session->student_id,
+            'enrollment_id'     => $session->enrollment_id,
+            'session_date'      => $session->session_date,
+        ]);
+
+        $response = $this->actingAs($admin)->postJson(
+            route('absensi.open-slots.video', $session)
+        );
+
+        $response->assertStatus(422)
+            ->assertJson(['success' => false]);
+    }
+
+    /** @test */
+    public function convert_video_ditolak_untuk_role_guru(): void
+    {
+        Role::firstOrCreate(['name' => 'Guru', 'guard_name' => 'web']);
+        $guru    = User::factory()->create();
+        $guru->assignRole('Guru');
+        $session = $this->makeSession(['status' => 'IZIN_PENDING']);
+
+        $response = $this->actingAs($guru)->postJson(
+            route('absensi.open-slots.video', $session)
+        );
+
+        $response->assertForbidden();
+    }
+
+    /** @test */
+    public function sesi_izin_video_tidak_muncul_di_open_slot_board(): void
+    {
+        Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $admin   = User::factory()->create();
+        $admin->assignRole('Admin');
+        $session = $this->makeSession([
+            'status'       => 'IZIN_PENDING',
+            'honor_code'   => 'H_IZIN',
+            'honor_amount' => 0,
+        ]);
+
+        $this->actingAs($admin)->postJson(
+            route('absensi.open-slots.video', $session)
+        )->assertOk();
+
+        $response = $this->actingAs($admin)->getJson(route('absensi.open-slots'));
+
+        $response->assertOk();
+        $ids = collect($response->json('slots'))->pluck('id');
+        $this->assertFalse($ids->contains($session->id));
+    }
+
+    /** @test */
+    public function convert_video_update_last_session_at_murid(): void
+    {
+        $session = $this->makeSession([
+            'status'       => 'IZIN_PENDING',
+            'session_date' => '2026-06-01',
+            'start_time'   => '10:00:00',
+        ]);
+        $student = $session->student;
+        $student->update(['last_session_at' => null]);
+
+        app(AttendanceService::class)->finalizePendingAsVideo($session);
+
+        $student->refresh();
+        $this->assertNotNull($student->last_session_at);
+        $this->assertEquals('2026-06-01', $student->last_session_at->toDateString());
     }
