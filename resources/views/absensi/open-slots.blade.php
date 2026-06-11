@@ -10,8 +10,9 @@
         {{-- Penjelasan singkat --}}
         <div class="mb-5 bg-mk-card border border-mk-border rounded-lg px-4 py-3 text-sm text-mk-muted">
             Daftar sesi <span class="font-semibold text-amber-600">IZIN PENDING</span>
-            yang belum ada sesi pengganti. <strong>Sesi Pending</strong> untuk murid lain,
-            atau <strong>Jadwalkan Pengganti</strong> untuk murid asli.
+            yang belum ada sesi pengganti. <strong>Isi Slot</strong> untuk murid lain,
+            <strong>Jadwalkan Pengganti</strong> untuk murid asli,
+            atau pilih <span class="font-semibold">Video</span> jika murid tidak jadi reschedule dan guru memberi video pengganti.
         </div>
 
         {{-- Flash success / error --}}
@@ -116,6 +117,17 @@
                                     const nama = @js($slot->student->full_name);
                                     if (!confirm(`Batalkan izin pending untuk ${nama}? Sesi kembali ke status belum diinput.`)) return;
                                     this.postAction('{{ route('absensi.open-slots.cancel', $slot) }}', {});
+                                },
+                                submitVideo() {
+                                    const nama = @js($slot->student->full_name);
+                                    const tgl  = @js(\Carbon\Carbon::parse($slot->session_date)->translatedFormat('d M Y'));
+                                    const jam  = @js(substr($slot->start_time, 0, 5) . '–' . substr($slot->end_time, 0, 5));
+                                    const msg = `Ubah izin pending ${nama} (${tgl}, ${jam}) menjadi Izin Video?\n\nSesi dianggap masuk via video pengganti. Guru mendapat honor penuh. Tidak ada sesi pengganti fisik.`;
+                                    if (!confirm(msg)) return;
+                                    this.postAction(
+                                        '{{ route('absensi.open-slots.video', $slot) }}',
+                                        { notes: null }
+                                    );
                                 },
                             }"
                             class="border-b border-mk-border">
@@ -235,6 +247,11 @@
                                             @click="pickAction('jadwal')"
                                             class="block w-full text-left px-4 py-2 text-mk-text hover:bg-mk-surface">
                                             Jadwalkan Pengganti
+                                        </button>
+                                        <button type="button" role="menuitem"
+                                            @click="closeMenu(); submitVideo()"
+                                            class="block w-full text-left px-4 py-2 text-mk-text hover:bg-mk-surface">
+                                            Video
                                         </button>
                                         <button type="button" role="menuitem"
                                             @click="closeMenu(); submitBatal()"
