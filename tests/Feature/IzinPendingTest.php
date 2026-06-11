@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace Tests\Feature;
 
@@ -76,7 +76,7 @@ class IzinPendingTest extends TestCase
             'honor_code'   => 'H_IZIN',
             'honor_amount' => 0,
         ]);
-        // Tidak ada sesi pengganti yang dibuat â€” masih 1 sesi di DB
+        // Tidak ada sesi pengganti yang dibuat — masih 1 sesi di DB
         $this->assertDatabaseCount('class_sessions', 1);
     }
 
@@ -268,17 +268,17 @@ class IzinPendingTest extends TestCase
             'status'       => 'IZIN_PENDING',
             'honor_code'   => 'H_IZIN',
             'honor_amount' => 0,
-            'notes'        => "Catatan admin\n[SARAN GURU: {$tanggal1} 09:00 â€” Saran pertama]\n[SARAN GURU: {$tanggal2} 10:00 â€” Saran kedua]",
+            'notes'        => "Catatan admin\n[SARAN GURU: {$tanggal1} 09:00 — Saran pertama]\n[SARAN GURU: {$tanggal2} 10:00 — Saran kedua]",
         ]);
 
         $response = $this->actingAs($admin)->get(route('absensi.open-slots'));
 
         $response->assertOk()
-            ->assertSee("{$tanggal2} 10:00 â€” Saran kedua")
+            ->assertSee("{$tanggal2} 10:00 — Saran kedua")
             ->assertSee('Saran ke-2')
             ->assertSee('Catatan admin')
             ->assertSee('#1')
-            ->assertSee("{$tanggal1} 09:00 â€” Saran pertama");
+            ->assertSee("{$tanggal1} 09:00 — Saran pertama");
     }
 
     /** @test */
@@ -438,7 +438,7 @@ class IzinPendingTest extends TestCase
             'split_part'        => null,
         ]);
 
-        // Coba ubah sesi asli dari IZIN_RESCHEDULE â†’ IZIN_PENDING â€” harus ditolak
+        // Coba ubah sesi asli dari IZIN_RESCHEDULE → IZIN_PENDING — harus ditolak
         $response = $this->actingAs($admin)
             ->patchJson(route('absensi.update', $sesiAsli), [
                 'status' => 'IZIN_PENDING',
@@ -469,7 +469,7 @@ class IzinPendingTest extends TestCase
             'status' => 'IZIN_PENDING', 'honor_code' => 'H_IZIN', 'honor_amount' => 0,
         ]);
 
-        // sessionSudahAda sudah punya replacement â†’ tidak muncul di board
+        // sessionSudahAda sudah punya replacement → tidak muncul di board
         \App\Models\ClassSession::factory()->create([
             'origin_session_id' => $sessionSudahAda->id,
             'status'            => 'SCHEDULED',
@@ -488,6 +488,7 @@ class IzinPendingTest extends TestCase
         $this->assertTrue($ids->contains($sessionPending->id));
         $this->assertFalse($ids->contains($sessionSudahAda->id));
     }
+
     /** @test */
     public function finalize_pending_as_video_sets_h_video_honor(): void
     {
@@ -553,6 +554,7 @@ class IzinPendingTest extends TestCase
 
         app(AttendanceService::class)->finalizePendingAsVideo($session);
     }
+
     /** @test */
     public function admin_dapat_convert_izin_pending_ke_video_dari_open_slot_board(): void
     {
@@ -581,6 +583,8 @@ class IzinPendingTest extends TestCase
             'honor_code'   => 'H_VIDEO',
             'honor_amount' => 50000,
         ]);
+    }
+
     /** @test */
     public function convert_video_ditolak_jika_bukan_izin_pending(): void
     {
@@ -676,3 +680,4 @@ class IzinPendingTest extends TestCase
         $this->assertNotNull($student->last_session_at);
         $this->assertEquals('2026-06-01', $student->last_session_at->toDateString());
     }
+}
