@@ -51,6 +51,7 @@
                     <tbody x-data="{
                                 showAction: null,
                                 showHistory: false,
+                                menuOpen: false,
                                 loading: false,
                                 errorMsg: '',
                                 isiEnrollmentId: '',
@@ -58,6 +59,19 @@
                                 jadwalDate: '{{ $latest['tanggal'] ?? '' }}',
                                 jadwalTime: '{{ $latest['jam'] ?? '' }}',
                                 jadwalRoomId: '',
+                                openMenu() {
+                                    this.menuOpen = !this.menuOpen;
+                                },
+                                closeMenu() {
+                                    this.menuOpen = false;
+                                },
+                                pickAction(action) {
+                                    this.menuOpen = false;
+                                    this.errorMsg = '';
+                                    if (action === 'isi' || action === 'jadwal') {
+                                        this.showAction = (this.showAction === action) ? null : action;
+                                    }
+                                },
                                 async postAction(url, payload) {
                                     this.loading  = true;
                                     this.errorMsg = '';
@@ -193,25 +207,42 @@
 
                             {{-- Aksi --}}
                             <td class="px-4 py-3 text-right whitespace-nowrap">
-                                <button
-                                    @click="showAction = (showAction === 'isi') ? null : 'isi'; errorMsg = ''"
-                                    :class="showAction === 'isi' ? 'bg-yellow-50 border-yellow-400 text-yellow-700' : 'border-mk-border text-mk-muted hover:text-mk-text hover:bg-mk-surface'"
-                                    class="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded border transition-colors mr-1">
-                                    Isi Slot
-                                </button>
-                                <button
-                                    @click="showAction = (showAction === 'jadwal') ? null : 'jadwal'; errorMsg = ''"
-                                    :class="showAction === 'jadwal' ? 'bg-green-50 border-green-400 text-green-700' : 'border-mk-border text-mk-muted hover:text-mk-text hover:bg-mk-surface'"
-                                    class="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded border transition-colors mr-1">
-                                    Jadwalkan Pengganti
-                                </button>
-                                <button
-                                    @click="submitBatal()"
-                                    :disabled="loading"
-                                    class="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded border border-red-200
-                                           text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors">
-                                    Batalkan Pending
-                                </button>
+                                <div class="relative inline-block text-left" @click.outside="menuOpen = false">
+                                    <button type="button"
+                                        @click="openMenu()"
+                                        :aria-expanded="menuOpen"
+                                        aria-haspopup="menu"
+                                        :disabled="loading"
+                                        class="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded border border-mk-border
+                                               text-mk-muted hover:text-mk-text hover:bg-mk-surface disabled:opacity-50 transition-colors">
+                                        Opsi
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    </button>
+
+                                    <div x-show="menuOpen"
+                                         x-cloak
+                                         role="menu"
+                                         class="absolute right-0 z-10 mt-1 w-48 origin-top-right rounded-md bg-white shadow-lg
+                                                border border-gray-200 py-1 text-sm">
+                                        <button type="button" role="menuitem"
+                                            @click="pickAction('isi')"
+                                            class="block w-full text-left px-4 py-2 text-mk-text hover:bg-mk-surface">
+                                            Isi Slot
+                                        </button>
+                                        <button type="button" role="menuitem"
+                                            @click="pickAction('jadwal')"
+                                            class="block w-full text-left px-4 py-2 text-mk-text hover:bg-mk-surface">
+                                            Jadwalkan Pengganti
+                                        </button>
+                                        <button type="button" role="menuitem"
+                                            @click="closeMenu(); submitBatal()"
+                                            class="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">
+                                            Batalkan Pending
+                                        </button>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
 
