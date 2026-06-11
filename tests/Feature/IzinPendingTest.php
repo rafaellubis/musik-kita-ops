@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace Tests\Feature;
 
@@ -76,7 +76,7 @@ class IzinPendingTest extends TestCase
             'honor_code'   => 'H_IZIN',
             'honor_amount' => 0,
         ]);
-        // Tidak ada sesi pengganti yang dibuat — masih 1 sesi di DB
+        // Tidak ada sesi pengganti yang dibuat â€” masih 1 sesi di DB
         $this->assertDatabaseCount('class_sessions', 1);
     }
 
@@ -268,17 +268,17 @@ class IzinPendingTest extends TestCase
             'status'       => 'IZIN_PENDING',
             'honor_code'   => 'H_IZIN',
             'honor_amount' => 0,
-            'notes'        => "Catatan admin\n[SARAN GURU: {$tanggal1} 09:00 — Saran pertama]\n[SARAN GURU: {$tanggal2} 10:00 — Saran kedua]",
+            'notes'        => "Catatan admin\n[SARAN GURU: {$tanggal1} 09:00 â€” Saran pertama]\n[SARAN GURU: {$tanggal2} 10:00 â€” Saran kedua]",
         ]);
 
         $response = $this->actingAs($admin)->get(route('absensi.open-slots'));
 
         $response->assertOk()
-            ->assertSee("{$tanggal2} 10:00 — Saran kedua")
+            ->assertSee("{$tanggal2} 10:00 â€” Saran kedua")
             ->assertSee('Saran ke-2')
             ->assertSee('Catatan admin')
             ->assertSee('#1')
-            ->assertSee("{$tanggal1} 09:00 — Saran pertama");
+            ->assertSee("{$tanggal1} 09:00 â€” Saran pertama");
     }
 
     /** @test */
@@ -438,7 +438,7 @@ class IzinPendingTest extends TestCase
             'split_part'        => null,
         ]);
 
-        // Coba ubah sesi asli dari IZIN_RESCHEDULE → IZIN_PENDING — harus ditolak
+        // Coba ubah sesi asli dari IZIN_RESCHEDULE â†’ IZIN_PENDING â€” harus ditolak
         $response = $this->actingAs($admin)
             ->patchJson(route('absensi.update', $sesiAsli), [
                 'status' => 'IZIN_PENDING',
@@ -469,7 +469,7 @@ class IzinPendingTest extends TestCase
             'status' => 'IZIN_PENDING', 'honor_code' => 'H_IZIN', 'honor_amount' => 0,
         ]);
 
-        // sessionSudahAda sudah punya replacement → tidak muncul di board
+        // sessionSudahAda sudah punya replacement â†’ tidak muncul di board
         \App\Models\ClassSession::factory()->create([
             'origin_session_id' => $sessionSudahAda->id,
             'status'            => 'SCHEDULED',
@@ -487,5 +487,70 @@ class IzinPendingTest extends TestCase
         $ids = collect($response->json('slots'))->pluck('id');
         $this->assertTrue($ids->contains($sessionPending->id));
         $this->assertFalse($ids->contains($sessionSudahAda->id));
+    }
+    /** @test */
+    public function finalize_pending_as_video_sets_h_video_honor(): void
+    {
+        $session = $this->makeSession([
+            'status'       => 'IZIN_PENDING',
+            'honor_code'   => 'H_IZIN',
+            'honor_amount' => 0,
+            'notes'        => 'Murid izin, jadwal menyusul',
+        ]);
+
+        $service = app(AttendanceService::class);
+        $result  = $service->finalizePendingAsVideo($session, 'Link video dikirim via WA');
+
+        $this->assertEquals('IZIN_VIDEO', $result->status);
+        $this->assertEquals('H_VIDEO', $result->honor_code);
+        $this->assertEquals(50000, $result->honor_amount); // 400k * 50% / 4
+        $this->assertStringContainsString('[VIDEO via Open Slot]', $result->notes);
+        $this->assertStringContainsString('Link video dikirim via WA', $result->notes);
+        $this->assertStringContainsString('Murid izin, jadwal menyusul', $result->notes);
+    }
+
+    /** @test */
+    public function finalize_pending_as_video_tanpa_catatan_pertahankan_notes_lama(): void
+    {
+        $session = $this->makeSession([
+            'status' => 'IZIN_PENDING',
+            'notes'  => 'Catatan lama saja',
+        ]);
+
+        $result = app(AttendanceService::class)->finalizePendingAsVideo($session, null);
+
+        $this->assertEquals('IZIN_VIDEO', $result->status);
+        $this->assertEquals('Catatan lama saja', $result->notes);
+    }
+
+    /** @test */
+    public function finalize_pending_as_video_ditolak_jika_bukan_izin_pending(): void
+    {
+        $session = $this->makeSession(['status' => 'SCHEDULED']);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Sesi bukan IZIN_PENDING.');
+
+        app(AttendanceService::class)->finalizePendingAsVideo($session);
+    }
+
+    /** @test */
+    public function finalize_pending_as_video_ditolak_jika_sudah_punya_replacement(): void
+    {
+        $session = $this->makeSession(['status' => 'IZIN_PENDING']);
+
+        ClassSession::factory()->create([
+            'origin_session_id' => $session->id,
+            'status'            => 'SCHEDULED',
+            'teacher_id'        => $session->teacher_id,
+            'student_id'        => $session->student_id,
+            'enrollment_id'     => $session->enrollment_id,
+            'session_date'      => $session->session_date,
+        ]);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('sudah punya sesi pengganti');
+
+        app(AttendanceService::class)->finalizePendingAsVideo($session);
     }
 }

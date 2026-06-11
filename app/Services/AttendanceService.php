@@ -122,6 +122,43 @@ class AttendanceService
     }
 
     /**
+     * Selesaikan IZIN_PENDING menjadi IZIN_VIDEO dari Open Slot Board.
+     * Murid tidak jadi reschedule fisik; guru tetap dapat honor penuh (H_VIDEO).
+     *
+     * @throws InvalidArgumentException Jika status bukan IZIN_PENDING atau sudah ada replacement
+     */
+    public function finalizePendingAsVideo(ClassSession $session, ?string $notes = null): ClassSession
+    {
+        if ($session->status !== ClassSession::STATUS_IZIN_PENDING) {
+            throw new InvalidArgumentException('Sesi bukan IZIN_PENDING.');
+        }
+
+        $hasReplacement = ClassSession::where('origin_session_id', $session->id)
+            ->whereNull('split_part')
+            ->exists();
+
+        if ($hasReplacement) {
+            throw new InvalidArgumentException(
+                'Sesi ini sudah punya sesi pengganti/isian slot dan tidak bisa diubah ke video.'
+            );
+        }
+
+        $mergedNotes = $session->notes;
+
+        if ($notes !== null && trim($notes) !== '') {
+            $suffix = '[VIDEO via Open Slot] ' . trim($notes);
+            $mergedNotes = $mergedNotes
+                ? trim($mergedNotes) . "\n" . $suffix
+                : $suffix;
+        }
+
+        return $this->recordAttendance($session, [
+            'status' => ClassSession::STATUS_IZIN_VIDEO,
+            'notes'  => $mergedNotes,
+        ]);
+    }
+
+    /**
      * Catat absensi IZIN_RESCHEDULE + buat sesi pengganti.
      *
      * 1. Mengubah status sesi asli → IZIN_RESCHEDULE (honor = Rp 0)
