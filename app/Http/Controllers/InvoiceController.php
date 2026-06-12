@@ -91,6 +91,7 @@ class InvoiceController extends Controller
             'payments.createdBy',
             'payments.voidedBy',
             'voidedBy',
+            'fineWaivedBy',
         ]);
 
         // Sibling invoices untuk panel progress cicilan Kids Bundle (BR-10.10).

@@ -423,6 +423,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('invoice-items/{invoiceItem}/discount',
             [\App\Http\Controllers\DiscountController::class, 'destroy']
         )->name('invoice-items.discount.destroy');
+
+        Route::post('invoice-items/{invoiceItem}/remove-fine',
+            [InvoiceItemController::class, 'removeFine']
+        )->name('invoice-items.remove-fine');
     });
 
     /* ======================================================================

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AuditLog;
 use App\Models\Enrollment;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
@@ -352,6 +353,77 @@ class InvoiceService
     }
 
     /**
+     * Hapus item DENDA dari invoice dan tandai waiver permanen (M05).
+     * Cron apply-fines tidak akan membuat ulang denda untuk invoice ini.
+     *
+     * @throws InvalidArgumentException jika validasi bisnis gagal
+     */
+    public function waiveFine(InvoiceItem $item, User $by, string $reason): Invoice
+    {
+        $invoice = $item->invoice;
+
+        if (! in_array($invoice->status, [Invoice::STATUS_UNPAID, Invoice::STATUS_PARTIAL], true)) {
+            throw new InvalidArgumentException(
+                'Denda hanya bisa dihapus pada invoice yang belum lunas (UNPAID/PARTIAL).'
+            );
+        }
+
+        if ($item->item_code !== 'DENDA') {
+            throw new InvalidArgumentException('Hanya item DENDA yang bisa dihapus melalui fitur ini.');
+        }
+
+        if ($invoice->isFineWaived()) {
+            throw new InvalidArgumentException('Denda invoice ini sudah pernah dihapus.');
+        }
+
+        return DB::transaction(function () use ($item, $invoice, $by, $reason) {
+            $snapshot = [
+                'item_id'     => $item->id,
+                'amount'      => $item->amount,
+                'description' => $item->description,
+                'metadata'    => $item->metadata,
+            ];
+
+            // Hapus diskon terkait DENDA jika ada
+            if ($discount = $item->discountItem()->first()) {
+                $snapshot['removed_discount'] = [
+                    'id'              => $discount->id,
+                    'amount'          => $discount->amount,
+                    'discount_type'   => $discount->discount_type,
+                    'discount_value'  => $discount->discount_value,
+                    'discount_reason' => $discount->discount_reason,
+                ];
+                $discount->delete();
+            }
+
+            $item->delete();
+
+            $invoice->update([
+                'fine_waived_at'     => now(),
+                'fine_waived_by'     => $by->id,
+                'fine_waive_reason'  => $reason,
+            ]);
+
+            $invoice = $this->recalcStatus($invoice->fresh());
+
+            AuditLog::record(
+                action: AuditLog::ACTION_DELETE,
+                entity: $invoice,
+                entityLabel: "Invoice {$invoice->invoice_number}",
+                oldValues: $snapshot,
+                newValues: [
+                    'fine_waived_at'    => $invoice->fine_waived_at?->toDateTimeString(),
+                    'fine_waived_by'    => $by->id,
+                    'fine_waive_reason' => $reason,
+                ],
+                notes: 'Hapus denda invoice',
+            );
+
+            return $invoice;
+        });
+    }
+
+    /**
      * Apply denda Rp 5.000/hari ke invoice UNPAID/PARTIAL bulan target,
      * berdasarkan jumlah hari telat (sejak tanggal 11).
      *
@@ -381,6 +453,7 @@ class InvoiceService
 
         $invoices = Invoice::forMonth($year, $month)
             ->unpaid()
+            ->whereNull('fine_waived_at')
             ->with('items')
             ->get();
 

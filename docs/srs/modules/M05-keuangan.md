@@ -22,6 +22,7 @@ Invoice (SPP, registrasi, denda, item manual), pembayaran, diskon, cicilan Kids 
 | Store item manual | `invoice-items.store` | Owner\|Admin |
 | Destroy item manual | `invoice-items.destroy` | Owner\|Admin |
 | Store/destroy diskon | `invoice-items.discount.*` | Owner\|Admin |
+| Hapus denda (waiver) | `invoice-items.remove-fine` | Owner\|Admin |
 
 **Services:** `InvoiceService`, `PaymentService`, `DiscountService`
 
@@ -32,6 +33,8 @@ Invoice (SPP, registrasi, denda, item manual), pembayaran, diskon, cicilan Kids 
 ### invoices
 
 `invoice_number` INV/YYYY/MM/NNNN, `student_id`, `enrollment_id` (**wajib** untuk SPP), `month`, `year`, `class_type` snapshot, `payment_mode` FULL|INSTALLMENT, `installment_number`, `installment_group_id`, `total_amount`, `paid_amount`, `status`, `due_date`
+
+Kolom waiver denda: `fine_waived_at`, `fine_waived_by`, `fine_waive_reason` — set saat Owner/Admin hapus denda; cron skip invoice ini.
 
 INSTALLMENT hanya `KIDS_CLASS_BUNDLE`.
 

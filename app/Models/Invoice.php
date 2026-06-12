@@ -33,6 +33,7 @@ class Invoice extends Model
         'due_date', 'issued_at',
         'notes',
         'voided_at', 'voided_by', 'voided_reason',
+        'fine_waived_at', 'fine_waived_by', 'fine_waive_reason',
         'class_type',
         'payment_mode',
         'installment_number',
@@ -43,6 +44,7 @@ class Invoice extends Model
         'due_date'           => 'date',
         'issued_at'          => 'date',
         'voided_at'          => 'datetime',
+        'fine_waived_at'     => 'datetime',
         'year'               => 'integer',
         'month'              => 'integer',
         'total_amount'       => 'integer',
@@ -116,6 +118,12 @@ class Invoice extends Model
         return $this->status === self::STATUS_VOID;
     }
 
+    /** Denda invoice ini sudah dihapus manual (cron tidak apply ulang)? */
+    public function isFineWaived(): bool
+    {
+        return $this->fine_waived_at !== null;
+    }
+
     // ============= RELATIONSHIPS =============
 
     public function student(): BelongsTo
@@ -149,6 +157,11 @@ class Invoice extends Model
     public function voidedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'voided_by');
+    }
+
+    public function fineWaivedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'fine_waived_by');
     }
 
     // ============= SCOPES =============

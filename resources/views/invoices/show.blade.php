@@ -81,6 +81,13 @@
                                 · {{ $invoice->voided_reason }}
                             </div>
                         @endif
+                        @if($invoice->fine_waived_at)
+                            <div class="text-xs text-amber-700 mt-1">
+                                Denda dihapus oleh {{ $invoice->fineWaivedBy->name ?? '?' }}
+                                · {{ $invoice->fine_waived_at->format('d M Y H:i') }}
+                                · {{ $invoice->fine_waive_reason }}
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -433,6 +440,7 @@
                 @foreach($invoice->items as $item)
                 <tbody x-data="{
                     showDiscount: false,
+                    showRemoveFine: false,
                     type: '{{ $item->discountItem?->discount_type ?? 'NOMINAL' }}',
                     value: '{{ $item->discountItem?->discount_value ?? '' }}',
                     itemAmount: {{ $item->amount }},
@@ -484,6 +492,13 @@
                                                 @click="showDiscount = !showDiscount"
                                                 class="text-xs text-amber-700 hover:underline">
                                             {{ $item->discountItem ? 'Edit Diskon' : 'Beri Diskon' }}
+                                        </button>
+                                    @endif
+                                    @if($canEditItems && $item->item_code === 'DENDA' && !$invoice->fine_waived_at)
+                                        <button type="button"
+                                                @click="showRemoveFine = !showRemoveFine"
+                                                class="text-xs text-red-600 hover:underline">
+                                            Hapus Denda
                                         </button>
                                     @endif
                                 </td>
@@ -550,6 +565,47 @@
                                         <p class="text-xs text-amber-700 mt-2">
                                             Preview diskon: –Rp <span x-text="previewFormatted">0</span>
                                         </p>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endif
+                    @endhasanyrole
+
+                    {{-- ===== Form hapus denda (inline expand, Alpine.js) ===== --}}
+                    @hasanyrole('Owner|Admin')
+                        @if($canEditItems && $item->item_code === 'DENDA' && !$invoice->fine_waived_at)
+                            <tr x-show="showRemoveFine" x-cloak>
+                                <td colspan="{{ $canEditItems ? 5 : 4 }}"
+                                    class="py-3 px-4 bg-red-50 border-b border-red-200">
+                                    <form method="POST"
+                                          action="{{ route('invoice-items.remove-fine', $item->id) }}"
+                                          onsubmit="return confirm('Hapus denda dari invoice ini? Denda tidak akan muncul lagi meski cron jalan.')">
+                                        @csrf
+                                        <p class="text-xs font-semibold text-red-800 mb-2">
+                                            Hapus Denda: <span class="font-normal">{{ $item->description }}</span>
+                                        </p>
+                                        <div class="flex gap-3 items-end flex-wrap">
+                                            <div class="flex-1 min-w-[180px]">
+                                                <label class="block text-xs font-medium text-mk-muted mb-1">
+                                                    Alasan <span class="text-red-500">*</span>
+                                                </label>
+                                                <input type="text" name="reason"
+                                                       required minlength="3" maxlength="500"
+                                                       class="block w-full border-mk-border rounded text-sm"
+                                                       placeholder="Mis: Konfirmasi telat bayar via WA, kesepakatan owner...">
+                                            </div>
+                                            <div class="flex gap-2 shrink-0">
+                                                <button type="submit"
+                                                        class="px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap bg-red-600 hover:bg-red-700 text-white">
+                                                    Konfirmasi Hapus Denda
+                                                </button>
+                                                <button type="button"
+                                                        @click="showRemoveFine = false"
+                                                        class="px-3 py-1.5 text-sm text-mk-muted hover:text-mk-text whitespace-nowrap">
+                                                    Batal
+                                                </button>
+                                            </div>
+                                        </div>
                                     </form>
                                 </td>
                             </tr>

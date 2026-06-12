@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RemoveFineRequest;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Services\InvoiceService;
@@ -98,5 +99,23 @@ class InvoiceItemController extends Controller
         $this->invoiceService->recalcStatus($invoice->fresh());
 
         return back()->with('success', "Item '{$code}' berhasil dihapus dari invoice.");
+    }
+
+    /**
+     * Hapus item DENDA sistem + waiver permanen (cron tidak apply ulang).
+     */
+    public function removeFine(RemoveFineRequest $request, InvoiceItem $invoiceItem)
+    {
+        try {
+            $this->invoiceService->waiveFine(
+                $invoiceItem,
+                $request->user(),
+                $request->validated('reason'),
+            );
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Denda berhasil dihapus dari invoice.');
     }
 }
