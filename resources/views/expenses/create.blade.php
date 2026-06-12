@@ -3,7 +3,7 @@
         <div class="flex justify-between items-center">
             <div>
                 <h2 class="font-semibold text-xl text-mk-text">Catat Pengeluaran</h2>
-                <div class="text-xs text-mk-muted mt-0.5">Pengeluaran & Kas</div>
+                <div class="text-xs text-mk-muted mt-0.5">Pengeluaran Operasional</div>
             </div>
             <a href="{{ route('expenses.index') }}"
                class="text-sm text-mk-muted hover:text-mk-text transition-colors">
@@ -64,37 +64,25 @@
                     @enderror
                 </div>
 
-                <div class="mb-4 grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-mk-muted">
-                            Jumlah (Rp) <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number" name="amount" required
-                               min="1" max="999999999"
-                               value="{{ old('amount') }}"
-                               placeholder="150000"
-                               class="mt-1 block w-full border-mk-border rounded @error('amount') border-red-500 @enderror">
-                        @error('amount')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-mk-muted">
-                            Metode Pembayaran <span class="text-red-500">*</span>
-                        </label>
-                        <select name="payment_method" required
-                                class="mt-1 block w-full border-mk-border rounded @error('payment_method') border-red-500 @enderror">
-                            @foreach(\App\Models\Expense::METHODS as $val => $label)
-                                <option value="{{ $val }}" {{ old('payment_method', 'CASH') == $val ? 'selected' : '' }}>
-                                    {{ $label }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('payment_method')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-mk-muted">
+                        Jumlah (Rp) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" name="amount" required
+                           min="1" max="999999999"
+                           value="{{ old('amount') }}"
+                           placeholder="150000"
+                           class="mt-1 block w-full border-mk-border rounded @error('amount') border-red-500 @enderror">
+                    @error('amount')
+                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
+
+                <input type="hidden" name="payment_method" value="TRANSFER">
+                <p class="text-xs text-mk-dim mb-4">Pengeluaran operasional dicatat via transfer bank.</p>
+                @error('payment_method')
+                    <p class="mb-4 text-xs text-red-600">{{ $message }}</p>
+                @enderror
 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-mk-muted">

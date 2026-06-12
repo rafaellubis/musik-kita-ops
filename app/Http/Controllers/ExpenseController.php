@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
-use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
  * Manajemen pengeluaran studio (M07).
  *
  * Route:
- *   GET  /expenses           → index  (list + filter + ringkasan + petty cash)
+ *   GET  /expenses           → index  (list + filter + ringkasan operasional)
  *   GET  /expenses/create    → create (form input)
  *   POST /expenses           → store
  *   GET  /expenses/{expense} → show   (detail + foto bukti)
@@ -25,8 +24,7 @@ use Illuminate\Support\Facades\Storage;
 class ExpenseController extends Controller
 {
     /**
-     * Daftar pengeluaran per bulan, lengkap dengan ringkasan per kategori
-     * dan saldo petty cash hari ini.
+     * Daftar pengeluaran operasional per bulan + ringkasan per kategori.
      */
     public function index(Request $request)
     {
@@ -62,36 +60,11 @@ class ExpenseController extends Controller
 
         $totalBulan = $summary->sum('total');
 
-        // ===== Petty Cash — saldo kas hari ini =====
-        // Kas masuk  : semua payment CASH dari murid yang valid (tidak void)
-        // Kas keluar : semua pengeluaran CASH
-        $today = now()->toDateString();
-
-        $kasmasukHariIni = Payment::where('method', 'CASH')
-            ->whereNull('voided_at')
-            ->whereDate('payment_date', $today)
-            ->sum('amount');
-
-        $kaskeluarHariIni = Expense::cash()
-            ->whereDate('expense_date', $today)
-            ->sum('amount');
-
-        // Saldo berjalan bulan ini (kumulatif)
-        $kasmasukBulan = Payment::where('method', 'CASH')
-            ->whereNull('voided_at')
-            ->whereYear('payment_date', $year)
-            ->whereMonth('payment_date', $month)
-            ->sum('amount');
-
-        $kaskeluarBulan = Expense::forMonth($year, $month)->cash()->sum('amount');
-
         $categories  = ExpenseCategory::active()->orderBy('sort_order')->get(['id', 'code', 'name']);
         $monthName   = Carbon::create($year, $month, 1)->format('F Y');
 
         return view('expenses.index', compact(
             'expenses', 'summary', 'totalBulan', 'categories',
-            'kasmasukHariIni', 'kaskeluarHariIni',
-            'kasmasukBulan', 'kaskeluarBulan',
             'year', 'month', 'monthName'
         ));
     }
@@ -109,7 +82,7 @@ class ExpenseController extends Controller
             'amount'              => 'required|integer|min:1|max:999999999',
             'description'         => 'required|string|max:255',
             'expense_date'        => 'required|date|before_or_equal:today',
-            'payment_method'      => 'required|in:CASH,TRANSFER',
+            'payment_method'      => 'required|in:TRANSFER',
             'receipt_image'       => 'nullable|image|max:2048',
             'notes'               => 'nullable|string|max:1000',
         ], [
@@ -121,6 +94,7 @@ class ExpenseController extends Controller
             'expense_date.required'        => 'Tanggal pengeluaran wajib diisi.',
             'expense_date.before_or_equal' => 'Tanggal pengeluaran tidak boleh di masa depan.',
             'payment_method.required'      => 'Metode pembayaran wajib dipilih.',
+            'payment_method.in'            => 'Pengeluaran operasional hanya via transfer bank.',
             'receipt_image.image'          => 'File harus berupa gambar (JPG/PNG).',
             'receipt_image.max'            => 'Ukuran foto maksimal 2 MB.',
         ]);
@@ -164,20 +138,27 @@ class ExpenseController extends Controller
 
     public function update(Request $request, Expense $expense)
     {
-        $data = $request->validate([
+        $rules = [
             'expense_category_id' => 'required|exists:expense_categories,id',
             'amount'              => 'required|integer|min:1|max:999999999',
             'description'         => 'required|string|max:255',
             'expense_date'        => 'required|date|before_or_equal:today',
-            'payment_method'      => 'required|in:CASH,TRANSFER',
             'receipt_image'       => 'nullable|image|max:2048',
             'notes'               => 'nullable|string|max:1000',
-        ], [
+        ];
+
+        // Record CASH legacy: metode tidak diubah; record baru/TRANSFER wajib TRANSFER
+        if ($expense->payment_method !== 'CASH') {
+            $rules['payment_method'] = 'required|in:TRANSFER';
+        }
+
+        $data = $request->validate($rules, [
             'expense_category_id.required' => 'Kategori pengeluaran wajib dipilih.',
             'amount.required'              => 'Jumlah pengeluaran wajib diisi.',
             'amount.min'                   => 'Jumlah pengeluaran harus lebih dari 0.',
             'description.required'         => 'Keterangan pengeluaran wajib diisi.',
             'expense_date.before_or_equal' => 'Tanggal pengeluaran tidak boleh di masa depan.',
+            'payment_method.in'            => 'Pengeluaran operasional hanya via transfer bank.',
             'receipt_image.image'          => 'File harus berupa gambar (JPG/PNG).',
             'receipt_image.max'            => 'Ukuran foto maksimal 2 MB.',
         ]);

@@ -57,32 +57,30 @@
                     @error('description')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
 
-                <div class="mb-4 grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-mk-muted">
-                            Jumlah (Rp) <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number" name="amount" required
-                               min="1" max="999999999"
-                               value="{{ old('amount', $expense->amount) }}"
-                               class="mt-1 block w-full border-mk-border rounded @error('amount') border-red-500 @enderror">
-                        @error('amount')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-mk-muted">
-                            Metode Pembayaran <span class="text-red-500">*</span>
-                        </label>
-                        <select name="payment_method" required
-                                class="mt-1 block w-full border-mk-border rounded">
-                            @foreach(\App\Models\Expense::METHODS as $val => $label)
-                                <option value="{{ $val }}"
-                                        {{ old('payment_method', $expense->payment_method) == $val ? 'selected' : '' }}>
-                                    {{ $label }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-mk-muted">
+                        Jumlah (Rp) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" name="amount" required
+                           min="1" max="999999999"
+                           value="{{ old('amount', $expense->amount) }}"
+                           class="mt-1 block w-full border-mk-border rounded @error('amount') border-red-500 @enderror">
+                    @error('amount')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
+
+                @if($expense->payment_method === 'CASH')
+                    {{-- Legacy: record CASH lama tetap tampil read-only, metode tidak diubah saat simpan --}}
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-mk-muted">Metode Pembayaran</label>
+                        <input type="text" readonly value="CASH (Tunai — data lama)"
+                               class="mt-1 block w-full border-mk-border rounded bg-mk-surface text-mk-muted cursor-not-allowed">
+                        <p class="text-xs text-mk-dim mt-1">Record tunai lama tidak dapat diubah metodenya. Untuk pengeluaran tunai baru, gunakan modul Petty Cash.</p>
+                    </div>
+                @else
+                    <input type="hidden" name="payment_method" value="TRANSFER">
+                    <p class="text-xs text-mk-dim mb-4">Pengeluaran operasional dicatat via transfer bank.</p>
+                @endif
+                @error('payment_method')<p class="mb-4 text-xs text-red-600">{{ $message }}</p>@enderror
 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-mk-muted">
