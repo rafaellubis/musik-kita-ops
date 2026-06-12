@@ -6,6 +6,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\PettyCashController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\HonorController;
@@ -245,6 +246,16 @@ Route::middleware('auth')->group(function () {
         Route::resource('expenses', ExpenseController::class)
             ->except(['index', 'show', 'destroy']);
 
+        // ===== M07: Petty Cash — expense write oleh Owner dan Admin =====
+        Route::get('petty-cash/expenses/create', [PettyCashController::class, 'createExpense'])
+            ->name('petty-cash.expenses.create');
+        Route::post('petty-cash/expenses', [PettyCashController::class, 'storeExpense'])
+            ->name('petty-cash.expenses.store');
+        Route::get('petty-cash/expenses/{expense}/edit', [PettyCashController::class, 'editExpense'])
+            ->name('petty-cash.expenses.edit');
+        Route::patch('petty-cash/expenses/{expense}', [PettyCashController::class, 'updateExpense'])
+            ->name('petty-cash.expenses.update');
+
         // ===== M05: Reminder tagihan via WhatsApp (Wablas) =====
         Route::get('invoice-reminders', [InvoiceReminderController::class, 'index'])
             ->name('invoice-reminders.index');
@@ -293,6 +304,20 @@ Route::middleware('auth')->group(function () {
         // ===== M07: Pengeluaran — hapus hanya Owner =====
         Route::delete('expenses/{expense}', [ExpenseController::class, 'destroy'])
             ->name('expenses.destroy');
+
+        // ===== M07: Petty Cash — top-up & delete hanya Owner =====
+        Route::get('petty-cash/topups/create', [PettyCashController::class, 'createTopup'])
+            ->name('petty-cash.topups.create');
+        Route::post('petty-cash/topups', [PettyCashController::class, 'storeTopup'])
+            ->name('petty-cash.topups.store');
+        Route::get('petty-cash/topups/{topup}/edit', [PettyCashController::class, 'editTopup'])
+            ->name('petty-cash.topups.edit');
+        Route::patch('petty-cash/topups/{topup}', [PettyCashController::class, 'updateTopup'])
+            ->name('petty-cash.topups.update');
+        Route::delete('petty-cash/topups/{topup}', [PettyCashController::class, 'destroyTopup'])
+            ->name('petty-cash.topups.destroy');
+        Route::delete('petty-cash/expenses/{expense}', [PettyCashController::class, 'destroyExpense'])
+            ->name('petty-cash.expenses.destroy');
 
         // ===== M07: Kategori pengeluaran — master data, hanya Owner =====
         Route::resource('expense-categories', ExpenseCategoryController::class)
@@ -476,6 +501,13 @@ Route::middleware('auth')->group(function () {
 
         // ===== M07: Pengeluaran — read-only =====
         Route::resource('expenses', ExpenseController::class)->only(['index', 'show']);
+
+        // ===== M07: Petty Cash — read-only =====
+        Route::get('petty-cash', [PettyCashController::class, 'index'])->name('petty-cash.index');
+        Route::get('petty-cash/topups/{topup}', [PettyCashController::class, 'showTopup'])
+            ->name('petty-cash.topups.show');
+        Route::get('petty-cash/expenses/{expense}', [PettyCashController::class, 'showExpense'])
+            ->name('petty-cash.expenses.show');
 
         Route::resource('expense-categories', ExpenseCategoryController::class)
             ->parameters(['expense-categories' => 'expenseCategory'])

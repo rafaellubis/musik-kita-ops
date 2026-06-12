@@ -18,6 +18,22 @@ class PettyCashTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Role::firstOrCreate(['name' => 'Owner', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'Auditor', 'guard_name' => 'web']);
+    }
+
+    private function expenseCategoryAtk(): ExpenseCategory
+    {
+        return ExpenseCategory::firstOrCreate(
+            ['code' => 'ATK'],
+            ['name' => 'Alat Tulis & Kantor', 'is_active' => true, 'sort_order' => 7]
+        );
+    }
+
     /** @test */
     public function saldo_petty_cash_adalah_topup_dikurangi_expense(): void
     {
@@ -75,5 +91,74 @@ class PettyCashTest extends TestCase
         $this->assertArrayHasKey('amount', $validator->errors()->toArray());
         $this->assertArrayHasKey('topup_date', $validator->errors()->toArray());
         $this->assertArrayHasKey('description', $validator->errors()->toArray());
+    }
+
+    /** @test */
+    public function admin_tidak_bisa_akses_form_topup(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('Admin');
+
+        $this->actingAs($admin)
+            ->get(route('petty-cash.topups.create'))
+            ->assertForbidden();
+    }
+
+    /** @test */
+    public function admin_tidak_bisa_catat_petty_expense_melebihi_saldo(): void
+    {
+        $category = $this->expenseCategoryAtk();
+        $admin = User::factory()->create();
+        $admin->assignRole('Admin');
+
+        PettyCashTopup::factory()->create([
+            'amount'     => 100_000,
+            'topup_date' => now()->toDateString(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('petty-cash.expenses.store'), [
+                'expense_category_id' => $category->id,
+                'amount'              => 150_000,
+                'description'         => 'Beli ATK melebihi saldo',
+                'expense_date'        => now()->toDateString(),
+            ])
+            ->assertSessionHasErrors('amount');
+    }
+
+    /** @test */
+    public function owner_bisa_topup_dan_admin_bisa_expense(): void
+    {
+        $category = $this->expenseCategoryAtk();
+        $owner = User::factory()->create();
+        $owner->assignRole('Owner');
+        $admin = User::factory()->create();
+        $admin->assignRole('Admin');
+
+        $this->actingAs($owner)
+            ->post(route('petty-cash.topups.store'), [
+                'amount'      => 500_000,
+                'topup_date'  => now()->toDateString(),
+                'description' => 'Isi saldo awal',
+            ])
+            ->assertRedirect(route('petty-cash.index', [
+                'year' => now()->year,
+                'month' => now()->month,
+            ]));
+
+        $this->actingAs($admin)
+            ->post(route('petty-cash.expenses.store'), [
+                'expense_category_id' => $category->id,
+                'amount'              => 50_000,
+                'description'         => 'Beli ATK',
+                'expense_date'        => now()->toDateString(),
+            ])
+            ->assertRedirect(route('petty-cash.index', [
+                'year' => now()->year,
+                'month' => now()->month,
+            ]));
+
+        $service = app(PettyCashService::class);
+        $this->assertSame(450_000, $service->getCurrentBalance());
     }
 }

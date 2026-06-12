@@ -51,6 +51,8 @@
         :active="request()->routeIs('staff-payrolls.*')" />
     <x-sidebar-item route="expenses.index" icon="📊" label="Pengeluaran"
         :active="request()->routeIs('expenses.*') || request()->routeIs('expense-categories.*')" />
+    <x-sidebar-item route="petty-cash.index" icon="💵" label="Petty Cash"
+        :active="request()->routeIs('petty-cash.*')" />
     <x-sidebar-item route="events.index" icon="🎤" label="Event"
         :active="request()->routeIs('events.*') || request()->routeIs('event-participants.*')"
         :disabled="true"
