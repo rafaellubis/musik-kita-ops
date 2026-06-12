@@ -212,7 +212,7 @@
                         <div>
                             <label class="block text-xs text-mk-dim mb-1">Tanggal & Jam <span class="text-red-400">*</span></label>
                             <input type="datetime-local" name="trial_date" required
-                                   min="{{ now()->addHour()->format('Y-m-d\TH:i') }}"
+                                   min="{{ now()->format('Y-m-d\TH:i') }}"
                                    class="block w-full rounded-lg text-sm px-3 py-2">
                         </div>
                         <div>
