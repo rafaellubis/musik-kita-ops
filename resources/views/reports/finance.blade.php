@@ -80,9 +80,15 @@
                     </span>
                 </div>
                 <div class="flex justify-between text-sm">
-                    <span class="text-mk-muted">Total Pengeluaran</span>
+                    <span class="text-mk-muted">Pengeluaran Operasional</span>
                     <span class="font-medium text-red-600">
-                        (Rp {{ number_format($totalPengeluaran, 0, ',', '.') }})
+                        (Rp {{ number_format($totalPengeluaranOperasional, 0, ',', '.') }})
+                    </span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-mk-muted">Isi Saldo Petty Cash</span>
+                    <span class="font-medium text-red-600">
+                        (Rp {{ number_format($totalPettyCashTopup, 0, ',', '.') }})
                     </span>
                 </div>
                 <div class="flex justify-between font-semibold border-t pt-2">
@@ -266,12 +272,12 @@
         </div>
         @endif
 
-        {{-- ===== PENGELUARAN PER KATEGORI ===== --}}
+        {{-- ===== PENGELUARAN OPERASIONAL PER KATEGORI ===== --}}
         <div class="bg-mk-card shadow-sm rounded-lg overflow-hidden">
             <div class="px-4 py-3 bg-mk-surface border-b flex justify-between">
-                <h3 class="font-semibold text-sm text-mk-muted">Pengeluaran per Kategori</h3>
+                <h3 class="font-semibold text-sm text-mk-muted">Pengeluaran Operasional per Kategori</h3>
                 <span class="text-sm font-semibold text-red-600">
-                    Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}
+                    Rp {{ number_format($totalPengeluaranOperasional, 0, ',', '.') }}
                 </span>
             </div>
             @if($expenseByCategory->count() > 0)
@@ -297,7 +303,7 @@
                                 Rp {{ number_format($cat->total, 0, ',', '.') }}
                             </td>
                             <td class="px-4 py-2 text-right text-mk-dim text-xs">
-                                {{ $totalPengeluaran > 0 ? number_format($cat->total / $totalPengeluaran * 100, 1) : 0 }}%
+                                {{ $totalPengeluaranOperasional > 0 ? number_format($cat->total / $totalPengeluaranOperasional * 100, 1) : 0 }}%
                             </td>
                         </tr>
                         @endforeach
@@ -305,7 +311,66 @@
                 </table>
             </div>
             @else
-            <div class="px-4 py-6 text-center text-mk-dim text-sm">Tidak ada pengeluaran bulan ini.</div>
+            <div class="px-4 py-6 text-center text-mk-dim text-sm">Tidak ada pengeluaran operasional bulan ini.</div>
+            @endif
+        </div>
+
+        {{-- ===== PETTY CASH ===== --}}
+        <div class="bg-mk-card shadow-sm rounded-lg overflow-hidden">
+            <div class="px-4 py-3 bg-mk-surface border-b flex justify-between">
+                <h3 class="font-semibold text-sm text-mk-muted">Petty Cash</h3>
+                <span class="text-sm font-semibold text-blue-700">
+                    Saldo akhir: Rp {{ number_format($saldoPettyCashAkhir, 0, ',', '.') }}
+                </span>
+            </div>
+            <div class="p-4 space-y-3 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-mk-muted">Top-up bulan ini</span>
+                    <span class="font-mono font-medium text-green-700">
+                        Rp {{ number_format($totalPettyCashTopup, 0, ',', '.') }}
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-mk-muted">Pengeluaran petty bulan ini</span>
+                    <span class="font-mono text-mk-dim">
+                        Rp {{ number_format($totalPettyCashExpense, 0, ',', '.') }}
+                        <span class="text-xs">(informatif, sudah termasuk di saldo)</span>
+                    </span>
+                </div>
+            </div>
+            @if($pettyCashExpenses->count() > 0)
+            <div class="overflow-x-auto border-t">
+                <table class="w-full text-sm">
+                    <thead class="border-b text-xs text-mk-dim uppercase">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Tanggal</th>
+                            <th class="px-4 py-2 text-left">Kategori</th>
+                            <th class="px-4 py-2 text-left">Keterangan</th>
+                            <th class="px-4 py-2 text-right">Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($pettyCashExpenses as $pce)
+                        <tr class="border-b">
+                            <td class="px-4 py-2 text-mk-dim text-xs">
+                                {{ $pce->expense_date->format('d/m/Y') }}
+                            </td>
+                            <td class="px-4 py-2 text-xs">
+                                {{ $pce->category->name ?? '—' }}
+                            </td>
+                            <td class="px-4 py-2">{{ $pce->description }}</td>
+                            <td class="px-4 py-2 text-right font-mono text-xs">
+                                Rp {{ number_format($pce->amount, 0, ',', '.') }}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            <div class="px-4 py-4 text-center text-mk-dim text-sm border-t">
+                Tidak ada pengeluaran petty cash bulan ini.
+            </div>
             @endif
         </div>
 

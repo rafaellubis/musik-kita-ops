@@ -35,6 +35,7 @@ class DashboardRoleViewTest extends TestCase
             ->get(route('dashboard'));
         $response->assertStatus(200);
         $response->assertDontSee('Saldo Kas');
+        $response->assertDontSee('Saldo Petty Cash');
     }
 
     public function test_admin_tidak_melihat_murid_aktif_kpi(): void
@@ -96,7 +97,8 @@ class DashboardRoleViewTest extends TestCase
         $response = $this->actingAs($this->userWithRole('Auditor'))
             ->get(route('dashboard'));
         $response->assertStatus(200);
-        $response->assertSee('Saldo Kas');
+        $response->assertSee('Saldo Petty Cash');
+        $response->assertDontSee('Saldo Kas');
     }
 
     public function test_auditor_masih_melihat_aging_piutang(): void
@@ -142,7 +144,8 @@ class DashboardRoleViewTest extends TestCase
         $response = $this->actingAs($this->userWithRole('Owner'))
             ->get(route('dashboard'));
         $response->assertStatus(200);
-        $response->assertSee('Saldo Kas');
+        $response->assertSee('Saldo Petty Cash');
+        $response->assertDontSee('Saldo Kas');
     }
 
     public function test_owner_masih_melihat_aging_piutang(): void

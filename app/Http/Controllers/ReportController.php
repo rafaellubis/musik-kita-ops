@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use App\Models\HonorSlip;
+use App\Models\PettyCashExpense;
+use App\Models\PettyCashTopup;
 use App\Models\StaffPayrollSlip;
 use App\Models\Invoice;
 use App\Models\Payment;
@@ -79,8 +81,21 @@ class ReportController extends Controller
             ->where('status', StaffPayrollSlip::STATUS_PAID)
             ->sum('net_salary');
 
-        // ===== PENGELUARAN — breakdown per kategori =====
+        // ===== PETTY CASH (top-up masuk P&L; expense petty informatif saja) =====
+        $totalPettyCashTopup = (int) PettyCashTopup::forMonth($year, $month)->sum('amount');
+        $pettyCashExpenses = PettyCashExpense::forMonth($year, $month)
+            ->with('category')
+            ->orderByDesc('expense_date')
+            ->get();
+        $totalPettyCashExpense = (int) $pettyCashExpenses->sum('amount');
+
+        $monthEnd = Carbon::create($year, $month, 1)->endOfMonth();
+        $saldoPettyCashAkhir = (int) PettyCashTopup::whereDate('topup_date', '<=', $monthEnd)->sum('amount')
+            - (int) PettyCashExpense::whereDate('expense_date', '<=', $monthEnd)->sum('amount');
+
+        // ===== PENGELUARAN OPERASIONAL — TRANSFER saja (bukan petty cash) =====
         $expenseByCategory = Expense::forMonth($year, $month)
+            ->where('expenses.payment_method', Expense::METHOD_TRANSFER)
             ->join('expense_categories', 'expenses.expense_category_id', '=', 'expense_categories.id')
             ->select(
                 'expense_categories.name as cat_name',
@@ -91,11 +106,11 @@ class ReportController extends Controller
             ->groupBy('expense_categories.id', 'expense_categories.name', 'expense_categories.code')
             ->orderBy('total', 'desc')
             ->get();
-        $totalPengeluaran = $expenseByCategory->sum('total');
+        $totalPengeluaranOperasional = (int) $expenseByCategory->sum('total');
 
         // ===== LABA / RUGI =====
-        // Laba = Revenue - Honor - Pengeluaran lainnya
-        $labaBersih = $totalRevenue - $totalHonor - $totalPengeluaran;
+        // Top-up petty cash = pengeluaran dari rekening studio; expense petty tidak double-hit
+        $labaBersih = $totalRevenue - $totalHonor - $totalPengeluaranOperasional - $totalPettyCashTopup;
 
         // ===== INVOICE OVERVIEW =====
         $invoiceStats = Invoice::where('year', $year)->where('month', $month)
@@ -117,7 +132,8 @@ class ReportController extends Controller
             'revenueByType', 'totalRevenue', 'revenueByMethod',
             'honorSlips', 'totalHonor', 'honorPaid',
             'staffPayrollSlips', 'totalStaffPayroll', 'staffPayrollPaid',
-            'expenseByCategory', 'totalPengeluaran',
+            'expenseByCategory', 'totalPengeluaranOperasional',
+            'totalPettyCashTopup', 'pettyCashExpenses', 'totalPettyCashExpense', 'saldoPettyCashAkhir',
             'labaBersih',
             'invoiceStats',
             'availableMonths',

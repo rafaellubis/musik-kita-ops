@@ -7,7 +7,9 @@ use App\Models\Expense;
 use App\Models\HonorSlip;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Models\PettyCashTopup;
 use App\Models\Student;
+use App\Services\PettyCashService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -46,7 +48,7 @@ class DashboardController extends Controller
 
         // ===== P&L (Owner only) =====
         $revenueBulan = $revenueCash = $revenueTransfer = 0;
-        $pengeluaranBulan = $pengeluaranCash = 0;
+        $pengeluaranBulan = 0;
         $labaBulan = 0;
         $revenueChart   = [];   // data area chart 6 bulan
         $instrumenChart = [];   // data donut distribusi instrumen
@@ -62,8 +64,11 @@ class DashboardController extends Controller
                 ->whereMonth('payment_date', $month)
                 ->sum('amount');
             $revenueTransfer  = $revenueBulan - $revenueCash;
-            $pengeluaranBulan = Expense::forMonth($year, $month)->sum('amount');
-            $pengeluaranCash  = Expense::forMonth($year, $month)->cash()->sum('amount');
+            $pengeluaranOperasional = (int) Expense::forMonth($year, $month)
+                ->where('payment_method', Expense::METHOD_TRANSFER)
+                ->sum('amount');
+            $pengeluaranTopup = (int) PettyCashTopup::forMonth($year, $month)->sum('amount');
+            $pengeluaranBulan = $pengeluaranOperasional + $pengeluaranTopup;
             $labaBulan        = $revenueBulan - $pengeluaranBulan;
 
             // Area chart: pemasukan vs honor 6 bulan terakhir
@@ -78,7 +83,10 @@ class DashboardController extends Controller
                     'honor'     => (int) HonorSlip::where('year', $d->year)
                                        ->where('month', $d->month)
                                        ->sum('total_honor'),
-                    'pengeluaran' => (int) Expense::forMonth($d->year, $d->month)->sum('amount'),
+                    'pengeluaran' => (int) Expense::forMonth($d->year, $d->month)
+                                           ->where('payment_method', Expense::METHOD_TRANSFER)
+                                           ->sum('amount')
+                                       + (int) PettyCashTopup::forMonth($d->year, $d->month)->sum('amount'),
                 ];
             }
 
@@ -98,14 +106,7 @@ class DashboardController extends Controller
         }
 
         // ===== PETTY CASH, AGING, INVOICE TERLAMA, HONOR (semua role) =====
-        $kasmasukTotal = Payment::whereNull('voided_at')
-            ->where('method', 'CASH')
-            ->whereDate('payment_date', '<=', $today)
-            ->sum('amount');
-        $kaskeluarTotal = Expense::cash()
-            ->whereDate('expense_date', '<=', $today)
-            ->sum('amount');
-        $saldoKas = $kasmasukTotal - $kaskeluarTotal;
+        $saldoPettyCash = app(PettyCashService::class)->getCurrentBalance();
 
         $aging      = ['current' => 0, 'late1_30' => 0, 'late31' => 0];
         $agingCount = ['current' => 0, 'late1_30' => 0, 'late31' => 0];
@@ -178,9 +179,9 @@ class DashboardController extends Controller
         return view('dashboard', compact(
             'year', 'month', 'monthName', 'isOwner', 'isAdmin',
             'revenueBulan', 'revenueCash', 'revenueTransfer',
-            'pengeluaranBulan', 'pengeluaranCash',
+            'pengeluaranBulan',
             'labaBulan',
-            'saldoKas', 'kasmasukTotal', 'kaskeluarTotal',
+            'saldoPettyCash',
             'muridAktif', 'muridTrial', 'muridCuti', 'muridCalon', 'muridTotal',
             'aging', 'agingCount', 'totalPiutang',
             'invoiceTerlama',

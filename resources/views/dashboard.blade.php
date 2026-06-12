@@ -52,7 +52,7 @@
                             Rp {{ number_format($pengeluaranBulan, 0, ',', '.') }}
                         </div>
                         <div class="mt-1.5 text-xs text-mk-dim">
-                            Cash {{ number_format($pengeluaranCash/1000000, 1, ',', '.') }}jt bulan ini
+                            Operasional transfer + isi petty cash
                         </div>
                     </div>
                     <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0"
@@ -79,18 +79,17 @@
             </div>
             @endif
 
-            {{-- Saldo Kas (semua role) --}}
+            {{-- Saldo Petty Cash (Owner & Auditor) --}}
             <div class="bg-mk-card rounded-xl p-5 border border-mk-borderLight shadow-sm fade-in-up"
                  style="animation-delay:{{ $isOwner ? '180ms' : '0ms' }}">
                 <div class="flex justify-between items-start">
                     <div>
-                        <div class="text-[10px] text-mk-dim uppercase tracking-widest font-semibold mb-2">Saldo Kas</div>
-                        <div class="text-2xl font-bold leading-none {{ $saldoKas >= 0 ? 'text-blue-700' : 'text-red-600' }}">
-                            Rp {{ number_format(abs($saldoKas), 0, ',', '.') }}
+                        <div class="text-[10px] text-mk-dim uppercase tracking-widest font-semibold mb-2">Saldo Petty Cash</div>
+                        <div class="text-2xl font-bold leading-none {{ $saldoPettyCash >= 0 ? 'text-blue-700' : 'text-red-600' }}">
+                            Rp {{ number_format(abs($saldoPettyCash), 0, ',', '.') }}
                         </div>
                         <div class="mt-1.5 text-xs text-mk-dim">
-                            Masuk {{ number_format($kasmasukTotal/1000000, 1, ',', '.') }}jt
-                            · Keluar {{ number_format($kaskeluarTotal/1000000, 1, ',', '.') }}jt
+                            Float kas kecil studio
                         </div>
                     </div>
                     <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0"
