@@ -257,7 +257,7 @@
                                         Batal
                                     </button>
                                     <button type="submit"
-                                            class="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700">
+                                            class="px-4 py-2 rounded-lg text-sm font-medium bg-mk-sidebar hover:bg-opacity-90 text-white">
                                         Buat Sesi
                                     </button>
                                 </div>
