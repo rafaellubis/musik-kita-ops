@@ -15,7 +15,7 @@
 <nav class="flex-1 overflow-y-auto py-3 px-2 space-y-0.5 text-[13px]">
 
     {{-- Grup: UTAMA --}}
-    <div class="px-2 pt-1 pb-1.5 text-[10px] font-semibold tracking-widest text-white/40 uppercase">Utama</div>
+    <div class="px-4 pt-4 pb-1.5 text-[10px] font-bold tracking-widest text-[#b1f0ce]/40 uppercase font-sans">Utama</div>
 
     <x-sidebar-item route="dashboard" icon="🏠" label="Dashboard"
         :active="request()->routeIs('dashboard')" />
@@ -34,7 +34,7 @@
     @endhasanyrole
 
     {{-- Grup: KEUANGAN --}}
-    <div class="px-2 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-white/40 uppercase">Keuangan</div>
+    <div class="px-4 pt-4 pb-1.5 text-[10px] font-bold tracking-widest text-[#b1f0ce]/40 uppercase font-sans">Keuangan</div>
 
     <x-sidebar-item route="invoices.index" icon="💳" label="Tagihan"
         :active="request()->routeIs('invoices.*')" />
@@ -59,7 +59,7 @@
         title="Sementara dinonaktifkan"/>
 
     {{-- Grup: LAPORAN --}}
-    <div class="px-2 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-white/40 uppercase">Laporan</div>
+    <div class="px-4 pt-4 pb-1.5 text-[10px] font-bold tracking-widest text-[#b1f0ce]/40 uppercase font-sans">Laporan</div>
 
     <x-sidebar-item route="progress-reports.index" icon="📝" label="Laporan Progres"
         :active="request()->routeIs('progress-reports.*')" />
@@ -77,7 +77,7 @@
     @endif
 
     {{-- Grup: MASTER DATA --}}
-    <div class="px-2 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-white/40 uppercase">Master Data</div>
+    <div class="px-4 pt-4 pb-1.5 text-[10px] font-bold tracking-widest text-[#b1f0ce]/40 uppercase font-sans">Master Data</div>
 
     <x-sidebar-item route="teachers.index" icon="👨‍🏫" label="Guru"
         :active="request()->routeIs('teachers.*')" />
