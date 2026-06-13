@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\PettyCashExpense;
 use App\Models\PettyCashTopup;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -96,5 +97,62 @@ class PettyCashService
         ]);
 
         return $topups->concat($expenses)->sortByDesc('date')->values();
+    }
+
+    /**
+     * Saldo awal bulan = total top-up sebelum bulan ini − total expense sebelum bulan ini.
+     */
+    public function getOpeningBalanceForMonth(int $year, int $month): int
+    {
+        $start = Carbon::create($year, $month, 1)->startOfMonth();
+        $in    = (int) PettyCashTopup::where('topup_date', '<', $start)->sum('amount');
+        $out   = (int) PettyCashExpense::where('expense_date', '<', $start)->sum('amount');
+
+        return $in - $out;
+    }
+
+    /**
+     * Ringkasan petty cash per bulan: saldo awal, mutasi, saldo akhir.
+     *
+     * @return array{opening_balance:int,total_topup:int,total_expense:int,closing_balance:int}
+     */
+    public function getMonthSummary(int $year, int $month): array
+    {
+        $opening = $this->getOpeningBalanceForMonth($year, $month);
+        $topup   = (int) PettyCashTopup::forMonth($year, $month)->sum('amount');
+        $expense = (int) PettyCashExpense::forMonth($year, $month)->sum('amount');
+
+        return [
+            'opening_balance' => $opening,
+            'total_topup'     => $topup,
+            'total_expense'   => $expense,
+            'closing_balance' => $opening + $topup - $expense,
+        ];
+    }
+
+    /**
+     * Mutasi bulan berurutan kronologis dengan kolom debit/kredit dan saldo berjalan.
+     */
+    public function getMutationsWithRunningBalance(int $year, int $month): Collection
+    {
+        $balance = $this->getOpeningBalanceForMonth($year, $month);
+
+        return $this->getMutations($year, $month)
+            ->sortBy('date')
+            ->values()
+            ->map(function ($row) use (&$balance) {
+                if ($row->type === 'topup') {
+                    $balance += $row->amount;
+                    $row->debit  = $row->amount;
+                    $row->credit = 0;
+                } else {
+                    $balance -= $row->amount;
+                    $row->debit  = 0;
+                    $row->credit = $row->amount;
+                }
+                $row->running_balance = $balance;
+
+                return $row;
+            });
     }
 }

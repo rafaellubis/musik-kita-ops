@@ -267,4 +267,37 @@ class PettyCashController extends Controller
             'month' => $date->month,
         ])->with('success', 'Pengeluaran petty cash berhasil dihapus.');
     }
+
+    /**
+     * Halaman cetak laporan petty cash per bulan (Ctrl+P → PDF).
+     */
+    public function print(Request $request, PettyCashService $service)
+    {
+        $year  = (int) $request->get('year', now()->year);
+        $month = (int) $request->get('month', now()->month);
+
+        $mutations = $service->getMutationsWithRunningBalance($year, $month);
+        $summary   = $service->getMonthSummary($year, $month);
+        $monthName = Carbon::create($year, $month, 1)->locale('id')->translatedFormat('F Y');
+
+        $user = auth()->user();
+        AuditLog::create([
+            'user_id'      => $user?->id,
+            'user_name'    => $user?->name,
+            'action'       => AuditLog::ACTION_PRINT,
+            'entity_type'  => 'PettyCashReport',
+            'entity_id'    => null,
+            'entity_label' => $monthName,
+            'new_values'   => ['year' => $year, 'month' => $month],
+            'ip_address'   => $request->ip(),
+        ]);
+
+        return view('petty-cash.print', compact(
+            'year',
+            'month',
+            'monthName',
+            'mutations',
+            'summary',
+        ));
+    }
 }

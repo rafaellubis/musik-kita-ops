@@ -504,6 +504,8 @@ Route::middleware('auth')->group(function () {
 
         // ===== M07: Petty Cash — read-only =====
         Route::get('petty-cash', [PettyCashController::class, 'index'])->name('petty-cash.index');
+        Route::get('petty-cash/print', [PettyCashController::class, 'print'])
+            ->name('petty-cash.print');
         Route::get('petty-cash/topups/{topup}', [PettyCashController::class, 'showTopup'])
             ->name('petty-cash.topups.show');
         Route::get('petty-cash/expenses/{expense}', [PettyCashController::class, 'showExpense'])

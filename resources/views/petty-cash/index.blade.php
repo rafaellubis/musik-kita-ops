@@ -6,6 +6,11 @@
                 <div class="text-xs text-mk-muted mt-0.5">{{ $monthName }}</div>
             </div>
             <div class="flex flex-wrap gap-2">
+                <a href="{{ route('petty-cash.print', ['year' => $year, 'month' => $month]) }}"
+                   target="_blank"
+                   class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm">
+                    Cetak PDF
+                </a>
                 @role('Owner')
                 <a href="{{ route('petty-cash.topups.create') }}"
                    class="px-4 py-2 rounded-lg text-sm font-bold transition-colors btn-mk-primary">
