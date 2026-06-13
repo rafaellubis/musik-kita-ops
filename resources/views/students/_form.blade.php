@@ -14,7 +14,7 @@
 
 {{-- ============= SECTION 1: IDENTITAS ============= --}}
 <fieldset class="mb-8">
-    <legend class="text-lg font-bold text-mk-text border-b w-full pb-2 mb-4">
+    <legend class="text-lg font-bold text-mk-text border-b border-mk-borderLight w-full pb-2 mb-4">
         1. Identitas
     </legend>
 
@@ -26,7 +26,7 @@
             </label>
             <input type="text" name="full_name" required maxlength="100"
                    value="{{ old('full_name', $student?->full_name) }}"
-                   class="mt-1 block w-full border-mk-border rounded-md shadow-sm"
+                   class="mt-1 block w-full border-mk-border rounded-lg shadow-sm"
                    placeholder="Nama sesuai akte/KTP">
             @error('full_name')
                 <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -37,7 +37,7 @@
             <label class="block text-sm font-medium">Nama Panggilan</label>
             <input type="text" name="nickname" maxlength="30"
                    value="{{ old('nickname', $student?->nickname) }}"
-                   class="mt-1 block w-full border-mk-border rounded-md shadow-sm">
+                   class="mt-1 block w-full border-mk-border rounded-lg shadow-sm">
             @error('nickname')
                 <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
             @enderror
@@ -48,7 +48,7 @@
                 Jenis Kelamin <span class="text-red-500">*</span>
             </label>
             <select name="gender" required
-                    class="mt-1 block w-full border-mk-border rounded-md shadow-sm">
+                    class="mt-1 block w-full border-mk-border rounded-lg shadow-sm">
                 <option value="">— Pilih —</option>
                 <option value="L" {{ old('gender', $student?->gender) == 'L' ? 'selected' : '' }}>
                     Laki-laki
@@ -66,7 +66,7 @@
             <label class="block text-sm font-medium">Tanggal Lahir</label>
             <input type="date" name="birth_date"
                    value="{{ old('birth_date', $student?->birth_date?->format('Y-m-d')) }}"
-                   class="mt-1 block w-full border-mk-border rounded-md shadow-sm">
+                   class="mt-1 block w-full border-mk-border rounded-lg shadow-sm">
             <p class="text-xs text-mk-dim mt-1">
                 Untuk hitung umur dan validasi paket Kids Class.
             </p>
@@ -80,7 +80,7 @@
 
 {{-- ============= SECTION 2: KONTAK ============= --}}
 <fieldset class="mb-8">
-    <legend class="text-lg font-bold text-mk-text border-b w-full pb-2 mb-4">
+    <legend class="text-lg font-bold text-mk-text border-b border-mk-borderLight w-full pb-2 mb-4">
         2. Kontak & Personal
     </legend>
 
@@ -90,7 +90,7 @@
             <label class="block text-sm font-medium">No. HP Murid</label>
             <input type="text" name="phone" maxlength="20"
                    value="{{ old('phone', $student?->phone) }}"
-                   class="mt-1 block w-full border-mk-border rounded-md shadow-sm"
+                   class="mt-1 block w-full border-mk-border rounded-lg shadow-sm"
                    placeholder="08123...">
             <p class="text-xs text-mk-dim mt-1">Kosongkan kalau murid masih anak-anak.</p>
             @error('phone')
@@ -102,7 +102,7 @@
             <label class="block text-sm font-medium">Email Murid</label>
             <input type="email" name="email" maxlength="100"
                    value="{{ old('email', $student?->email) }}"
-                   class="mt-1 block w-full border-mk-border rounded-md shadow-sm">
+                   class="mt-1 block w-full border-mk-border rounded-lg shadow-sm">
             @error('email')
                 <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
             @enderror
@@ -111,7 +111,7 @@
         <div class="md:col-span-2">
             <label class="block text-sm font-medium">Alamat</label>
             <textarea name="address" rows="2"
-                      class="mt-1 block w-full border-mk-border rounded-md shadow-sm"
+                      class="mt-1 block w-full border-mk-border rounded-lg shadow-sm"
                       placeholder="Jalan, RT/RW, Kel, Kec, Kota">{{ old('address', $student?->address) }}</textarea>
             @error('address')
                 <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -121,7 +121,7 @@
         <div class="md:col-span-2">
             <label class="block text-sm font-medium">Catatan Internal</label>
             <textarea name="notes" rows="2"
-                      class="mt-1 block w-full border-mk-border rounded-md shadow-sm"
+                      class="mt-1 block w-full border-mk-border rounded-lg shadow-sm"
                       placeholder="Info penting untuk admin">{{ old('notes', $student?->notes) }}</textarea>
             @error('notes')
                 <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -133,7 +133,7 @@
 
 {{-- ============= SECTION 3: ORANG TUA ============= --}}
 <fieldset class="mb-8">
-    <legend class="text-lg font-bold text-mk-text border-b w-full pb-2 mb-4">
+    <legend class="text-lg font-bold text-mk-text border-b border-mk-borderLight w-full pb-2 mb-4">
         3. Orang Tua / Wali
         <span class="text-xs font-normal text-mk-dim">(wajib untuk Kids Class)</span>
     </legend>
@@ -144,7 +144,7 @@
             <label class="block text-sm font-medium">Nama Orang Tua / Wali</label>
             <input type="text" name="parent_name" maxlength="100"
                    value="{{ old('parent_name', $student?->parent_name) }}"
-                   class="mt-1 block w-full border-mk-border rounded-md shadow-sm">
+                   class="mt-1 block w-full border-mk-border rounded-lg shadow-sm">
             @error('parent_name')
                 <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
             @enderror
@@ -153,7 +153,7 @@
         <div>
             <label class="block text-sm font-medium">Hubungan</label>
             <select name="parent_relationship"
-                    class="mt-1 block w-full border-mk-border rounded-md shadow-sm">
+                    class="mt-1 block w-full border-mk-border rounded-lg shadow-sm">
                 <option value="">— Pilih —</option>
                 @foreach(['Ayah', 'Ibu', 'Wali'] as $rel)
                     <option value="{{ $rel }}"
@@ -171,7 +171,7 @@
             <label class="block text-sm font-medium">No. HP Orang Tua/No. WhatsApp</label>
             <input type="text" name="parent_phone" maxlength="20"
                    value="{{ old('parent_phone', $student?->parent_phone) }}"
-                   class="mt-1 block w-full border-mk-border rounded-md shadow-sm">
+                   class="mt-1 block w-full border-mk-border rounded-lg shadow-sm">
             @error('parent_phone')
                 <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
             @enderror
@@ -181,7 +181,7 @@
             <label class="block text-sm font-medium">Email Orang Tua</label>
             <input type="email" name="parent_email" maxlength="100"
                    value="{{ old('parent_email', $student?->parent_email) }}"
-                   class="mt-1 block w-full border-mk-border rounded-md shadow-sm">
+                   class="mt-1 block w-full border-mk-border rounded-lg shadow-sm">
             @error('parent_email')
                 <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
             @enderror
@@ -192,7 +192,7 @@
 
 {{-- ============= SECTION 4: STATUS BELAJAR ============= --}}
 <fieldset class="mb-4">
-    <legend class="text-lg font-bold text-mk-text border-b w-full pb-2 mb-4">
+    <legend class="text-lg font-bold text-mk-text border-b border-mk-borderLight w-full pb-2 mb-4">
         4. Status Belajar & Paket
     </legend>
 
@@ -211,7 +211,7 @@
         {{-- Mode Create: status selalu Calon, tidak bisa dipilih --}}
         <input type="hidden" name="status" value="Calon">
         <div class="mt-1 flex items-center gap-3">
-            <span class="px-4 py-2 rounded-md border text-sm font-medium bg-mk-surface text-mk-muted border-mk-border">
+            <span class="px-4 py-2 rounded-lg border text-sm font-medium bg-mk-surface text-mk-muted border-mk-border">
                 Calon
             </span>
             <span class="text-xs text-mk-dim">
@@ -233,7 +233,7 @@
             $currentColor = $statusColors[$student?->status] ?? 'bg-gray-100 text-gray-700 border-gray-300';
         @endphp
         <div class="mt-1 flex items-center gap-3">
-            <span class="px-4 py-2 rounded-md border text-sm font-medium {{ $currentColor }}">
+            <span class="px-4 py-2 rounded-lg border text-sm font-medium {{ $currentColor }}">
                 {{ $student?->status ?? '—' }}
             </span>
             <span class="text-xs text-mk-dim">

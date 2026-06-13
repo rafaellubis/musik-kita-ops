@@ -15,9 +15,9 @@
     </x-slot>
 
     <div class="py-6 px-4 lg:px-8">
-        <div class="bg-mk-card shadow-sm sm:rounded-lg p-6 max-w-4xl">
+        <div class="bg-mk-card shadow-sm rounded-2xl p-6 md:p-8 max-w-4xl">
 
-            <div class="mb-6 p-3 bg-amber-50 border border-amber-200 rounded text-sm text-amber-800">
+            <div class="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-2xl text-sm text-amber-800">
                 <strong>Status saat ini: {{ $student->status }}.</strong>
                 Status hanya bisa diubah lewat tombol aksi di halaman Detail,
                 bukan dari form ini.
@@ -32,9 +32,9 @@
                     'mode' => 'edit'
                 ])
 
-                <div class="flex justify-end gap-2 mt-6 pt-6 border-t">
+                <div class="flex justify-end gap-2 mt-6 pt-6 border-t border-mk-borderLight">
                     <a href="{{ route('students.show', $student->id) }}"
-                       class="px-4 py-2 bg-mk-surface hover:bg-mk-surfaceHover rounded text-sm">
+                       class="px-4 py-2 bg-mk-surface hover:bg-mk-surfaceHover rounded-lg text-sm border border-secondary/10 transition-colors">
                         Batal
                     </a>
                     <button type="submit"
