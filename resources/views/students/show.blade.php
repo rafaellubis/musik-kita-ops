@@ -50,7 +50,7 @@
         $studentInstrument = $activeEnrollment?->package?->instrument?->name;
     @endphp
 
-    <div class="py-6 px-4 lg:px-8 max-w-4xl mx-auto space-y-5">
+    <div class="py-10 px-4 lg:px-10 max-w-5xl mx-auto space-y-6">
 
         @if($errors->any())
         <div class="p-3 rounded-lg text-sm fade-in-up font-medium"
@@ -63,7 +63,7 @@
         @endif
 
         {{-- ===== HEADER CARD ===== --}}
-        <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-6 fade-in-up" style="animation-delay:0ms">
+        <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm p-6 fade-in-up" style="animation-delay:0ms">
             <div class="flex justify-between items-start gap-4">
 
                 {{-- Avatar + Info --}}
@@ -98,15 +98,14 @@
 
                 {{-- Edit button --}}
                 <a href="{{ route('students.edit', $student->id) }}"
-                   class="px-4 py-2 rounded-lg text-sm font-semibold shrink-0 transition-colors"
-                   style="background:rgba(93,184,144,0.15);color:#5DB890;border:1px solid rgba(93,184,144,0.3)">
+                   class="px-4 py-2 rounded-lg text-sm font-semibold shrink-0 transition-colors bg-secondary-container/30 text-secondary border border-secondary/20 hover:bg-secondary-container/50">
                     Edit Data
                 </a>
             </div>
         </div>
 
         {{-- ===== LIFECYCLE PANEL ===== --}}
-        <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5 fade-in-up"
+        <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm p-5 fade-in-up"
              style="animation-delay:80ms"
              x-data="{ openForm: null }">
 
@@ -117,35 +116,30 @@
 
                 @if($student->status === 'Calon')
                 <button type="button" @click="openForm = openForm === 'trial' ? null : 'trial'"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-                        style="background:rgba(167,139,250,0.15);color:#A78BFA;border:1px solid rgba(167,139,250,0.3)">
+                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100">
                     🎯 Mulai Trial
                 </button>
                 <button type="button" @click="openForm = openForm === 'skip' ? null : 'skip'"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-                        style="background:rgba(52,211,153,0.15);color:#34D399;border:1px solid rgba(52,211,153,0.3)">
+                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100">
                     ⚡ Skip Trial → Aktif
                 </button>
                 @endif
 
                 @if($student->status === 'Trial')
                 <button type="button" @click="openForm = openForm === 'convert' ? null : 'convert'"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-                        style="background:rgba(52,211,153,0.15);color:#34D399;border:1px solid rgba(52,211,153,0.3)">
+                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100">
                     ✅ Konversi → Aktif
                 </button>
                 @endif
 
                 @if($student->status === 'Aktif')
                 <button type="button" @click="openForm = openForm === 'cuti' ? null : 'cuti'"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-                        style="background:rgba(251,191,36,0.15);color:#FBBF24;border:1px solid rgba(251,191,36,0.3)">
+                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100">
                     ☕ Ajukan Cuti
                 </button>
                 @if($isKidsClass)
                 <button type="button" @click="openForm = openForm === 'complete' ? null : 'complete'"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-                        style="background:rgba(96,165,250,0.15);color:#60A5FA;border:1px solid rgba(96,165,250,0.3)">
+                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100">
                     🎓 Tandai Selesai (Kids)
                 </button>
                 @endif
@@ -158,38 +152,33 @@
                       onsubmit="return confirm('Akhiri cuti dan kembalikan ke Aktif?')" class="inline">
                     @csrf
                     <button type="submit"
-                            class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-                            style="background:rgba(52,211,153,0.15);color:#34D399;border:1px solid rgba(52,211,153,0.3)">
+                            class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100">
                         ✅ Akhiri Cuti → Aktif
                     </button>
                 </form>
                 @else
                 <button disabled
                         title="Cuti berlaku hingga {{ $student->cuti_until->format('d M Y') }}"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold cursor-not-allowed"
-                        style="background:rgba(52,211,153,0.05);color:rgba(52,211,153,0.35);border:1px solid rgba(52,211,153,0.1)">
+                        class="px-4 py-2 rounded-lg text-sm font-semibold cursor-not-allowed bg-emerald-50/50 text-emerald-700/40 border border-emerald-200/50">
                     ✅ Akhiri Cuti → Aktif
                 </button>
                 @endif
                 <button type="button" @click="openForm = openForm === 'cuti' ? null : 'cuti'"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-                        style="background:rgba(251,191,36,0.15);color:#FBBF24;border:1px solid rgba(251,191,36,0.3)">
+                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100">
                     ↩ Perpanjang Cuti
                 </button>
                 @endif
 
                 @if(in_array($student->status, ['Selesai', 'Mengundurkan Diri']))
                 <button type="button" @click="openForm = openForm === 'reactivate' ? null : 'reactivate'"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-                        style="background:rgba(52,211,153,0.15);color:#34D399;border:1px solid rgba(52,211,153,0.3)">
+                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100">
                     🔄 {{ $student->status === 'Selesai' ? 'Re-enroll Privat' : 'Re-aktivasi' }}
                 </button>
                 @endif
 
                 @if(in_array($student->status, ['Calon', 'Trial', 'Aktif', 'Cuti']))
                 <button type="button" @click="openForm = openForm === 'withdraw' ? null : 'withdraw'"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-                        style="background:rgba(248,113,113,0.15);color:#F87171;border:1px solid rgba(248,113,113,0.3)">
+                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-red-50 text-red-700 border border-red-200 hover:bg-red-100">
                     🚪 Tandai Mundur
                 </button>
                 @endif
@@ -253,8 +242,7 @@
                             <textarea name="notes" rows="2" maxlength="500" class="block w-full rounded-lg text-sm px-3 py-2"></textarea>
                         </div>
                     </div>
-                    <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
-                            style="background:rgba(167,139,250,0.2);color:#A78BFA">
+                    <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold bg-purple-600 hover:bg-purple-700 text-white transition-colors">
                         Simpan Jadwal Trial
                     </button>
                 </form>
@@ -321,8 +309,8 @@
                             </select>
                         </div>
                         {{-- Metode pembayaran: hanya muncul untuk KIDS_CLASS_BUNDLE --}}
-                        <div x-show="kidsBundle" class="md:col-span-2 p-3 rounded-lg border border-blue-200 bg-blue-50">
-                            <div class="text-xs font-semibold text-blue-700 mb-2">Metode Pembayaran Kids Class Bundle</div>
+                        <div x-show="kidsBundle" class="md:col-span-2 p-3 rounded-lg border border-secondary/20 bg-secondary/5">
+                            <div class="text-xs font-semibold text-secondary mb-2">Metode Pembayaran Kids Class Bundle</div>
                             <div class="flex gap-6">
                                 <label class="flex items-center gap-2 text-sm text-mk-muted cursor-pointer">
                                     <input type="radio" name="payment_mode" value="FULL" checked> Lunas sekali bayar
@@ -335,8 +323,7 @@
                         {{-- Hidden default FULL untuk non-bundle --}}
                         <template x-if="!kidsBundle"><input type="hidden" name="payment_mode" value="FULL"></template>
                     </div>
-                    <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
-                            style="background:rgba(52,211,153,0.2);color:#34D399">
+                    <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors">
                         Konfirmasi Skip Trial
                     </button>
                 </form>
@@ -395,8 +382,8 @@
                             <textarea name="notes" rows="2" maxlength="500" class="block w-full rounded-lg text-sm px-3 py-2"></textarea>
                         </div>
                         {{-- Metode pembayaran: hanya muncul untuk KIDS_CLASS_BUNDLE --}}
-                        <div x-show="kidsBundle" class="md:col-span-2 p-3 rounded-lg border border-blue-200 bg-blue-50">
-                            <div class="text-xs font-semibold text-blue-700 mb-2">Metode Pembayaran Kids Class Bundle</div>
+                        <div x-show="kidsBundle" class="md:col-span-2 p-3 rounded-lg border border-secondary/20 bg-secondary/5">
+                            <div class="text-xs font-semibold text-secondary mb-2">Metode Pembayaran Kids Class Bundle</div>
                             <div class="flex gap-6">
                                 <label class="flex items-center gap-2 text-sm text-mk-muted cursor-pointer">
                                     <input type="radio" name="payment_mode" value="FULL" checked> Lunas sekali bayar
@@ -408,8 +395,7 @@
                         </div>
                         <template x-if="!kidsBundle"><input type="hidden" name="payment_mode" value="FULL"></template>
                     </div>
-                    <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
-                            style="background:rgba(52,211,153,0.2);color:#34D399">
+                    <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors">
                         Konfirmasi Konversi Aktif
                     </button>
                 </form>
@@ -417,8 +403,7 @@
 
             {{-- Cuti --}}
             <div x-show="openForm === 'cuti'" x-cloak
-                 class="mt-4 rounded-xl p-4"
-                 style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2)">
+                 class="mt-4 rounded-2xl p-4 bg-amber-50 border border-amber-200">
                 <form method="POST" action="{{ route('students.start-cuti', $student->id) }}">
                     @csrf
                     <div class="text-sm font-semibold mb-1" style="color:#FBBF24">
@@ -445,8 +430,7 @@
                                       placeholder="Mis: UAS sekolah, perjalanan keluarga, dll."></textarea>
                         </div>
                     </div>
-                    <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
-                            style="background:rgba(251,191,36,0.2);color:#FBBF24">
+                    <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold bg-amber-600 hover:bg-amber-700 text-white transition-colors">
                         Simpan Pengajuan Cuti
                     </button>
                 </form>
@@ -454,8 +438,7 @@
 
             {{-- Selesai Kids --}}
             <div x-show="openForm === 'complete'" x-cloak
-                 class="mt-4 rounded-xl p-4"
-                 style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2)">
+                 class="mt-4 rounded-2xl p-4 bg-blue-50 border border-blue-200">
                 <form method="POST" action="{{ route('students.complete', $student->id) }}">
                     @csrf
                     <div class="text-sm font-semibold mb-1" style="color:#60A5FA">Tandai Selesai (Lulus Kids Class)</div>
@@ -464,8 +447,7 @@
                               class="block w-full rounded-lg text-sm px-3 py-2"
                               placeholder="Catatan kelulusan (opsional)"></textarea>
                     <button type="submit" onclick="return confirm('Tandai murid Selesai?')"
-                            class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
-                            style="background:rgba(96,165,250,0.2);color:#60A5FA">
+                            class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors">
                         Konfirmasi Selesai
                     </button>
                 </form>
@@ -474,8 +456,7 @@
             {{-- Re-aktivasi --}}
             <div x-show="openForm === 'reactivate'" x-cloak
                  x-data="lifecycleTeacherFilter()"
-                 class="mt-4 rounded-xl p-4"
-                 style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2)">
+                 class="mt-4 rounded-2xl p-4 bg-emerald-50 border border-emerald-200">
                 <form method="POST" action="{{ route('students.reactivate', $student->id) }}">
                     @csrf
                     <div class="text-sm font-semibold mb-1" style="color:#34D399">
@@ -522,8 +503,8 @@
                             <textarea name="notes" rows="2" maxlength="500" class="block w-full rounded-lg text-sm px-3 py-2"></textarea>
                         </div>
                         {{-- Metode pembayaran: hanya muncul untuk KIDS_CLASS_BUNDLE --}}
-                        <div x-show="kidsBundle" class="md:col-span-2 p-3 rounded-lg border border-blue-200 bg-blue-50">
-                            <div class="text-xs font-semibold text-blue-700 mb-2">Metode Pembayaran Kids Class Bundle</div>
+                        <div x-show="kidsBundle" class="md:col-span-2 p-3 rounded-lg border border-secondary/20 bg-secondary/5">
+                            <div class="text-xs font-semibold text-secondary mb-2">Metode Pembayaran Kids Class Bundle</div>
                             <div class="flex gap-6">
                                 <label class="flex items-center gap-2 text-sm text-mk-muted cursor-pointer">
                                     <input type="radio" name="payment_mode" value="FULL" checked> Lunas sekali bayar
@@ -535,8 +516,7 @@
                         </div>
                         <template x-if="!kidsBundle"><input type="hidden" name="payment_mode" value="FULL"></template>
                     </div>
-                    <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
-                            style="background:rgba(52,211,153,0.2);color:#34D399">
+                    <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors">
                         Konfirmasi Re-aktivasi
                     </button>
                 </form>
@@ -544,8 +524,7 @@
 
             {{-- Mundur --}}
             <div x-show="openForm === 'withdraw'" x-cloak
-                 class="mt-4 rounded-xl p-4"
-                 style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2)">
+                 class="mt-4 rounded-2xl p-4 bg-red-50 border border-red-200">
                 <form method="POST" action="{{ route('students.withdraw', $student->id) }}"
                       onsubmit="return confirm('Tandai murid Mengundurkan Diri? Bisa di-rollback via Re-aktivasi.')">
                     @csrf
@@ -555,8 +534,7 @@
                     <textarea name="reason" required rows="2" maxlength="500"
                               class="block w-full rounded-lg text-sm px-3 py-2"
                               placeholder="Mis: pindah kota, tunggakan >1 bulan, tidak melanjutkan setelah trial"></textarea>
-                    <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold"
-                            style="background:rgba(248,113,113,0.2);color:#F87171">
+                    <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold bg-red-600 hover:bg-red-700 text-white transition-colors">
                         Konfirmasi Mundur
                     </button>
                 </form>
@@ -567,7 +545,7 @@
         <div x-data="{ activeTab: 'info', openSchedule: null, editSchedule: null }" class="space-y-0">
 
             {{-- Tab pills --}}
-            <div class="flex gap-1 p-1 bg-mk-card rounded-xl border border-mk-borderLight shadow-sm mb-5 fade-in-up"
+            <div class="flex gap-1 p-1 bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm mb-5 fade-in-up"
                  style="animation-delay:160ms">
                 @foreach([
                     ['info',    '📋 Informasi'],
@@ -577,9 +555,9 @@
                     ['history', '📜 Riwayat'],
                 ] as [$tab, $label])
                 <button @click="activeTab = '{{ $tab }}'"
-                        :style="activeTab === '{{ $tab }}'
-                            ? 'background:rgba(93,184,144,0.15);color:#5DB890'
-                            : 'background:transparent;color:#6B7494'"
+                        :class="activeTab === '{{ $tab }}'
+                            ? 'bg-secondary/15 text-secondary font-semibold shadow-sm'
+                            : 'text-mk-muted hover:text-mk-text'"
                         class="flex-1 py-2 px-1 rounded-lg text-xs font-medium transition-all duration-150 text-center">
                     {{ $label }}
                 </button>
@@ -595,9 +573,8 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
                     {{-- Identitas & Kontak --}}
-                    <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold mb-4"
-                             style="color:#5DB890">Identitas & Kontak</div>
+                    <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm p-5">
+                        <div class="text-[10px] uppercase tracking-widest font-semibold mb-4 text-secondary">Identitas & Kontak</div>
                         <div class="space-y-3">
                             @foreach([
                                 ['Jenis Kelamin', $student->gender == 'L' ? 'Laki-laki' : 'Perempuan'],
@@ -615,9 +592,8 @@
                     </div>
 
                     {{-- Orang Tua / Wali --}}
-                    <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold mb-4"
-                             style="color:#5DB890">Orang Tua / Wali</div>
+                    <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm p-5">
+                        <div class="text-[10px] uppercase tracking-widest font-semibold mb-4 text-secondary">Orang Tua / Wali</div>
                         <div class="space-y-3">
                             @foreach([
                                 ['Nama',        $student->parent_name ?? '—'],
@@ -634,9 +610,8 @@
                     </div>
 
                     {{-- Status Belajar --}}
-                    <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold mb-4"
-                             style="color:#5DB890">Status Belajar</div>
+                    <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm p-5">
+                        <div class="text-[10px] uppercase tracking-widest font-semibold mb-4 text-secondary">Status Belajar</div>
                         <div class="space-y-3">
                             <div class="flex gap-3">
                                 <div class="text-xs text-mk-dim w-28 shrink-0 pt-0.5">Paket</div>
@@ -676,9 +651,8 @@
                     </div>
 
                     {{-- Tracking --}}
-                    <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold mb-4"
-                             style="color:#5DB890">Tracking</div>
+                    <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm p-5">
+                        <div class="text-[10px] uppercase tracking-widest font-semibold mb-4 text-secondary">Tracking</div>
                         <div class="space-y-3">
                             <div class="flex gap-3">
                                 <div class="text-xs text-mk-dim w-28 shrink-0 pt-0.5">Sesi Terakhir</div>
@@ -720,8 +694,8 @@
                  class="space-y-5">
 
                 {{-- Enrollment aktif — tampilkan semua kelas aktif (multi-enrollment) --}}
-                <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5">
-                    <div class="text-[10px] uppercase tracking-widest font-semibold mb-3" style="color:#5DB890">Kelas Aktif</div>
+                <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm p-5">
+                    <div class="text-[10px] uppercase tracking-widest font-semibold mb-3 text-secondary">Kelas Aktif</div>
                     @if($activeEnrollments->isEmpty())
                     <div class="rounded-lg p-3 text-sm text-mk-dim"
                          style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07)">
@@ -757,19 +731,18 @@
                     $aeLabel = ($ae->package->instrument->name ?? '?') . ' — ' . ($ae->package->code ?? '?');
                     if ($ae->is_primary) { $aeLabel .= ' (Utama)'; }
                 @endphp
-                <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5"
+                <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm p-5"
                      x-data="{ openCreate: false }">
                     <div class="flex justify-between items-center mb-3">
                         <div>
-                            <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#5DB890">
+                            <div class="text-[10px] uppercase tracking-widest font-semibold text-secondary">
                                 Jadwal — {{ $aeLabel }}
                             </div>
                             <div class="text-xs text-mk-dim mt-0.5">Guru: {{ $ae->teacher->name ?? '?' }}</div>
                         </div>
                         <button type="button"
                                 @click="openCreate = !openCreate"
-                                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                                style="background:rgba(93,184,144,0.15);color:#5DB890">
+                                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors bg-secondary-container/30 text-secondary border border-secondary/20 hover:bg-secondary-container/50">
                             + Tambah Jadwal
                         </button>
                     </div>
@@ -802,8 +775,7 @@
                                  });
                              }
                          }"
-                         class="mb-4 rounded-xl p-4"
-                         style="background:rgba(93,184,144,0.06);border:1px solid rgba(93,184,144,0.2)">
+                         class="mb-4 rounded-2xl p-4 bg-secondary/5 border border-secondary/20">
                         <form method="POST" action="{{ route('schedules.store', $student->id) }}">
                             @csrf
                             {{-- enrollment_id wajib agar store() tahu jadwal untuk enrollment mana --}}
@@ -855,8 +827,7 @@
                                     <input type="text" name="notes" maxlength="500" class="block w-full rounded-lg text-sm px-2 py-1.5">
                                 </div>
                             </div>
-                            <button type="submit" class="mt-2 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                                    style="background:rgba(93,184,144,0.2);color:#5DB890">
+                            <button type="submit" class="mt-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-secondary text-white hover:bg-secondary/90 transition-colors">
                                 Simpan Jadwal
                             </button>
                         </form>
@@ -906,17 +877,17 @@
                                                 notes: @js($sch->notes ?? ''),
                                                 instrument: @js($aeInstrument)
                                             }"
-                                            class="text-xs hover:underline" style="color:#5DB890">Edit</button>
+                                            class="text-xs hover:underline text-secondary">Edit</button>
                                     <form method="POST" action="{{ route('schedules.toggle-active', [$student->id, $sch->id]) }}" class="inline">
                                         @csrf
-                                        <button type="submit" class="text-xs hover:underline" style="color:#FBBF24">
+                                        <button type="submit" class="text-xs hover:underline text-amber-500">
                                             {{ $sch->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
                                         </button>
                                     </form>
                                     <form method="POST" action="{{ route('schedules.destroy', [$student->id, $sch->id]) }}" class="inline"
                                           onsubmit="return confirm('Hapus jadwal ini?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="text-xs hover:underline" style="color:#F87171">Hapus</button>
+                                        <button type="submit" class="text-xs hover:underline text-red-500">Hapus</button>
                                     </form>
                                 </td>
                             </tr>
@@ -934,16 +905,14 @@
                 {{-- Modal Edit Jadwal --}}
                 <div x-show="editSchedule !== null"
                      x-cloak
-                     class="fixed inset-0 z-50 flex items-center justify-center p-4"
-                     style="background:rgba(0,0,0,0.6)"
+                     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
                      @click.self="editSchedule = null">
 
                     <div x-show="editSchedule !== null"
                          x-transition:enter="transition ease-out duration-200"
                          x-transition:enter-start="opacity-0 scale-95"
                          x-transition:enter-end="opacity-100 scale-100"
-                         class="w-full max-w-lg rounded-xl shadow-2xl p-5"
-                         style="background:#241608;border:1px solid rgba(212,168,83,0.15)"
+                         class="w-full max-w-lg rounded-2xl shadow-2xl p-6 bg-white border border-mk-borderLight"
                          x-data="{
                              get selDay()        { return editSchedule ? String(editSchedule.day_of_week) : '' },
                              get selStart()      { return editSchedule ? editSchedule.start_time : '' },
@@ -1033,13 +1002,11 @@
 
                                 <div class="flex gap-2 mt-4">
                                     <button type="submit"
-                                            class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-                                            style="background:rgba(93,184,144,0.2);color:#5DB890">
+                                            class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-secondary text-white hover:bg-secondary/90">
                                         Simpan Perubahan
                                     </button>
                                     <button type="button" @click="editSchedule = null"
-                                            class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-                                            style="background:rgba(255,255,255,0.05);color:#8A6848">
+                                            class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-mk-surface hover:bg-mk-surfaceHover text-mk-muted">
                                         Batal
                                     </button>
                                 </div>
@@ -1159,7 +1126,7 @@
                     <div x-show="editSession !== null" x-cloak
                          class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
                          @click.self="editSession = null">
-                        <div class="bg-mk-card rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+                        <div class="bg-mk-card rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
                             <div class="flex justify-between items-center mb-4">
                                 <h3 class="text-sm font-semibold text-mk-text">
                                     Edit Sesi — <span x-text="editSession?.sessionDate" class="font-mono"></span>
@@ -1300,26 +1267,24 @@
                             </form>
                         </div>
                     </div>
-
                 </div>
                 @endif
 
-                {{-- Ringkasan saldo --}}
-                <div class="grid grid-cols-3 gap-4">
-                    <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm p-4">
                         <div class="text-[10px] uppercase tracking-wide text-mk-dim mb-1">Saldo Outstanding</div>
-                        <div class="text-xl font-bold leading-none {{ $outstandingBalance > 0 ? '' : '' }}"
+                        <div class="text-xl font-bold leading-none"
                              style="color:{{ $outstandingBalance > 0 ? '#F87171' : '#34D399' }}">
                             Rp {{ number_format($outstandingBalance, 0, ',', '.') }}
                         </div>
                         <div class="text-xs text-mk-dim mt-1">{{ $unpaidCount }} tagihan belum lunas</div>
                     </div>
-                    <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-4">
+                    <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm p-4">
                         <div class="text-[10px] uppercase tracking-wide text-mk-dim mb-1">Total Invoice</div>
                         <div class="text-xl font-bold text-mk-text leading-none">{{ $student->invoices->count() }}</div>
                         <div class="text-xs text-mk-dim mt-1">sepanjang waktu</div>
                     </div>
-                    <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-4 flex items-center justify-center">
+                    <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm p-4 flex items-center justify-center">
                         <a href="{{ route('invoices.index', ['student_id' => $student->id]) }}"
                            class="text-xs text-secondary hover:text-secondary/80 hover:underline text-center">
                             Lihat semua tagihan →
@@ -1329,9 +1294,9 @@
 
                 {{-- Tombol generate cicilan: muncul jika KIDS_CLASS_BUNDLE belum punya invoice cicilan --}}
                 @if($student->primaryEnrollment?->package?->class_type === 'KIDS_CLASS_BUNDLE' && (empty($kidsInstallments) || $kidsInstallments->isEmpty()))
-                <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm overflow-hidden" x-data="{ showBundleModal: false }">
+                <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm overflow-hidden" x-data="{ showBundleModal: false }">
                     <div class="px-5 py-3.5 border-b border-mk-borderLight flex items-center justify-between">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#5DB890">Cicilan Kids Class Bundle</div>
+                        <div class="text-[10px] uppercase tracking-widest font-semibold text-secondary">Cicilan Kids Class Bundle</div>
                     </div>
                     <div class="px-5 py-6 text-center">
                         <p class="text-sm text-mk-dim mb-3">Belum ada invoice cicilan untuk murid ini.</p>
@@ -1346,7 +1311,7 @@
                          class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
                          @click.self="showBundleModal = false"
                          @keydown.escape.window="showBundleModal = false">
-                        <div class="bg-mk-card rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
+                        <div class="bg-mk-card rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
                                 <h3 class="text-base font-semibold text-mk-text mb-1">Generate Cicilan Bundle</h3>
                                 <p class="text-xs text-mk-dim mb-4">
                                     Sistem akan membuat 3 invoice: Termin 1 (bulan mulai), Termin 2 (+1 bulan), Termin 3 (+3 bulan).
@@ -1394,9 +1359,9 @@
                         ? $kidsInstallments->where('status', '!=', 'PAID')->min('installment_number')
                         : null;
                 @endphp
-                <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm overflow-hidden">
+                <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm overflow-hidden">
                     <div class="px-5 py-3.5 border-b border-mk-borderLight flex items-center justify-between">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#5DB890">
+                        <div class="text-[10px] uppercase tracking-widest font-semibold text-secondary">
                             Cicilan Kids Class Bundle
                         </div>
                         @if($kAllPaid)
@@ -1477,9 +1442,9 @@
                 @endif
 
                 {{-- Invoice terbaru --}}
-                <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm overflow-hidden">
+                <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm overflow-hidden">
                     <div class="px-5 py-3.5 border-b border-mk-borderLight">
-                        <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#5DB890">5 Tagihan Terbaru</div>
+                        <div class="text-[10px] uppercase tracking-widest font-semibold text-secondary">5 Tagihan Terbaru</div>
                     </div>
                     @if($recentInvoices->isEmpty())
                     <div class="px-5 py-8 text-center text-sm text-mk-dim">Belum ada tagihan.</div>
@@ -1499,7 +1464,7 @@
                             @foreach($recentInvoices as $inv)
                             @php $iCfg = $invStatusCfg[$inv->status] ?? ['bg'=>'rgba(139,146,168,0.12)','color'=>'#8B92A8']; @endphp
                             <tr class="border-b border-mk-borderLight hover:bg-mk-surface transition-colors">
-                                <td class="px-4 py-2.5 font-mono" style="color:#5DB890">{{ $inv->invoice_number }}</td>
+                                <td class="px-4 py-2.5 font-mono text-secondary">{{ $inv->invoice_number }}</td>
                                 <td class="px-4 py-2.5">
                                     @foreach($inv->items as $item)
                                     <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold mr-1"
@@ -1521,8 +1486,7 @@
                                 </td>
                                 <td class="px-4 py-2.5 text-center">
                                     <a href="{{ route('invoices.show', $inv->id) }}"
-                                       class="px-2.5 py-1 rounded-lg text-[10px] font-semibold"
-                                       style="background:rgba(93,184,144,0.15);color:#5DB890">
+                                       class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-secondary/15 text-secondary hover:bg-secondary/25 transition-colors">
                                         Detail
                                     </a>
                                 </td>
@@ -1540,8 +1504,8 @@
                  x-transition:enter-start="opacity-0 translate-y-2"
                  x-transition:enter-end="opacity-100 translate-y-0">
 
-                <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-5">
-                    <div class="text-[10px] uppercase tracking-widest font-semibold mb-5" style="color:#5DB890">
+                <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm p-5">
+                    <div class="text-[10px] uppercase tracking-widest font-semibold mb-5 text-secondary">
                         Riwayat Perubahan Status
                     </div>
 
@@ -1563,7 +1527,7 @@
                                  style="background:{{ $hCfg['dot'] }};border:3px solid #1E2235"></div>
 
                             {{-- Card --}}
-                            <div class="rounded-xl p-4" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07)">
+                            <div class="rounded-2xl p-4 bg-mk-surface border border-mk-borderLight">
                                 <div class="flex justify-between items-start gap-3">
                                     <div class="flex items-center gap-2 flex-wrap">
                                         @if($h->from_status)

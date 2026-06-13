@@ -6,8 +6,7 @@
     {{-- Notifikasi konfirmasi swap kelas utama (muncul setelah DELETE enrollment primer dengan >1 kelas aktif) --}}
     @if(session('confirm_primary_swap') && auth()->user()->hasAnyRole(['Owner', 'Admin']))
         @php $swap = session('confirm_primary_swap'); @endphp
-        <div class="rounded-xl p-4"
-             style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25)">
+        <div class="rounded-2xl p-4 bg-amber-50 border border-amber-200">
             <p class="text-sm font-semibold mb-3" style="color:#FBBF24">
                 Kelas yang dihentikan adalah <strong>Kelas Utama</strong>.
                 Pilih kelas pengganti sebagai kelas utama baru:
@@ -26,8 +25,7 @@
                         @endforeach
                     </select>
                     <button type="submit"
-                            class="px-4 py-2 rounded-lg text-sm font-semibold"
-                            style="background:rgba(251,191,36,0.2);color:#FBBF24">
+                            class="px-4 py-2 rounded-lg text-sm font-semibold bg-amber-600 hover:bg-amber-700 text-white transition-colors">
                         Hentikan &amp; Ganti Utama
                     </button>
                     <a href="{{ route('students.show', $student) }}"
@@ -38,22 +36,20 @@
     @endif
 
     {{-- ===== KELAS BERJALAN ===== --}}
-    <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm overflow-hidden">
+    <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm overflow-hidden">
 
         {{-- Header section kelas berjalan --}}
         <div class="px-5 py-3.5 flex items-center justify-between border-b border-mk-borderLight">
-            <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#5DB890">
+            <div class="text-[10px] uppercase tracking-widest font-semibold text-secondary">
                 Kelas Berjalan
-                <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold"
-                      style="background:rgba(93,184,144,0.12);color:#5DB890">
+                <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-secondary/15 text-secondary">
                     {{ $activeEnrollments->count() }}
                 </span>
             </div>
             @if(auth()->user()->hasAnyRole(['Owner', 'Admin']) && $student->status === 'Aktif')
                 <button type="button"
                         onclick="document.getElementById('modal-tambah-kelas').classList.remove('hidden')"
-                        class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                        style="background:rgba(93,184,144,0.15);color:#5DB890;border:1px solid rgba(93,184,144,0.3)">
+                        class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors bg-secondary-container/30 text-secondary border border-secondary/20 hover:bg-secondary-container/50">
                     + Tambah Kelas
                 </button>
             @endif
@@ -69,8 +65,7 @@
             <div class="px-5 py-4 flex items-start gap-4 border-b border-mk-borderLight last:border-0">
 
                 {{-- Ikon instrumen --}}
-                <div class="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0 mt-0.5"
-                     style="background:rgba(93,184,144,0.1)">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0 mt-0.5 bg-secondary/10">
                     🎵
                 </div>
 
@@ -83,8 +78,7 @@
                             <span class="font-mono">{{ $enrollment->package->code ?? '—' }}</span>
                         </span>
                         @if($enrollment->is_primary)
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                                  style="background:rgba(93,184,144,0.15);color:#5DB890">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary/15 text-secondary">
                                 ★ Kelas Utama
                             </span>
                         @endif
@@ -130,8 +124,7 @@
                                   action="{{ route('students.enrollments.set-primary', [$student, $enrollment]) }}">
                                 @csrf @method('PATCH')
                                 <button type="submit"
-                                        class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors"
-                                        style="background:rgba(93,184,144,0.12);color:#5DB890;border:1px solid rgba(93,184,144,0.25)">
+                                        class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors bg-secondary-container/30 text-secondary border border-secondary/20 hover:bg-secondary-container/50">
                                     Jadikan Utama
                                 </button>
                             </form>
@@ -142,8 +135,7 @@
                               onsubmit="return confirm('Hentikan kelas {{ addslashes($enrollment->package->code ?? '') }}? Jadwal aktif akan dinonaktifkan.')">
                             @csrf @method('DELETE')
                             <button type="submit"
-                                    class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors"
-                                    style="background:rgba(248,113,113,0.1);color:#F87171;border:1px solid rgba(248,113,113,0.2)">
+                                    class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors bg-red-50 text-red-600 border border-red-200 hover:bg-red-100">
                                 Hentikan
                             </button>
                         </form>
@@ -162,8 +154,7 @@
                         </div>
                         @if($slotInfo['next_sequence'])
                             <button type="button" @click="showManualModal = true"
-                                    class="px-2.5 py-1 rounded-lg text-[10px] font-semibold"
-                                    style="background:rgba(93,184,144,0.15);color:#5DB890">
+                                    class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-secondary/15 text-secondary hover:bg-secondary/25 transition-colors">
                                 + Tambah Sesi Manual
                             </button>
                         @else
@@ -195,7 +186,7 @@
                          class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
                          @click.self="showManualModal = false"
                          @keydown.escape.window="showManualModal = false">
-                        <div class="bg-mk-card rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+                        <div class="bg-mk-card rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
                             <h3 class="text-base font-semibold text-mk-text mb-1">Tambah Sesi Manual</h3>
                             <p class="text-xs text-mk-dim mb-4">
                                 Atribusi: {{ $slotInfo['month_label'] }} · Slot {{ $slotInfo['next_sequence'] }}
@@ -277,16 +268,15 @@
 
     {{-- ===== RIWAYAT KELAS ===== --}}
     @if($historyEnrollments->isNotEmpty())
-        <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm overflow-hidden">
+        <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm overflow-hidden">
             <div class="px-5 py-3.5 border-b border-mk-borderLight">
-                <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#5DB890">
+                <div class="text-[10px] uppercase tracking-widest font-semibold text-secondary">
                     Riwayat Kelas
                 </div>
             </div>
             @foreach($historyEnrollments as $enrollment)
                 <div class="px-5 py-3.5 flex items-center gap-4 border-b border-mk-borderLight last:border-0 opacity-60">
-                    <div class="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0"
-                         style="background:rgba(93,184,144,0.07)">
+                    <div class="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0 bg-secondary/10">
                         🎵
                     </div>
                     <div class="flex-1 min-w-0">
@@ -323,7 +313,7 @@
      class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
      style="background:rgba(0,0,0,0.55)"
      onclick="if(event.target===this) this.classList.add('hidden')">
-    <div class="bg-mk-card rounded-xl shadow-2xl w-full max-w-xl max-h-[80vh] flex flex-col"
+    <div class="bg-mk-card rounded-2xl shadow-2xl w-full max-w-xl max-h-[80vh] flex flex-col"
          onclick="event.stopPropagation()">
 
         {{-- Header modal — fixed, tidak ikut scroll --}}
@@ -364,7 +354,7 @@
                     </label>
                     <select name="package_id" required
                             @change="onPackageChange($event.target.value)"
-                            class="block w-full rounded-lg text-sm px-3 py-2 border border-mk-border">
+                            class="block w-full rounded-lg text-sm px-3 py-2 border border-mk-border focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary">
                         <option value="">— Pilih Paket —</option>
                         @foreach($allPackages as $pkg)
                             <option value="{{ $pkg->id }}">
@@ -456,13 +446,11 @@
             <div class="px-5 py-3 border-t border-mk-borderLight flex justify-end gap-2 flex-shrink-0">
                 <button type="button"
                         onclick="document.getElementById('modal-tambah-kelas').classList.add('hidden')"
-                        class="px-4 py-2 text-sm text-mk-muted rounded-lg transition-colors"
-                        style="border:1px solid rgba(93,184,144,0.2)">
+                        class="px-4 py-2 text-sm text-mk-muted rounded-lg transition-colors border border-secondary/25 hover:bg-mk-surfaceHover">
                     Batal
                 </button>
                 <button type="submit"
-                        class="px-4 py-2 text-sm font-semibold rounded-lg transition-colors"
-                        style="background:rgba(93,184,144,0.9);color:#FFFFFF">
+                        class="px-4 py-2 text-sm font-semibold rounded-lg transition-colors bg-secondary text-white hover:bg-secondary/90">
                     Simpan &amp; Buat Jadwal
                 </button>
             </div>
