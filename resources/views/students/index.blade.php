@@ -28,7 +28,7 @@
     $activeStatus = request('status');
     @endphp
 
-    <div class="py-6 px-4 lg:px-8 space-y-5">
+    <div class="py-10 px-4 lg:px-10 space-y-6">
 
         {{-- Flash messages --}}
         {{-- ===== STATUS FILTER CARDS ===== --}}
@@ -77,20 +77,18 @@
                     @endforeach
                 </select>
                 <button type="submit"
-                        class="mk-filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-                        style="background:rgba(93,184,144,0.15);color:#5DB890">
+                        class="mk-filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
                     Filter
                 </button>
                 <a href="{{ route('students.index') }}"
-                   class="mk-reset-btn px-4 py-2 rounded-lg text-sm transition-colors"
-                   style="background:rgba(255,255,255,0.05);color:#8B92A8">
+                   class="mk-reset-btn px-4 py-2 rounded-lg text-sm transition-colors">
                     Reset
                 </a>
             </div>
         </form>
 
         {{-- ===== TABEL MURID ===== --}}
-        <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm overflow-hidden fade-in-up" style="animation-delay:140ms">
+        <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm overflow-hidden fade-in-up" style="animation-delay:140ms">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
@@ -114,7 +112,7 @@
                         @endphp
                         <tr class="border-b border-mk-borderLight hover:bg-mk-surface transition-colors cursor-pointer"
                             onclick="window.location='{{ route('students.show', $s->id) }}'">
-                            <td class="px-4 py-3 font-mono text-xs font-semibold" style="color:#5DB890">
+                            <td class="px-4 py-3 font-mono text-xs font-semibold text-secondary">
                                 {{ $s->student_code }}
                             </td>
                             <td class="px-4 py-3">
@@ -164,8 +162,7 @@
                             </td>
                             <td class="px-4 py-3 text-center" onclick="event.stopPropagation()">
                                 <a href="{{ route('students.show', $s->id) }}"
-                                   class="inline-block px-3 py-1 rounded-lg text-xs font-semibold transition-colors"
-                                   style="background:rgba(93,184,144,0.15);color:#5DB890">
+                                   class="inline-block px-3 py-1 rounded-lg text-xs font-semibold transition-colors bg-secondary/15 text-secondary hover:bg-secondary/25">
                                     Detail →
                                 </a>
                             </td>
