@@ -1062,7 +1062,7 @@
                     <div class="flex justify-between items-center mb-3">
                         <div class="text-[10px] uppercase tracking-widest font-semibold" style="color:#5DB890">Sesi Mendatang</div>
                         <a href="{{ route('sessions.index', ['student_id' => $student->id]) }}"
-                           class="text-xs text-indigo-600 hover:underline">Lihat semua sesi →</a>
+                           class="text-xs text-secondary hover:text-secondary/80 hover:underline">Lihat semua sesi →</a>
                     </div>
                     @if($upcomingSessions->isEmpty())
                     <p class="text-sm text-mk-dim">
@@ -1132,7 +1132,7 @@
                                                 teacherId: {{ $sess->teacher_id ?? 'null' }},
                                                 roomId: {{ $sess->room_id ?? 'null' }}
                                             }"
-                                            class="text-[10px] text-indigo-600 hover:underline">
+                                            class="text-[10px] text-secondary hover:text-secondary/80 hover:underline">
                                         Edit
                                     </button>
                                     @endif
@@ -1321,7 +1321,7 @@
                     </div>
                     <div class="bg-mk-card rounded-xl border border-mk-borderLight shadow-sm p-4 flex items-center justify-center">
                         <a href="{{ route('invoices.index', ['student_id' => $student->id]) }}"
-                           class="text-xs text-indigo-600 hover:underline text-center">
+                           class="text-xs text-secondary hover:text-secondary/80 hover:underline text-center">
                             Lihat semua tagihan →
                         </a>
                     </div>
@@ -1336,7 +1336,7 @@
                     <div class="px-5 py-6 text-center">
                         <p class="text-sm text-mk-dim mb-3">Belum ada invoice cicilan untuk murid ini.</p>
                         <button @click="showBundleModal = true"
-                                class="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
+                                class="px-4 py-2 rounded-lg text-sm font-medium bg-mk-sidebar hover:bg-opacity-90 text-white transition-colors">
                             Generate Cicilan Bundle
                         </button>
                     </div>
@@ -1358,7 +1358,7 @@
                                             Tanggal Mulai Program (bulan ke-1)
                                         </label>
                                         <input type="date" name="program_start_date" required
-                                               class="w-full border border-mk-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                               class="w-full border border-mk-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-mk-accent">
                                         <p class="text-xs text-mk-dim mt-1">
                                             Contoh: jika program mulai Maret 2026, isi 2026-03-01
                                         </p>
@@ -1369,7 +1369,7 @@
                                             Batal
                                         </button>
                                         <button type="submit"
-                                                class="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
+                                                class="px-4 py-2 rounded-lg text-sm font-medium bg-mk-sidebar hover:bg-opacity-90 text-white transition-colors">
                                             Generate
                                         </button>
                                     </div>
