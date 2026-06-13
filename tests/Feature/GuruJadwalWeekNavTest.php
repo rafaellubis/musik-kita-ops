@@ -58,81 +58,82 @@ class GuruJadwalWeekNavTest extends TestCase
         ]);
     }
 
-    public function test_default_menampilkan_sesi_minggu_ini_saja(): void
+    public function test_default_menampilkan_sesi_hari_ini_saja(): void
     {
-        $thisWeekMonday = Carbon::now()->startOfWeek(Carbon::MONDAY);
-        $nextWeekMonday = $thisWeekMonday->copy()->addWeek();
+        $today    = Carbon::today();
+        $tomorrow = Carbon::tomorrow();
 
-        $this->createSessionForTeacher($thisWeekMonday, 'Murid Minggu Ini');
-        $this->createSessionForTeacher($nextWeekMonday, 'Murid Minggu Depan');
+        $this->createSessionForTeacher($today, 'Murid Hari Ini');
+        $this->createSessionForTeacher($tomorrow, 'Murid Besok');
 
         $response = $this->actingAs($this->guruUser)->get(route('guru.jadwal'));
 
         $response->assertOk()
-            ->assertSee('Murid Minggu Ini', false)
-            ->assertDontSee('Murid Minggu Depan', false)
-            ->assertViewHas('weekStart', fn ($weekStart) => $weekStart->isSameWeek(Carbon::now()));
+            ->assertSee('Murid Hari Ini', false)
+            ->assertDontSee('Murid Besok', false)
+            ->assertViewHas('tanggal', $today->toDateString());
     }
 
-    public function test_week_param_menampilkan_sesi_minggu_terpilih(): void
+    public function test_date_param_menampilkan_sesi_tanggal_terpilih(): void
     {
-        $lastWeekMonday = Carbon::now()->startOfWeek(Carbon::MONDAY)->subWeek();
-        $thisWeekMonday = Carbon::now()->startOfWeek(Carbon::MONDAY);
+        $yesterday = Carbon::yesterday();
+        $today     = Carbon::today();
 
-        $this->createSessionForTeacher($lastWeekMonday, 'Murid Minggu Lalu');
-        $this->createSessionForTeacher($thisWeekMonday, 'Murid Minggu Ini');
+        $this->createSessionForTeacher($yesterday, 'Murid Kemarin');
+        $this->createSessionForTeacher($today, 'Murid Hari Ini');
 
         $response = $this->actingAs($this->guruUser)
-            ->get(route('guru.jadwal', ['week' => $lastWeekMonday->format('Y-m-d')]));
+            ->get(route('guru.jadwal', ['date' => $yesterday->format('Y-m-d')]));
 
         $response->assertOk()
-            ->assertSee('Murid Minggu Lalu', false)
-            ->assertDontSee('Murid Minggu Ini', false)
-            ->assertViewHas('weekStart', fn ($weekStart) => $weekStart->format('Y-m-d') === $lastWeekMonday->format('Y-m-d'));
+            ->assertSee('Murid Kemarin', false)
+            ->assertDontSee('Murid Hari Ini', false)
+            ->assertViewHas('tanggal', $yesterday->toDateString());
     }
 
-    public function test_week_param_invalid_fallback_ke_minggu_ini(): void
+    public function test_date_param_invalid_fallback_ke_hari_ini(): void
     {
         $response = $this->actingAs($this->guruUser)
-            ->get(route('guru.jadwal', ['week' => 'not-a-date']));
+            ->get(route('guru.jadwal', ['date' => 'not-a-date']));
 
         $response->assertOk()
-            ->assertViewHas('weekStart', fn ($weekStart) => $weekStart->isSameWeek(Carbon::now()));
+            ->assertViewHas('tanggal', Carbon::today()->toDateString());
     }
 
-    public function test_navigasi_minggu_lalu_dan_minggu_depan_ada_di_halaman(): void
+    public function test_kalender_strip_menampilkan_7_hari(): void
     {
         $response = $this->actingAs($this->guruUser)->get(route('guru.jadwal'));
 
         $response->assertOk()
-            ->assertSee('Minggu Lalu', false)
-            ->assertSee('Minggu Depan', false)
+            ->assertViewHas('weekDates', fn ($weekDates) => $weekDates->count() === 7);
+    }
+
+    public function test_sesi_count_per_day_tersedia(): void
+    {
+        $today = Carbon::today();
+        $this->createSessionForTeacher($today, 'Murid A');
+        $this->createSessionForTeacher($today, 'Murid B');
+
+        $response = $this->actingAs($this->guruUser)->get(route('guru.jadwal'));
+
+        $response->assertOk()
+            ->assertViewHas('sesiCountPerDay', fn ($counts) =>
+                ($counts[$today->toDateString()] ?? 0) === 2
+            );
+    }
+
+    public function test_navigasi_minggu_sebelum_dan_sesudah(): void
+    {
+        $response = $this->actingAs($this->guruUser)->get(route('guru.jadwal'));
+
+        $weekStart = Carbon::today()->startOfWeek(Carbon::MONDAY);
+
+        $response->assertOk()
             ->assertSee(route('guru.jadwal', [
-                'week' => Carbon::now()->startOfWeek(Carbon::MONDAY)->subWeek()->format('Y-m-d'),
+                'date' => $weekStart->copy()->subWeek()->format('Y-m-d'),
             ]), false)
             ->assertSee(route('guru.jadwal', [
-                'week' => Carbon::now()->startOfWeek(Carbon::MONDAY)->addWeek()->format('Y-m-d'),
+                'date' => $weekStart->copy()->addWeek()->format('Y-m-d'),
             ]), false);
-    }
-
-    public function test_tombol_minggu_ini_tampil_saat_bukan_minggu_berjalan(): void
-    {
-        $lastWeekMonday = Carbon::now()->startOfWeek(Carbon::MONDAY)->subWeek();
-
-        $response = $this->actingAs($this->guruUser)
-            ->get(route('guru.jadwal', ['week' => $lastWeekMonday->format('Y-m-d')]));
-
-        $response->assertOk()
-            ->assertSee('Minggu Ini', false)
-            ->assertViewHas('isCurrentWeek', false);
-    }
-
-    public function test_tombol_minggu_ini_disembunyikan_saat_sudah_minggu_berjalan(): void
-    {
-        $response = $this->actingAs($this->guruUser)->get(route('guru.jadwal'));
-
-        $response->assertOk()
-            ->assertDontSee('Minggu Ini', false)
-            ->assertViewHas('isCurrentWeek', true);
     }
 }

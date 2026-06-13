@@ -101,7 +101,8 @@ class GuruController extends Controller
     }
 
     /**
-     * Jadwal guru: sesi 1 minggu (Senin–Minggu), navigasi via ?week=YYYY-MM-DD.
+     * Jadwal guru: sesi per hari, navigasi via ?date=YYYY-MM-DD.
+     * Juga menyediakan data minggu (Senin–Minggu) untuk strip kalender horizontal.
      */
     public function jadwal(Request $request)
     {
@@ -109,36 +110,54 @@ class GuruController extends Controller
         abort_if(!$teacher, 403);
 
         try {
-            $weekStart = $request->filled('week')
-                ? Carbon::parse($request->input('week'))->startOfWeek(Carbon::MONDAY)
-                : Carbon::now()->startOfWeek(Carbon::MONDAY);
+            $selectedDate = $request->filled('date')
+                ? Carbon::parse($request->input('date'))->startOfDay()
+                : Carbon::today();
         } catch (\Exception $e) {
-            $weekStart = Carbon::now()->startOfWeek(Carbon::MONDAY);
+            $selectedDate = Carbon::today();
         }
 
-        $mulai = $weekStart->toDateString();
-        $akhir = $weekStart->copy()->endOfWeek(Carbon::SUNDAY)->toDateString();
+        $tanggal = $selectedDate->toDateString();
+        $today   = today()->toDateString();
 
+        // Sesi untuk hari terpilih
         $sesi = ClassSession::where(function ($q) use ($teacher) {
                 $q->where('teacher_id', $teacher->id)
                   ->orWhere('substitute_teacher_id', $teacher->id);
             })
-            ->whereBetween('session_date', [$mulai, $akhir])
+            ->where('session_date', $tanggal)
             ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher', 'teacherNote', 'originSession'])
-            ->orderBy('session_date')
             ->orderBy('start_time')
             ->get();
 
-        $today = today()->toDateString();
+        // Kalender strip: tanggal Senin–Minggu dari minggu terpilih
+        $weekStart = $selectedDate->copy()->startOfWeek(Carbon::MONDAY);
+        $weekDates = collect();
+        for ($i = 0; $i < 7; $i++) {
+            $weekDates->push($weekStart->copy()->addDays($i));
+        }
 
-        $prevWeek    = ['week' => $weekStart->copy()->subWeek()->format('Y-m-d')];
-        $nextWeek    = ['week' => $weekStart->copy()->addWeek()->format('Y-m-d')];
-        $currentWeek = ['week' => Carbon::now()->startOfWeek(Carbon::MONDAY)->format('Y-m-d')];
-        $isCurrentWeek = $weekStart->isSameWeek(Carbon::now());
+        // Hitung jumlah sesi per hari di minggu ini (untuk indikator dot)
+        $weekStartStr = $weekStart->toDateString();
+        $weekEndStr   = $weekStart->copy()->addDays(6)->toDateString();
+
+        $sesiCountPerDay = ClassSession::where(function ($q) use ($teacher) {
+                $q->where('teacher_id', $teacher->id)
+                  ->orWhere('substitute_teacher_id', $teacher->id);
+            })
+            ->whereBetween('session_date', [$weekStartStr, $weekEndStr])
+            ->whereNotIn('status', ['CANCELLED'])
+            ->selectRaw('session_date, count(*) as cnt')
+            ->groupBy('session_date')
+            ->pluck('cnt', 'session_date');
+
+        $prevWeekNav = ['date' => $weekStart->copy()->subWeek()->toDateString()];
+        $nextWeekNav = ['date' => $weekStart->copy()->addWeek()->toDateString()];
 
         return view('guru.jadwal', compact(
-            'teacher', 'sesi', 'today', 'mulai', 'akhir',
-            'weekStart', 'prevWeek', 'nextWeek', 'currentWeek', 'isCurrentWeek',
+            'teacher', 'sesi', 'today', 'tanggal', 'selectedDate',
+            'weekDates', 'sesiCountPerDay', 'weekStart',
+            'prevWeekNav', 'nextWeekNav',
         ));
     }
 
