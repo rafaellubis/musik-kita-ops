@@ -71,7 +71,7 @@
 
                     {{-- Kanan: Tanggal + Bell Notif + Avatar + Keluar --}}
                     <div class="flex items-center gap-3 ml-auto">
-                        <span class="hidden sm:block text-xs text-white/55">
+                        <span class="hidden sm:block text-xs text-white/60 font-semibold tracking-wide font-sans">
                             {{ now()->translatedFormat('l, j F Y') }}
                         </span>
 
@@ -81,15 +81,15 @@
 
                             {{-- Tombol Bell --}}
                             <button @click="terbuka = !terbuka"
-                                    class="relative flex items-center justify-center w-8 h-8 rounded-lg
-                                           border border-mk-border bg-mk-accentDim
-                                           hover:border-mk-accent transition-colors text-sm"
-                                    :class="terbuka ? 'border-mk-accent' : ''"
+                                    class="relative flex items-center justify-center w-8 h-8 rounded-full
+                                           border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20
+                                           transition-all text-xs text-white/85 shadow-sm"
+                                    :class="terbuka ? 'border-secondary bg-white/10' : ''"
                                     title="Notifikasi auto-mundur">
                                 🔔
-                                <span class="absolute -top-1 -right-1 flex items-center justify-center
+                                <span class="absolute -top-1.5 -right-1.5 flex items-center justify-center
                                              min-w-[16px] h-4 px-1 rounded-full bg-red-500
-                                             text-white text-[9px] font-bold border-2 border-mk-sidebar">
+                                             text-white text-[9px] font-bold border-2 border-mk-sidebar shadow-sm">
                                     {{ $overdueNotifCount ?? 0 }}
                                 </span>
                             </button>
@@ -104,22 +104,22 @@
                                  x-transition:leave-end="opacity-0 scale-95"
                                  x-cloak
                                  class="absolute right-0 top-full mt-2 w-80 z-50
-                                        bg-mk-card border border-mk-border rounded-xl
-                                        shadow-[0_12px_40px_rgba(0,0,0,0.55)] overflow-hidden">
+                                        bg-mk-card border border-mk-border rounded-2xl
+                                        shadow-lg overflow-hidden">
 
                                 {{-- Header --}}
                                 <div class="flex items-center justify-between px-4 py-3
-                                            border-b border-mk-border bg-mk-accentDim/30">
+                                            border-b border-mk-border bg-mk-bg/40">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-sm font-bold text-mk-accent">Konfirmasi Auto-Mundur</span>
-                                        <span class="text-[10px] font-bold text-red-400 bg-red-500/15
-                                                     px-2 py-0.5 rounded-full">
+                                        <span class="text-xs font-bold text-mk-text">Konfirmasi Auto-Mundur</span>
+                                        <span class="text-[9px] font-bold text-white bg-red-500
+                                                     px-1.5 py-0.5 rounded-full">
                                             {{ $overdueNotifCount ?? 0 }}
                                         </span>
                                     </div>
                                     {{-- Tombol mark all read --}}
                                     <button onclick="markAllRead(this)"
-                                            class="text-[10px] text-mk-dim hover:text-mk-muted transition-colors">
+                                            class="text-[10px] text-secondary hover:text-secondary-container hover:underline font-semibold transition-colors">
                                         Tandai semua dibaca
                                     </button>
                                 </div>
@@ -130,24 +130,24 @@
                                     @php $d = $notif->data; @endphp
                                     <div class="flex items-start gap-3 px-4 py-3
                                                 border-b border-mk-border/50 last:border-0
-                                                hover:bg-mk-cardHover transition-colors">
-                                        <div class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 mt-1.5"></div>
+                                                hover:bg-mk-cardHover/50 transition-colors">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0 mt-1.5"></div>
                                         <div class="flex-1 min-w-0">
-                                            <div class="text-sm font-semibold text-mk-text truncate">
+                                            <div class="text-xs font-bold text-mk-text truncate">
                                                 {{ $d['student_name'] }}
                                             </div>
-                                            <div class="text-[11px] text-mk-muted mt-0.5">
+                                            <div class="text-[10px] text-mk-muted mt-0.5">
                                                 Tunggakan {{ $d['invoice_month'] }} ·
-                                                <span class="text-red-400 font-medium">
+                                                <span class="text-error font-semibold">
                                                     Rp {{ number_format($d['total_overdue'], 0, ',', '.') }}
                                                 </span>
                                             </div>
                                         </div>
                                         <a href="{{ $d['student_url'] }}"
                                            onclick="markRead('{{ $notif->id }}', this)"
-                                           class="flex-shrink-0 text-[11px] text-mk-accent font-medium
-                                                  px-2 py-1 rounded border border-mk-border
-                                                  hover:bg-mk-accentDim transition-colors">
+                                           class="flex-shrink-0 text-[10px] text-secondary font-semibold
+                                                  px-2 py-1 rounded-lg border border-mk-border
+                                                  hover:bg-secondary/10 transition-colors">
                                             Tinjau →
                                         </a>
                                     </div>
@@ -155,8 +155,8 @@
                                 </div>
 
                                 {{-- Footer --}}
-                                <div class="px-4 py-2 border-t border-mk-border">
-                                    <p class="text-[10px] text-mk-dim text-center">
+                                <div class="px-4 py-2 border-t border-mk-border bg-mk-bg/10">
+                                    <p class="text-[9px] text-mk-dim text-center font-medium">
                                         Klik Tinjau → halaman murid → klik Mundurkan
                                     </p>
                                 </div>
@@ -166,15 +166,14 @@
 
                         {{-- Jam digital --}}
                         <div id="topbar-clock"
-                             class="text-xs text-white/55 tabular-nums shrink-0 min-w-[42px] text-center">
+                             class="text-xs text-[#b1f0ce] font-mono tracking-wider bg-[#2c694e]/20 border border-[#2c694e]/30 px-2.5 py-1 rounded-full shrink-0 min-w-[50px] text-center shadow-inner">
                         </div>
 
                         {{-- Tombol keluar --}}
-                        <form method="POST" action="{{ route('logout') }}">
+                        <form method="POST" action="{{ route('logout') }}" class="m-0">
                             @csrf
                             <button type="submit"
-                                    class="text-xs text-white/55 hover:text-white/80 transition-colors
-                                           px-2 py-1 rounded hover:bg-white/5">
+                                    class="text-xs text-white/70 hover:text-white/95 hover:border-white/20 border border-white/10 transition-all px-3 py-1.5 rounded-full bg-white/5 font-semibold shadow-sm">
                                 Keluar
                             </button>
                         </form>
