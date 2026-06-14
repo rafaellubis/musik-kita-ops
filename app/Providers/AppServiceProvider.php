@@ -21,6 +21,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // [SECURITY] Force HTTPS di production — mencegah credential sniffing via HTTP.
+        if ($this->app->environment('production')) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         // View Composer: injeksi notifikasi overdue ke semua view yang di-render.
         // Dipasang ke wildcard '*' karena layout menggunakan <x-app-layout> (class-based
         // Blade component), sehingga 'layouts.app' tidak pernah di-fire oleh composer biasa.
