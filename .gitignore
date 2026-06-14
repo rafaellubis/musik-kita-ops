@@ -38,6 +38,7 @@ docs/
 /*.jpeg
 /*.html
 /*.bat
+/*.md
 /docs/mockups/
 
 .worktrees/
