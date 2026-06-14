@@ -37,6 +37,7 @@ docs/
 /*.jpg
 /*.jpeg
 /*.html
+/*.bat
 /docs/mockups/
 
 .worktrees/
