@@ -32,7 +32,7 @@ class PaymentController extends Controller
             'amount'       => 'required|integer|min:1|max:99999999',
             'method'       => ['required', Rule::in(array_keys(Payment::METHODS))],
             'payment_date' => 'required|date|before_or_equal:today',
-            'proof_image'  => 'nullable|image|max:2048', // 2MB
+            'proof_image'  => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', // [SECURITY] mimes eksplisit, cegah SVG XSS
             'notes'        => 'nullable|string|max:500',
         ], [
             'amount.required'       => 'Jumlah pembayaran wajib diisi.',

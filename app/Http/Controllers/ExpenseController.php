@@ -83,7 +83,7 @@ class ExpenseController extends Controller
             'description'         => 'required|string|max:255',
             'expense_date'        => 'required|date|before_or_equal:today',
             'payment_method'      => 'required|in:TRANSFER',
-            'receipt_image'       => 'nullable|image|max:2048',
+            'receipt_image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', // [SECURITY] mimes eksplisit
             'notes'               => 'nullable|string|max:1000',
         ], [
             'expense_category_id.required' => 'Kategori pengeluaran wajib dipilih.',
@@ -143,7 +143,7 @@ class ExpenseController extends Controller
             'amount'              => 'required|integer|min:1|max:999999999',
             'description'         => 'required|string|max:255',
             'expense_date'        => 'required|date|before_or_equal:today',
-            'receipt_image'       => 'nullable|image|max:2048',
+            'receipt_image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', // [SECURITY] mimes eksplisit
             'notes'               => 'nullable|string|max:1000',
         ];
 

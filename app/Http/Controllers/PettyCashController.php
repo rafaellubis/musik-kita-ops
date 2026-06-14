@@ -64,7 +64,7 @@ class PettyCashController extends Controller
 
         $request->validate([
             'notes'         => 'nullable|string|max:1000',
-            'receipt_image' => 'nullable|image|max:2048',
+            'receipt_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', // [SECURITY] mimes eksplisit
         ], [
             'receipt_image.image' => 'File harus berupa gambar (JPG/PNG).',
             'receipt_image.max'   => 'Ukuran foto maksimal 2 MB.',
