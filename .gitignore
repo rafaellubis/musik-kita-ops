@@ -42,3 +42,13 @@ docs/
 /docs/mockups/
 
 .worktrees/
+
+# [SECURITY] File development & deployment — jangan commit ke repo
+/bug/
+/stuff/
+/commit-build/
+debug-*.log
+generate_*.cjs
+.env.production
+/public/query
+/public/mockups/
