@@ -170,9 +170,10 @@ Route::middleware('auth')->group(function () {
         )->name('students.enrollments.manual-sessions.store');
 
         // ===== M03: Generator sesi manual =====
+        // [SECURITY] Throttle: operasi berat, cegah abuse (max 5x/menit)
         Route::post('sessions/generate',
             [SessionController::class, 'generate']
-        )->name('sessions.generate');
+        )->middleware('throttle:5,1')->name('sessions.generate');
 
         // M03: Edit jam, guru, ruang satu sesi (conflict detection)
         Route::patch('sessions/{classSession}',
@@ -227,12 +228,13 @@ Route::middleware('auth')->group(function () {
         )->name('payments.store');
 
         // M05: Generator SPP & denda manual (analog cron)
+        // [SECURITY] Throttle: operasi berat, cegah duplikasi invoice (max 5x/menit)
         Route::post('invoices/generate-spp',
             [InvoiceController::class, 'generateSpp']
-        )->name('invoices.generate-spp');
+        )->middleware('throttle:5,1')->name('invoices.generate-spp');
         Route::post('invoices/apply-fines',
             [InvoiceController::class, 'applyFines']
-        )->name('invoices.apply-fines');
+        )->middleware('throttle:5,1')->name('invoices.apply-fines');
         Route::post('students/{student}/generate-bundle',
             [InvoiceController::class, 'generateBundle']
         )->name('invoices.generate-bundle');
@@ -259,8 +261,9 @@ Route::middleware('auth')->group(function () {
         // ===== M05: Reminder tagihan via WhatsApp (Wablas) =====
         Route::get('invoice-reminders', [InvoiceReminderController::class, 'index'])
             ->name('invoice-reminders.index');
+        // [SECURITY] Throttle: mencegah spam WhatsApp dan kuota API habis (max 3x/menit)
         Route::post('invoice-reminders/send', [InvoiceReminderController::class, 'send'])
-            ->name('invoice-reminders.send');
+            ->middleware('throttle:3,1')->name('invoice-reminders.send');
 
         Route::post('session-report-wa-logs/{sessionReportWaLog}/resend', [SessionReportWaLogController::class, 'resend'])
             ->name('session-report-wa-logs.resend');
@@ -359,9 +362,10 @@ Route::middleware('auth')->group(function () {
         // ===== M06: Honor Guru — aksi sensitif (Owner only) =====
         // Kalkulasi, edit komponen manual, dan tandai dibayar.
         // READ (index, show, print) di group read-only di bawah.
+        // [SECURITY] Throttle: operasi kalkulasi berat (max 5x/menit)
         Route::post('honors/calculate',
             [HonorController::class, 'calculate']
-        )->name('honors.calculate');
+        )->middleware('throttle:5,1')->name('honors.calculate');
         Route::get('honors/{honor}/edit',
             [HonorController::class, 'edit']
         )->name('honors.edit');
