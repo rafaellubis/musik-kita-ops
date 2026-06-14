@@ -20,17 +20,20 @@ yarn-error.log
 /.idea
 /.nova
 /.vscode
-/.agents
+.agents/
 /.zed
 .understanding-anything/
+.cursor/
 memory/
+docs/
 .superpowers/
-.claude/worktrees/
+.claude/
 
 # Dokumen & aset di root level (bukan source code)
 /*.docx
 /*.xlsx
 /*.png
+/*.pdf
 /*.jpg
 /*.jpeg
 /*.html
