@@ -190,7 +190,7 @@ class GuruController extends Controller
         abort_if($honorSlip->teacher_id !== $teacher->id, 403, 'Bukan slip honor Anda.');
         abort_if(!in_array($honorSlip->status, ['CALCULATED', 'PAID']), 403, 'Slip honor belum tersedia.');
 
-        // Sesi di bulan slip yang punya honor_code (sudah dikalkulasi)
+        // Sesi di bulan slip yang punya honor_code (sudah dikalkulasi) dan honor > 0
         $sesi = ClassSession::where(function ($q) use ($teacher) {
                 $q->where('teacher_id', $teacher->id)
                   ->orWhere('substitute_teacher_id', $teacher->id);
@@ -198,7 +198,8 @@ class GuruController extends Controller
             ->whereYear('session_date', $honorSlip->year)
             ->whereMonth('session_date', $honorSlip->month)
             ->whereNotNull('honor_code')
-            ->with(['student', 'room'])
+            ->where('honor_amount', '>', 0)
+            ->with(['student', 'room', 'enrollment.package'])
             ->orderBy('session_date')
             ->orderBy('start_time')
             ->get();

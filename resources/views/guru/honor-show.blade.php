@@ -63,8 +63,8 @@
                         <div class="font-medium text-mk-text text-sm">{{ $s->student->full_name }}</div>
                         <div class="text-xs text-mk-muted mt-0.5">
                             {{ \Carbon\Carbon::parse($s->session_date)->locale('id')->isoFormat('D MMM') }}
-                            · {{ \Carbon\Carbon::parse($s->start_time)->format('H:i') }}
-                            @if($s->room) · {{ $s->room->name }} @endif
+                            · {{ $s->enrollment?->package?->code ?? '—' }}
+                            · Sesi ke-{{ $s->session_sequence ?? '—' }}
                         </div>
                     </div>
                     <div class="text-right">
@@ -87,7 +87,8 @@
                 <tr>
                     <th class="text-left px-4 py-3 text-xs font-semibold text-mk-muted uppercase tracking-wider">Tanggal</th>
                     <th class="text-left px-4 py-3 text-xs font-semibold text-mk-muted uppercase tracking-wider">Murid</th>
-                    <th class="text-left px-4 py-3 text-xs font-semibold text-mk-muted uppercase tracking-wider">Ruang</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-mk-muted uppercase tracking-wider">Paket</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-mk-muted uppercase tracking-wider">Sesi</th>
                     <th class="text-left px-4 py-3 text-xs font-semibold text-mk-muted uppercase tracking-wider">Kode</th>
                     <th class="text-right px-4 py-3 text-xs font-semibold text-mk-muted uppercase tracking-wider">Honor</th>
                 </tr>
@@ -97,13 +98,14 @@
                     <tr>
                         <td class="px-4 py-3 text-mk-muted">{{ \Carbon\Carbon::parse($s->session_date)->locale('id')->isoFormat('D MMM Y') }}</td>
                         <td class="px-4 py-3 font-medium text-mk-text">{{ $s->student->full_name }}</td>
-                        <td class="px-4 py-3 text-mk-muted">{{ $s->room?->name ?? '—' }}</td>
+                        <td class="px-4 py-3 text-mk-muted">{{ $s->enrollment?->package?->code ?? '—' }}</td>
+                        <td class="px-4 py-3 text-mk-muted">Sesi ke-{{ $s->session_sequence ?? '—' }}</td>
                         <td class="px-4 py-3 text-mk-muted">{{ $s->honor_code }}</td>
                         <td class="px-4 py-3 text-right font-medium text-mk-text">Rp {{ number_format($s->honor_amount, 0, ',', '.') }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-4 py-10 text-center text-mk-muted">Tidak ada rincian sesi.</td>
+                        <td colspan="6" class="px-4 py-10 text-center text-mk-muted">Tidak ada rincian sesi.</td>
                     </tr>
                 @endforelse
             </tbody>
