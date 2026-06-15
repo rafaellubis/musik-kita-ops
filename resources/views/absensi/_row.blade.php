@@ -264,7 +264,7 @@
                         status === 'IZIN_RESCHEDULE'   ? '📅 ' + (replacementLabel || 'IZIN') :
                         status === 'IZIN_PENDING'      ? '⏳ PENDING' :
                         status === 'IZIN_VIDEO'        ? '📹 VIDEO' :
-                        status === 'CANCELLED'         ? '✕ BATAL' : status
+                        status === 'CANCELLED'         ? 'CANCELLED' : status
                     ">
                 </span>
 
