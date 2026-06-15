@@ -25,25 +25,8 @@
 <div class="px-4 py-3">
     <h2 class="text-xs font-semibold tracking-widest text-outline uppercase mb-3">Sesi Hari Ini</h2>
 
-    @forelse($sesiHariIni as $sesi)
-        <div class="bg-white rounded-2xl border border-outline-variant/30 shadow-sm mb-3 overflow-hidden">
-
-            <div class="flex items-start justify-between px-4 py-3 border-b border-outline-variant/15">
-                <div>
-                    <div class="font-semibold text-on-surface">{{ $sesi->student->full_name }}</div>
-                    @include('guru._sesi-identitas', ['sesi' => $sesi])
-                    <div class="text-xs text-outline mt-0.5">
-                        {{ \Carbon\Carbon::parse($sesi->start_time)->format('H:i') }}–{{ \Carbon\Carbon::parse($sesi->end_time)->format('H:i') }}
-                        @if($sesi->room) · {{ $sesi->room->name }} @endif
-                        @if($sesi->enrollment?->package) · {{ $sesi->enrollment->package->code }} @endif
-                    </div>
-                </div>
-                @include('guru._badge-status', ['status' => $sesi->status])
-            </div>
-
-            @include('guru._sesi-absensi-actions', ['sesi' => $sesi, 'teacher' => $teacher])
-
-        </div>
+    @forelse($sesiHariIni as $idx => $sesi)
+        @include('guru._sesi-card', ['sesi' => $sesi, 'teacher' => $teacher, 'sIdx' => $idx])
     @empty
         <div class="bg-white rounded-2xl border border-outline-variant/30 px-4 py-10 text-center shadow-sm">
             <div class="text-3xl mb-2">🎵</div>

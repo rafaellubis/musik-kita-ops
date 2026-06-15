@@ -39,8 +39,7 @@
                 @csrf
                 <input type="hidden" name="action" value="hadir">
                 <button type="submit"
-                        class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors appearance-none"
-                        style="background-color:#22c55e;color:#ffffff;">
+                        class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors bg-secondary text-on-secondary hover:bg-secondary/90 shadow-sm">
                     ✓ Hadir
                 </button>
             </form>
@@ -58,8 +57,7 @@
             @csrf @method('PATCH')
             <input type="hidden" name="status" value="HADIR">
             <button type="submit"
-                    class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors appearance-none"
-                    style="background-color:#22c55e;color:#ffffff;">
+                    class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors bg-secondary text-on-secondary hover:bg-secondary/90 shadow-sm">
                 ✓ Hadir
             </button>
         </form>

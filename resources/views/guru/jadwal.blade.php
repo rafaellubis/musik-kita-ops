@@ -110,23 +110,6 @@
         <div class="space-y-3">
             @foreach($sesi as $sIdx => $s)
                 @php
-                    $isCompleted  = in_array($s->status, ['HADIR', 'HADIR_TERLAMBAT'], true);
-                    $isDiganti    = $s->status === 'DIGANTI';
-                    $isLibur      = $s->status === 'LIBUR';
-                    $isCancelled  = $s->status === 'CANCELLED';
-                    $isScheduled  = $s->status === 'SCHEDULED';
-                    $isMuted      = $isCompleted || $isCancelled;
-                    $packageLabel = $s->enrollment?->package?->code ?? '';
-                    $instrumentName = $s->enrollment?->package?->instrument?->name ?? '';
-                    $instrumentIcon = match(strtolower($instrumentName)) {
-                        'piano'       => '🎹',
-                        'gitar', 'guitar' => '🎸',
-                        'biola', 'violin' => '🎻',
-                        'drum', 'drums'   => '🥁',
-                        'vokal', 'vocal'  => '🎤',
-                        default       => '🎵',
-                    };
-
                     $showSessionActions = $tanggal === $today
                         || in_array($s->status, ['HADIR', 'HADIR_TERLAMBAT'], true)
                         || (
@@ -135,94 +118,12 @@
                             && $s->honor_code !== null
                         );
                 @endphp
-
-                {{-- Session Card --}}
-                <div class="bg-surface-container-lowest border border-outline-variant/20 rounded-2xl
-                            shadow-[rgba(74,14,14,0.04)_0px_2px_8px]
-                            hover:shadow-[rgba(74,14,14,0.08)_0px_4px_12px]
-                            transition-all duration-300
-                            {{ $isMuted ? 'opacity-70' : '' }}
-                            fade-in-up"
-                     style="animation-delay: {{ ($sIdx + 2) * 80 }}ms"
-                >
-                    {{-- Card main row --}}
-                    <div class="flex items-center gap-4 p-4">
-                        {{-- Time block --}}
-                        <div class="w-14 h-14 rounded-xl flex flex-col items-center justify-center shrink-0 border
-                            {{ $isCompleted
-                                ? 'bg-surface-container border-outline-variant/20 text-on-surface-variant'
-                                : ($isLibur
-                                    ? 'bg-purple-50 border-purple-200 text-purple-600'
-                                    : 'bg-primary/5 border-primary/10 text-primary')
-                            }}
-                        ">
-                            <span class="text-xs font-bold leading-tight">
-                                {{ \Carbon\Carbon::parse($s->start_time)->format('H:i') }}
-                            </span>
-                            <div class="w-5 h-px my-0.5
-                                {{ $isCompleted ? 'bg-outline-variant/30' : ($isLibur ? 'bg-purple-200' : 'bg-primary/10') }}
-                            "></div>
-                            <span class="text-[10px] opacity-70">
-                                {{ \Carbon\Carbon::parse($s->end_time)->format('H:i') }}
-                            </span>
-                        </div>
-
-                        {{-- Content --}}
-                        <div class="flex-1 min-w-0">
-                            <h4 class="font-semibold text-primary text-base leading-snug truncate">
-                                {{ $s->student->full_name }}
-                            </h4>
-                            <div class="flex flex-wrap items-center gap-1.5 mt-1">
-                                <span class="text-sm">{{ $instrumentIcon }}</span>
-                                @if($packageLabel)
-                                    <span class="text-[10px] bg-secondary-container/40 text-secondary font-mono px-1.5 py-0.5 rounded font-medium">
-                                        {{ $packageLabel }}
-                                    </span>
-                                @endif
-                            </div>
-                            @include('guru._sesi-identitas', ['sesi' => $s])
-                            @if($s->room)
-                                <div class="text-xs text-on-surface-variant/60 mt-0.5">📍 {{ $s->room->name }}</div>
-                            @endif
-                            @if($s->substitute_teacher_id === auth()->user()->teacher?->id)
-                                <div class="text-[10px] text-blue-600 font-medium mt-0.5">Anda sebagai pengganti</div>
-                            @endif
-                        </div>
-
-                        {{-- Status badge --}}
-                        <div class="flex flex-col items-end gap-2 shrink-0">
-                            @php
-                                $statusMap = [
-                                    'HADIR'           => ['bg-secondary-container text-on-secondary-container', 'Hadir', '✓'],
-                                    'HADIR_TERLAMBAT' => ['bg-yellow-100 text-yellow-700', 'Terlambat', '⏱'],
-                                    'SCHEDULED'       => ['bg-surface-container-high text-on-surface-variant', 'Terjadwal', ''],
-                                    'LIBUR'           => ['bg-purple-100 text-purple-700', 'Libur', ''],
-                                    'HANGUS'          => ['bg-error-container text-on-error-container', 'Hangus', ''],
-                                    'IZIN_RESCHEDULE' => ['bg-orange-100 text-orange-600', 'Izin', ''],
-                                    'IZIN_VIDEO'      => ['bg-orange-100 text-orange-600', 'Izin Video', ''],
-                                    'DIGANTI'         => ['bg-blue-100 text-blue-600', 'Diganti', ''],
-                                    'CANCELLED'       => ['bg-surface-container-high text-on-surface-variant', 'Batal', ''],
-                                ];
-                                [$badgeCls, $badgeLabel, $badgeIcon] = $statusMap[$s->status] ?? ['bg-surface-container-high text-on-surface-variant', $s->status, ''];
-                            @endphp
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold {{ $badgeCls }}">
-                                {{ $badgeLabel }}
-                            </span>
-                            @if($isCompleted)
-                                <svg class="w-5 h-5 text-secondary" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                                </svg>
-                            @endif
-                        </div>
-                    </div>
-
-                    {{-- Expandable action section --}}
-                    @if($showSessionActions)
-                        <div class="border-t border-outline-variant/15">
-                            @include('guru._sesi-absensi-actions', ['sesi' => $s, 'teacher' => $teacher])
-                        </div>
-                    @endif
-                </div>
+                @include('guru._sesi-card', [
+                    'sesi' => $s,
+                    'teacher' => $teacher,
+                    'sIdx' => $sIdx,
+                    'showSessionActions' => $showSessionActions
+                ])
             @endforeach
         </div>
     @endif
