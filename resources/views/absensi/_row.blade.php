@@ -337,10 +337,6 @@
                     class="border border-blue-300 text-blue-600 hover:bg-blue-50 rounded px-3 py-1.5 text-xs">
                     VIDEO
                 </button>
-                <button x-show="dbStatus !== 'SCHEDULED'" type="button" @click="status = dbStatus"
-                    class="border border-mk-border text-mk-dim hover:bg-mk-surface rounded px-3 py-1.5 text-xs">
-                    BATAL
-                </button>
 
                 {{-- Tombol DIGANTI --}}
                 <div class="relative">
@@ -411,6 +407,10 @@
                     </div>
 
                 </div>
+                <button x-show="dbStatus !== 'SCHEDULED'" type="button" @click="status = dbStatus"
+                    class="border border-red-300 text-red-600 hover:bg-red-50 rounded px-3 py-1.5 text-xs">
+                    BATAL
+                </button>
             </div>
 
             {{-- Mini-modal: RESCHEDULE (di luar tombol ···, karena dipanggil dari tombol IZIN) --}}
