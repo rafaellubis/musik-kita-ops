@@ -53,40 +53,16 @@
         <span class="text-xs text-mk-muted italic">Kehadiran pengganti sudah dikonfirmasi ✓</span>
     </div>
 @elseif($isOwnScheduled)
-    <div x-data="{ showLate: false }" class="px-4 py-3 space-y-2">
-        <div class="flex gap-2">
-            <form method="POST" action="{{ route('guru.absensi.update', $sesi) }}" class="flex-1">
-                @csrf @method('PATCH')
-                <input type="hidden" name="status" value="HADIR">
-                <button type="submit"
-                        class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors appearance-none"
-                        style="background-color:#22c55e;color:#ffffff;">
-                    ✓ Hadir
-                </button>
-            </form>
-            <button @click="showLate = !showLate"
-                    class="flex-1 py-2.5 rounded-xl border border-yellow-400 text-yellow-600
-                           font-semibold text-sm hover:bg-yellow-50 transition-colors appearance-none">
-                ⏱ Terlambat
+    <div class="px-4 py-3">
+        <form method="POST" action="{{ route('guru.absensi.update', $sesi) }}">
+            @csrf @method('PATCH')
+            <input type="hidden" name="status" value="HADIR">
+            <button type="submit"
+                    class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors appearance-none"
+                    style="background-color:#22c55e;color:#ffffff;">
+                ✓ Hadir
             </button>
-        </div>
-        <div x-show="showLate" x-transition class="pt-1">
-            <form method="POST" action="{{ route('guru.absensi.update', $sesi) }}" class="flex gap-2">
-                @csrf @method('PATCH')
-                <input type="hidden" name="status" value="HADIR_TERLAMBAT">
-                <div class="flex-1">
-                    <input type="number" name="late_minutes" min="1" max="60"
-                           placeholder="Berapa menit terlambat?"
-                           class="w-full border border-mk-borderLight rounded-xl px-3 py-2.5 text-sm bg-mk-card
-                                  focus:outline-none focus:ring-2 focus:ring-yellow-300">
-                </div>
-                <button type="submit"
-                        class="px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors appearance-none"
-                        style="background-color:#eab308;color:#ffffff;">
-                    Simpan
-                </button>
-            </form>
-        </div>
+        </form>
     </div>
 @else
     <div class="px-4 py-3 flex items-center gap-2">

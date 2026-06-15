@@ -16,6 +16,7 @@
     @if(! $isLibur)
     x-data="{
         status: '{{ $session->status }}',
+        dbStatus: '{{ $session->status }}',
         lateMinutes: {{ $session->late_minutes ?? 15 }},
         substituteId: {{ $session->substitute_teacher_id ?? 'null' }},
         substituteLabel: @js($session->substituteTeacher?->name ?? ''),
@@ -52,6 +53,7 @@
                 const data = await res.json();
                 if (data.success) {
                     this.status = data.status;
+                    this.dbStatus = data.status;
                     if (data.late_minutes)            this.lateMinutes     = data.late_minutes;
                     if (data.substitute_teacher_name) this.substituteLabel = data.substitute_teacher_name;
                     if (data.replacement_label)       this.replacementLabel = data.replacement_label;
@@ -155,6 +157,7 @@
                         this.$el.dataset.status = 'DIGANTI';
                     } else {
                         this.status = 'SCHEDULED';
+                        this.dbStatus = 'SCHEDULED';
                         this.substituteId = null;
                         this.substituteLabel = '';
                         this.honorConfirmed = false;
@@ -322,50 +325,17 @@
                     class="border border-blue-300 text-blue-600 hover:bg-blue-50 rounded px-3 py-1.5 text-xs">
                     VIDEO
                 </button>
+                <button x-show="dbStatus !== 'SCHEDULED'" type="button" @click="status = dbStatus"
+                    class="border border-mk-border text-mk-dim hover:bg-mk-surface rounded px-3 py-1.5 text-xs">
+                    BATAL
+                </button>
 
-                {{-- Tombol ··· dengan dropdown --}}
+                {{-- Tombol DIGANTI --}}
                 <div class="relative">
-                    <button @click="showModal = showModal === 'menu' ? null : 'menu'"
-                        class="border border-mk-border text-mk-muted hover:bg-mk-surfaceHover rounded px-2.5 py-1.5 text-xs">
-                        ···
+                    <button @click="showModal = showModal === 'diganti' ? null : 'diganti'"
+                        class="border border-purple-300 text-purple-600 hover:bg-purple-50 rounded px-3 py-1.5 text-xs">
+                        DIGANTI
                     </button>
-
-                    {{-- Dropdown menu --}}
-                    <div x-show="showModal === 'menu'" @click.outside="showModal = null"
-                        class="absolute right-0 top-8 z-20 bg-mk-card border border-mk-border rounded-lg shadow-lg w-36 py-1">
-                        <button @click="showModal = 'terlambat'"
-                            class="w-full text-left px-4 py-2 text-orange-600 text-xs hover:bg-mk-surface">
-                            Terlambat
-                        </button>
-                        <button @click="showModal = 'diganti'"
-                            class="w-full text-left px-4 py-2 text-purple-600 text-xs hover:bg-mk-surface">
-                            Diganti
-                        </button>
-                    </div>
-
-                    {{-- Mini-modal: TERLAMBAT --}}
-                    <div x-show="showModal === 'terlambat'" @click.outside="showModal = null"
-                        class="absolute right-0 top-8 z-20 bg-mk-card border border-mk-border rounded-lg shadow-lg w-56 p-4">
-                        <p class="text-mk-dim text-xs mb-3 truncate">
-                            {{ $session->student->full_name }} · {{ $session->teacher->name }}
-                        </p>
-                        <label class="block text-mk-dim text-xs mb-1">Terlambat berapa menit?</label>
-                        <div class="flex items-center gap-2 mb-4">
-                            <input type="number" x-model.number="lateMinutes" min="1" max="60"
-                                class="border border-mk-border text-mk-muted rounded px-3 py-1.5 w-20 text-center text-sm">
-                            <span class="text-mk-dim text-xs">menit</span>
-                        </div>
-                        <div class="flex gap-2">
-                            <button @click="save('HADIR_TERLAMBAT', { late_minutes: lateMinutes })"
-                                class="flex-1 font-semibold text-xs py-2 rounded btn-mk-primary">
-                                Simpan
-                            </button>
-                            <button @click="showModal = null"
-                                class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2 px-3 rounded">
-                                Batal
-                            </button>
-                        </div>
-                    </div>
 
                     {{-- Mini-modal: DIGANTI (expanded — opsional jam + ruang pengganti) --}}
                     <div x-show="showModal === 'diganti'" @click.outside="showModal = null"
