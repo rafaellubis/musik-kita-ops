@@ -27,134 +27,96 @@
             : ($sesi->student?->parent_phone ?: $sesi->student?->phone)
     );
 @endphp
+<div class="px-4 py-3 bg-surface-container-low/20">
+    <details class="group"
+             @if($errors->any() || filled(old('material_learned')) || filled(old('homework_notes')) || filled(old('notes')) || filled(old('session_rating'))) open @endif>
+        <summary class="flex items-center justify-between py-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+            <span class="text-sm font-semibold text-primary">
+                Catatan Sesi
+                @if(!$teacherNote)
+                    <span class="text-[#2c694e] font-normal text-xs ml-1.5">— tap untuk mengisi laporan</span>
+                @endif
+            </span>
+            <span class="text-xs text-outline group-open:hidden">▼</span>
+            <span class="text-xs text-outline hidden group-open:inline">▲</span>
+        </summary>
+        <div class="space-y-4 pt-2.5">
+            <form method="POST" action="{{ route('guru.sesi.catatan.update', $sesi) }}" class="space-y-3">
+                @csrf @method('PATCH')
+                
+                <div>
+                    <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Rating Anak Hari Ini</label>
+                    <select name="session_rating"
+                            class="w-full border border-outline-variant/35 rounded-xl px-3 py-2 text-sm bg-white
+                                   focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary">
+                        <option value="">— Pilih rating (opsional) —</option>
+                        @for ($i = 1; $i <= 5; $i++)
+                            <option value="{{ $i }}" @selected((int) old('session_rating', $teacherNote?->session_rating) === $i)>
+                                {{ $i }} / 5 ({{ str_repeat('★', $i) }}{{ str_repeat('☆', 5 - $i) }})
+                            </option>
+                        @endfor
+                    </select>
+                </div>
 
-@if($isSubstitutePending)
-    <div class="px-4 py-3 space-y-2">
-        <p class="text-xs text-blue-600">
-            Anda ditugaskan menggantikan {{ $sesi->teacher->name ?? 'guru utama' }}.
-            Konfirmasi setelah sesi selesai.
-        </p>
-        <div class="flex gap-2">
-            <form method="POST" action="{{ route('guru.absensi.confirm-substitute', $sesi) }}" class="flex-1">
-                @csrf
-                <input type="hidden" name="action" value="hadir">
-                <button type="submit"
-                        class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors bg-secondary text-on-secondary hover:bg-secondary/90 shadow-sm">
-                    ✓ Hadir
+                <div>
+                    <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Materi yang Dipelajari</label>
+                    <textarea name="material_learned" rows="2" maxlength="2000"
+                              class="w-full border border-outline-variant/35 rounded-xl px-3 py-2 text-sm bg-white
+                                     focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary resize-y"
+                              placeholder="Contoh: Scales mayor, teknik pernafasan">{{ old('material_learned', $teacherNote?->material_learned) }}</textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Tugas &amp; Latihan (1 Minggu Kedepan)</label>
+                    <textarea name="homework_notes" rows="2" maxlength="2000"
+                              class="w-full border border-outline-variant/35 rounded-xl px-3 py-2 text-sm bg-white
+                                     focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary resize-y"
+                              placeholder="Contoh: Latihan 15 menit per hari">{{ old('homework_notes', $teacherNote?->homework_notes) }}</textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Catatan Tambahan</label>
+                    <textarea name="notes" rows="2" maxlength="2000"
+                              class="w-full border border-outline-variant/35 rounded-xl px-3 py-2 text-sm bg-white
+                                     focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary resize-y"
+                              placeholder="Catatan tambahan untuk murid/orang tua">{{ old('notes', $teacherNote?->notes) }}</textarea>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 rounded-xl font-bold text-sm bg-[#2a0002] text-white hover:bg-[#4a0e0e] transition-colors shadow-sm cursor-pointer">
+                    Simpan Catatan Sesi
                 </button>
-            </form>
-            
-        </div>
-    </div>
-@elseif($isSubstituteConfirmed)
-    <div class="px-4 py-3 flex items-center gap-2">
-        @include('guru._badge-status', ['status' => $sesi->status])
-        <span class="text-xs text-mk-muted italic">Kehadiran pengganti sudah dikonfirmasi ✓</span>
-    </div>
-@elseif($isOwnScheduled)
-    <div class="px-4 py-3">
-        <form method="POST" action="{{ route('guru.absensi.update', $sesi) }}">
-            @csrf @method('PATCH')
-            <input type="hidden" name="status" value="HADIR">
-            <button type="submit"
-                    class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors bg-secondary text-on-secondary hover:bg-secondary/90 shadow-sm">
-                ✓ Hadir
-            </button>
-        </form>
-    </div>
-@else
-    <div class="px-4 py-3 flex items-center gap-2">
-        @include('guru._badge-status', ['status' => $sesi->status])
-        <span class="text-xs text-mk-muted italic">
-            @if($sesi->status === 'LIBUR')
-                Sesi libur — tidak perlu absensi.
-            @elseif(in_array($sesi->status, ['HADIR', 'HADIR_TERLAMBAT']))
-                Absensi sudah tercatat.
-            @elseif($sesi->status === 'DIGANTI' && $sesi->substitute_teacher_id)
-                Penugasan pengganti: {{ $sesi->substituteTeacher?->name ?? '?' }}
-                @if($sesi->honor_code === null) (menunggu konfirmasi pengganti) @else ✓ @endif
-            @else
-                Status: {{ $sesi->status }}
-            @endif
-        </span>
-    </div>
-@endif
 
-@if($canWriteNotes)
-    <div class="px-4 pb-3 border-t border-mk-borderLight">
-        <details class="group"
-                 @if($errors->any() || filled(old('material_learned')) || filled(old('homework_notes')) || filled(old('notes')) || filled(old('session_rating'))) open @endif>
-            <summary class="flex items-center justify-between py-2.5 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-                <span class="text-sm font-semibold text-mk-text">
-                    Catatan Sesi
-                    @if(!$teacherNote)
-                        <span class="text-mk-accent font-normal text-xs">— tap untuk isi</span>
-                    @endif
-                </span>
-                <span class="text-xs text-mk-muted group-open:hidden">▼</span>
-                <span class="text-xs text-mk-muted hidden group-open:inline">▲</span>
-            </summary>
-            <div class="space-y-3 pt-1">
-                <form method="POST" action="{{ route('guru.sesi.catatan.update', $sesi) }}" class="space-y-3">
-                    @csrf @method('PATCH')
-                    <div>
-                        <label class="block text-xs font-medium text-mk-muted mb-1">Rating Anak hari Ini</label>
-                        <select name="session_rating"
-                                class="w-full border border-mk-borderLight rounded-xl px-3 py-2.5 text-sm bg-mk-card
-                                       focus:outline-none focus:ring-2 focus:ring-mk-accent/30">
-                            <option value="">— Pilih rating (opsional) —</option>
-                            @for ($i = 1; $i <= 5; $i++)
-                                <option value="{{ $i }}" @selected((int) old('session_rating', $teacherNote?->session_rating) === $i)>
-                                    {{ $i }} / 5
-                                </option>
-                            @endfor
-                        </select>
+                @if($waState !== 'DISABLED')
+                    <div class="text-xs rounded-xl px-3 py-2.5 border mt-3
+                        @if($waState === 'SENT') border-green-200 bg-green-50/70 text-green-700
+                        @elseif($waState === 'FAILED') border-red-200 bg-red-50/70 text-red-700
+                        @elseif($waState === 'SKIPPED') border-gray-200 bg-gray-50/70 text-gray-600
+                        @else border-amber-200 bg-amber-50/70 text-amber-700
+                        @endif">
+                        @if($waState === 'SENT')
+                            <div class="flex items-center gap-1.5 font-medium">
+                                <span>✓</span>
+                                <span>Laporan terkirim via WA ke {{ $waRecipientLabel }} ({{ $waMaskedPhone }})</span>
+                            </div>
+                        @elseif($waState === 'FAILED')
+                            <div class="flex items-center gap-1.5 font-medium text-red-800">
+                                <span>⚠</span>
+                                <span>Gagal kirim WA — hubungi admin</span>
+                            </div>
+                        @elseif($waState === 'SKIPPED')
+                            <div class="flex items-center gap-1.5 text-gray-500">
+                                <span>ℹ</span>
+                                <span>Nomor WA tidak tersedia (pesan dilewati)</span>
+                            </div>
+                        @else
+                            <div class="flex items-center gap-1.5 font-medium text-amber-800">
+                                <span class="animate-pulse">⏳</span>
+                                <span>Akan dikirim ke {{ $waRecipientLabel }} dlm ~{{ config('session_report_wa.debounce_minutes', 10) }} mnt</span>
+                            </div>
+                        @endif
                     </div>
-                    <div>
-                        <label class="block text-xs font-medium text-mk-muted mb-1">Materi yang dipelajari</label>
-                        <textarea name="material_learned" rows="2" maxlength="2000"
-                                  class="w-full border border-mk-borderLight rounded-xl px-3 py-2.5 text-sm bg-mk-card
-                                         focus:outline-none focus:ring-2 focus:ring-mk-accent/30 resize-y"
-                                  placeholder="Contoh: Scales mayor, teknik pernafasan">{{ old('material_learned', $teacherNote?->material_learned) }}</textarea>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-mk-muted mb-1">Tugas &amp; Latihan/Persiapan 1 Minggu Kedepan</label>
-                        <textarea name="homework_notes" rows="2" maxlength="2000"
-                                  class="w-full border border-mk-borderLight rounded-xl px-3 py-2.5 text-sm bg-mk-card
-                                         focus:outline-none focus:ring-2 focus:ring-mk-accent/30 resize-y"
-                                  placeholder="Contoh: Latihan 15 menit per hari">{{ old('homework_notes', $teacherNote?->homework_notes) }}</textarea>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-mk-muted mb-1">Catatan</label>
-                        <textarea name="notes" rows="2" maxlength="2000"
-                                  class="w-full border border-mk-borderLight rounded-xl px-3 py-2.5 text-sm bg-mk-card
-                                         focus:outline-none focus:ring-2 focus:ring-mk-accent/30 resize-y"
-                                  placeholder="Catatan tambahan untuk murid/orang tua">{{ old('notes', $teacherNote?->notes) }}</textarea>
-                    </div>
-                    <button type="submit" class="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors appearance-none btn-mk-primary">
-                        Simpan Catatan
-                    </button>
-                    @if($waState !== 'DISABLED')
-                        <div class="text-xs rounded-lg px-3 py-2 border
-                            @if($waState === 'SENT') border-green-200 bg-green-50 text-green-700
-                            @elseif($waState === 'FAILED') border-red-200 bg-red-50 text-red-700
-                            @elseif($waState === 'SKIPPED') border-gray-200 bg-gray-50 text-gray-600
-                            @else border-amber-200 bg-amber-50 text-amber-700
-                            @endif">
-                            @if($waState === 'SENT')
-                                ✓ Pesan WA terkirim ke {{ $waMaskedPhone }}
-                            @elseif($waState === 'FAILED')
-                                ⚠ Gagal kirim WA — hubungi admin
-                            @elseif($waState === 'SKIPPED')
-                                ℹ Nomor WA tidak tersedia
-                            @else
-                                ⏳ Akan dikirim ke {{ $waRecipientLabel }} dalam ~{{ config('session_report_wa.debounce_minutes', 10) }} menit
-                            @endif
-                        </div>
-                        <p class="text-[11px] text-mk-muted">Dikirim ke nomor ortu terlebih dahulu; jika kosong, ke nomor murid dengan template berbeda.</p>
-                    @endif
-                </form>
-            </div>
-        </details>
-    </div>
-@endif
+                @endif
+            </form>
+        </div>
+    </details>
+</div>

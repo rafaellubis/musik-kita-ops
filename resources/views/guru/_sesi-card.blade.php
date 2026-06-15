@@ -29,12 +29,26 @@
                 && $sesi->honor_code !== null
             );
     }
+
+    $isSubstitutePending = (int) $sesi->substitute_teacher_id === (int) $teacher->id
+        && $sesi->status === 'DIGANTI'
+        && $sesi->honor_code === null;
+    $isOwnScheduled = $sesi->status === 'SCHEDULED'
+        && (int) $sesi->teacher_id === (int) $teacher->id
+        && !$sesi->substitute_teacher_id;
+    $isSubstituteConfirmed = (int) $sesi->substitute_teacher_id === (int) $teacher->id
+        && $sesi->status === 'DIGANTI'
+        && $sesi->honor_code !== null;
+    $canWriteNotes = (
+        in_array($sesi->status, ['HADIR', 'HADIR_TERLAMBAT'], true)
+        && (int) $sesi->teacher_id === (int) $teacher->id
+    ) || $isSubstituteConfirmed;
 @endphp
 
 {{-- Session Card --}}
 <div class="bg-surface-container-lowest border border-outline-variant/20 rounded-2xl
-            shadow-[rgba(74,14,14,0.04)_0px_2px_8px]
-            hover:shadow-[rgba(74,14,14,0.08)_0px_4px_12px]
+            shadow-[rgba(44,105,78,0.04)_0px_2px_8px]
+            hover:shadow-[rgba(44,105,78,0.08)_0px_4px_12px]
             transition-all duration-300
             {{ $isMuted ? 'opacity-70' : '' }}
             fade-in-up"
@@ -82,21 +96,57 @@
             @if($sesi->substitute_teacher_id === $teacher->id)
                 <div class="text-[10px] text-blue-600 font-medium mt-0.5">Anda sebagai pengganti</div>
             @endif
+            @if($sesi->substitute_teacher_id && $sesi->substitute_teacher_id !== $teacher->id)
+                <div class="text-[10px] text-amber-600 font-medium mt-0.5">
+                    Digantikan oleh: {{ $sesi->substituteTeacher?->name ?? '?' }}
+                    @if($sesi->honor_code === null)
+                        <span class="text-gray-400 font-normal">(menunggu konfirmasi)</span>
+                    @else
+                        <span class="text-green-600 font-normal">✓</span>
+                    @endif
+                </div>
+            @endif
         </div>
 
-        {{-- Status badge + Completed Icon --}}
-        <div class="flex flex-col items-end gap-2 shrink-0">
+        {{-- Status badge + Hadir Button / Completed Icon --}}
+        <div class="flex flex-col items-end gap-2.5 shrink-0">
             @include('guru._badge-status', ['status' => $sesi->status])
-            @if($isCompleted)
-                <svg class="w-5 h-5 text-secondary" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
+            @if($showSessionActions && ($isOwnScheduled || $isSubstitutePending))
+                @if($isOwnScheduled)
+                    <form method="POST" action="{{ route('guru.absensi.update', $sesi) }}" class="m-0">
+                        @csrf @method('PATCH')
+                        <input type="hidden" name="status" value="HADIR">
+                        <button type="submit"
+                                class="w-14 h-14 rounded-2xl font-bold bg-secondary text-on-secondary hover:bg-secondary/90 transition-all shadow-[rgba(44,105,78,0.15)_0px_2px_8px] active:scale-95 flex flex-col items-center justify-center gap-0.5"
+                                title="Absen Hadir">
+                            <span class="text-base leading-none">✓</span>
+                            <span class="text-[10px] uppercase tracking-wider leading-none">Hadir</span>
+                        </button>
+                    </form>
+                @elseif($isSubstitutePending)
+                    <form method="POST" action="{{ route('guru.absensi.confirm-substitute', $sesi) }}" class="m-0">
+                        @csrf
+                        <input type="hidden" name="action" value="hadir">
+                        <button type="submit"
+                                class="w-14 h-14 rounded-2xl font-bold bg-secondary text-on-secondary hover:bg-secondary/90 transition-all shadow-[rgba(44,105,78,0.15)_0px_2px_8px] active:scale-95 flex flex-col items-center justify-center gap-0.5"
+                                title="Konfirmasi Hadir (Pengganti)">
+                            <span class="text-base leading-none">✓</span>
+                            <span class="text-[10px] uppercase tracking-wider leading-none">Hadir</span>
+                        </button>
+                    </form>
+                @endif
+            @elseif($isCompleted)
+                <div class="w-8 h-8 rounded-full bg-secondary/10 text-secondary flex items-center justify-center border border-secondary/20">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                </div>
             @endif
         </div>
     </div>
 
     {{-- Expandable action section --}}
-    @if($showSessionActions)
+    @if($canWriteNotes)
         <div class="border-t border-outline-variant/15">
             @include('guru._sesi-absensi-actions', ['sesi' => $sesi, 'teacher' => $teacher])
         </div>
