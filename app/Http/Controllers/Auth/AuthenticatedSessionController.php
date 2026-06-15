@@ -28,12 +28,23 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Guru diarahkan ke portal guru mereka sendiri
-        if (auth()->user()->hasRole('Guru')) {
-            return redirect()->intended(route('guru.dashboard', absolute: false));
+        $user = auth()->user();
+
+        // Bersihkan url.intended jika tidak cocok dengan peran user
+        $intended = $request->session()->get('url.intended');
+        if ($intended) {
+            if ($user->hasRole('Guru')) {
+                if (!str_contains($intended, '/guru/') && !str_contains($intended, '/profile')) {
+                    $request->session()->forget('url.intended');
+                }
+            } else {
+                if (str_contains($intended, '/guru/')) {
+                    $request->session()->forget('url.intended');
+                }
+            }
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->intended(route($user->getDashboardRoute(), absolute: false));
     }
 
     /**

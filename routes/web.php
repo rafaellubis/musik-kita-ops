@@ -46,6 +46,9 @@ Route::get('/', function () {
 });
 */
 Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route(auth()->user()->getDashboardRoute());
+    }
     return redirect()->route('login');
 });
 

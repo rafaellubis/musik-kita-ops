@@ -64,4 +64,12 @@ class User extends Authenticatable
     {
         return $this->hasOne(Teacher::class);
     }
+
+    /**
+     * Dapatkan rute default dashboard untuk user berdasarkan perannya.
+     */
+    public function getDashboardRoute(): string
+    {
+        return $this->hasRole('Guru') ? 'guru.dashboard' : 'dashboard';
+    }
 }

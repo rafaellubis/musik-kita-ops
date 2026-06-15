@@ -59,5 +59,14 @@ class AppServiceProvider extends ServiceProvider
             $view->with('overdueNotifs', $data['notifs']);
             $view->with('overdueNotifCount', $data['count']);
         });
+
+        // Kustomisasi pengalihan untuk pengguna terautentikasi (middleware guest / RedirectIfAuthenticated)
+        \Illuminate\Auth\Middleware\RedirectIfAuthenticated::redirectUsing(function ($request) {
+            $user = auth()->user();
+            if ($user) {
+                return route($user->getDashboardRoute());
+            }
+            return route('dashboard');
+        });
     }
 }
