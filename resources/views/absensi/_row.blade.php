@@ -246,7 +246,8 @@
             @endif
             {{-- Badge setelah status diinput --}}
             <div x-show="status !== 'SCHEDULED'" class="flex items-center justify-end gap-2">
-                <span class="rounded px-3 py-1 text-xs border"
+                {{-- Status selain DIGANTI --}}
+                <span x-show="status !== 'DIGANTI'" class="rounded px-3 py-1 text-xs border"
                     :class="{
                         'bg-green-100 text-green-700 border-green-200':    status === 'HADIR',
                         'bg-orange-100 text-orange-700 border-orange-200': status === 'HADIR_TERLAMBAT',
@@ -254,7 +255,6 @@
                         'bg-yellow-100 text-yellow-700 border-yellow-200': status === 'IZIN_RESCHEDULE',
                         'bg-amber-100 text-amber-700 border-amber-200':    status === 'IZIN_PENDING',
                         'bg-blue-100 text-blue-700 border-blue-200':       status === 'IZIN_VIDEO',
-                        'bg-purple-100 text-purple-700 border-purple-200': status === 'DIGANTI',
                         'bg-mk-surface text-mk-dim border-mk-border':       status === 'CANCELLED',
                     }"
                     x-text="
@@ -264,10 +264,22 @@
                         status === 'IZIN_RESCHEDULE'   ? '📅 ' + (replacementLabel || 'IZIN') :
                         status === 'IZIN_PENDING'      ? '⏳ PENDING' :
                         status === 'IZIN_VIDEO'        ? '📹 VIDEO' :
-                        status === 'DIGANTI'           ? '↔ ' + substituteLabel + (honorConfirmed ? ' ✓' : ' ⏳') :
                         status === 'CANCELLED'         ? '✕ BATAL' : status
                     ">
                 </span>
+
+                {{-- Status DIGANTI (Dua badge terpisah - Opsi A) --}}
+                <div x-show="status === 'DIGANTI'" class="flex items-center gap-1.5">
+                    {{-- Nama Guru Pengganti --}}
+                    <span class="rounded px-2.5 py-1 text-xs border bg-purple-100 text-purple-700 border-purple-200 font-medium"
+                          x-text="'↔ ' + substituteLabel">
+                    </span>
+                    {{-- Status Kehadiran --}}
+                    <span class="rounded px-2 py-1 text-xs border font-semibold"
+                          :class="honorConfirmed ? 'bg-green-100 text-green-700 border-green-200' : 'bg-amber-100 text-amber-700 border-amber-200'"
+                          x-text="honorConfirmed ? '✓ HADIR' : '⏳SCHEDULED'">
+                    </span>
+                </div>
                 {{-- HADIR/HADIR_TERLAMBAT: hanya bisa di-batalkan, tidak bisa diubah ke status lain --}}
                 <button x-show="status === 'HADIR' || status === 'HADIR_TERLAMBAT'"
                     @click="save('CANCELLED')"
