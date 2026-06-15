@@ -124,16 +124,16 @@ class AbsensiController extends Controller
             }
         }
 
-        // Guard: sesi yang sudah HADIR/HADIR_TERLAMBAT hanya bisa di-CANCELLED.
-        // Koreksi status lain tidak diizinkan — batalkan dulu, baru input ulang.
+        // Guard: sesi yang sudah HADIR/HADIR_TERLAMBAT hanya bisa dikembalikan ke SCHEDULED.
+        // Koreksi status lain tidak diizinkan — batalkan dulu (kembali ke SCHEDULED), baru input ulang.
         $statusSudahHadir = in_array($classSession->status, [
             ClassSession::STATUS_HADIR,
             ClassSession::STATUS_HADIR_TERLAMBAT,
         ], true);
-        if ($statusSudahHadir && $request->status !== ClassSession::STATUS_CANCELLED) {
+        if ($statusSudahHadir && $request->status !== ClassSession::STATUS_SCHEDULED) {
             return response()->json([
                 'success' => false,
-                'message' => 'Sesi yang sudah HADIR hanya bisa dibatalkan (CANCELLED). Batalkan dulu untuk mengganti status.',
+                'message' => 'Sesi yang sudah HADIR hanya bisa dikembalikan ke status SCHEDULED. Batalkan dulu untuk mengganti status.',
             ], 422);
         }
 

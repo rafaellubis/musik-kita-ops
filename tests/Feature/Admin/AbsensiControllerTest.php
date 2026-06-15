@@ -167,7 +167,7 @@ class AbsensiControllerTest extends TestCase
     public function test_status_hadir_tidak_bisa_diubah_ke_status_lain(): void
     {
         // Sesi yang sudah HADIR tidak boleh diubah ke status lain (misal HANGUS).
-        // Harus di-CANCELLED dulu, baru bisa diinput ulang.
+        // Harus dikembalikan ke SCHEDULED dulu, baru bisa diinput ulang.
         $session = $this->createTestSession(['status' => 'HADIR']);
 
         $response = $this->actingAs($this->admin)
@@ -177,17 +177,17 @@ class AbsensiControllerTest extends TestCase
         $this->assertDatabaseHas('class_sessions', ['id' => $session->id, 'status' => 'HADIR']);
     }
 
-    public function test_status_hadir_bisa_di_cancelled(): void
+    public function test_status_hadir_bisa_dikembalikan_ke_scheduled(): void
     {
         $session = $this->createTestSession(['status' => 'HADIR', 'honor_amount' => 42500]);
 
         $response = $this->actingAs($this->admin)
-            ->patchJson(route('absensi.update', $session), ['status' => 'CANCELLED']);
+            ->patchJson(route('absensi.update', $session), ['status' => 'SCHEDULED']);
 
-        $response->assertOk()->assertJson(['success' => true, 'status' => 'CANCELLED']);
+        $response->assertOk()->assertJson(['success' => true, 'status' => 'SCHEDULED']);
         $this->assertDatabaseHas('class_sessions', [
             'id'           => $session->id,
-            'status'       => 'CANCELLED',
+            'status'       => 'SCHEDULED',
             'honor_amount' => 0,
             'honor_code'   => null,
         ]);

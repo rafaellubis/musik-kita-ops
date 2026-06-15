@@ -35,8 +35,7 @@ class AttendanceService
     private const KIDS_HONOR_PER_STUDENT = 42500;
 
     /**
-     * Status valid untuk input absensi (7 nilai, exclude SCHEDULED yang
-     * adalah default sebelum absensi disubmit).
+     * Status valid untuk input absensi.
      */
     public const VALID_ATTENDANCE_STATUSES = [
         'HADIR',
@@ -48,6 +47,7 @@ class AttendanceService
         'LIBUR',
         'DIGANTI',
         'CANCELLED',
+        'SCHEDULED',
     ];
 
     /**

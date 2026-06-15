@@ -282,7 +282,7 @@
                 </div>
                 {{-- HADIR/HADIR_TERLAMBAT: hanya bisa di-batalkan, tidak bisa diubah ke status lain --}}
                 <button x-show="status === 'HADIR' || status === 'HADIR_TERLAMBAT'"
-                    @click="save('CANCELLED')"
+                    @click="save('SCHEDULED')"
                     :disabled="loading"
                     class="text-red-500 hover:text-red-700 text-xs underline">batalkan</button>
                 {{-- Status lain (termasuk CANCELLED): bisa di-ubah ulang ke SCHEDULED.

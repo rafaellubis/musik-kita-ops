@@ -20,8 +20,8 @@ class UpdateAbsensiRequest extends FormRequest
     /**
      * Aturan validasi untuk update absensi satu sesi.
      *
-     * Status yang valid adalah semua status kecuali LIBUR dan SCHEDULED —
-     * LIBUR diblok di controller (BR-4.10), SCHEDULED bukan input valid dari admin.
+     * Status yang valid adalah semua status kecuali LIBUR.
+     * SCHEDULED diizinkan untuk membatalkan/mereset status absensi kembali ke awal.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
@@ -39,6 +39,7 @@ class UpdateAbsensiRequest extends FormRequest
                     ClassSession::STATUS_IZIN_VIDEO,
                     ClassSession::STATUS_DIGANTI,
                     ClassSession::STATUS_CANCELLED,
+                    ClassSession::STATUS_SCHEDULED,
                 ]),
             ],
             // Menit terlambat — wajib jika status HADIR_TERLAMBAT
