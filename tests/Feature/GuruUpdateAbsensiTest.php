@@ -58,6 +58,8 @@ class GuruUpdateAbsensiTest extends TestCase
             'student_id'    => $student->id,
             'teacher_id'    => $this->teacher->id,
             'session_date'  => today()->toDateString(),
+            'start_time'    => now()->subMinutes(10)->toTimeString(),
+            'end_time'      => now()->addMinutes(20)->toTimeString(),
             'status'        => 'SCHEDULED',
             // honor_code dan honor_amount null — belum diisi sebelum absensi
         ]);
@@ -89,6 +91,8 @@ class GuruUpdateAbsensiTest extends TestCase
             'teacher_id'            => $guruAsli->id,
             'substitute_teacher_id' => $this->teacher->id,
             'session_date'          => today()->toDateString(),
+            'start_time'            => now()->subMinutes(10)->toTimeString(),
+            'end_time'              => now()->addMinutes(20)->toTimeString(),
             'status'                => 'DIGANTI',
             'honor_code'            => null,
             'honor_amount'          => 0,
@@ -127,6 +131,8 @@ class GuruUpdateAbsensiTest extends TestCase
             'teacher_id'            => $this->teacher->id,
             'substitute_teacher_id' => $pengganti->id,
             'session_date'          => today()->toDateString(),
+            'start_time'            => now()->subMinutes(10)->toTimeString(),
+            'end_time'              => now()->addMinutes(20)->toTimeString(),
             'status'                => 'DIGANTI',
             'honor_code'            => null,
         ]);
@@ -224,5 +230,89 @@ class GuruUpdateAbsensiTest extends TestCase
             ->assertRedirect();
 
         $this->assertNull($this->sesiHariIni->fresh()->late_minutes);
+    }
+
+    public function test_guru_tidak_bisa_update_absensi_sebelum_15_menit_sebelum_sesi_mulai(): void
+    {
+        // Set waktu sekarang ke 13:44:00
+        \Carbon\Carbon::setTestNow('2026-06-16 13:44:00');
+
+        $sesi = ClassSession::factory()->create([
+            'teacher_id'   => $this->teacher->id,
+            'session_date' => '2026-06-16',
+            'start_time'    => '14:00:00',
+            'end_time'      => '14:30:00',
+            'status'        => 'SCHEDULED',
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->patch(route('guru.absensi.update', $sesi), ['status' => 'HADIR'])
+            ->assertStatus(403);
+
+        \Carbon\Carbon::setTestNow(); // Reset mock waktu
+    }
+
+    public function test_guru_bisa_update_absensi_dalam_rentang_15_menit_sebelum_sesi_mulai(): void
+    {
+        // Set waktu sekarang ke 13:45:00 (pas 15 menit sebelum sesi mulai)
+        \Carbon\Carbon::setTestNow('2026-06-16 13:45:00');
+
+        $sesi = ClassSession::factory()->create([
+            'teacher_id'   => $this->teacher->id,
+            'session_date' => '2026-06-16',
+            'start_time'    => '14:00:00',
+            'end_time'      => '14:30:00',
+            'status'        => 'SCHEDULED',
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->patch(route('guru.absensi.update', $sesi), ['status' => 'HADIR'])
+            ->assertRedirect();
+
+        $this->assertEquals('HADIR', $sesi->fresh()->status);
+
+        \Carbon\Carbon::setTestNow(); // Reset mock waktu
+    }
+
+    public function test_guru_bisa_update_absensi_setelah_sesi_selesai_sebelum_tengah_malam(): void
+    {
+        // Set waktu sekarang ke 23:59:00 di hari yang sama
+        \Carbon\Carbon::setTestNow('2026-06-16 23:59:00');
+
+        $sesi = ClassSession::factory()->create([
+            'teacher_id'   => $this->teacher->id,
+            'session_date' => '2026-06-16',
+            'start_time'    => '14:00:00',
+            'end_time'      => '14:30:00',
+            'status'        => 'SCHEDULED',
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->patch(route('guru.absensi.update', $sesi), ['status' => 'HADIR'])
+            ->assertRedirect();
+
+        $this->assertEquals('HADIR', $sesi->fresh()->status);
+
+        \Carbon\Carbon::setTestNow(); // Reset mock waktu
+    }
+
+    public function test_guru_tidak_bisa_update_absensi_setelah_lewat_tengah_malam(): void
+    {
+        // Set waktu sekarang ke 00:01:00 keesokan harinya
+        \Carbon\Carbon::setTestNow('2026-06-17 00:01:00');
+
+        $sesi = ClassSession::factory()->create([
+            'teacher_id'   => $this->teacher->id,
+            'session_date' => '2026-06-16',
+            'start_time'    => '14:00:00',
+            'end_time'      => '14:30:00',
+            'status'        => 'SCHEDULED',
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->patch(route('guru.absensi.update', $sesi), ['status' => 'HADIR'])
+            ->assertStatus(403);
+
+        \Carbon\Carbon::setTestNow(); // Reset mock waktu
     }
 }

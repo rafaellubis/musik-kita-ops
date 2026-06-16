@@ -528,6 +528,17 @@ class GuruController extends Controller
             'Hanya sesi hari ini yang bisa diupdate.'
         );
 
+        // Batasi absensi dimulai 15 menit sebelum jam mulai sesi
+        $sessionStart = Carbon::parse($classSession->session_date)
+            ->setTimeFromTimeString($classSession->start_time)
+            ->subMinutes(15);
+
+        abort_if(
+            now()->lt($sessionStart),
+            403,
+            'Absensi hanya dapat diisi mulai 15 menit sebelum sesi dimulai.'
+        );
+
         // Issue 3: sesi libur tidak bisa diubah oleh guru
         abort_if(
             $classSession->status === 'LIBUR',
@@ -602,6 +613,18 @@ class GuruController extends Controller
         }
 
         if ($request->action === 'hadir') {
+            // Pastikan hanya bisa dikonfirmasi mulai 15 menit sebelum sesi dimulai hingga akhir hari
+            $now = now();
+            $sessionDate = Carbon::parse($classSession->session_date);
+            $sessionStart = $sessionDate->copy()->setTimeFromTimeString($classSession->start_time)->subMinutes(15);
+            $endOfDay = $sessionDate->copy()->endOfDay();
+
+            abort_if(
+                $classSession->session_date !== today()->toDateString() || $now->lt($sessionStart) || $now->gt($endOfDay),
+                403,
+                'Kehadiran pengganti hanya dapat dikonfirmasi mulai 15 menit sebelum sesi dimulai hingga akhir hari ini.'
+            );
+
             $classSession->loadMissing(['enrollment.package']);
             $honor = $this->attendanceService->calculateSubstituteHonor($classSession);
 

@@ -109,30 +109,69 @@
         </div>
 
         {{-- Status badge + Hadir Button / Completed Icon --}}
-        <div class="flex flex-col items-end gap-2.5 shrink-0">
+        <div class="flex flex-col items-end gap-2.5 shrink-0"
+             @if($showSessionActions && ($isOwnScheduled || $isSubstitutePending))
+                 @php
+                     $sessionStart = \Carbon\Carbon::parse($sesi->session_date)
+                         ->setTimeFromTimeString($sesi->start_time)
+                         ->subMinutes(15);
+                     $sessionStartEpoch = $sessionStart->getTimestamp() * 1000;
+                 @endphp
+                 x-data="{
+                     isDisabled: true,
+                     timeLabel: '',
+                     init() {
+                         const startEpoch = {{ $sessionStartEpoch }};
+                         const updateStatus = () => {
+                             const now = Date.now();
+                             if (now >= startEpoch) {
+                                 this.isDisabled = false;
+                                 this.timeLabel = '';
+                             } else {
+                                 this.isDisabled = true;
+                                 this.timeLabel = 'Absensi aktif pkl {{ \Carbon\Carbon::parse($sesi->start_time)->subMinutes(15)->format('H:i') }}';
+                             }
+                         };
+                         updateStatus();
+                         if (this.isDisabled) {
+                             const interval = setInterval(() => {
+                                 updateStatus();
+                                 if (!this.isDisabled) {
+                                     clearInterval(interval);
+                                 }
+                             }, 1000);
+                         }
+                     }
+                 }"
+             @endif
+        >
             @include('guru._badge-status', ['status' => $sesi->status])
             @if($showSessionActions && ($isOwnScheduled || $isSubstitutePending))
                 @if($isOwnScheduled)
-                    <form method="POST" action="{{ route('guru.absensi.update', $sesi) }}" class="m-0">
+                    <form method="POST" action="{{ route('guru.absensi.update', $sesi) }}" class="m-0 flex flex-col items-end">
                         @csrf @method('PATCH')
                         <input type="hidden" name="status" value="HADIR">
                         <button type="submit"
-                                class="w-14 h-14 rounded-2xl font-bold bg-secondary text-on-secondary hover:bg-secondary/90 transition-all shadow-[rgba(44,105,78,0.15)_0px_2px_8px] active:scale-95 flex flex-col items-center justify-center gap-0.5"
+                                :disabled="isDisabled"
+                                class="w-14 h-14 rounded-2xl font-bold bg-secondary text-on-secondary hover:bg-secondary/90 transition-all shadow-[rgba(44,105,78,0.15)_0px_2px_8px] active:scale-95 disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none flex flex-col items-center justify-center gap-0.5"
                                 title="Absen Hadir">
                             <span class="text-base leading-none">✓</span>
                             <span class="text-[10px] uppercase tracking-wider leading-none">Hadir</span>
                         </button>
+                        <span x-show="isDisabled" class="text-[9px] text-amber-700 leading-none mt-1 whitespace-nowrap bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-medium" x-text="timeLabel" style="display: none;"></span>
                     </form>
                 @elseif($isSubstitutePending)
-                    <form method="POST" action="{{ route('guru.absensi.confirm-substitute', $sesi) }}" class="m-0">
+                    <form method="POST" action="{{ route('guru.absensi.confirm-substitute', $sesi) }}" class="m-0 flex flex-col items-end">
                         @csrf
                         <input type="hidden" name="action" value="hadir">
                         <button type="submit"
-                                class="w-14 h-14 rounded-2xl font-bold bg-secondary text-on-secondary hover:bg-secondary/90 transition-all shadow-[rgba(44,105,78,0.15)_0px_2px_8px] active:scale-95 flex flex-col items-center justify-center gap-0.5"
+                                :disabled="isDisabled"
+                                class="w-14 h-14 rounded-2xl font-bold bg-secondary text-on-secondary hover:bg-secondary/90 transition-all shadow-[rgba(44,105,78,0.15)_0px_2px_8px] active:scale-95 disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none flex flex-col items-center justify-center gap-0.5"
                                 title="Konfirmasi Hadir (Pengganti)">
                             <span class="text-base leading-none">✓</span>
                             <span class="text-[10px] uppercase tracking-wider leading-none">Hadir</span>
                         </button>
+                        <span x-show="isDisabled" class="text-[9px] text-amber-700 leading-none mt-1 whitespace-nowrap bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-medium" x-text="timeLabel" style="display: none;"></span>
                     </form>
                 @endif
             @elseif($isCompleted)

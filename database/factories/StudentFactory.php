@@ -28,7 +28,7 @@ class StudentFactory extends Factory
         return [
             'student_code'        => "M-{$year}-{$seq}",
             'full_name'           => $this->faker->name(),
-            'nickname'            => $this->faker->firstName(),
+            'nickname'            => $this->faker->unique()->firstName(),
             'gender'              => $this->faker->randomElement(['L', 'P']),
             'status'              => 'Calon',
             'primary_enrollment_id' => null,
