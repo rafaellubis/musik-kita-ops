@@ -112,6 +112,8 @@
     @role('Owner')
     <x-sidebar-item route="users.index" icon="👤" label="Manage User"
         :active="request()->routeIs('users.*')" />
+    <x-sidebar-item route="scheduler.edit" icon="⚙️" label="Pengaturan Scheduler"
+        :active="request()->routeIs('scheduler.*')" />
     @endrole
 
 </nav>

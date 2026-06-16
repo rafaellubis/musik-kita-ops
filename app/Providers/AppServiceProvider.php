@@ -21,6 +21,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Override config dari database jika tabel settings ada
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
+                config([
+                    'schedule_reminder.enabled' => filter_var(\App\Models\Setting::get('schedule_reminder_enabled', config('schedule_reminder.enabled')), FILTER_VALIDATE_BOOLEAN),
+                    'schedule_reminder.mode' => \App\Models\Setting::get('schedule_reminder_mode', config('schedule_reminder.mode')),
+                    'schedule_reminder.send_time' => \App\Models\Setting::get('schedule_reminder_send_time', config('schedule_reminder.send_time')),
+                    'schedule_reminder.hours_before' => (int) \App\Models\Setting::get('schedule_reminder_hours_before', config('schedule_reminder.hours_before')),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Abaikan error jika database belum siap
+        }
+
         // [SECURITY] Force HTTPS di production — mencegah credential sniffing via HTTP.
         if ($this->app->environment('production')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');

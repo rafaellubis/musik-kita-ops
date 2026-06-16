@@ -408,6 +408,10 @@ Route::middleware('auth')->group(function () {
             [EventController::class, 'saveExamResults']
         )->name('events.exam-results');
 
+        // ===== Pengaturan Scheduler (Owner only) =====
+        Route::get('scheduler', [\App\Http\Controllers\SettingController::class, 'editScheduler'])->name('scheduler.edit');
+        Route::patch('scheduler', [\App\Http\Controllers\SettingController::class, 'updateScheduler'])->name('scheduler.update');
+
     });
 
     /* ======================================================================
