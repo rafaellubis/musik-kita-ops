@@ -6,7 +6,45 @@
         </div>
     </x-slot>
 
-    <div class="py-6 px-4 lg:px-8 max-w-5xl mx-auto">
+    <div class="py-6 px-4 lg:px-8 max-w-5xl mx-auto space-y-6">
+
+        {{-- Preview jadwal aktif --}}
+        <div class="bg-mk-card rounded-2xl border border-mk-borderLight p-6 shadow-sm">
+            <h3 class="text-sm font-bold text-mk-text mb-1">Preview Jadwal Aktif</h3>
+            <p class="text-[11px] text-mk-muted mb-4">Estimasi berdasarkan konfigurasi saat ini. Berlaku setelah proses <code class="text-xs">schedule:run</code> berikutnya.</p>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="border-b border-mk-borderLight text-left text-mk-muted">
+                            <th class="pb-2 pr-4 font-semibold">Job</th>
+                            <th class="pb-2 pr-4 font-semibold">Status</th>
+                            <th class="pb-2 pr-4 font-semibold">Frekuensi</th>
+                            <th class="pb-2 font-semibold">Eksekusi Berikutnya</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-mk-text">
+                        @foreach($preview as $row)
+                        <tr class="border-b border-mk-borderLight/60 last:border-0">
+                            <td class="py-2.5 pr-4 font-medium">{{ $row['name'] }}</td>
+                            <td class="py-2.5 pr-4">
+                                <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $row['enabled'] ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500' }}">
+                                    {{ $row['status_label'] }}
+                                </span>
+                            </td>
+                            <td class="py-2.5 pr-4 text-mk-muted">{{ $row['frequency_label'] }}</td>
+                            <td class="py-2.5 text-mk-muted">{{ $row['next_run_label'] }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-[10px] text-mk-dim mt-4 leading-relaxed">
+                Prasyarat: Windows Task Scheduler (atau cron Linux) harus menjalankan
+                <code class="text-[10px]">php artisan schedule:run</code> setiap menit.
+                Halaman ini tidak mengubah task OS secara otomatis.
+            </p>
+        </div>
+
         <form action="{{ route('scheduler.update') }}" method="POST" class="space-y-6" x-data="{
             sessionsGenerateEnabled: {{ $settings['scheduler_sessions_generate_enabled'] ? 'true' : 'false' }},
             invoicesGenerateEnabled: {{ $settings['scheduler_invoices_generate_enabled'] ? 'true' : 'false' }},
@@ -19,13 +57,14 @@
             @csrf
             @method('PATCH')
 
-            {{-- Menampilkan info petunjuk --}}
+            {{-- Informasi cara kerja scheduler --}}
             <div class="bg-mk-surface border border-mk-border rounded-2xl p-4 flex gap-3 text-xs text-mk-text shadow-sm">
                 <span class="text-lg shrink-0">⚙️</span>
                 <div>
-                    <h4 class="font-bold text-secondary mb-1">Informasi Sinkronisasi Jadwal</h4>
+                    <h4 class="font-bold text-secondary mb-1">Cara Kerja Pengaturan Scheduler</h4>
                     <p class="text-mk-muted leading-relaxed">
-                        Halaman ini mengatur pemicu otomatis untuk tugas operasional internal studio Musik KITA. Perubahan waktu atau tanggal di bawah akan langsung disesuaikan ke pemicu server (Linux Cron / Windows Task Scheduler) secara instan.
+                        Perubahan disimpan ke database dan dibaca ulang setiap kali <code class="text-xs">php artisan schedule:run</code> dijalankan (biasanya ≤ 1 menit).
+                        Task Windows Task Scheduler atau cron Linux <strong>tidak</strong> diubah otomatis dari halaman ini — pastikan prasyarat di atas sudah terpasang.
                     </p>
                 </div>
             </div>
@@ -160,12 +199,22 @@
                             </label>
                         </div>
 
-                        <div class="pt-4 border-t border-mk-borderLight" x-show="honorCalculateEnabled" x-collapse>
-                            <div class="w-1/2">
+                        <div class="grid grid-cols-2 gap-4 pt-4 border-t border-mk-borderLight" x-show="honorCalculateEnabled" x-collapse>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-mk-muted mb-1">Hari Sebelum Akhir Bulan</label>
+                                <input type="number" name="scheduler_honor_calculate_days_before_eom"
+                                       value="{{ old('scheduler_honor_calculate_days_before_eom', $settings['scheduler_honor_calculate_days_before_eom']) }}"
+                                       min="1" max="28"
+                                       class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_honor_calculate_days_before_eom') border-red-500 @enderror">
+                                <p class="text-[10px] text-mk-dim mt-1">Default BR: 2 (= H-2)</p>
+                                @error('scheduler_honor_calculate_days_before_eom')
+                                    <p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
                                 <label class="block text-[11px] font-semibold text-mk-muted mb-1">Jam Eksekusi</label>
                                 <input type="time" name="scheduler_honor_calculate_time"
                                        value="{{ old('scheduler_honor_calculate_time', $settings['scheduler_honor_calculate_time']) }}"
-                                       required
                                        class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_honor_calculate_time') border-red-500 @enderror">
                                 @error('scheduler_honor_calculate_time')
                                     <p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>
@@ -174,7 +223,7 @@
                         </div>
                     </div>
                     <div class="text-[10px] text-mk-dim pt-2.5 border-t border-mk-borderLight bg-mk-bg/50 -mx-6 -mb-6 px-6 py-3 rounded-b-2xl">
-                        Default: H-2 Akhir Bulan, Jam 06:00
+                        Default: H-2 sebelum akhir bulan (2 hari), Jam 06:00
                     </div>
                 </div>
 
@@ -244,12 +293,21 @@
                             </label>
                         </div>
 
-                        <div class="pt-4 border-t border-mk-borderLight" x-show="overdueCheckEnabled" x-collapse>
-                            <div class="w-1/2">
+                        <div class="grid grid-cols-2 gap-4 pt-4 border-t border-mk-borderLight" x-show="overdueCheckEnabled" x-collapse>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-mk-muted mb-1">Tanggal Eksekusi</label>
+                                <input type="number" name="scheduler_overdue_check_day"
+                                       value="{{ old('scheduler_overdue_check_day', $settings['scheduler_overdue_check_day']) }}"
+                                       min="1" max="31"
+                                       class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_overdue_check_day') border-red-500 @enderror">
+                                @error('scheduler_overdue_check_day')
+                                    <p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
                                 <label class="block text-[11px] font-semibold text-mk-muted mb-1">Jam Eksekusi</label>
                                 <input type="time" name="scheduler_overdue_check_time"
                                        value="{{ old('scheduler_overdue_check_time', $settings['scheduler_overdue_check_time']) }}"
-                                       required
                                        class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_overdue_check_time') border-red-500 @enderror">
                                 @error('scheduler_overdue_check_time')
                                     <p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>

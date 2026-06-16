@@ -8,6 +8,7 @@ use App\Models\Instrument;
 use App\Models\Package;
 use App\Models\Room;
 use App\Models\ScheduleReminderLog;
+use App\Models\Setting;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\WhatsappMessageTemplate;
@@ -31,10 +32,12 @@ class ScheduleReminderTest extends TestCase
             'sort_order' => 2,
         ]);
 
+        Setting::set('schedule_reminder_enabled', 'true');
+        Setting::set('schedule_reminder_mode', 'day_before');
+        Setting::set('schedule_reminder_send_time', '18:00');
+        Setting::set('schedule_reminder_hours_before', '2');
+
         config([
-            'schedule_reminder.enabled'    => true,
-            'schedule_reminder.mode'       => 'day_before',
-            'schedule_reminder.send_time'  => '18:00',
             'services.fonnte.token'        => 'test-fonnte-token',
             'services.fonnte.base_url'     => 'https://api.fonnte.com',
             'services.fonnte.country_code' => '62',
@@ -198,7 +201,8 @@ class ScheduleReminderTest extends TestCase
     {
         $this->fakeFonnte();
 
-        config(['schedule_reminder.mode' => 'hours_before', 'schedule_reminder.hours_before' => 2]);
+        Setting::set('schedule_reminder_mode', 'hours_before');
+        Setting::set('schedule_reminder_hours_before', '2');
 
         $today = now()->toDateString();
         $this->studentWithScheduledSession($today);
@@ -220,7 +224,8 @@ class ScheduleReminderTest extends TestCase
     {
         Http::fake();
 
-        config(['schedule_reminder.mode' => 'hours_before', 'schedule_reminder.hours_before' => 2]);
+        Setting::set('schedule_reminder_mode', 'hours_before');
+        Setting::set('schedule_reminder_hours_before', '2');
 
         $today = now()->toDateString();
         $this->studentWithScheduledSession($today);

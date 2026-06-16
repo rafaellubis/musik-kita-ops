@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ClassSession;
+use App\Services\SchedulerSettings;
 use App\Models\Enrollment;
 use App\Models\ScheduleReminderLog;
 use App\Models\Student;
@@ -23,13 +24,13 @@ class ScheduleReminderService
     /** Apakah fitur aktif dan siap dijalankan? */
     public function isEnabled(): bool
     {
-        return (bool) config('schedule_reminder.enabled');
+        return SchedulerSettings::reminderEnabled();
     }
 
-    /** Mode pengingat dari config. */
+    /** Mode pengingat dari settings database. */
     public function mode(): string
     {
-        return (string) config('schedule_reminder.mode', ScheduleReminderLog::MODE_DAY_BEFORE);
+        return SchedulerSettings::reminderMode();
     }
 
     /**
@@ -46,7 +47,7 @@ class ScheduleReminderService
             return true;
         }
 
-        $sendTime = (string) config('schedule_reminder.send_time', '18:00');
+        $sendTime = SchedulerSettings::reminderSendTime();
         [$hour, $minute] = array_pad(explode(':', $sendTime), 2, '0');
 
         return $now->hour === (int) $hour && $now->minute === (int) $minute;
@@ -214,7 +215,7 @@ class ScheduleReminderService
      */
     private function groupHoursBeforeSessions(Carbon $now): Collection
     {
-        $hoursBefore = (int) config('schedule_reminder.hours_before', 2);
+        $hoursBefore = SchedulerSettings::reminderHoursBefore();
         $window = (int) config('schedule_reminder.hours_before_window_minutes', 7);
         $targetMinutes = $hoursBefore * 60;
 
