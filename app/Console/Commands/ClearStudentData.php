@@ -2,7 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Services\ProtectedDatabaseGuard;
 use Illuminate\Console\Command;
+use Illuminate\Console\Prohibitable;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -14,6 +16,8 @@ use Illuminate\Support\Facades\DB;
  */
 class ClearStudentData extends Command
 {
+    use Prohibitable;
+
     protected $signature   = 'db:clear-students';
     protected $description = 'Hapus semua data murid (students, enrollments, invoices, dll) — master data tetap aman';
 
@@ -39,6 +43,12 @@ class ClearStudentData extends Command
 
     public function handle(): int
     {
+        if ($this->isProhibited(true)) {
+            $this->components->warn(ProtectedDatabaseGuard::blockedMessage());
+
+            return self::FAILURE;
+        }
+
         $this->newLine();
         $this->line('  <fg=yellow;options=bold>⚠  HAPUS DATA MURID</>');
         $this->newLine();

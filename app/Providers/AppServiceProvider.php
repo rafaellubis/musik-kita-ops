@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Notifications\MuridOverdueNotification;
+use App\Services\ProtectedDatabaseGuard;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,6 +22,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Blokir migrate:fresh / db:wipe / db:clear-students pada database operasional.
+        if ($this->app->runningInConsole()) {
+            ProtectedDatabaseGuard::apply();
+        }
+
         // [SECURITY] Force HTTPS di production — mencegah credential sniffing via HTTP.
         if ($this->app->environment('production')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');

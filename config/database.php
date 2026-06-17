@@ -170,4 +170,25 @@ return [
 
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Database Operasional — Guard Perintah Destructive
+    |--------------------------------------------------------------------------
+    |
+    | Saat DB_DATABASE cocok daftar protected, perintah berikut diblokir:
+    | migrate:fresh, migrate:refresh, migrate:reset, migrate:rollback,
+    | db:wipe, db:clear-students.
+    |
+    | Testing PHPUnit (SQLite :memory:) tidak terpengaruh.
+    | Override darurat: DB_GUARD_DESTRUCTIVE=false di .env
+    |
+    */
+
+    'guard_destructive_commands' => env('DB_GUARD_DESTRUCTIVE', true),
+
+    'protected_databases' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', env('DB_PROTECTED_DATABASES', 'mk_operasional'))
+    ))),
+
 ];
