@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Setting;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -59,24 +58,14 @@ class SchedulerSettings
         return filter_var(self::get('scheduler_honor_calculate_enabled', 'true'), FILTER_VALIDATE_BOOLEAN);
     }
 
+    public static function honorCalculateDay(): int
+    {
+        return (int) self::get('scheduler_honor_calculate_day', 28);
+    }
+
     public static function honorCalculateTime(): string
     {
         return (string) self::get('scheduler_honor_calculate_time', '06:00');
-    }
-
-    public static function honorDaysBeforeEom(): int
-    {
-        return (int) self::get('scheduler_honor_calculate_days_before_eom', 2);
-    }
-
-    public static function honorTargetDay(Carbon $date): int
-    {
-        return $date->copy()->endOfMonth()->subDays(self::honorDaysBeforeEom())->day;
-    }
-
-    public static function isHonorRunDay(Carbon $now): bool
-    {
-        return $now->day === self::honorTargetDay($now);
     }
 
     public static function finesApplyEnabled(): bool
@@ -87,6 +76,16 @@ class SchedulerSettings
     public static function finesApplyTime(): string
     {
         return (string) self::get('scheduler_fines_apply_time', '06:00');
+    }
+
+    public static function finesStartDay(): int
+    {
+        return (int) self::get('scheduler_fines_start_day', 11);
+    }
+
+    public static function sppDueDay(): int
+    {
+        return (int) self::get('spp_due_day', 10);
     }
 
     public static function overdueCheckEnabled(): bool
@@ -122,5 +121,63 @@ class SchedulerSettings
     public static function reminderHoursBefore(): int
     {
         return (int) self::get('schedule_reminder_hours_before', 2);
+    }
+
+    public static function reminderPollMinutes(): int
+    {
+        $minutes = (int) self::get('schedule_reminder_poll_minutes', 15);
+
+        return max(5, min(60, $minutes));
+    }
+
+    public static function invoiceReminderEnabled(): bool
+    {
+        return filter_var(self::get('scheduler_invoice_reminder_enabled', 'false'), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    public static function invoiceReminderDaysBeforeDue(): int
+    {
+        return (int) self::get('scheduler_invoice_reminder_days_before_due', 3);
+    }
+
+    public static function invoiceReminderTime(): string
+    {
+        return (string) self::get('scheduler_invoice_reminder_time', '10:00');
+    }
+
+    public static function invoiceReminderTemplateId(): ?int
+    {
+        $value = self::get('scheduler_invoice_reminder_template_id', '');
+
+        if ($value === '' || $value === null) {
+            return null;
+        }
+
+        return (int) $value;
+    }
+
+    public static function cutiReturnEnabled(): bool
+    {
+        return filter_var(self::get('scheduler_cuti_return_enabled', 'true'), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    public static function cutiReturnTime(): string
+    {
+        return (string) self::get('scheduler_cuti_return_time', '23:59');
+    }
+
+    public static function staffPayrollEnabled(): bool
+    {
+        return filter_var(self::get('scheduler_staff_payroll_enabled', 'true'), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    public static function staffPayrollDay(): int
+    {
+        return (int) self::get('scheduler_staff_payroll_day', 28);
+    }
+
+    public static function staffPayrollTime(): string
+    {
+        return (string) self::get('scheduler_staff_payroll_time', '07:00');
     }
 }
