@@ -338,6 +338,201 @@ class InvoiceReminderService
         return $summary;
     }
 
+    /**
+     * Kirim reminder terjadwal H-N sebelum tempo (teks saja, tanpa PDF).
+     * Dipanggil cron invoice-reminders:send-scheduled pada jam yang dikonfigurasi.
+     *
+     * @return array{
+     *   skipped_time: bool,
+     *   skipped_disabled: bool,
+     *   eligible: int,
+     *   sent: int,
+     *   failed: int,
+     *   skipped: int,
+     *   skipped_already_reminded: int,
+     *   dry_run: bool,
+     *   errors: array<string, string>,
+     *   log_ids: array<int>,
+     * }
+     */
+    public function sendScheduledReminders(Carbon $now, bool $dryRun = false): array
+    {
+        $summary = [
+            'skipped_time'             => false,
+            'skipped_disabled'         => false,
+            'eligible'                 => 0,
+            'sent'                     => 0,
+            'failed'                   => 0,
+            'skipped'                  => 0,
+            'skipped_already_reminded' => 0,
+            'dry_run'                  => $dryRun,
+            'errors'                   => [],
+            'log_ids'                  => [],
+        ];
+
+        if (! SchedulerSettings::invoiceReminderEnabled()) {
+            $summary['skipped_disabled'] = true;
+
+            return $summary;
+        }
+
+        if ($now->format('H:i') !== SchedulerSettings::invoiceReminderTime()) {
+            $summary['skipped_time'] = true;
+
+            return $summary;
+        }
+
+        if (! $this->wablas->isConfigured()) {
+            throw new \InvalidArgumentException('Kredensial Wablas belum dikonfigurasi.');
+        }
+
+        $sender = User::role('Owner')->orderBy('id')->first();
+        if (! $sender) {
+            throw new \InvalidArgumentException('Tidak ada user Owner untuk mencatat pengiriman reminder.');
+        }
+
+        $templateId = SchedulerSettings::invoiceReminderTemplateId();
+        $template = $templateId
+            ? WhatsappMessageTemplate::query()->where('id', $templateId)->where('is_active', true)->first()
+            : WhatsappMessageTemplate::defaultInvoiceReminder();
+
+        if (! $template) {
+            throw new \InvalidArgumentException('Template reminder aktif tidak ditemukan.');
+        }
+
+        $daysBefore = SchedulerSettings::invoiceReminderDaysBeforeDue();
+        $targetDueDate = $now->copy()->startOfDay()->addDays($daysBefore)->toDateString();
+        $monthStart = $now->copy()->startOfMonth();
+
+        $invoices = Invoice::query()
+            ->unpaid()
+            ->whereDate('due_date', $targetDueDate)
+            ->with(['student', 'enrollment.package.instrument'])
+            ->get();
+
+        foreach ($invoices->groupBy('student_id') as $studentId => $studentInvoices) {
+            $student = $studentInvoices->first()->student;
+
+            $alreadyReminded = InvoiceReminderLog::query()
+                ->where('student_id', $studentId)
+                ->where('sent_at', '>=', $monthStart)
+                ->exists();
+
+            if ($alreadyReminded) {
+                $summary['skipped_already_reminded']++;
+                continue;
+            }
+
+            if (! $this->wablas->isValidPhone($student->parent_phone)) {
+                $summary['skipped']++;
+                continue;
+            }
+
+            $summary['eligible']++;
+
+            if ($dryRun) {
+                $summary['sent']++;
+                continue;
+            }
+
+            try {
+                $log = $this->sendTextOnlyReminder(
+                    $student,
+                    $studentInvoices->values(),
+                    $sender,
+                    $template,
+                );
+            } catch (\Throwable $e) {
+                $summary['failed']++;
+                $summary['errors'][$student->student_code] = $e->getMessage();
+                continue;
+            }
+
+            $summary['log_ids'][] = $log->id;
+
+            if ($log->status === InvoiceReminderLog::STATUS_SUCCESS) {
+                $summary['sent']++;
+            } else {
+                $summary['failed']++;
+                if ($log->error_message) {
+                    $summary['errors'][$student->student_code] = $this->humanizeWablasError($log->error_message);
+                }
+            }
+
+            if ($log->status === InvoiceReminderLog::STATUS_FAILED
+                && str_contains(strtolower($log->error_message ?? ''), 'token wablas')) {
+                break;
+            }
+        }
+
+        return $summary;
+    }
+
+    /**
+     * Kirim reminder teks saja (tanpa lampiran PDF) — untuk scheduler otomatis.
+     *
+     * @param  Collection<int, Invoice>  $invoices
+     */
+    public function sendTextOnlyReminder(
+        Student $student,
+        Collection $invoices,
+        User $sender,
+        ?WhatsappMessageTemplate $template = null,
+    ): InvoiceReminderLog {
+        $template ??= WhatsappMessageTemplate::defaultInvoiceReminder();
+
+        if (! $template) {
+            throw new \InvalidArgumentException('Template reminder aktif tidak ditemukan.');
+        }
+
+        $phone = $this->wablas->normalizePhone($student->parent_phone);
+        if (! $phone) {
+            throw new \InvalidArgumentException("Murid {$student->full_name} tidak punya nomor HP ortu yang valid.");
+        }
+
+        $message = $this->composeMessage($student, $invoices, $template);
+        $textResult = $this->wablas->sendText($phone, $message);
+        $wablasIds = [];
+
+        if ($textResult['message_id']) {
+            $wablasIds[] = $textResult['message_id'];
+        }
+
+        if (! $textResult['ok']) {
+            $err = ($textResult['auth_invalid'] ?? false)
+                ? 'Token Wablas tidak valid.'
+                : ($textResult['error'] ?? 'Gagal kirim pesan teks.');
+
+            return $this->persistLog(
+                student: $student,
+                sender: $sender,
+                phone: $phone,
+                message: $message,
+                invoiceIds: $invoices->pluck('id')->all(),
+                pdfNames: [],
+                wablasIds: $wablasIds,
+                documentsSent: 0,
+                documentsTotal: 0,
+                status: InvoiceReminderLog::STATUS_FAILED,
+                error: $err,
+            );
+        }
+
+        return $this->persistLog(
+            student: $student,
+            sender: $sender,
+            phone: $phone,
+            message: $message,
+            invoiceIds: $invoices->pluck('id')->all(),
+            pdfNames: [],
+            wablasIds: $wablasIds,
+            documentsSent: 0,
+            documentsTotal: 0,
+            status: InvoiceReminderLog::STATUS_SUCCESS,
+            error: null,
+        );
+    }
+
     /** Terjemahkan pesan error Wablas ke Bahasa Indonesia yang mudah dipahami Admin. */
     private function humanizeWablasError(string $raw): string
     {
