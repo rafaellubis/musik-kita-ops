@@ -38,6 +38,7 @@ return [
     /*
     | Wablas — WhatsApp gateway (reminder tagihan ke ortu).
     | Authorization header: {token}.{secret_key}
+    | Fallback jika DB kosong; prioritas: IntegrationSettings (UI /scheduler).
     */
     'wablas' => [
         'token'      => env('WABLAS_TOKEN'),
@@ -48,6 +49,7 @@ return [
     /*
     | Fonnte — WhatsApp gateway (pengingat jadwal ke ortu).
     | Authorization header: {token} (tanpa Bearer).
+    | Fallback jika DB kosong; prioritas: IntegrationSettings (UI /scheduler).
     */
     'fonnte' => [
         'token'        => env('FONNTE_TOKEN'),

@@ -17,10 +17,8 @@ class WablasService
 
     public function isConfigured(): bool
     {
-        $token = config('services.wablas.token');
-        $secret = config('services.wablas.secret_key');
-
-        return filled($token) && filled($secret);
+        return filled(IntegrationSettings::wablasToken())
+            && filled(IntegrationSettings::wablasSecretKey());
     }
 
     /**
@@ -122,8 +120,8 @@ class WablasService
         }
         $payload['phone'] = $normalized;
 
-        $url = rtrim(config('services.wablas.base_url'), '/') . $path;
-        $auth = config('services.wablas.token') . '.' . config('services.wablas.secret_key');
+        $url = rtrim(IntegrationSettings::wablasBaseUrl(), '/') . $path;
+        $auth = IntegrationSettings::wablasToken() . '.' . IntegrationSettings::wablasSecretKey();
 
         try {
             $response = Http::timeout(30)

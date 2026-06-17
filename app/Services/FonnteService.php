@@ -17,7 +17,7 @@ class FonnteService
 
     public function isConfigured(): bool
     {
-        return filled(config('services.fonnte.token'));
+        return filled(IntegrationSettings::fonnteToken());
     }
 
     /**
@@ -83,7 +83,7 @@ class FonnteService
         return $this->post([
             'target'      => $target,
             'message'     => $message,
-            'countryCode' => (string) config('services.fonnte.country_code', '62'),
+            'countryCode' => (string) config('services.fonnte.country_code', '62'), // country code tetap dari .env
         ]);
     }
 
@@ -97,8 +97,8 @@ class FonnteService
             return $this->fail('Kredensial Fonnte belum dikonfigurasi.', 0, [], false);
         }
 
-        $url = rtrim(config('services.fonnte.base_url'), '/') . '/send';
-        $token = config('services.fonnte.token');
+        $url = rtrim(IntegrationSettings::fonnteBaseUrl(), '/') . '/send';
+        $token = IntegrationSettings::fonnteToken();
 
         try {
             $response = Http::timeout(30)
