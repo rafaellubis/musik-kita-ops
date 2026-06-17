@@ -87,7 +87,7 @@ class ScheduleReminderService
 
         if (! $this->isEnabled()) {
             $summary['skipped'] = true;
-            $summary['reason'] = 'Pengingat jadwal nonaktif (SCHEDULE_REMINDER_ENABLED=false).';
+            $summary['reason'] = 'Pengingat jadwal nonaktif. Aktifkan di Pengaturan Scheduler.';
 
             return $summary;
         }
@@ -382,7 +382,7 @@ class ScheduleReminderService
         $key = strtolower(trim($raw));
 
         return match (true) {
-            str_contains($key, 'token') && str_contains($key, 'invalid') => 'Token Fonnte tidak valid. Periksa FONNTE_TOKEN di .env.',
+            str_contains($key, 'token') && str_contains($key, 'invalid') => 'Token Fonnte tidak valid. Periksa kredensial di Pengaturan Scheduler.',
             str_contains($key, 'insufficient quota') => 'Kuota pesan Fonnte habis.',
             str_contains($key, 'target invalid') => 'Nomor WhatsApp tujuan tidak valid.',
             str_contains($key, 'device') => 'Device Fonnte belum terhubung. Scan QR di dashboard Fonnte.',

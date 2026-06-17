@@ -22,15 +22,28 @@ class SchedulerPreviewServiceTest extends TestCase
         $this->assertSame('Nonaktif', $spp['status_label']);
     }
 
-    public function test_preview_honor_shows_eom_offset_label(): void
+    public function test_preview_honor_shows_fixed_day_label(): void
     {
-        Setting::set('scheduler_honor_calculate_days_before_eom', '3');
+        Setting::set('scheduler_honor_calculate_day', '28');
         Setting::set('scheduler_honor_calculate_enabled', 'true');
         Setting::set('scheduler_honor_calculate_time', '08:00');
 
         $preview = (new SchedulerPreviewService())->build();
         $honor = collect($preview)->firstWhere('key', 'honor');
 
-        $this->assertStringContainsString('3 hari sebelum akhir bulan', $honor['frequency_label']);
+        $this->assertStringContainsString('tanggal 28', $honor['frequency_label']);
+    }
+
+    public function test_preview_reminder_shows_poll_minutes_label(): void
+    {
+        Setting::set('schedule_reminder_enabled', 'true');
+        Setting::set('schedule_reminder_mode', 'hours_before');
+        Setting::set('schedule_reminder_poll_minutes', '30');
+        Setting::set('schedule_reminder_hours_before', '2');
+
+        $preview = (new SchedulerPreviewService())->build();
+        $reminder = collect($preview)->firstWhere('key', 'reminder');
+
+        $this->assertStringContainsString('30 menit', $reminder['frequency_label']);
     }
 }

@@ -45,11 +45,10 @@ if (SchedulerSettings::invoicesGenerateEnabled()) {
 }
 
 // ===== M06: Kalkulasi honor guru =====
-// Offset H-N sebelum akhir bulan (default N=2 = H-2). when() untuk tanggal H-N saja.
+// Tanggal tetap setiap bulan (default tgl 28).
 if (SchedulerSettings::honorCalculateEnabled()) {
     Schedule::command('honor:calculate')
-        ->dailyAt(SchedulerSettings::honorCalculateTime())
-        ->when(fn () => SchedulerSettings::isHonorRunDay(now()))
+        ->monthlyOn(SchedulerSettings::honorCalculateDay(), SchedulerSettings::honorCalculateTime())
         ->name('m06-calculate-teacher-honor')
         ->withoutOverlapping();
 }
@@ -58,7 +57,7 @@ if (SchedulerSettings::honorCalculateEnabled()) {
 if (SchedulerSettings::finesApplyEnabled()) {
     Schedule::command('invoices:apply-fines')
         ->dailyAt(SchedulerSettings::finesApplyTime())
-        ->when(fn () => now()->day >= 11)
+        ->when(fn () => now()->day >= SchedulerSettings::finesStartDay())
         ->name('m05-apply-late-fines')
         ->withoutOverlapping();
 }
@@ -74,8 +73,9 @@ if (SchedulerSettings::overdueCheckEnabled()) {
 // ===== M03: Pengingat jadwal kelas via Fonnte =====
 if (SchedulerSettings::reminderEnabled()) {
     if (SchedulerSettings::reminderMode() === 'hours_before') {
+        $pollMinutes = SchedulerSettings::reminderPollMinutes();
         Schedule::command('schedule-reminders:send')
-            ->everyFifteenMinutes()
+            ->cron("*/{$pollMinutes} * * * *")
             ->name('m03-schedule-reminders-hours-before')
             ->withoutOverlapping();
     } else {
@@ -84,4 +84,28 @@ if (SchedulerSettings::reminderEnabled()) {
             ->name('m03-schedule-reminders-daily')
             ->withoutOverlapping();
     }
+}
+
+// ===== M02: Cuti → Aktif otomatis =====
+if (SchedulerSettings::cutiReturnEnabled()) {
+    Schedule::command('students:return-from-leave')
+        ->dailyAt(SchedulerSettings::cutiReturnTime())
+        ->name('m02-return-students-from-leave')
+        ->withoutOverlapping();
+}
+
+// ===== M05: Reminder tagihan WA terjadwal (H-N sebelum tempo, teks saja) =====
+if (SchedulerSettings::invoiceReminderEnabled()) {
+    Schedule::command('invoice-reminders:send-scheduled')
+        ->dailyAt(SchedulerSettings::invoiceReminderTime())
+        ->name('m05-invoice-reminder-scheduled')
+        ->withoutOverlapping();
+}
+
+// ===== M12: Generate slip gaji staff bulanan =====
+if (SchedulerSettings::staffPayrollEnabled()) {
+    Schedule::command('staff-payroll:generate-slips')
+        ->monthlyOn(SchedulerSettings::staffPayrollDay(), SchedulerSettings::staffPayrollTime())
+        ->name('m12-generate-staff-payroll-slips')
+        ->withoutOverlapping();
 }
