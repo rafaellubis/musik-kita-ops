@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AuditLog;
 use App\Models\Enrollment;
 use App\Models\Invoice;
+use App\Models\InvoiceComponent;
 use App\Models\InvoiceItem;
 use App\Models\Student;
 use App\Models\User;
@@ -30,9 +31,27 @@ class InvoiceService
     public const FEE_KIDS_FP   = 140000;
     public const FEE_UJI       = 395000;
     public const FEE_MC        = 295000;
-    public const FINE_PER_DAY  = 5000;
-    public const FINE_START_DAY = 11; // mulai tanggal 11 (BR-5.3)
-    public const DUE_DAY       = 10;  // jatuh tempo SPP (BR-5.2)
+    public const FINE_PER_DAY  = 5000; // fallback jika komponen DENDA tidak ada
+
+    /**
+     * Nominal denda per hari dari komponen invoice DENDA (editable Owner).
+     */
+    public function finePerDay(): int
+    {
+        $component = InvoiceComponent::where('code', 'DENDA')
+            ->where('is_active', true)
+            ->first();
+
+        return $component?->default_price ?? self::FINE_PER_DAY;
+    }
+
+    /**
+     * Tanggal jatuh tempo SPP dari setting spp_due_day.
+     */
+    public function dueDay(): int
+    {
+        return SchedulerSettings::sppDueDay();
+    }
 
     /**
      * Generate nomor invoice unik untuk bulan target.
@@ -84,7 +103,7 @@ class InvoiceService
         }
 
         $issuedAt ??= now();
-        $dueDate ??= $issuedAt->copy()->day(self::DUE_DAY)->endOfDay();
+        $dueDate ??= $issuedAt->copy()->day($this->dueDay())->endOfDay();
         // Kalau sudah lewat tanggal 10 saat issue, due date pindah ke akhir bulan.
         if ($dueDate->lt($issuedAt)) {
             $dueDate = $issuedAt->copy()->endOfMonth();
@@ -172,7 +191,7 @@ class InvoiceService
                 $amount   = [$termin1, $termin2, $termin3][$i];
 
                 $issuedAt = $startDate->copy()->addMonths($offset)->startOfMonth();
-                $dueDate  = $issuedAt->copy()->setDay(self::DUE_DAY)->endOfDay();
+                $dueDate  = $issuedAt->copy()->setDay($this->dueDay())->endOfDay();
 
                 // Jika due date sudah lewat hari ini (mis. aktivasi setelah tgl 10),
                 // geser ke akhir bulan agar murid tidak langsung berstatus overdue.
@@ -217,7 +236,7 @@ class InvoiceService
     public function generateMonthlySPP(int $year, int $month): array
     {
         $issuedAt = Carbon::create($year, $month, 1)->startOfMonth();
-        $dueDate  = $issuedAt->copy()->day(self::DUE_DAY)->endOfDay();
+        $dueDate  = $issuedAt->copy()->day($this->dueDay())->endOfDay();
 
         $report = ['created' => 0, 'skipped' => 0];
 
@@ -437,19 +456,20 @@ class InvoiceService
         $today ??= now()->startOfDay();
         $report = ['updated' => 0, 'processed' => 0];
 
-        // Hari telat: berapa hari setelah tanggal jatuh tempo (10).
-        // Pakai startOfDay both sides + integer cast supaya tidak ada float.
-        // Tanggal 11 = telat 1 hari, tanggal 15 = telat 5 hari, dst.
-        $cutoff = Carbon::create($year, $month, self::DUE_DAY)->startOfDay();
+        $dueDay = $this->dueDay();
+        $finePerDay = $this->finePerDay();
+        $fineFormatted = number_format($finePerDay, 0, ',', '.');
+
+        // Hari telat: berapa hari setelah tanggal jatuh tempo.
+        $cutoff = Carbon::create($year, $month, $dueDay)->startOfDay();
         $today = $today->copy()->startOfDay();
         $daysLate = max(0, (int) $cutoff->diffInDays($today, false));
 
         if ($daysLate <= 0) {
-            // Belum melewati tanggal jatuh tempo
             return $report;
         }
 
-        $fineAmount = $daysLate * self::FINE_PER_DAY;
+        $fineAmount = $daysLate * $finePerDay;
 
         $invoices = Invoice::forMonth($year, $month)
             ->unpaid()
@@ -460,25 +480,26 @@ class InvoiceService
         foreach ($invoices as $invoice) {
             $report['processed']++;
 
-            DB::transaction(function () use ($invoice, $fineAmount, $daysLate) {
+            DB::transaction(function () use ($invoice, $fineAmount, $daysLate, $finePerDay, $fineFormatted) {
                 $existingFine = $invoice->items()->where('item_code', 'DENDA')->first();
+                $description = "Denda keterlambatan ({$daysLate} hari × Rp {$fineFormatted})";
 
                 if ($existingFine) {
                     if ($existingFine->amount === $fineAmount) {
-                        return; // sudah pas, tidak perlu update
+                        return;
                     }
                     $existingFine->update([
                         'amount'      => $fineAmount,
-                        'description' => "Denda keterlambatan ({$daysLate} hari × Rp 5.000)",
-                        'metadata'    => ['days_late' => $daysLate],
+                        'description' => $description,
+                        'metadata'    => ['days_late' => $daysLate, 'fine_per_day' => $finePerDay],
                     ]);
                 } else {
                     InvoiceItem::create([
                         'invoice_id'  => $invoice->id,
                         'item_code'   => 'DENDA',
-                        'description' => "Denda keterlambatan ({$daysLate} hari × Rp 5.000)",
+                        'description' => $description,
                         'amount'      => $fineAmount,
-                        'metadata'    => ['days_late' => $daysLate],
+                        'metadata'    => ['days_late' => $daysLate, 'fine_per_day' => $finePerDay],
                     ]);
                 }
 
