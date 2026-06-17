@@ -210,7 +210,7 @@ class SchedulerSettingsTest extends TestCase
 
         $log = AuditLog::query()->latest('id')->first();
         $this->assertNotNull($log);
-        $this->assertSame('••••••••oken', $log->new_values['integration_fonnte_token'] ?? null);
+        $this->assertSame('********oken', $log->new_values['integration_fonnte_token'] ?? null);
     }
 
     public function test_kosongkan_field_kredensial_tidak_overwrite(): void
