@@ -566,6 +566,7 @@ class StudentLifecycleService
 
         return DB::transaction(function () use ($student, $data) {
             $from = $student->status;
+            $isAuto = (bool) ($data['auto'] ?? false);
 
             $student->update([
                 'status'     => 'Aktif',
@@ -573,11 +574,19 @@ class StudentLifecycleService
                 'cuti_until' => null,
             ]);
 
+            // Kembalikan enrollment ON_LEAVE ke ACTIVE (BR-CUTI.5)
+            $student->enrollments()
+                ->where('status', Enrollment::STATUS_ON_LEAVE)
+                ->update(['status' => Enrollment::STATUS_ACTIVE]);
+
             $this->recordHistory(
-                student: $student,
-                from:    $from,
-                to:      'Aktif',
-                reason:  $data['notes'] ?? 'Cuti berakhir, murid kembali aktif',
+                student:  $student,
+                from:     $from,
+                to:       'Aktif',
+                reason:   $data['notes'] ?? ($isAuto
+                    ? 'Cuti berakhir otomatis (scheduler)'
+                    : 'Cuti berakhir, murid kembali aktif'),
+                metadata: ['auto' => $isAuto],
             );
 
             return $student->fresh();
