@@ -45,66 +45,23 @@
             </p>
         </div>
 
-        <form action="{{ route('scheduler.update') }}" method="POST" class="space-y-6" x-data="{
-            sessionsGenerateEnabled: {{ $settings['scheduler_sessions_generate_enabled'] ? 'true' : 'false' }},
-            invoicesGenerateEnabled: {{ $settings['scheduler_invoices_generate_enabled'] ? 'true' : 'false' }},
-            honorCalculateEnabled: {{ $settings['scheduler_honor_calculate_enabled'] ? 'true' : 'false' }},
-            finesApplyEnabled: {{ $settings['scheduler_fines_apply_enabled'] ? 'true' : 'false' }},
-            overdueCheckEnabled: {{ $settings['scheduler_overdue_check_enabled'] ? 'true' : 'false' }},
-            invoiceReminderEnabled: {{ $settings['scheduler_invoice_reminder_enabled'] ? 'true' : 'false' }},
-            cutiReturnEnabled: {{ $settings['scheduler_cuti_return_enabled'] ? 'true' : 'false' }},
-            staffPayrollEnabled: {{ $settings['scheduler_staff_payroll_enabled'] ? 'true' : 'false' }},
-            reminderEnabled: {{ $settings['schedule_reminder_enabled'] ? 'true' : 'false' }},
-            reminderMode: '{{ $settings['schedule_reminder_mode'] }}',
-            fonnteTokenMasked: @js($settings['integration_fonnte_token_masked']),
-            wablasTokenMasked: @js($settings['integration_wablas_token_masked']),
-            wablasSecretMasked: @js($settings['integration_wablas_secret_masked']),
-            showFonnteToken: false,
-            showWablasToken: false,
-            showWablasSecret: false,
-            toggleSecret(field) {
-                if (field === 'fonnte') {
-                    this.showFonnteToken = !this.showFonnteToken;
-                    const el = this.$refs.fonnteTokenInput;
-                    if (this.showFonnteToken && this.fonnteTokenMasked) {
-                        el.value = this.fonnteTokenMasked;
-                    } else if (!this.showFonnteToken && el.value === this.fonnteTokenMasked) {
-                        el.value = '';
-                    }
-                } else if (field === 'wablasToken') {
-                    this.showWablasToken = !this.showWablasToken;
-                    const el = this.$refs.wablasTokenInput;
-                    if (this.showWablasToken && this.wablasTokenMasked) {
-                        el.value = this.wablasTokenMasked;
-                    } else if (!this.showWablasToken && el.value === this.wablasTokenMasked) {
-                        el.value = '';
-                    }
-                } else if (field === 'wablasSecret') {
-                    this.showWablasSecret = !this.showWablasSecret;
-                    const el = this.$refs.wablasSecretInput;
-                    if (this.showWablasSecret && this.wablasSecretMasked) {
-                        el.value = this.wablasSecretMasked;
-                    } else if (!this.showWablasSecret && el.value === this.wablasSecretMasked) {
-                        el.value = '';
-                    }
-                }
-            },
-            clearMaskedSecretsBeforeSubmit(event) {
-                const pairs = [
-                    ['integration_fonnte_token', this.fonnteTokenMasked],
-                    ['integration_wablas_token', this.wablasTokenMasked],
-                    ['integration_wablas_secret_key', this.wablasSecretMasked],
-                ];
-                pairs.forEach(([name, masked]) => {
-                    const el = event.target.querySelector('[name=\"' + name + '\"]');
-                    if (!el) return;
-                    const val = el.value.trim();
-                    if (val === '' || val === masked || val.startsWith('********') || val.startsWith('••••')) {
-                        el.disabled = true;
-                    }
-                });
-            }
-        }" @submit="clearMaskedSecretsBeforeSubmit($event)">
+        <form action="{{ route('scheduler.update') }}" method="POST" class="space-y-6"
+              x-data="schedulerSettingsForm(@js([
+                  'sessionsGenerateEnabled' => (bool) $settings['scheduler_sessions_generate_enabled'],
+                  'invoicesGenerateEnabled' => (bool) $settings['scheduler_invoices_generate_enabled'],
+                  'honorCalculateEnabled' => (bool) $settings['scheduler_honor_calculate_enabled'],
+                  'finesApplyEnabled' => (bool) $settings['scheduler_fines_apply_enabled'],
+                  'overdueCheckEnabled' => (bool) $settings['scheduler_overdue_check_enabled'],
+                  'invoiceReminderEnabled' => (bool) $settings['scheduler_invoice_reminder_enabled'],
+                  'cutiReturnEnabled' => (bool) $settings['scheduler_cuti_return_enabled'],
+                  'staffPayrollEnabled' => (bool) $settings['scheduler_staff_payroll_enabled'],
+                  'reminderEnabled' => (bool) $settings['schedule_reminder_enabled'],
+                  'reminderMode' => $settings['schedule_reminder_mode'],
+                  'fonnteTokenMasked' => $settings['integration_fonnte_token_masked'],
+                  'wablasTokenMasked' => $settings['integration_wablas_token_masked'],
+                  'wablasSecretMasked' => $settings['integration_wablas_secret_masked'],
+              ]))"
+              @submit="clearMaskedSecretsBeforeSubmit($event)">
             @csrf
             @method('PATCH')
 
@@ -143,7 +100,7 @@
                             </div>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4" :class="!invoicesGenerateEnabled && 'opacity-50'" x-show="invoicesGenerateEnabled" x-collapse>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4" :class="!invoicesGenerateEnabled && 'opacity-50'" x-show="invoicesGenerateEnabled">
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Tanggal Eksekusi</label>
                             <input type="number" name="scheduler_invoices_generate_day"
@@ -190,7 +147,7 @@
                             </div>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 gap-4" :class="!finesApplyEnabled && 'opacity-50'" x-show="finesApplyEnabled" x-collapse>
+                    <div class="grid grid-cols-2 gap-4" :class="!finesApplyEnabled && 'opacity-50'" x-show="finesApplyEnabled">
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Tanggal Mulai Denda</label>
                             <input type="number" name="scheduler_fines_start_day"
@@ -226,7 +183,7 @@
                             </div>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" :class="!invoiceReminderEnabled && 'opacity-50'" x-show="invoiceReminderEnabled" x-collapse>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" :class="!invoiceReminderEnabled && 'opacity-50'" x-show="invoiceReminderEnabled">
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Kirim H-N (hari sebelum tempo)</label>
                             <input type="number" name="scheduler_invoice_reminder_days_before_due"
@@ -276,7 +233,7 @@
                             </div>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 gap-4" :class="!overdueCheckEnabled && 'opacity-50'" x-show="overdueCheckEnabled" x-collapse>
+                    <div class="grid grid-cols-2 gap-4" :class="!overdueCheckEnabled && 'opacity-50'" x-show="overdueCheckEnabled">
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Tanggal Eksekusi</label>
                             <input type="number" name="scheduler_overdue_check_day"
@@ -320,7 +277,7 @@
                             </div>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 gap-4" :class="!sessionsGenerateEnabled && 'opacity-50'" x-show="sessionsGenerateEnabled" x-collapse>
+                    <div class="grid grid-cols-2 gap-4" :class="!sessionsGenerateEnabled && 'opacity-50'" x-show="sessionsGenerateEnabled">
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Tanggal Eksekusi</label>
                             <input type="number" name="scheduler_sessions_generate_day"
@@ -356,7 +313,7 @@
                             </div>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 gap-4" :class="!honorCalculateEnabled && 'opacity-50'" x-show="honorCalculateEnabled" x-collapse>
+                    <div class="grid grid-cols-2 gap-4" :class="!honorCalculateEnabled && 'opacity-50'" x-show="honorCalculateEnabled">
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Tanggal Eksekusi</label>
                             <input type="number" name="scheduler_honor_calculate_day"
@@ -392,7 +349,7 @@
                             </div>
                         </label>
                     </div>
-                    <div class="max-w-xs" :class="!cutiReturnEnabled && 'opacity-50'" x-show="cutiReturnEnabled" x-collapse>
+                    <div class="max-w-xs" :class="!cutiReturnEnabled && 'opacity-50'" x-show="cutiReturnEnabled">
                         <label class="block text-[11px] font-semibold text-mk-muted mb-1">Jam Eksekusi Harian</label>
                         <input type="time" name="scheduler_cuti_return_time"
                                value="{{ old('scheduler_cuti_return_time', $settings['scheduler_cuti_return_time']) }}"
@@ -418,7 +375,7 @@
                             </div>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 gap-4" :class="!staffPayrollEnabled && 'opacity-50'" x-show="staffPayrollEnabled" x-collapse>
+                    <div class="grid grid-cols-2 gap-4" :class="!staffPayrollEnabled && 'opacity-50'" x-show="staffPayrollEnabled">
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Tanggal Eksekusi</label>
                             <input type="number" name="scheduler_staff_payroll_day"
@@ -462,7 +419,7 @@
                         </label>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" :class="!reminderEnabled && 'opacity-50'" x-show="reminderEnabled" x-collapse>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" :class="!reminderEnabled && 'opacity-50'" x-show="reminderEnabled">
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Mode Pengiriman</label>
                             <select name="schedule_reminder_mode" x-model="reminderMode"
@@ -516,24 +473,26 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Token Device</label>
-                            @if($settings['integration_fonnte_token_configured'])
-                                <p class="text-[10px] mb-1.5">
-                                    <span class="text-mk-muted">Nilai aktif:</span>
-                                    <code class="font-mono text-mk-text tracking-wide">{{ $settings['integration_fonnte_token_masked'] }}</code>
-                                    @if($settings['integration_fonnte_token_from_env'])
-                                        <span class="text-mk-dim"> · dari .env</span>
-                                    @endif
-                                </p>
-                            @else
-                                <p class="text-[10px] text-mk-dim mb-1.5">Belum dikonfigurasi — isi token di bawah.</p>
-                            @endif
+                            <div class="mb-1.5">
+                                @if($settings['integration_fonnte_token_configured'])
+                                    <p class="text-[10px] leading-snug">
+                                        <span class="text-mk-muted">Nilai aktif:</span>
+                                        <code class="font-mono text-mk-text tracking-wide">{{ $settings['integration_fonnte_token_masked'] }}</code>
+                                        @if($settings['integration_fonnte_token_from_env'])
+                                            <span class="text-mk-dim"> · dari .env</span>
+                                        @endif
+                                    </p>
+                                @else
+                                    <p class="text-[10px] text-mk-dim leading-snug">Belum dikonfigurasi — isi token di bawah.</p>
+                                @endif
+                            </div>
                             <div class="relative">
                                 <input x-ref="fonnteTokenInput"
                                        :type="showFonnteToken ? 'text' : 'password'"
                                        name="integration_fonnte_token"
                                        placeholder="Token baru (kosongkan jika tidak mengubah)"
                                        autocomplete="new-password"
-                                       class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary pr-16 @error('integration_fonnte_token') border-red-500 @enderror">
+                                       class="w-full h-9 rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary pr-16 @error('integration_fonnte_token') border-red-500 @enderror">
                                 @if($settings['integration_fonnte_token_configured'])
                                 <button type="button" @click="toggleSecret('fonnte')"
                                         class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-mk-muted hover:text-mk-text px-2 py-1">
@@ -545,10 +504,24 @@
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Base URL API</label>
+                            {{-- Spacer invisible: salin markup baris status Token agar tinggi identik (desktop) --}}
+                            <div class="mb-1.5 hidden md:block" aria-hidden="true">
+                                @if($settings['integration_fonnte_token_configured'])
+                                    <p class="text-[10px] leading-snug" style="visibility:hidden">
+                                        <span>Nilai aktif:</span>
+                                        <code class="font-mono tracking-wide">{{ $settings['integration_fonnte_token_masked'] }}</code>
+                                        @if($settings['integration_fonnte_token_from_env'])
+                                            <span> · dari .env</span>
+                                        @endif
+                                    </p>
+                                @else
+                                    <p class="text-[10px] leading-snug" style="visibility:hidden">Belum dikonfigurasi — isi token di bawah.</p>
+                                @endif
+                            </div>
                             <input type="url" name="integration_fonnte_base_url"
                                    value="{{ old('integration_fonnte_base_url', $settings['integration_fonnte_base_url']) }}"
                                    placeholder="https://api.fonnte.com"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('integration_fonnte_base_url') border-red-500 @enderror">
+                                   class="w-full h-9 rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('integration_fonnte_base_url') border-red-500 @enderror">
                             @error('integration_fonnte_base_url')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
                         </div>
                     </div>
@@ -636,4 +609,74 @@
             </div>
         </form>
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('schedulerSettingsForm', (initial) => ({
+                sessionsGenerateEnabled: initial.sessionsGenerateEnabled,
+                invoicesGenerateEnabled: initial.invoicesGenerateEnabled,
+                honorCalculateEnabled: initial.honorCalculateEnabled,
+                finesApplyEnabled: initial.finesApplyEnabled,
+                overdueCheckEnabled: initial.overdueCheckEnabled,
+                invoiceReminderEnabled: initial.invoiceReminderEnabled,
+                cutiReturnEnabled: initial.cutiReturnEnabled,
+                staffPayrollEnabled: initial.staffPayrollEnabled,
+                reminderEnabled: initial.reminderEnabled,
+                reminderMode: initial.reminderMode,
+                fonnteTokenMasked: initial.fonnteTokenMasked ?? '',
+                wablasTokenMasked: initial.wablasTokenMasked ?? '',
+                wablasSecretMasked: initial.wablasSecretMasked ?? '',
+                showFonnteToken: false,
+                showWablasToken: false,
+                showWablasSecret: false,
+
+                toggleSecret(field) {
+                    if (field === 'fonnte') {
+                        this.showFonnteToken = !this.showFonnteToken;
+                        const el = this.$refs.fonnteTokenInput;
+                        if (this.showFonnteToken && this.fonnteTokenMasked) {
+                            el.value = this.fonnteTokenMasked;
+                        } else if (!this.showFonnteToken && el.value === this.fonnteTokenMasked) {
+                            el.value = '';
+                        }
+                    } else if (field === 'wablasToken') {
+                        this.showWablasToken = !this.showWablasToken;
+                        const el = this.$refs.wablasTokenInput;
+                        if (this.showWablasToken && this.wablasTokenMasked) {
+                            el.value = this.wablasTokenMasked;
+                        } else if (!this.showWablasToken && el.value === this.wablasTokenMasked) {
+                            el.value = '';
+                        }
+                    } else if (field === 'wablasSecret') {
+                        this.showWablasSecret = !this.showWablasSecret;
+                        const el = this.$refs.wablasSecretInput;
+                        if (this.showWablasSecret && this.wablasSecretMasked) {
+                            el.value = this.wablasSecretMasked;
+                        } else if (!this.showWablasSecret && el.value === this.wablasSecretMasked) {
+                            el.value = '';
+                        }
+                    }
+                },
+
+                clearMaskedSecretsBeforeSubmit(event) {
+                    const pairs = [
+                        ['integration_fonnte_token', this.fonnteTokenMasked],
+                        ['integration_wablas_token', this.wablasTokenMasked],
+                        ['integration_wablas_secret_key', this.wablasSecretMasked],
+                    ];
+
+                    pairs.forEach(([name, masked]) => {
+                        const el = event.target.elements.namedItem(name);
+                        if (!el) return;
+                        const val = el.value.trim();
+                        if (val === '' || val === masked || val.startsWith('********') || val.startsWith('••••')) {
+                            el.disabled = true;
+                        }
+                    });
+                },
+            }));
+        });
+    </script>
+    @endpush
 </x-app-layout>
