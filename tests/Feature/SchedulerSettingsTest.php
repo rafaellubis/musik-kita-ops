@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\AuditLog;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\WhatsappMessageTemplate;
+use App\Services\IntegrationSettings;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -51,23 +53,69 @@ class SchedulerSettingsTest extends TestCase
             'scheduler_invoices_generate_enabled'         => 'true',
             'scheduler_invoices_generate_day'             => '1',
             'scheduler_invoices_generate_time'            => '06:00',
+            'spp_due_day'                                 => '10',
             'scheduler_honor_calculate_enabled'           => 'true',
-            'scheduler_honor_calculate_days_before_eom'   => '2',
+            'scheduler_honor_calculate_day'               => '28',
             'scheduler_honor_calculate_time'              => '06:00',
             'scheduler_fines_apply_enabled'               => 'true',
             'scheduler_fines_apply_time'                  => '06:00',
+            'scheduler_fines_start_day'                   => '11',
             'scheduler_overdue_check_enabled'             => 'true',
             'scheduler_overdue_check_day'                 => '1',
             'scheduler_overdue_check_time'                => '06:05',
+            'scheduler_invoice_reminder_enabled'          => 'false',
+            'scheduler_invoice_reminder_days_before_due'  => '3',
+            'scheduler_invoice_reminder_time'             => '10:00',
+            'scheduler_invoice_reminder_template_id'      => '',
+            'scheduler_cuti_return_enabled'               => 'true',
+            'scheduler_cuti_return_time'                  => '23:59',
+            'scheduler_staff_payroll_enabled'             => 'true',
+            'scheduler_staff_payroll_day'                 => '28',
+            'scheduler_staff_payroll_time'                => '07:00',
             'schedule_reminder_enabled'                   => 'false',
             'schedule_reminder_mode'                      => 'day_before',
             'schedule_reminder_send_time'                 => '18:00',
             'schedule_reminder_hours_before'              => '2',
+            'schedule_reminder_poll_minutes'              => '15',
+            'integration_fonnte_base_url'                 => 'https://api.fonnte.com',
+            'integration_wablas_base_url'                 => 'https://solo.wablas.com',
         ];
 
         foreach ($defaults as $key => $value) {
             Setting::set($key, $value);
         }
+    }
+
+    /** Payload minimal valid untuk PATCH scheduler. */
+    private function validPayload(array $overrides = []): array
+    {
+        return array_merge([
+            'scheduler_sessions_generate_enabled'         => '1',
+            'scheduler_sessions_generate_day'             => '25',
+            'scheduler_sessions_generate_time'            => '06:00',
+            'scheduler_invoices_generate_enabled'         => '1',
+            'scheduler_invoices_generate_day'             => '1',
+            'scheduler_invoices_generate_time'            => '06:00',
+            'spp_due_day'                                 => '10',
+            'scheduler_honor_calculate_enabled'           => '1',
+            'scheduler_honor_calculate_day'               => '28',
+            'scheduler_honor_calculate_time'              => '06:00',
+            'scheduler_fines_apply_enabled'               => '1',
+            'scheduler_fines_apply_time'                  => '06:00',
+            'scheduler_fines_start_day'                   => '11',
+            'scheduler_overdue_check_enabled'             => '1',
+            'scheduler_overdue_check_day'                 => '1',
+            'scheduler_overdue_check_time'                => '06:05',
+            'scheduler_invoice_reminder_enabled'          => '0',
+            'scheduler_cuti_return_enabled'               => '1',
+            'scheduler_cuti_return_time'                  => '23:59',
+            'scheduler_staff_payroll_enabled'             => '1',
+            'scheduler_staff_payroll_day'                 => '28',
+            'scheduler_staff_payroll_time'                => '07:00',
+            'schedule_reminder_enabled'                   => '0',
+            'integration_fonnte_base_url'                 => 'https://api.fonnte.com',
+            'integration_wablas_base_url'                 => 'https://solo.wablas.com',
+        ], $overrides);
     }
 
     public function test_owner_dapat_akses_halaman_pengaturan_scheduler(): void
@@ -78,11 +126,21 @@ class SchedulerSettingsTest extends TestCase
         $response->assertOk();
         $response->assertViewIs('scheduler.edit');
         $response->assertViewHas('preview');
+        $response->assertViewHas('whatsappTemplates');
     }
 
     public function test_admin_tidak_bisa_akses_halaman_pengaturan_scheduler(): void
     {
         $this->actingAs($this->admin())->get(route('scheduler.edit'))
+            ->assertForbidden();
+    }
+
+    public function test_admin_tidak_bisa_simpan_pengaturan_scheduler(): void
+    {
+        $this->seedDefaultSchedulerSettings();
+
+        $this->actingAs($this->admin())
+            ->patch(route('scheduler.update'), $this->validPayload())
             ->assertForbidden();
     }
 
@@ -102,31 +160,20 @@ class SchedulerSettingsTest extends TestCase
     {
         $this->seedDefaultSchedulerSettings();
 
-        $response = $this->patchScheduler([
-            'scheduler_sessions_generate_enabled'         => '1',
+        $response = $this->patchScheduler($this->validPayload([
             'scheduler_sessions_generate_day'             => '20',
             'scheduler_sessions_generate_time'            => '07:30',
-
             'scheduler_invoices_generate_enabled'         => '0',
-            'scheduler_invoices_generate_day'             => '1',
-            'scheduler_invoices_generate_time'            => '06:00',
-
-            'scheduler_honor_calculate_enabled'             => '1',
-            'scheduler_honor_calculate_days_before_eom'   => '2',
-            'scheduler_honor_calculate_time'              => '08:00',
-
-            'scheduler_fines_apply_enabled'               => '1',
-            'scheduler_fines_apply_time'                  => '06:00',
-
-            'scheduler_overdue_check_enabled'             => '1',
             'scheduler_overdue_check_day'                 => '5',
-            'scheduler_overdue_check_time'                => '06:05',
-
+            'scheduler_honor_calculate_day'               => '27',
+            'scheduler_fines_start_day'                   => '12',
+            'spp_due_day'                                 => '10',
             'schedule_reminder_enabled'                   => '1',
             'schedule_reminder_mode'                      => 'same_day',
             'schedule_reminder_send_time'                 => '10:00',
             'schedule_reminder_hours_before'              => '3',
-        ]);
+            'schedule_reminder_poll_minutes'              => '20',
+        ]));
 
         $response->assertRedirect(route('scheduler.edit'));
         $response->assertSessionHas('success');
@@ -136,9 +183,13 @@ class SchedulerSettingsTest extends TestCase
         $this->assertEquals('07:30', Setting::get('scheduler_sessions_generate_time'));
         $this->assertEquals('false', Setting::get('scheduler_invoices_generate_enabled'));
         $this->assertEquals('5', Setting::get('scheduler_overdue_check_day'));
+        $this->assertEquals('27', Setting::get('scheduler_honor_calculate_day'));
+        $this->assertEquals('12', Setting::get('scheduler_fines_start_day'));
+        $this->assertEquals('10', Setting::get('spp_due_day'));
         $this->assertEquals('true', Setting::get('schedule_reminder_enabled'));
         $this->assertEquals('same_day', Setting::get('schedule_reminder_mode'));
         $this->assertEquals('10:00', Setting::get('schedule_reminder_send_time'));
+        $this->assertEquals('20', Setting::get('schedule_reminder_poll_minutes'));
 
         $this->assertDatabaseHas('audit_logs', [
             'action'       => AuditLog::ACTION_UPDATE,
@@ -147,83 +198,94 @@ class SchedulerSettingsTest extends TestCase
         ]);
     }
 
+    public function test_simpan_kredensial_wa_terenkripsi_dan_audit_masked(): void
+    {
+        $this->seedDefaultSchedulerSettings();
+
+        $this->patchScheduler($this->validPayload([
+            'integration_fonnte_token' => 'my-fonnte-secret-token',
+        ]))->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame('my-fonnte-secret-token', IntegrationSettings::fonnteToken());
+
+        $log = AuditLog::query()->latest('id')->first();
+        $this->assertNotNull($log);
+        $this->assertSame('••••••••oken', $log->new_values['integration_fonnte_token'] ?? null);
+    }
+
+    public function test_kosongkan_field_kredensial_tidak_overwrite(): void
+    {
+        $this->seedDefaultSchedulerSettings();
+        IntegrationSettings::set('integration_fonnte_token', 'existing-token');
+
+        $this->patchScheduler($this->validPayload([
+            'integration_fonnte_token' => '',
+        ]))->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame('existing-token', IntegrationSettings::fonnteToken());
+    }
+
     public function test_simpan_dengan_toggle_mati_tidak_wajib_day_time(): void
     {
         $this->seedDefaultSchedulerSettings();
 
-        $this->patchScheduler([
-            'scheduler_sessions_generate_enabled'         => '0',
-            'scheduler_invoices_generate_enabled'         => '1',
-            'scheduler_invoices_generate_day'             => '1',
-            'scheduler_invoices_generate_time'            => '06:00',
-            'scheduler_honor_calculate_enabled'           => '1',
-            'scheduler_honor_calculate_days_before_eom'   => '2',
-            'scheduler_honor_calculate_time'              => '06:00',
-            'scheduler_fines_apply_enabled'               => '1',
-            'scheduler_fines_apply_time'                  => '06:00',
-            'scheduler_overdue_check_enabled'             => '1',
-            'scheduler_overdue_check_day'                 => '1',
-            'scheduler_overdue_check_time'                => '06:05',
-        ])->assertRedirect()->assertSessionHasNoErrors();
+        $this->patchScheduler($this->validPayload([
+            'scheduler_sessions_generate_enabled' => '0',
+        ]))->assertRedirect()->assertSessionHasNoErrors();
 
         $this->assertEquals('false', Setting::get('scheduler_sessions_generate_enabled'));
         $this->assertEquals('25', Setting::get('scheduler_sessions_generate_day'));
         $this->assertEquals('06:00', Setting::get('scheduler_sessions_generate_time'));
     }
 
-    public function test_honor_offset_dan_overdue_day_validasi(): void
+    public function test_honor_day_dan_overdue_day_validasi(): void
     {
         $this->seedDefaultSchedulerSettings();
 
-        $this->patchScheduler([
-            'scheduler_sessions_generate_enabled'         => '1',
-            'scheduler_sessions_generate_day'             => '25',
-            'scheduler_sessions_generate_time'            => '06:00',
-            'scheduler_invoices_generate_enabled'         => '1',
-            'scheduler_invoices_generate_day'             => '1',
-            'scheduler_invoices_generate_time'            => '06:00',
-            'scheduler_honor_calculate_enabled'           => '1',
-            'scheduler_honor_calculate_days_before_eom' => '0',
-            'scheduler_honor_calculate_time'              => '06:00',
-            'scheduler_fines_apply_enabled'               => '1',
-            'scheduler_fines_apply_time'                  => '06:00',
-            'scheduler_overdue_check_enabled'             => '1',
-            'scheduler_overdue_check_day'                 => '32',
-            'scheduler_overdue_check_time'                => '06:05',
-            'schedule_reminder_enabled'                   => '0',
-        ])->assertSessionHasErrors([
-            'scheduler_honor_calculate_days_before_eom',
+        $this->patchScheduler($this->validPayload([
+            'scheduler_honor_calculate_day' => '0',
+            'scheduler_overdue_check_day'   => '32',
+        ]))->assertSessionHasErrors([
+            'scheduler_honor_calculate_day',
             'scheduler_overdue_check_day',
         ]);
+    }
+
+    public function test_invoice_reminder_days_before_due_harus_kurang_dari_tempo(): void
+    {
+        $this->seedDefaultSchedulerSettings();
+
+        $template = WhatsappMessageTemplate::create([
+            'code'       => WhatsappMessageTemplate::CODE_INVOICE_REMINDER,
+            'name'       => 'Reminder Tagihan',
+            'body'       => 'Halo {nama_ortu}',
+            'is_active'  => true,
+            'sort_order' => 1,
+        ]);
+
+        $this->patchScheduler($this->validPayload([
+            'spp_due_day'                                => '5',
+            'scheduler_invoice_reminder_enabled'         => '1',
+            'scheduler_invoice_reminder_days_before_due' => '5',
+            'scheduler_invoice_reminder_time'            => '10:00',
+            'scheduler_invoice_reminder_template_id'     => (string) $template->id,
+        ]))->assertSessionHasErrors(['scheduler_invoice_reminder_days_before_due']);
     }
 
     public function test_simpan_konfigurasi_scheduler_invalid_ditolak(): void
     {
         $this->seedDefaultSchedulerSettings();
 
-        $response = $this->patchScheduler([
-            'scheduler_sessions_generate_enabled'         => '1',
-            'scheduler_sessions_generate_day'             => '32',
-            'scheduler_sessions_generate_time'            => '25:00',
-
-            'scheduler_invoices_generate_enabled'         => '1',
-            'scheduler_invoices_generate_day'             => '0',
-            'scheduler_invoices_generate_time'            => '12:00',
-
-            'scheduler_honor_calculate_enabled'           => '1',
-            'scheduler_honor_calculate_days_before_eom'   => '2',
-            'scheduler_honor_calculate_time'              => '06:00',
-            'scheduler_fines_apply_enabled'               => '1',
-            'scheduler_fines_apply_time'                  => '06:00',
-            'scheduler_overdue_check_enabled'             => '1',
-            'scheduler_overdue_check_day'                 => '1',
-            'scheduler_overdue_check_time'                => '06:05',
-
-            'schedule_reminder_enabled'                   => '1',
-            'schedule_reminder_mode'                      => 'invalid_mode',
-            'schedule_reminder_send_time'                 => '18:00',
-            'schedule_reminder_hours_before'              => '25',
-        ]);
+        $response = $this->patchScheduler($this->validPayload([
+            'scheduler_sessions_generate_day'  => '32',
+            'scheduler_sessions_generate_time' => '25:00',
+            'scheduler_invoices_generate_day'  => '0',
+            'schedule_reminder_enabled'        => '1',
+            'schedule_reminder_mode'           => 'invalid_mode',
+            'schedule_reminder_send_time'      => '18:00',
+            'schedule_reminder_hours_before'   => '25',
+            'integration_fonnte_base_url'    => 'not-a-url',
+        ]));
 
         $response->assertSessionHasErrors([
             'scheduler_sessions_generate_day',
@@ -231,6 +293,7 @@ class SchedulerSettingsTest extends TestCase
             'scheduler_invoices_generate_day',
             'schedule_reminder_mode',
             'schedule_reminder_hours_before',
+            'integration_fonnte_base_url',
         ]);
     }
 }
