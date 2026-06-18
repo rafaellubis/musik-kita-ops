@@ -31,12 +31,21 @@
     <details class="group"
              @if($errors->any() || filled(old('material_learned')) || filled(old('homework_notes')) || filled(old('notes')) || filled(old('session_rating'))) open @endif>
         <summary class="flex items-center justify-between py-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-            <span class="text-sm font-semibold text-primary">
-                Catatan Sesi
-                @if(!$teacherNote)
-                    <span class="text-[#2c694e] font-normal text-xs ml-1.5">— tap untuk mengisi laporan</span>
-                @endif
-            </span>
+            <div class="flex items-center justify-between flex-1 pr-4">
+                <span class="text-sm font-semibold text-primary flex items-center gap-1.5">
+                    Catatan Sesi
+                    @if(!$teacherNote)
+                        <span class="text-[#2c694e] font-normal text-xs ml-1.5 hidden sm:inline">— tap untuk mengisi laporan</span>
+                    @endif
+                </span>
+                
+                <!-- Tombol Riwayat Sesi -->
+                <button type="button"
+                        class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#e8f5e9] text-[#2c694e] hover:bg-[#c8e6c9] hover:text-[#1b5e20] transition-all shrink-0 shadow-sm flex items-center gap-1 border border-[#a5d6a7] cursor-pointer"
+                        @click.stop="$dispatch('open-session-history', { sessionId: {{ $sesi->id }}, studentName: '{{ addslashes($sesi->student->full_name) }}' })">
+                    ⏳ Riwayat Sesi
+                </button>
+            </div>
             <span class="text-xs text-outline group-open:hidden">▼</span>
             <span class="text-xs text-outline hidden group-open:inline">▲</span>
         </summary>
