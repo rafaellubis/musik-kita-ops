@@ -337,81 +337,86 @@
                 </button>
 
                 {{-- Tombol DIGANTI --}}
-                <div class="relative">
-                    <button @click="showModal = showModal === 'diganti' ? null : 'diganti'"
-                        class="border border-purple-200 text-purple-700 bg-purple-50/50 hover:bg-purple-50 hover:border-purple-300 rounded-lg px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
-                        DIGANTI
-                    </button>
+                <button @click="showModal = 'diganti'"
+                    class="border border-purple-200 text-purple-700 bg-purple-50/50 hover:bg-purple-50 hover:border-purple-300 rounded-lg px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
+                    DIGANTI
+                </button>
 
-                    {{-- Mini-modal: DIGANTI (expanded — opsional jam + ruang pengganti) --}}
-                    <div x-show="showModal === 'diganti'" @click.outside="showModal = null"
-                        class="absolute right-0 top-9 z-20 bg-mk-card border border-mk-border rounded-xl shadow-lg w-72 p-4 text-left">
-                        <p class="text-mk-dim text-xs font-semibold mb-2 truncate">
-                            {{ $session->student->full_name }} · {{ $session->teacher->name }}
-                        </p>
-                        <p class="text-xs mb-3 p-2 rounded-lg border text-mk-warning bg-mk-warningBg border-mk-warningBorder">
-                            Guru asli berhalangan. Tugaskan pengganti + opsional jam/ruang baru.<br>
-                            <span class="font-medium text-mk-muted">Konfirmasi kehadiran setelah sesi berlangsung (⏳).</span>
-                        </p>
-                        <label class="block text-mk-dim text-xs mb-1 font-semibold">Guru pengganti <span class="text-red-400">*</span></label>
-                        <select x-model="substituteId"
-                            class="w-full border border-mk-border text-mk-muted rounded-lg px-3 py-1.5 text-sm mb-3 focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
-                            <option value="">— Pilih guru pengganti —</option>
-                            @foreach($teachers as $t)
-                                <option value="{{ $t->id }}">{{ $t->name }}</option>
-                            @endforeach
-                        </select>
-                        {{-- Jam pengganti (opsional — jika berbeda dari jadwal asli) --}}
-                        <div class="grid grid-cols-2 gap-2 mb-3">
-                            <div>
-                                <label class="block text-mk-dim text-xs mb-1 font-semibold">Jam Mulai <span class="text-mk-dim text-[10px] font-normal">(opsional)</span></label>
-                                <input type="time" x-model="substituteStartTime"
-                                    class="w-full border border-mk-border text-mk-muted rounded-lg px-2 py-1.5 text-sm focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
-                            </div>
-                            <div>
-                                <label class="block text-mk-dim text-xs mb-1 font-semibold">Jam Selesai</label>
-                                <input type="time" x-model="substituteEndTime"
-                                    class="w-full border border-mk-border text-mk-muted rounded-lg px-2 py-1.5 text-sm focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
-                            </div>
-                        </div>
-                        {{-- Ruangan pengganti (opsional) --}}
-                        <div class="mb-3">
-                            <label class="block text-mk-dim text-xs mb-1 font-semibold">Ruangan <span class="text-mk-dim text-[10px] font-normal">(opsional)</span></label>
-                            <select x-model="substituteRoomId"
-                                class="w-full border border-mk-border text-mk-muted rounded-lg px-2 py-1.5 text-sm focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
-                                <option value="">— Sama dengan ruangan asli —</option>
-                                @foreach($rooms as $room)
-                                    <option value="{{ $room->id }}">{{ $room->code }} — {{ $room->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <p class="text-mk-dim text-[11px] mb-3">Honor ke guru pengganti setelah dikonfirmasi hadir.</p>
-                        <div class="flex gap-2">
-                            <button @click="if(substituteId) save('DIGANTI', {
-                                    substitute_teacher_id: substituteId,
-                                    substitute_start_time: substituteStartTime || null,
-                                    substitute_end_time: substituteEndTime || null,
-                                    substitute_room_id: substituteRoomId || null,
-                                  })"
-                                :disabled="!substituteId"
-                                class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded-lg btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
-                                Simpan
-                            </button>
-                            <button @click="showModal = null"
-                                class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
-                                Batal
-                            </button>
-                        </div>
-                    </div>
-
-                </div>
                 <button x-show="dbStatus !== 'SCHEDULED'" type="button" @click="status = dbStatus"
                     class="border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 rounded-lg px-3 py-1.5 text-xs font-bold">
                     BATAL
                 </button>
             </div>
 
-            {{-- Mini-modal: RESCHEDULE --}}
+            {{-- Modal DIGANTI — di-teleport ke body agar fixed bekerja di mobile --}}
+            <template x-teleport="body">
+            <div x-show="showModal === 'diganti'"
+                x-transition
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+                style="display: none;"
+                @click.self="showModal = null">
+                <div class="bg-mk-card border border-mk-border rounded-xl shadow-xl w-80 p-5 text-left mx-4" @click.stop>
+                    <p class="text-mk-muted text-sm font-bold mb-1">Tugaskan Guru Pengganti</p>
+                    <p class="text-mk-dim text-xs mb-3 truncate font-medium">
+                        {{ $session->student->full_name }} · {{ $session->teacher->name }}
+                    </p>
+                    <p class="text-xs mb-3 p-2 rounded-lg border text-mk-warning bg-mk-warningBg border-mk-warningBorder">
+                        Guru asli berhalangan. Tugaskan pengganti + opsional jam/ruang baru.<br>
+                        <span class="font-medium text-mk-muted">Konfirmasi kehadiran setelah sesi berlangsung (⏳).</span>
+                    </p>
+                    <label class="block text-mk-dim text-xs mb-1 font-semibold">Guru pengganti <span class="text-red-400">*</span></label>
+                    <select x-model="substituteId"
+                        class="w-full border border-mk-border text-mk-muted rounded-lg px-3 py-1.5 text-sm mb-3 focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
+                        <option value="">— Pilih guru pengganti —</option>
+                        @foreach($teachers as $t)
+                            <option value="{{ $t->id }}">{{ $t->name }}</option>
+                        @endforeach
+                    </select>
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div>
+                            <label class="block text-mk-dim text-xs mb-1 font-semibold">Jam Mulai <span class="text-mk-dim text-[10px] font-normal">(opsional)</span></label>
+                            <input type="time" x-model="substituteStartTime"
+                                class="w-full border border-mk-border text-mk-muted rounded-lg px-2 py-1.5 text-sm focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
+                        </div>
+                        <div>
+                            <label class="block text-mk-dim text-xs mb-1 font-semibold">Jam Selesai</label>
+                            <input type="time" x-model="substituteEndTime"
+                                class="w-full border border-mk-border text-mk-muted rounded-lg px-2 py-1.5 text-sm focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-mk-dim text-xs mb-1 font-semibold">Ruangan <span class="text-mk-dim text-[10px] font-normal">(opsional)</span></label>
+                        <select x-model="substituteRoomId"
+                            class="w-full border border-mk-border text-mk-muted rounded-lg px-2 py-1.5 text-sm focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
+                            <option value="">— Sama dengan ruangan asli —</option>
+                            @foreach($rooms as $room)
+                                <option value="{{ $room->id }}">{{ $room->code }} — {{ $room->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <p class="text-mk-dim text-[11px] mb-3">Honor ke guru pengganti setelah dikonfirmasi hadir.</p>
+                    <div class="flex gap-2">
+                        <button @click="if(substituteId) save('DIGANTI', {
+                                substitute_teacher_id: substituteId,
+                                substitute_start_time: substituteStartTime || null,
+                                substitute_end_time: substituteEndTime || null,
+                                substitute_room_id: substituteRoomId || null,
+                              })"
+                            :disabled="!substituteId"
+                            class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded-lg btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
+                            Simpan
+                        </button>
+                        <button @click="showModal = null"
+                            class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
+                            Batal
+                        </button>
+                    </div>
+                </div>
+            </div>
+            </template>
+
+            {{-- Modal RESCHEDULE — di-teleport ke body agar fixed bekerja di mobile --}}
+            <template x-teleport="body">
             <div x-show="showModal === 'reschedule'"
                 x-transition
                 class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
@@ -474,8 +479,10 @@
                     </div>
                 </div>
             </div>
+            </template>
 
-            {{-- Mini-modal: IZIN PENDING --}}
+            {{-- Modal IZIN PENDING — di-teleport ke body --}}
+            <template x-teleport="body">
             <div x-show="showModal === 'pending'"
                 x-transition
                 class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
@@ -506,8 +513,10 @@
                     </div>
                 </div>
             </div>
+            </template>
 
-            {{-- Modal: Jadwalkan Bagian 2 --}}
+            {{-- Modal Bagian 2 — di-teleport ke body --}}
+            <template x-teleport="body">
             <div x-show="showModal === 'part2'"
                  x-transition
                  class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
@@ -558,6 +567,7 @@
                     </div>
                 </div>
             </div>
+            </template>
 
         @endif
     </td>
