@@ -173,7 +173,7 @@
     @endif
 >
     {{-- Jam --}}
-    <td class="px-3 py-2.5 font-bold text-sm"
+    <td class="px-4 py-3 font-bold text-sm"
         @if(! $isLibur)
         :style="status === 'SCHEDULED' ? 'color:#5DB890;font-weight:700' : ''"
         :class="status !== 'SCHEDULED' ? 'text-mk-dim' : ''"
@@ -184,7 +184,7 @@
     </td>
 
     {{-- Murid --}}
-    <td class="px-3 py-2.5 text-sm min-w-0 max-w-0"
+    <td class="px-4 py-3 text-sm min-w-0 max-w-0"
         @if(! $isLibur)
         :class="status === 'SCHEDULED' ? 'text-mk-text font-medium' : 'text-mk-dim'"
         @else
@@ -222,13 +222,13 @@
     </td>
 
     {{-- Guru --}}
-    <td class="px-3 py-2.5 text-xs text-mk-dim text-center">{{ $session->teacher->name }}</td>
+    <td class="px-4 py-3 text-xs text-mk-dim text-left">{{ $session->teacher->name }}</td>
 
     {{-- Ruang --}}
-    <td class="px-3 py-2.5 text-xs text-mk-dim">{{ $session->room?->code ?? '—' }}</td>
+    <td class="px-4 py-3 text-xs text-mk-dim">{{ $session->room?->code ?? '—' }}</td>
 
     {{-- Aksi --}}
-    <td class="px-3 py-2.5 text-right">
+    <td class="px-4 py-3 text-right">
 
         @if($isLibur)
             <span class="bg-mk-surface text-mk-dim border border-mk-border rounded px-3 py-1 text-xs">
@@ -240,21 +240,21 @@
             @if($session->split_part === 1 && !isset($part2ExistsForOriginIds[$session->origin_session_id]))
                 <button type="button"
                     @click="showModal = 'part2'"
-                    class="inline-flex items-center gap-1 rounded px-2 py-1 text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors mb-1">
+                    class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors mb-1 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                     + Tambah Bagian 2
                 </button>
             @endif
             {{-- Badge setelah status diinput --}}
             <div x-show="status !== 'SCHEDULED'" class="flex items-center justify-end gap-2">
                 {{-- Status selain DIGANTI --}}
-                <span x-show="status !== 'DIGANTI'" class="rounded px-3 py-1 text-xs border"
+                <span x-show="status !== 'DIGANTI'" class="rounded-lg px-3 py-1.5 text-xs font-semibold border whitespace-normal break-words max-w-[160px] md:max-w-none text-right inline-block"
                     :class="{
-                        'bg-green-100 text-green-700 border-green-200':    status === 'HADIR',
-                        'bg-orange-100 text-orange-700 border-orange-200': status === 'HADIR_TERLAMBAT',
-                        'bg-red-100 text-red-700 border-red-200':          status === 'HANGUS',
-                        'bg-yellow-100 text-yellow-700 border-yellow-200': status === 'IZIN_RESCHEDULE',
-                        'bg-amber-100 text-amber-700 border-amber-200':    status === 'IZIN_PENDING',
-                        'bg-blue-100 text-blue-700 border-blue-200':       status === 'IZIN_VIDEO',
+                        'bg-green-50 text-green-700 border-green-200':    status === 'HADIR',
+                        'bg-orange-50 text-orange-700 border-orange-200': status === 'HADIR_TERLAMBAT',
+                        'bg-red-50 text-red-700 border-red-200':          status === 'HANGUS',
+                        'bg-yellow-50 text-yellow-850 border-yellow-200': status === 'IZIN_RESCHEDULE',
+                        'bg-amber-50 text-amber-850 border-amber-200':    status === 'IZIN_PENDING',
+                        'bg-blue-50 text-blue-700 border-blue-200':       status === 'IZIN_VIDEO',
                         'bg-mk-surface text-mk-dim border-mk-border':       status === 'CANCELLED',
                     }"
                     x-text="
@@ -268,43 +268,41 @@
                     ">
                 </span>
 
-                {{-- Status DIGANTI (Dua badge terpisah - Opsi A) --}}
+                {{-- Status DIGANTI --}}
                 <div x-show="status === 'DIGANTI'" class="flex items-center gap-1.5">
                     {{-- Nama Guru Pengganti --}}
-                    <span class="rounded px-2.5 py-1 text-xs border bg-purple-100 text-purple-700 border-purple-200 font-medium"
+                    <span class="rounded-lg px-2.5 py-1.5 text-xs border bg-purple-50 text-purple-700 border-purple-200 font-semibold"
                           x-text="'↔ ' + substituteLabel">
                     </span>
                     {{-- Status Kehadiran --}}
-                    <span class="rounded px-2 py-1 text-xs border font-semibold"
-                          :class="honorConfirmed ? 'bg-green-100 text-green-700 border-green-200' : 'bg-amber-100 text-amber-700 border-amber-200'"
-                          x-text="honorConfirmed ? '✓ HADIR' : '⏳SCHEDULED'">
+                    <span class="rounded-lg px-2.5 py-1.5 text-xs border font-bold"
+                          :class="honorConfirmed ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'"
+                          x-text="honorConfirmed ? '✓ HADIR' : '⏳ SCHEDULED'">
                     </span>
                 </div>
                 {{-- HADIR/HADIR_TERLAMBAT: hanya bisa di-batalkan, tidak bisa diubah ke status lain --}}
                 <button x-show="status === 'HADIR' || status === 'HADIR_TERLAMBAT'"
                     @click="save('SCHEDULED')"
                     :disabled="loading"
-                    class="text-red-500 hover:text-red-700 text-xs underline">batalkan</button>
+                    class="text-red-500 hover:text-red-700 text-xs font-semibold underline ml-1 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent rounded">batalkan</button>
                 {{-- Status lain (termasuk CANCELLED): bisa di-ubah ulang ke SCHEDULED.
                      Disembunyikan jika sesi sudah punya replacement atau sedang menunggu konfirmasi DIGANTI. --}}
                 @if(!isset($sessionIdsWithReplacement[$session->id]))
                 <button x-show="status !== 'HADIR' && status !== 'HADIR_TERLAMBAT' && !(status === 'DIGANTI' && !honorConfirmed)"
                     @click="status = 'SCHEDULED'; errorMsg = ''"
-                    class="text-mk-dim hover:text-mk-muted text-xs underline">ubah</button>
+                    class="text-mk-dim hover:text-mk-muted text-xs font-semibold underline ml-1 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent rounded">ubah</button>
                 @endif
                 {{-- Tombol konfirmasi kehadiran pengganti — hanya tampil jika DIGANTI dan belum dikonfirmasi --}}
                 <div x-show="status === 'DIGANTI' && !honorConfirmed"
-                     class="flex items-center gap-1 mt-1">
+                     class="flex items-center gap-1.5 ml-1">
                     <button @click="confirmSubstitute('hadir')"
                             :disabled="loading"
-                            class="rounded px-2 py-1 text-xs font-semibold disabled:opacity-40"
-                            style="background:rgba(52,211,153,0.15);color:#34D399">
+                            class="rounded-lg px-2.5 py-1 text-xs font-bold bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 disabled:opacity-40 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                         ✓ Hadir
                     </button>
                     <button @click="confirmSubstitute('batal')"
                             :disabled="loading"
-                            class="rounded px-2 py-1 text-xs disabled:opacity-40"
-                            style="background:rgba(248,113,113,0.12);color:#F87171">
+                            class="rounded-lg px-2.5 py-1 text-xs font-bold bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 disabled:opacity-40 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                         ✗ Batalkan
                     </button>
                 </div>
@@ -316,48 +314,48 @@
                 :class="loading ? 'opacity-50 pointer-events-none' : ''">
 
                 <button @click="save('HADIR')"
-                    class="rounded px-3 py-1.5 text-xs font-semibold btn-mk-primary">
+                    class="rounded-lg px-3 py-1.5 text-xs font-bold btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                     HADIR
                 </button>
                 <button @click="save('HANGUS')"
-                    class="border border-red-300 text-red-600 hover:bg-red-50 rounded px-3 py-1.5 text-xs">
+                    class="border border-red-200 text-red-700 bg-red-50/50 hover:bg-red-50 hover:border-red-300 rounded-lg px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                     HANGUS
                 </button>
                 {{-- IZIN → buka mini-modal dengan tanggal pengganti. --}}
                 <button @click="showModal = 'reschedule'"
-                    class="border border-yellow-300 text-yellow-700 hover:bg-yellow-50 rounded px-3 py-1.5 text-xs">
+                    class="border border-yellow-200 text-yellow-800 bg-yellow-50/50 hover:bg-yellow-50 hover:border-yellow-300 rounded-lg px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                     IZIN
                 </button>
                 {{-- IZIN PENDING → izin tanpa tanggal, jadwal menyusul (Open Slot Board). --}}
                 <button @click="showModal = 'pending'"
-                    class="border border-amber-300 text-amber-700 hover:bg-amber-50 rounded px-3 py-1.5 text-xs">
+                    class="border border-amber-200 text-amber-800 bg-amber-50/50 hover:bg-amber-50 hover:border-amber-300 rounded-lg px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                     PENDING
                 </button>
                 <button @click="save('IZIN_VIDEO')"
-                    class="border border-blue-300 text-blue-600 hover:bg-blue-50 rounded px-3 py-1.5 text-xs">
+                    class="border border-blue-200 text-blue-700 bg-blue-50/50 hover:bg-blue-50 hover:border-blue-300 rounded-lg px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                     VIDEO
                 </button>
 
                 {{-- Tombol DIGANTI --}}
                 <div class="relative">
                     <button @click="showModal = showModal === 'diganti' ? null : 'diganti'"
-                        class="border border-purple-300 text-purple-600 hover:bg-purple-50 rounded px-3 py-1.5 text-xs">
+                        class="border border-purple-200 text-purple-700 bg-purple-50/50 hover:bg-purple-50 hover:border-purple-300 rounded-lg px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                         DIGANTI
                     </button>
 
                     {{-- Mini-modal: DIGANTI (expanded — opsional jam + ruang pengganti) --}}
                     <div x-show="showModal === 'diganti'" @click.outside="showModal = null"
-                        class="absolute right-0 top-8 z-20 bg-mk-card border border-mk-border rounded-lg shadow-lg w-72 p-4">
-                        <p class="text-mk-dim text-xs mb-2 truncate">
+                        class="absolute right-0 top-9 z-20 bg-mk-card border border-mk-border rounded-xl shadow-lg w-72 p-4 text-left">
+                        <p class="text-mk-dim text-xs font-semibold mb-2 truncate">
                             {{ $session->student->full_name }} · {{ $session->teacher->name }}
                         </p>
-                        <p class="text-xs mb-3" style="color:#8A6848;background:rgba(212,168,83,0.06);padding:6px 8px;border-radius:6px;border:1px solid rgba(212,168,83,0.12)">
+                        <p class="text-xs mb-3 p-2 rounded-lg border text-mk-warning bg-mk-warningBg border-mk-warningBorder">
                             Guru asli berhalangan. Tugaskan pengganti + opsional jam/ruang baru.<br>
-                            <span style="color:#6B4A2A">Konfirmasi kehadiran setelah sesi berlangsung (⏳).</span>
+                            <span class="font-medium text-mk-muted">Konfirmasi kehadiran setelah sesi berlangsung (⏳).</span>
                         </p>
-                        <label class="block text-mk-dim text-xs mb-1">Guru pengganti <span class="text-red-400">*</span></label>
+                        <label class="block text-mk-dim text-xs mb-1 font-semibold">Guru pengganti <span class="text-red-400">*</span></label>
                         <select x-model="substituteId"
-                            class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-3">
+                            class="w-full border border-mk-border text-mk-muted rounded-lg px-3 py-1.5 text-sm mb-3 focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
                             <option value="">— Pilih guru pengganti —</option>
                             @foreach($teachers as $t)
                                 <option value="{{ $t->id }}">{{ $t->name }}</option>
@@ -366,41 +364,41 @@
                         {{-- Jam pengganti (opsional — jika berbeda dari jadwal asli) --}}
                         <div class="grid grid-cols-2 gap-2 mb-3">
                             <div>
-                                <label class="block text-mk-dim text-xs mb-1">Jam Mulai <span class="text-mk-dim text-[10px]">(opsional)</span></label>
+                                <label class="block text-mk-dim text-xs mb-1 font-semibold">Jam Mulai <span class="text-mk-dim text-[10px] font-normal">(opsional)</span></label>
                                 <input type="time" x-model="substituteStartTime"
-                                    class="w-full border border-mk-border text-mk-muted rounded px-2 py-1.5 text-sm">
+                                    class="w-full border border-mk-border text-mk-muted rounded-lg px-2 py-1.5 text-sm focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
                             </div>
                             <div>
-                                <label class="block text-mk-dim text-xs mb-1">Jam Selesai</label>
+                                <label class="block text-mk-dim text-xs mb-1 font-semibold">Jam Selesai</label>
                                 <input type="time" x-model="substituteEndTime"
-                                    class="w-full border border-mk-border text-mk-muted rounded px-2 py-1.5 text-sm">
+                                    class="w-full border border-mk-border text-mk-muted rounded-lg px-2 py-1.5 text-sm focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
                             </div>
                         </div>
                         {{-- Ruangan pengganti (opsional) --}}
                         <div class="mb-3">
-                            <label class="block text-mk-dim text-xs mb-1">Ruangan <span class="text-mk-dim text-[10px]">(opsional)</span></label>
+                            <label class="block text-mk-dim text-xs mb-1 font-semibold">Ruangan <span class="text-mk-dim text-[10px] font-normal">(opsional)</span></label>
                             <select x-model="substituteRoomId"
-                                class="w-full border border-mk-border text-mk-muted rounded px-2 py-1.5 text-sm">
+                                class="w-full border border-mk-border text-mk-muted rounded-lg px-2 py-1.5 text-sm focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
                                 <option value="">— Sama dengan ruangan asli —</option>
                                 @foreach($rooms as $room)
                                     <option value="{{ $room->id }}">{{ $room->code }} — {{ $room->name }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <p class="text-mk-dim text-xs mb-3">Honor ke guru pengganti setelah dikonfirmasi hadir.</p>
+                        <p class="text-mk-dim text-[11px] mb-3">Honor ke guru pengganti setelah dikonfirmasi hadir.</p>
                         <div class="flex gap-2">
                             <button @click="if(substituteId) save('DIGANTI', {
                                     substitute_teacher_id: substituteId,
                                     substitute_start_time: substituteStartTime || null,
                                     substitute_end_time: substituteEndTime || null,
                                     substitute_room_id: substituteRoomId || null,
-                                })"
+                                  })"
                                 :disabled="!substituteId"
-                                class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded btn-mk-primary">
+                                class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded-lg btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                                 Simpan
                             </button>
                             <button @click="showModal = null"
-                                class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2 px-3 rounded">
+                                class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                                 Batal
                             </button>
                         </div>
@@ -408,37 +406,39 @@
 
                 </div>
                 <button x-show="dbStatus !== 'SCHEDULED'" type="button" @click="status = dbStatus"
-                    class="border border-red-300 text-red-600 hover:bg-red-50 rounded px-3 py-1.5 text-xs">
+                    class="border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 rounded-lg px-3 py-1.5 text-xs font-bold">
                     BATAL
                 </button>
             </div>
 
-            {{-- Mini-modal: RESCHEDULE (di luar tombol ···, karena dipanggil dari tombol IZIN) --}}
-            <div x-show="showModal === 'reschedule'" @click.outside="showModal = null"
-                class="fixed inset-0 z-40 flex items-center justify-center"
-                style="display: none;">
-                <div class="bg-mk-card border border-mk-border rounded-lg shadow-xl w-80 p-5">
-                    <p class="text-mk-muted text-sm font-medium mb-1">Jadwalkan Sesi Pengganti</p>
-                    <p class="text-mk-dim text-xs mb-4 truncate">
+            {{-- Mini-modal: RESCHEDULE --}}
+            <div x-show="showModal === 'reschedule'"
+                x-transition
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+                style="display: none;"
+                @click.self="showModal = null; errorMsg = ''">
+                <div class="bg-mk-card border border-mk-border rounded-xl shadow-xl w-80 p-5 text-left" @click.stop>
+                    <p class="text-mk-muted text-sm font-bold mb-1">Jadwalkan Sesi Pengganti</p>
+                    <p class="text-mk-dim text-xs mb-4 truncate font-medium">
                         {{ $session->student->full_name }} · {{ $session->teacher->name }}
                     </p>
 
                     {{-- Error message dari server (konflik guru/ruangan) --}}
                     <p x-show="errorMsg" x-text="errorMsg"
-                        class="bg-red-50 border border-red-200 text-red-600 text-xs rounded px-3 py-2 mb-3">
+                        class="bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg px-3 py-2 mb-3">
                     </p>
 
-                    <label class="block text-mk-dim text-xs mb-1">Tanggal Pengganti</label>
+                    <label class="block text-mk-dim text-xs mb-1 font-semibold">Tanggal Pengganti</label>
                     <input type="date" x-model="rescheduleDate"
-                        class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-3">
+                        class="w-full border border-mk-border text-mk-muted rounded-lg px-3 py-1.5 text-sm mb-3 focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
 
-                    <label class="block text-mk-dim text-xs mb-1">Jam Mulai</label>
+                    <label class="block text-mk-dim text-xs mb-1 font-semibold">Jam Mulai</label>
                     <input type="time" x-model="rescheduleTime"
-                        class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-3">
+                        class="w-full border border-mk-border text-mk-muted rounded-lg px-3 py-1.5 text-sm mb-3 focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
 
-                    <label class="block text-mk-dim text-xs mb-1">Ruangan <span class="text-mk-dim">(opsional)</span></label>
+                    <label class="block text-mk-dim text-xs mb-1 font-semibold">Ruangan <span class="text-mk-dim font-normal">(opsional)</span></label>
                     <select x-model="rescheduleRoomId"
-                        class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-4">
+                        class="w-full border border-mk-border text-mk-muted rounded-lg px-3 py-1.5 text-sm mb-4 focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
                         <option value="">— Tanpa ruangan —</option>
                         @foreach($rooms as $room)
                             <option value="{{ $room->id }}">{{ $room->code }} — {{ $room->name }}</option>
@@ -447,7 +447,7 @@
 
                     {{-- Toggle: Bagi menjadi 2 bagian — hanya untuk sesi original (bukan hasil split) --}}
                     @if($session->split_part === null)
-                    <div class="flex items-center gap-2 mb-3">
+                    <div class="flex items-center gap-2 mb-4">
                         <button type="button"
                             @click="splitMode = !splitMode"
                             :class="splitMode ? 'bg-amber-600' : 'bg-gray-400'"
@@ -455,8 +455,8 @@
                             <span :class="splitMode ? 'translate-x-5' : 'translate-x-1'"
                                   class="inline-block h-3 w-3 transform rounded-full bg-mk-card transition-transform"></span>
                         </button>
-                        <span class="text-xs text-mk-muted">Bagi menjadi 2 bagian</span>
-                        <span x-show="splitMode" class="text-xs text-amber-600">(15 menit + 15 menit)</span>
+                        <span class="text-xs text-mk-muted font-medium">Bagi menjadi 2 bagian</span>
+                        <span x-show="splitMode" class="text-xs text-amber-600 font-bold">(15m + 15m)</span>
                     </div>
                     @endif
 
@@ -464,56 +464,58 @@
                         <button type="button"
                             @click="{{ $session->split_part === null ? 'splitMode ? saveSplitPart1() : saveReschedule()' : 'saveReschedule()' }}"
                             :disabled="!rescheduleDate || !rescheduleTime"
-                            class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded btn-mk-primary">
+                            class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2.5 rounded-lg btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                             <span x-text="splitMode ? 'Jadwalkan Bagian 1' : 'Buat Sesi Pengganti'"></span>
                         </button>
                         <button @click="showModal = null; errorMsg = ''; splitMode = false"
-                            class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2 px-3 rounded">
+                            class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2.5 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                             Batal
                         </button>
                     </div>
                 </div>
             </div>
 
-            {{-- Mini-modal: IZIN PENDING — keterangan opsional sebelum simpan --}}
-            <div x-show="showModal === 'pending'" @click.outside="showModal = null"
-                class="fixed inset-0 z-40 flex items-center justify-center"
-                style="display: none;">
-                <div class="bg-mk-card border border-mk-border rounded-lg shadow-xl w-80 p-5">
-                    <p class="text-mk-muted text-sm font-medium mb-1">Izin — Tanggal Menyusul</p>
-                    <p class="text-mk-dim text-xs mb-3 truncate">
+            {{-- Mini-modal: IZIN PENDING --}}
+            <div x-show="showModal === 'pending'"
+                x-transition
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+                style="display: none;"
+                @click.self="showModal = null; pendingNotes = ''">
+                <div class="bg-mk-card border border-mk-border rounded-xl shadow-xl w-80 p-5 text-left" @click.stop>
+                    <p class="text-mk-muted text-sm font-bold mb-1">Izin — Tanggal Menyusul</p>
+                    <p class="text-mk-dim text-xs mb-3 truncate font-medium">
                         {{ $session->student->full_name }} · {{ $session->teacher->name }}
                     </p>
-                    <p class="text-xs mb-3" style="color:#8A6848;background:rgba(245,158,11,0.08);padding:6px 8px;border-radius:6px;border:1px solid rgba(245,158,11,0.2)">
+                    <p class="text-xs mb-3 p-2 rounded-lg border text-mk-warning bg-mk-warningBg border-mk-warningBorder">
                         Sesi masuk Open Slot Board. Jadwal pengganti diatur belakangan.
                     </p>
-                    <label class="block text-mk-dim text-xs mb-1">Keterangan <span class="text-mk-dim">(opsional)</span></label>
+                    <label class="block text-mk-dim text-xs mb-1 font-semibold">Keterangan <span class="text-mk-dim font-normal">(opsional)</span></label>
                     <textarea x-model="pendingNotes" maxlength="500" rows="3"
                         placeholder="Misal: Murid izin sakit, belum tahu jadwal pengganti"
-                        class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-4 resize-none"></textarea>
+                        class="w-full border border-mk-border text-mk-muted rounded-lg px-3 py-1.5 text-sm mb-4 resize-none focus:border-mk-accent focus:ring-1 focus:ring-mk-accent"></textarea>
                     <div class="flex gap-2">
                         <button type="button" @click="savePending()"
                             :disabled="loading"
-                            class="flex-1 disabled:opacity-40 font-semibold text-xs py-2 rounded btn-mk-primary">
+                            class="flex-1 disabled:opacity-40 font-semibold text-xs py-2.5 rounded-lg btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                             Simpan Pending
                         </button>
                         <button type="button" @click="showModal = null; pendingNotes = ''"
-                            class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2 px-3 rounded">
+                            class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2.5 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                             Batal
                         </button>
                     </div>
                 </div>
             </div>
 
-            {{-- Modal: Jadwalkan Bagian 2 (muncul dari tombol "Tambah Bagian 2" pada baris Split Part 1) --}}
+            {{-- Modal: Jadwalkan Bagian 2 --}}
             <div x-show="showModal === 'part2'"
                  x-transition
-                 class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
+                 class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
                  style="display: none;"
                  @click.self="showModal = null; part2Error = ''">
-                <div class="bg-mk-card border border-mk-border rounded-lg shadow-xl w-80 p-5" @click.stop>
-                    <p class="text-mk-muted text-sm font-medium mb-1">Jadwalkan Bagian 2</p>
-                    <p class="text-mk-dim text-xs mb-4 truncate">
+                <div class="bg-mk-card border border-mk-border rounded-xl shadow-xl w-80 p-5 text-left" @click.stop>
+                    <p class="text-mk-muted text-sm font-bold mb-1">Jadwalkan Bagian 2</p>
+                    <p class="text-mk-dim text-xs mb-4 truncate font-medium">
                         {{ $session->student->full_name }} · {{ $session->teacher->name }}
                         @php $lbl = $session->getSessionLabel(); @endphp
                         @if($lbl !== '—')
@@ -523,20 +525,20 @@
 
                     {{-- Pesan error dari server --}}
                     <p x-show="part2Error" x-text="part2Error"
-                        class="bg-red-50 border border-red-200 text-red-600 text-xs rounded px-3 py-2 mb-3">
+                        class="bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg px-3 py-2 mb-3">
                     </p>
 
-                    <label class="block text-mk-dim text-xs mb-1">Tanggal</label>
+                    <label class="block text-mk-dim text-xs mb-1 font-semibold">Tanggal</label>
                     <input type="date" x-model="part2Date"
-                        class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-3">
+                        class="w-full border border-mk-border text-mk-muted rounded-lg px-3 py-1.5 text-sm mb-3 focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
 
-                    <label class="block text-mk-dim text-xs mb-1">Jam Mulai</label>
+                    <label class="block text-mk-dim text-xs mb-1 font-semibold">Jam Mulai</label>
                     <input type="time" x-model="part2Time"
-                        class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-3">
+                        class="w-full border border-mk-border text-mk-muted rounded-lg px-3 py-1.5 text-sm mb-3 focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
 
-                    <label class="block text-mk-dim text-xs mb-1">Ruangan <span class="text-mk-dim">(opsional)</span></label>
+                    <label class="block text-mk-dim text-xs mb-1 font-semibold">Ruangan <span class="text-mk-dim font-normal">(opsional)</span></label>
                     <select x-model="part2RoomId"
-                        class="w-full border border-mk-border text-mk-muted rounded px-3 py-1.5 text-sm mb-4">
+                        class="w-full border border-mk-border text-mk-muted rounded-lg px-3 py-1.5 text-sm mb-4 focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
                         <option value="">— Tanpa ruangan —</option>
                         @foreach($rooms as $room)
                             <option value="{{ $room->id }}">{{ $room->code }} — {{ $room->name }}</option>
@@ -546,11 +548,11 @@
                     <div class="flex gap-2">
                         <button type="button" @click="saveSplitPart2()"
                             :disabled="!part2Date || !part2Time"
-                            class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded bg-purple-600 text-white hover:bg-purple-700">
+                            class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2.5 rounded-lg bg-purple-650 text-white hover:bg-purple-750 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                             Jadwalkan Bagian 2
                         </button>
                         <button type="button" @click="showModal = null; part2Error = ''"
-                            class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2 px-3 rounded">
+                            class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2.5 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                             Batal
                         </button>
                     </div>
