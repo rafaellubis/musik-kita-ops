@@ -738,4 +738,33 @@ class GuruController extends Controller
 
         return back()->with('success', 'Catatan sesi tersimpan. Laporan sesi akan otomatis dikirim ke WhatsApp orang tua.');
     }
+
+    public function sessionHistory(ClassSession $classSession)
+    {
+        $teacher = auth()->user()->teacher;
+        abort_if(!$teacher, 403);
+
+        // Verifikasi hak akses (hanya guru utama atau guru pengganti yang boleh akses)
+        abort_if(
+            $classSession->teacher_id !== $teacher->id && 
+            $classSession->substitute_teacher_id !== $teacher->id, 
+            403, 
+            'Bukan sesi Anda.'
+        );
+
+        // Sesi bulan berjalan (Juni 2026) dari enrollment yang sama, kecuali sesi aktif
+        $history = ClassSession::where('enrollment_id', $classSession->enrollment_id)
+            ->where('id', '!=', $classSession->id)
+            ->where('attribution_month', $classSession->attribution_month)
+            ->where('attribution_year', $classSession->attribution_year)
+            ->whereIn('status', ['HADIR', 'HADIR_TERLAMBAT'])
+            ->with('teacherNote')
+            ->orderByDesc('session_date')
+            ->orderByDesc('start_time')
+            ->get();
+
+        // Sementara kembalikan view kosong atau mock response
+        return view('guru._sesi-history-timeline', compact('history', 'classSession'));
+    }
 }
+
