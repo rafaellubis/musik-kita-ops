@@ -9,7 +9,7 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         // [SECURITY] Health check path diubah dari /up agar tidak mudah ditebak
-        health: '/kesehatan',
+        health: '/kesehatankita',
     )
     ->withMiddleware(function (Middleware $middleware) {
 		$middleware->alias([
