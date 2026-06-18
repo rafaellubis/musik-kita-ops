@@ -223,10 +223,9 @@
         setInterval(tick, 1000);
     }
 })();
-</script>
 
-<!-- Global Session History Drawer/Modal -->
-<div x-data="{
+document.addEventListener('alpine:init', () => {
+    Alpine.data('sessionHistoryModal', () => ({
         open: false,
         loading: false,
         studentName: '',
@@ -250,13 +249,17 @@
                         this.loading = false;
                     })
                     .catch(() => {
-                        this.contentHtml = '<div class=&quot;py-8 text-center text-red-500 text-xs font-semibold&quot;>Gagal memuat riwayat. Silakan coba lagi.</div>';
+                        this.contentHtml = '<div class="py-8 text-center text-red-500 text-xs font-semibold">Gagal memuat riwayat. Silakan coba lagi.</div>';
                         this.loading = false;
                     });
             });
         }
-     }"
-     x-cloak>
+    }));
+});
+</script>
+
+<!-- Global Session History Drawer/Modal -->
+<div x-data="sessionHistoryModal()" x-cloak>
      
     <!-- Dark Backdrop -->
     <div class="fixed inset-0 z-50 transition-opacity duration-300"
