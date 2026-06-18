@@ -240,7 +240,7 @@
                 this.loading = true;
                 this.contentHtml = '';
                 
-                fetch('/guru/sesi/' + this.sessionId + '/history')
+                fetch('{{ url('/guru/sesi') }}/' + this.sessionId + '/history')
                     .then(res => {
                         if (!res.ok) throw new Error();
                         return res.text();
@@ -275,7 +275,7 @@
                 /* Mobile: Slide-up Bottom Sheet */
                 bottom-0 left-0 right-0 w-full rounded-t-2xl max-h-[85%]
                 /* Desktop: Centered Modal */
-                sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:w-[480px] sm:max-w-lg sm:rounded-2xl sm:max-h-[75%]"
+                sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:right-auto sm:w-[480px] sm:max-w-lg sm:rounded-2xl sm:max-h-[75%]"
          x-show="open"
          x-transition:enter="ease-out duration-300"
          /* Entrance transition: slide up on mobile, fade & scale on desktop */
