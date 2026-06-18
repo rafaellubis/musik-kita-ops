@@ -515,8 +515,8 @@ class GuruController extends Controller
 
         // Pastikan sesi ini memang milik guru yang sedang login
         abort_if(
-            $classSession->teacher_id !== $teacher->id
-            && $classSession->substitute_teacher_id !== $teacher->id,
+            (int) $classSession->teacher_id !== (int) $teacher->id
+            && (int) $classSession->substitute_teacher_id !== (int) $teacher->id,
             403,
             'Bukan sesi Anda.'
         );
@@ -746,8 +746,8 @@ class GuruController extends Controller
 
         // Verifikasi hak akses (hanya guru utama atau guru pengganti yang boleh akses)
         abort_if(
-            $classSession->teacher_id !== $teacher->id && 
-            $classSession->substitute_teacher_id !== $teacher->id, 
+            (int) $classSession->teacher_id !== (int) $teacher->id && 
+            (int) $classSession->substitute_teacher_id !== (int) $teacher->id, 
             403, 
             'Bukan sesi Anda.'
         );
