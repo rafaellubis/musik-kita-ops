@@ -16,10 +16,10 @@
                 $dateObj = \Carbon\Carbon::parse($sesi->session_date);
             @endphp
             <div class="relative mb-6 last:mb-2">
-                <!-- Bullet marker -->
+                <!-- Penanda titik timeline -->
                 <div class="absolute -left-[31px] top-1.5 w-3 h-3 rounded-full bg-accent border-2 border-white ring-2 ring-accent/30"></div>
                 
-                <!-- Sesi meta header -->
+                <!-- Header metadata sesi -->
                 <div class="flex items-center justify-between gap-2 mb-1.5">
                     <span class="text-xs font-bold text-primary">
                         {{ $dateObj->locale('id')->isoFormat('dddd, D MMM Y') }}
@@ -29,9 +29,9 @@
                     </span>
                 </div>
 
-                <!-- Details Card -->
+                <!-- Kartu Rincian Catatan -->
                 <div class="bg-surface/50 border border-outline-variant/20 rounded-xl p-3 shadow-sm">
-                    <!-- Rating Star -->
+                    <!-- Rating Bintang -->
                     @if($note && $note->session_rating)
                         <div class="text-amber-500 text-xs mb-1.5 flex gap-0.5" title="Rating: {{ $note->session_rating }}/5">
                             @for($i = 1; $i <= 5; $i++)
@@ -40,7 +40,7 @@
                         </div>
                     @endif
 
-                    <!-- Content Fields -->
+                    <!-- Kolom Konten Catatan -->
                     <div class="space-y-2">
                         <div>
                             <span class="block text-[10px] font-bold text-on-surface-variant/60 uppercase tracking-wider">Materi</span>
