@@ -78,6 +78,9 @@ export default {
                     text:        '#3A2015',              // teks utama konten
                     muted:       '#7A3818',              // teks sekunder
                     dim:         '#C47A45',              // teks redup (tanggal, hint)
+                    warning:     '#8A6848',              // teks peringatan / informasi
+                    warningBg:   'rgba(212,168,83,0.06)',// background box peringatan
+                    warningBorder:'rgba(212,168,83,0.18)',// border box peringatan
                 },
             },
         },
