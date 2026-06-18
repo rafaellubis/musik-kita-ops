@@ -1,90 +1,117 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-mk-text leading-tight">
-            Absensi Harian
-        </h2>
-    </x-slot>
-
-    <div class="py-6 px-4 lg:px-8">
-
+        <div class="flex justify-between items-center flex-wrap gap-4">
+            <div>
+                <h2 class="font-semibold text-xl text-mk-text leading-tight">
+                    Absensi Harian
+                </h2>
+                <div class="text-xs text-mk-dim mt-0.5">Input absensi dan jadwal pengganti harian</div>
+            </div>
             {{-- Link ke Open Slot Board --}}
             @php $jumlahPending = \App\Models\ClassSession::where('status','IZIN_PENDING')->count(); @endphp
             @if($jumlahPending > 0)
             <a href="{{ route('absensi.open-slots') }}"
-               class="flex items-center gap-2 mb-4 px-4 py-2.5 bg-amber-50 border border-amber-200
-                      text-amber-700 rounded-xl text-sm font-medium hover:bg-amber-100 transition-colors">
+               class="px-4 py-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg text-sm font-semibold hover:bg-amber-100 transition-colors flex items-center gap-2 shadow-sm">
                 <span>📋</span>
-                <span>{{ $jumlahPending }} slot terbuka di Open Slot Board</span>
-                <span class="ml-auto text-amber-400">›</span>
+                <span>Open Slot Board ({{ $jumlahPending }})</span>
             </a>
             @endif
+        </div>
+    </x-slot>
 
-            {{-- Tanggal + progress --}}
-            <div class="flex items-center gap-3 mb-4 flex-wrap">
-                <span class="text-mk-dim text-sm">
-                    {{ \Carbon\Carbon::parse($tanggal)->translatedFormat('l, d F Y') }}
+    <div class="py-6 px-4 lg:px-8 space-y-6">
+
+        {{-- Tanggal + progress navigation bar --}}
+        <div class="flex flex-wrap items-center justify-between gap-4 bg-mk-card p-4 rounded-xl border border-mk-borderLight shadow-sm fade-in-up" style="animation-delay:40ms">
+            <div class="flex items-center gap-2">
+                <a href="{{ route('absensi.index', ['date' => $tanggalObj->copy()->subDay()->toDateString()]) }}"
+                   class="p-2 rounded-lg border border-mk-border hover:bg-mk-surface text-mk-muted transition-colors text-sm font-semibold"
+                   title="Hari Sebelumnya">
+                    &larr;
+                </a>
+                <span class="text-mk-text font-bold text-sm md:text-base px-2">
+                    {{ $tanggalObj->translatedFormat('l, d F Y') }}
                 </span>
-                <form method="GET" action="{{ route('absensi.index') }}">
+                <a href="{{ route('absensi.index', ['date' => $tanggalObj->copy()->addDay()->toDateString()]) }}"
+                   class="p-2 rounded-lg border border-mk-border hover:bg-mk-surface text-mk-muted transition-colors text-sm font-semibold"
+                   title="Hari Berikutnya">
+                    &rarr;
+                </a>
+                <form method="GET" action="{{ route('absensi.index') }}" class="ml-2">
                     <input type="date" name="date" value="{{ $tanggal }}"
-                        class="border border-mk-border text-mk-muted text-sm rounded px-3 py-1.5 cursor-pointer"
+                        class="border border-mk-border text-mk-muted text-sm rounded-lg px-3 py-1.5 cursor-pointer focus:border-mk-accent focus:ring-1 focus:ring-mk-accent"
                         onchange="this.form.submit()">
                 </form>
+            </div>
+
+            <div class="flex items-center gap-3">
                 @php
                     $belum   = $sessions->where('status', 'SCHEDULED')->count();
                     $selesai = $sessions->where('status', '!=', 'SCHEDULED')->count();
                 @endphp
-                <span class="bg-yellow-100 text-yellow-700 text-xs font-semibold px-3 py-1 rounded-full">
-                    {{ $belum }} belum diinput
+                <span class="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+                    <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                    {{ $belum }} Belum Diinput
                 </span>
-                <span class="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full">
-                    {{ $selesai }} sudah ✓
+                <span class="inline-flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                    {{ $selesai }} Sudah Diinput
                 </span>
             </div>
+        </div>
 
-            {{-- Filter bar --}}
-            <div class="flex items-center gap-2 mb-3 flex-wrap">
+        {{-- Filter bar --}}
+        <div class="flex flex-wrap gap-3 items-center bg-mk-card p-4 rounded-xl border border-mk-borderLight shadow-sm fade-in-up" style="animation-delay:80ms">
+            <div class="flex-1 min-w-[200px] relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-mk-dim text-sm">🔍</span>
+                <input type="text" id="filter-murid" placeholder="Cari nama murid..."
+                    class="w-full pl-9 pr-3 py-2 border border-mk-border text-mk-muted text-sm rounded-lg focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
+            </div>
+
+            <div class="flex flex-wrap gap-2">
                 <select id="filter-guru"
-                    class="border border-mk-border text-mk-muted text-sm rounded px-3 py-1.5">
+                    class="border border-mk-border text-mk-muted text-sm rounded-lg px-3 py-2 bg-white focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
                     <option value="">Semua Guru</option>
                     @foreach($teachers as $t)
                         <option value="{{ $t->id }}">{{ $t->name }}</option>
                     @endforeach
                 </select>
                 <select id="filter-status"
-                    class="border border-mk-border text-mk-muted text-sm rounded px-3 py-1.5">
-                    <option value="">Semua Status</option>
+                    class="border border-mk-border text-mk-muted text-sm rounded-lg px-3 py-2 bg-white focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
+                    <option value="">Semua Status Sesi</option>
                     <option value="SCHEDULED">Belum Diinput</option>
                     <option value="inputted">Sudah Diinput</option>
                 </select>
-                <input type="text" id="filter-murid" placeholder="Cari murid..."
-                    class="border border-mk-border text-mk-muted text-sm rounded px-3 py-1.5 w-48">
             </div>
+        </div>
 
-            {{-- Tabel / empty state --}}
-            @if($sessions->isEmpty())
-                <div class="text-mk-dim text-sm py-12 text-center bg-mk-card rounded-lg shadow-sm border border-mk-border">
-                    Belum ada sesi terjadwal untuk tanggal ini.
-                </div>
-            @else
-                <div class="bg-mk-card shadow-sm rounded-lg">
+        {{-- Tabel / empty state --}}
+        @if($sessions->isEmpty())
+            <div class="text-mk-dim text-sm py-12 text-center bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm fade-in-up" style="animation-delay:120ms">
+                🚫 Belum ada sesi terjadwal untuk tanggal ini.
+            </div>
+        @else
+            <div class="bg-mk-card border border-mk-borderLight shadow-sm rounded-2xl overflow-hidden fade-in-up" style="animation-delay:120ms">
+                <div class="overflow-x-auto">
                     <table class="w-full table-fixed text-sm divide-y divide-mk-border" id="tabel-absensi">
-                        <thead class="bg-mk-surface rounded-t-lg">
-                            <tr class="text-mk-dim font-medium text-xs uppercase tracking-wider">
-                                <th class="px-3 py-3 text-left w-[8%] rounded-tl-lg">Jam</th>
-                                <th class="px-3 py-3 text-left w-[35%]">Murid</th>
-                                <th class="px-3 py-3 text-center w-[14%]">Guru</th>
-                                <th class="px-3 py-3 text-left w-[8%]">Ruang</th>
-                                <th class="px-3 py-3 text-right w-[35%] rounded-tr-lg">Aksi</th>
+                        <thead>
+                            <tr class="bg-mk-surface border-b border-mk-borderLight text-left text-[10px] font-semibold uppercase tracking-widest text-mk-dim">
+                                <th class="px-4 py-3 text-left w-[10%]">Jam</th>
+                                <th class="px-4 py-3 text-left w-[33%]">Murid & Paket</th>
+                                <th class="px-4 py-3 text-left w-[14%]">Guru</th>
+                                <th class="px-4 py-3 text-left w-[10%]">Ruang</th>
+                                <th class="px-4 py-3 text-right w-[33%]">Input Kehadiran / Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-mk-border">
+                        <tbody class="divide-y divide-mk-borderLight">
                             @foreach($sessions as $session)
                                 @include('absensi._row', ['session' => $session, 'teachers' => $teachers, 'rooms' => $rooms])
                             @endforeach
                         </tbody>
                     </table>
                 </div>
-            @endif
+            </div>
+        @endif
 
     </div>
 
