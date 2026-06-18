@@ -224,5 +224,109 @@
     }
 })();
 </script>
+
+<!-- Global Session History Drawer/Modal -->
+<div x-data="{
+        open: false,
+        loading: false,
+        studentName: '',
+        sessionId: null,
+        contentHtml: '',
+        init() {
+            window.addEventListener('open-session-history', (e) => {
+                this.sessionId = e.detail.sessionId;
+                this.studentName = e.detail.studentName;
+                this.open = true;
+                this.loading = true;
+                this.contentHtml = '';
+                
+                fetch('/guru/sesi/' + this.sessionId + '/history')
+                    .then(res => {
+                        if (!res.ok) throw new Error();
+                        return res.text();
+                    })
+                    .then(html => {
+                        this.contentHtml = html;
+                        this.loading = false;
+                    })
+                    .catch(() => {
+                        this.contentHtml = '<div class=&quot;py-8 text-center text-red-500 text-xs font-semibold&quot;>Gagal memuat riwayat. Silakan coba lagi.</div>';
+                        this.loading = false;
+                    });
+            });
+        }
+     }"
+     x-cloak>
+     
+    <!-- Dark Backdrop -->
+    <div class="fixed inset-0 z-50 transition-opacity duration-300"
+         x-show="open"
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="open = false"
+         style="background-color: rgba(0, 0, 0, 0.45);"></div>
+
+    <!-- Drawer/Modal Container -->
+    <div class="fixed z-50 transition-all duration-300 flex flex-col bg-white shadow-2xl overflow-hidden
+                /* Mobile: Slide-up Bottom Sheet */
+                bottom-0 left-0 right-0 w-full rounded-t-2xl max-h-[85%]
+                /* Desktop: Centered Modal */
+                sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:w-[480px] sm:max-w-lg sm:rounded-2xl sm:max-h-[75%]"
+         x-show="open"
+         x-transition:enter="ease-out duration-300"
+         /* Entrance transition: slide up on mobile, fade & scale on desktop */
+         x-transition:enter-start="translate-y-full sm:translate-y-0 sm:scale-95 sm:opacity-0 sm:-translate-x-1/2 sm:-translate-y-[45%]"
+         x-transition:enter-end="translate-y-0 sm:translate-y-0 sm:scale-100 sm:opacity-100 sm:-translate-x-1/2 sm:-translate-y-1/2"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="translate-y-0 sm:translate-y-0 sm:scale-100 sm:opacity-100 sm:-translate-x-1/2 sm:-translate-y-1/2"
+         x-transition:leave-end="translate-y-full sm:translate-y-0 sm:scale-95 sm:opacity-0 sm:-translate-x-1/2 sm:-translate-y-[45%]"
+         :style="window.innerWidth >= 640 && open ? 'transform: translate(-50%, -50%)' : ''">
+
+        <!-- Handle Seret untuk Mobile -->
+        <div class="w-10 h-1 bg-outline-variant/30 rounded-full mx-auto my-3 shrink-0 sm:hidden"></div>
+
+        <!-- Header -->
+        <div class="px-5 py-3.5 border-b border-outline-variant/15 flex items-center justify-between shrink-0 bg-surface/30">
+            <div>
+                <h3 class="font-bold text-primary text-sm tracking-tight sm:text-base font-serif">Riwayat Sesi</h3>
+                <p class="text-[10px] text-on-surface-variant/60 font-semibold tracking-wide uppercase mt-0.5" x-text="studentName"></p>
+            </div>
+            <button type="button" 
+                    class="text-on-surface-variant/60 hover:text-primary p-1 rounded-full hover:bg-surface transition-colors cursor-pointer text-base leading-none"
+                    @click="open = false">
+                &times;
+            </button>
+        </div>
+
+        <!-- Area Konten Utama -->
+        <div class="p-5 overflow-y-auto flex-1">
+            <!-- Loading Skeleton -->
+            <div x-show="loading" class="space-y-4 py-2">
+                <div class="animate-pulse flex gap-3">
+                    <div class="w-3 h-3 bg-outline-variant/40 rounded-full mt-1.5"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-3 bg-outline-variant/40 rounded w-1/3"></div>
+                        <div class="h-20 bg-outline-variant/30 rounded-xl"></div>
+                    </div>
+                </div>
+                <div class="animate-pulse flex gap-3">
+                    <div class="w-3 h-3 bg-outline-variant/40 rounded-full mt-1.5"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-3 bg-outline-variant/40 rounded w-1/4"></div>
+                        <div class="h-16 bg-outline-variant/30 rounded-xl"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Konten Riwayat Asli via AJAX -->
+            <div x-show="!loading" x-html="contentHtml"></div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
