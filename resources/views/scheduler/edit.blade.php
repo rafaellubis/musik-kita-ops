@@ -15,19 +15,19 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-xs">
                     <thead>
-                        <tr class="border-b border-mk-borderLight text-left text-mk-muted">
-                            <th class="pb-2 pr-4 font-semibold">Job</th>
-                            <th class="pb-2 pr-4 font-semibold">Status</th>
-                            <th class="pb-2 pr-4 font-semibold">Frekuensi</th>
-                            <th class="pb-2 font-semibold">Eksekusi Berikutnya</th>
+                        <tr class="border-b border-mk-borderLight text-left text-[10px] font-semibold uppercase tracking-widest text-mk-dim">
+                            <th class="pb-3 pr-4">Job</th>
+                            <th class="pb-3 pr-4">Status</th>
+                            <th class="pb-3 pr-4">Frekuensi</th>
+                            <th class="pb-3">Eksekusi Berikutnya</th>
                         </tr>
                     </thead>
                     <tbody class="text-mk-text">
                         @foreach($preview as $row)
-                        <tr class="border-b border-mk-borderLight/60 last:border-0">
+                        <tr class="border-b border-mk-borderLight/60 last:border-0 hover:bg-mk-surface/40 transition-colors duration-150">
                             <td class="py-2.5 pr-4 font-medium">{{ $row['name'] }}</td>
                             <td class="py-2.5 pr-4">
-                                <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $row['enabled'] ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500' }}">
+                                <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $row['enabled'] ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-mk-surface text-mk-dim border border-mk-borderLight' }}">
                                     {{ $row['status_label'] }}
                                 </span>
                             </td>
@@ -65,10 +65,10 @@
             @csrf
             @method('PATCH')
 
-            <div class="bg-mk-surface border border-mk-border rounded-2xl p-4 flex gap-3 text-xs text-mk-text shadow-sm">
-                <span class="text-lg shrink-0" aria-hidden="true">⚙️</span>
+            <div class="bg-mk-warningBg border border-mk-warningBorder text-mk-warning rounded-2xl p-4 flex gap-3 text-xs shadow-sm">
+                <span class="text-lg shrink-0" aria-hidden="true">⚠️</span>
                 <div>
-                    <h4 class="font-bold text-secondary mb-1">Cara Kerja Pengaturan Scheduler</h4>
+                    <h4 class="font-bold text-mk-warning mb-1">Cara Kerja Pengaturan Scheduler</h4>
                     <p class="text-mk-muted leading-relaxed">
                         Perubahan disimpan ke database dan dibaca ulang setiap kali <code class="text-xs">php artisan schedule:run</code> dijalankan (biasanya ≤ 1 menit).
                         Task Windows Task Scheduler atau cron Linux <strong>tidak</strong> diubah otomatis dari halaman ini.
@@ -92,37 +92,37 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <span class="sr-only">Aktifkan generator SPP bulanan</span>
-                            <input type="checkbox" name="scheduler_invoices_generate_enabled" value="1" class="sr-only" x-model="invoicesGenerateEnabled">
-                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner"
+                            <input type="checkbox" name="scheduler_invoices_generate_enabled" value="1" class="sr-only peer" x-model="invoicesGenerateEnabled">
+                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-offset-1 peer-focus:ring-mk-accent"
                                  :class="invoicesGenerateEnabled ? 'bg-secondary border-secondary' : 'bg-gray-200 border-gray-300'">
                                 <span class="absolute top-1 left-1 bg-white rounded-full h-5 w-5 transition-transform duration-200 shadow-sm"
                                       :class="invoicesGenerateEnabled ? 'translate-x-5' : 'translate-x-0'"></span>
                             </div>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4" :class="!invoicesGenerateEnabled && 'opacity-50'" x-show="invoicesGenerateEnabled">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4" :class="!invoicesGenerateEnabled && 'opacity-50'" x-show="invoicesGenerateEnabled" x-cloak>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Tanggal Eksekusi</label>
                             <input type="number" name="scheduler_invoices_generate_day"
                                    value="{{ old('scheduler_invoices_generate_day', $settings['scheduler_invoices_generate_day']) }}"
-                                   min="1" max="31" class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_invoices_generate_day') border-red-500 @enderror">
-                            @error('scheduler_invoices_generate_day')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   min="1" max="31" class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_invoices_generate_day') border-red-500 @enderror">
+                            @error('scheduler_invoices_generate_day')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Jam Eksekusi</label>
                             <input type="time" name="scheduler_invoices_generate_time"
                                    value="{{ old('scheduler_invoices_generate_time', $settings['scheduler_invoices_generate_time']) }}"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_invoices_generate_time') border-red-500 @enderror">
-                            @error('scheduler_invoices_generate_time')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_invoices_generate_time') border-red-500 @enderror">
+                            @error('scheduler_invoices_generate_time')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Tempo Akhir Bayar SPP</label>
                             <input type="number" name="spp_due_day"
                                    value="{{ old('spp_due_day', $settings['spp_due_day']) }}"
                                    min="1" max="31" required
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('spp_due_day') border-red-500 @enderror">
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('spp_due_day') border-red-500 @enderror">
                             <p class="text-[10px] text-mk-dim mt-1">Tempo akhir bayar SPP setiap bulan (default tgl 10).</p>
-                            @error('spp_due_day')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                            @error('spp_due_day')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                     </div>
                 </div>
@@ -134,34 +134,34 @@
                             <h4 class="text-sm font-semibold text-mk-text">Apply Denda Harian</h4>
                             <p class="text-[11px] text-mk-muted mt-0.5">
                                 Kalkulasi denda Rp {{ number_format($finePerDay, 0, ',', '.') }}/hari.
-                                Nominal diatur di <a href="{{ route('invoice-components.index') }}" class="text-indigo-600 hover:underline">Komponen Invoice → DENDA</a>.
+                                Nominal diatur di <a href="{{ route('invoice-components.index') }}" class="text-indigo-600 hover:underline focus:outline-none focus:ring-2 focus:ring-mk-accent rounded">Komponen Invoice → DENDA</a>.
                             </p>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <span class="sr-only">Aktifkan apply denda harian</span>
-                            <input type="checkbox" name="scheduler_fines_apply_enabled" value="1" class="sr-only" x-model="finesApplyEnabled">
-                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner"
+                            <input type="checkbox" name="scheduler_fines_apply_enabled" value="1" class="sr-only peer" x-model="finesApplyEnabled">
+                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-offset-1 peer-focus:ring-mk-accent"
                                  :class="finesApplyEnabled ? 'bg-secondary border-secondary' : 'bg-gray-200 border-gray-300'">
                                 <span class="absolute top-1 left-1 bg-white rounded-full h-5 w-5 transition-transform duration-200 shadow-sm"
                                       :class="finesApplyEnabled ? 'translate-x-5' : 'translate-x-0'"></span>
                             </div>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 gap-4" :class="!finesApplyEnabled && 'opacity-50'" x-show="finesApplyEnabled">
+                    <div class="grid grid-cols-2 gap-4" :class="!finesApplyEnabled && 'opacity-50'" x-show="finesApplyEnabled" x-cloak>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Tanggal Mulai Denda</label>
                             <input type="number" name="scheduler_fines_start_day"
                                    value="{{ old('scheduler_fines_start_day', $settings['scheduler_fines_start_day']) }}"
                                    min="1" max="31"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_fines_start_day') border-red-500 @enderror">
-                            @error('scheduler_fines_start_day')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_fines_start_day') border-red-500 @enderror">
+                            @error('scheduler_fines_start_day')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Jam Eksekusi</label>
                             <input type="time" name="scheduler_fines_apply_time"
                                    value="{{ old('scheduler_fines_apply_time', $settings['scheduler_fines_apply_time']) }}"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_fines_apply_time') border-red-500 @enderror">
-                            @error('scheduler_fines_apply_time')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_fines_apply_time') border-red-500 @enderror">
+                            @error('scheduler_fines_apply_time')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                     </div>
                 </div>
@@ -175,34 +175,34 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <span class="sr-only">Aktifkan reminder tagihan otomatis</span>
-                            <input type="checkbox" name="scheduler_invoice_reminder_enabled" value="1" class="sr-only" x-model="invoiceReminderEnabled">
-                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner"
+                            <input type="checkbox" name="scheduler_invoice_reminder_enabled" value="1" class="sr-only peer" x-model="invoiceReminderEnabled">
+                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-offset-1 peer-focus:ring-mk-accent"
                                  :class="invoiceReminderEnabled ? 'bg-secondary border-secondary' : 'bg-gray-200 border-gray-300'">
                                 <span class="absolute top-1 left-1 bg-white rounded-full h-5 w-5 transition-transform duration-200 shadow-sm"
                                       :class="invoiceReminderEnabled ? 'translate-x-5' : 'translate-x-0'"></span>
                             </div>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" :class="!invoiceReminderEnabled && 'opacity-50'" x-show="invoiceReminderEnabled">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" :class="!invoiceReminderEnabled && 'opacity-50'" x-show="invoiceReminderEnabled" x-cloak>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Kirim H-N (hari sebelum tempo)</label>
                             <input type="number" name="scheduler_invoice_reminder_days_before_due"
                                    value="{{ old('scheduler_invoice_reminder_days_before_due', $settings['scheduler_invoice_reminder_days_before_due']) }}"
                                    min="1" max="{{ max(1, $settings['spp_due_day'] - 1) }}"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_invoice_reminder_days_before_due') border-red-500 @enderror">
-                            @error('scheduler_invoice_reminder_days_before_due')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_invoice_reminder_days_before_due') border-red-500 @enderror">
+                            @error('scheduler_invoice_reminder_days_before_due')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Jam Eksekusi</label>
                             <input type="time" name="scheduler_invoice_reminder_time"
                                    value="{{ old('scheduler_invoice_reminder_time', $settings['scheduler_invoice_reminder_time']) }}"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_invoice_reminder_time') border-red-500 @enderror">
-                            @error('scheduler_invoice_reminder_time')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_invoice_reminder_time') border-red-500 @enderror">
+                            @error('scheduler_invoice_reminder_time')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Template WhatsApp</label>
                             <select name="scheduler_invoice_reminder_template_id"
-                                    class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_invoice_reminder_template_id') border-red-500 @enderror">
+                                    class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_invoice_reminder_template_id') border-red-500 @enderror">
                                 <option value="">— Pilih template —</option>
                                 @foreach($whatsappTemplates as $tpl)
                                     <option value="{{ $tpl->id }}"
@@ -211,7 +211,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            @error('scheduler_invoice_reminder_template_id')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                            @error('scheduler_invoice_reminder_template_id')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                     </div>
                 </div>
@@ -225,29 +225,29 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <span class="sr-only">Aktifkan deteksi murid overdue</span>
-                            <input type="checkbox" name="scheduler_overdue_check_enabled" value="1" class="sr-only" x-model="overdueCheckEnabled">
-                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner"
+                            <input type="checkbox" name="scheduler_overdue_check_enabled" value="1" class="sr-only peer" x-model="overdueCheckEnabled">
+                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-offset-1 peer-focus:ring-mk-accent"
                                  :class="overdueCheckEnabled ? 'bg-secondary border-secondary' : 'bg-gray-200 border-gray-300'">
                                 <span class="absolute top-1 left-1 bg-white rounded-full h-5 w-5 transition-transform duration-200 shadow-sm"
                                       :class="overdueCheckEnabled ? 'translate-x-5' : 'translate-x-0'"></span>
                             </div>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 gap-4" :class="!overdueCheckEnabled && 'opacity-50'" x-show="overdueCheckEnabled">
+                    <div class="grid grid-cols-2 gap-4" :class="!overdueCheckEnabled && 'opacity-50'" x-show="overdueCheckEnabled" x-cloak>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Tanggal Eksekusi</label>
                             <input type="number" name="scheduler_overdue_check_day"
                                    value="{{ old('scheduler_overdue_check_day', $settings['scheduler_overdue_check_day']) }}"
                                    min="1" max="31"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_overdue_check_day') border-red-500 @enderror">
-                            @error('scheduler_overdue_check_day')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_overdue_check_day') border-red-500 @enderror">
+                            @error('scheduler_overdue_check_day')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Jam Eksekusi</label>
                             <input type="time" name="scheduler_overdue_check_time"
                                    value="{{ old('scheduler_overdue_check_time', $settings['scheduler_overdue_check_time']) }}"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_overdue_check_time') border-red-500 @enderror">
-                            @error('scheduler_overdue_check_time')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_overdue_check_time') border-red-500 @enderror">
+                            @error('scheduler_overdue_check_time')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                     </div>
                 </div>
@@ -269,29 +269,29 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <span class="sr-only">Aktifkan generator sesi mingguan</span>
-                            <input type="checkbox" name="scheduler_sessions_generate_enabled" value="1" class="sr-only" x-model="sessionsGenerateEnabled">
-                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner"
+                            <input type="checkbox" name="scheduler_sessions_generate_enabled" value="1" class="sr-only peer" x-model="sessionsGenerateEnabled">
+                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-offset-1 peer-focus:ring-mk-accent"
                                  :class="sessionsGenerateEnabled ? 'bg-secondary border-secondary' : 'bg-gray-200 border-gray-300'">
                                 <span class="absolute top-1 left-1 bg-white rounded-full h-5 w-5 transition-transform duration-200 shadow-sm"
                                       :class="sessionsGenerateEnabled ? 'translate-x-5' : 'translate-x-0'"></span>
                             </div>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 gap-4" :class="!sessionsGenerateEnabled && 'opacity-50'" x-show="sessionsGenerateEnabled">
+                    <div class="grid grid-cols-2 gap-4" :class="!sessionsGenerateEnabled && 'opacity-50'" x-show="sessionsGenerateEnabled" x-cloak>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Tanggal Eksekusi</label>
                             <input type="number" name="scheduler_sessions_generate_day"
                                    value="{{ old('scheduler_sessions_generate_day', $settings['scheduler_sessions_generate_day']) }}"
                                    min="1" max="31"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_sessions_generate_day') border-red-500 @enderror">
-                            @error('scheduler_sessions_generate_day')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_sessions_generate_day') border-red-500 @enderror">
+                            @error('scheduler_sessions_generate_day')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Jam Eksekusi</label>
                             <input type="time" name="scheduler_sessions_generate_time"
                                    value="{{ old('scheduler_sessions_generate_time', $settings['scheduler_sessions_generate_time']) }}"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_sessions_generate_time') border-red-500 @enderror">
-                            @error('scheduler_sessions_generate_time')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_sessions_generate_time') border-red-500 @enderror">
+                            @error('scheduler_sessions_generate_time')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                     </div>
                 </div>
@@ -305,29 +305,29 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <span class="sr-only">Aktifkan kalkulasi honor guru</span>
-                            <input type="checkbox" name="scheduler_honor_calculate_enabled" value="1" class="sr-only" x-model="honorCalculateEnabled">
-                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner"
+                            <input type="checkbox" name="scheduler_honor_calculate_enabled" value="1" class="sr-only peer" x-model="honorCalculateEnabled">
+                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-offset-1 peer-focus:ring-mk-accent"
                                  :class="honorCalculateEnabled ? 'bg-secondary border-secondary' : 'bg-gray-200 border-gray-300'">
                                 <span class="absolute top-1 left-1 bg-white rounded-full h-5 w-5 transition-transform duration-200 shadow-sm"
                                       :class="honorCalculateEnabled ? 'translate-x-5' : 'translate-x-0'"></span>
                             </div>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 gap-4" :class="!honorCalculateEnabled && 'opacity-50'" x-show="honorCalculateEnabled">
+                    <div class="grid grid-cols-2 gap-4" :class="!honorCalculateEnabled && 'opacity-50'" x-show="honorCalculateEnabled" x-cloak>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Tanggal Eksekusi</label>
                             <input type="number" name="scheduler_honor_calculate_day"
                                    value="{{ old('scheduler_honor_calculate_day', $settings['scheduler_honor_calculate_day']) }}"
                                    min="1" max="31"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_honor_calculate_day') border-red-500 @enderror">
-                            @error('scheduler_honor_calculate_day')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_honor_calculate_day') border-red-500 @enderror">
+                            @error('scheduler_honor_calculate_day')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Jam Eksekusi</label>
                             <input type="time" name="scheduler_honor_calculate_time"
                                    value="{{ old('scheduler_honor_calculate_time', $settings['scheduler_honor_calculate_time']) }}"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_honor_calculate_time') border-red-500 @enderror">
-                            @error('scheduler_honor_calculate_time')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_honor_calculate_time') border-red-500 @enderror">
+                            @error('scheduler_honor_calculate_time')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                     </div>
                 </div>
@@ -341,20 +341,20 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <span class="sr-only">Aktifkan cuti ke aktif otomatis</span>
-                            <input type="checkbox" name="scheduler_cuti_return_enabled" value="1" class="sr-only" x-model="cutiReturnEnabled">
-                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner"
+                            <input type="checkbox" name="scheduler_cuti_return_enabled" value="1" class="sr-only peer" x-model="cutiReturnEnabled">
+                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-offset-1 peer-focus:ring-mk-accent"
                                  :class="cutiReturnEnabled ? 'bg-secondary border-secondary' : 'bg-gray-200 border-gray-300'">
                                 <span class="absolute top-1 left-1 bg-white rounded-full h-5 w-5 transition-transform duration-200 shadow-sm"
                                       :class="cutiReturnEnabled ? 'translate-x-5' : 'translate-x-0'"></span>
                             </div>
                         </label>
                     </div>
-                    <div class="max-w-xs" :class="!cutiReturnEnabled && 'opacity-50'" x-show="cutiReturnEnabled">
+                    <div class="max-w-xs" :class="!cutiReturnEnabled && 'opacity-50'" x-show="cutiReturnEnabled" x-cloak>
                         <label class="block text-[11px] font-semibold text-mk-muted mb-1">Jam Eksekusi Harian</label>
                         <input type="time" name="scheduler_cuti_return_time"
                                value="{{ old('scheduler_cuti_return_time', $settings['scheduler_cuti_return_time']) }}"
-                               class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_cuti_return_time') border-red-500 @enderror">
-                        @error('scheduler_cuti_return_time')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                               class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_cuti_return_time') border-red-500 @enderror">
+                        @error('scheduler_cuti_return_time')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                     </div>
                 </div>
 
@@ -367,42 +367,42 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <span class="sr-only">Aktifkan generate slip gaji staff</span>
-                            <input type="checkbox" name="scheduler_staff_payroll_enabled" value="1" class="sr-only" x-model="staffPayrollEnabled">
-                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner"
+                            <input type="checkbox" name="scheduler_staff_payroll_enabled" value="1" class="sr-only peer" x-model="staffPayrollEnabled">
+                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-offset-1 peer-focus:ring-mk-accent"
                                  :class="staffPayrollEnabled ? 'bg-secondary border-secondary' : 'bg-gray-200 border-gray-300'">
                                 <span class="absolute top-1 left-1 bg-white rounded-full h-5 w-5 transition-transform duration-200 shadow-sm"
                                       :class="staffPayrollEnabled ? 'translate-x-5' : 'translate-x-0'"></span>
                             </div>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 gap-4" :class="!staffPayrollEnabled && 'opacity-50'" x-show="staffPayrollEnabled">
+                    <div class="grid grid-cols-2 gap-4" :class="!staffPayrollEnabled && 'opacity-50'" x-show="staffPayrollEnabled" x-cloak>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Tanggal Eksekusi</label>
                             <input type="number" name="scheduler_staff_payroll_day"
                                    value="{{ old('scheduler_staff_payroll_day', $settings['scheduler_staff_payroll_day']) }}"
                                    min="1" max="31"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_staff_payroll_day') border-red-500 @enderror">
-                            @error('scheduler_staff_payroll_day')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_staff_payroll_day') border-red-500 @enderror">
+                            @error('scheduler_staff_payroll_day')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Jam Eksekusi</label>
                             <input type="time" name="scheduler_staff_payroll_time"
                                    value="{{ old('scheduler_staff_payroll_time', $settings['scheduler_staff_payroll_time']) }}"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('scheduler_staff_payroll_time') border-red-500 @enderror">
-                            @error('scheduler_staff_payroll_time')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_staff_payroll_time') border-red-500 @enderror">
+                            @error('scheduler_staff_payroll_time')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                     </div>
                 </div>
             </section>
 
             {{-- Zona 4: Reminder & Notifikasi --}}
-            <section class="bg-mk-card rounded-2xl border border-mk-borderLight p-6 shadow-sm space-y-4">
-                <header>
+            <section class="bg-mk-card rounded-2xl border border-mk-borderLight p-6 shadow-sm space-y-0">
+                <header class="mb-5">
                     <h3 class="text-sm font-bold text-mk-text">Reminder & Notifikasi</h3>
                     <p class="text-[11px] text-mk-muted mt-0.5">Pengingat jadwal kelas via Fonnte ke ortu murid.</p>
                 </header>
 
-                <div class="pt-4 border-t border-mk-borderLight space-y-4">
+                <div class="pt-5 border-t border-mk-borderLight space-y-4">
                     <div class="flex justify-between items-start gap-4">
                         <div>
                             <h4 class="text-sm font-semibold text-mk-text">WhatsApp Reminder Jadwal Kelas</h4>
@@ -410,8 +410,8 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <span class="sr-only">Aktifkan WhatsApp reminder jadwal</span>
-                            <input type="checkbox" name="schedule_reminder_enabled" value="1" class="sr-only" x-model="reminderEnabled">
-                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner"
+                            <input type="checkbox" name="schedule_reminder_enabled" value="1" class="sr-only peer" x-model="reminderEnabled">
+                            <div class="w-12 h-7 rounded-full transition-colors relative border shadow-inner peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-offset-1 peer-focus:ring-mk-accent"
                                  :class="reminderEnabled ? 'bg-secondary border-secondary' : 'bg-gray-200 border-gray-300'">
                                 <span class="absolute top-1 left-1 bg-white rounded-full h-5 w-5 transition-transform duration-200 shadow-sm"
                                       :class="reminderEnabled ? 'translate-x-5' : 'translate-x-0'"></span>
@@ -419,11 +419,11 @@
                         </label>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" :class="!reminderEnabled && 'opacity-50'" x-show="reminderEnabled">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" :class="!reminderEnabled && 'opacity-50'" x-show="reminderEnabled" x-cloak>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Mode Pengiriman</label>
                             <select name="schedule_reminder_mode" x-model="reminderMode"
-                                    class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary">
+                                    class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0">
                                 <option value="day_before">H-1 Pelajaran (Harian)</option>
                                 <option value="same_day">Hari-H Pelajaran (Harian)</option>
                                 <option value="hours_before">N Jam Sebelum Pelajaran (Berkala)</option>
@@ -434,8 +434,8 @@
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Jam Pengiriman</label>
                             <input type="time" name="schedule_reminder_send_time"
                                    value="{{ old('schedule_reminder_send_time', $settings['schedule_reminder_send_time']) }}"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary">
-                            @error('schedule_reminder_send_time')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0">
+                            @error('schedule_reminder_send_time')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div x-show="reminderMode === 'hours_before'">
@@ -443,8 +443,8 @@
                             <input type="number" name="schedule_reminder_hours_before"
                                    value="{{ old('schedule_reminder_hours_before', $settings['schedule_reminder_hours_before']) }}"
                                    min="1" max="24"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary">
-                            @error('schedule_reminder_hours_before')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0">
+                            @error('schedule_reminder_hours_before')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
 
                         <div x-show="reminderMode === 'hours_before'">
@@ -452,23 +452,23 @@
                             <input type="number" name="schedule_reminder_poll_minutes"
                                    value="{{ old('schedule_reminder_poll_minutes', $settings['schedule_reminder_poll_minutes']) }}"
                                    min="5" max="60"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary">
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0">
                             <p class="text-[10px] text-mk-dim mt-1">Seberapa sering cron cek sesi (mode N jam sebelum).</p>
-                            @error('schedule_reminder_poll_minutes')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                            @error('schedule_reminder_poll_minutes')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                     </div>
                 </div>
             </section>
 
             {{-- Zona 5: Integrasi WhatsApp --}}
-            <section class="bg-mk-card rounded-2xl border border-mk-borderLight p-6 shadow-sm space-y-5">
-                <header>
+            <section class="bg-mk-card rounded-2xl border border-mk-borderLight p-6 shadow-sm space-y-0">
+                <header class="mb-5">
                     <h3 class="text-sm font-bold text-mk-text">Integrasi WhatsApp</h3>
                     <p class="text-[11px] text-mk-muted mt-0.5">Kredensial disimpan terenkripsi. Isi field hanya jika ingin mengganti nilai yang sudah ada.</p>
                 </header>
 
                 {{-- Fonnte --}}
-                <div class="pt-4 border-t border-mk-borderLight space-y-4">
+                <div class="pt-5 border-t border-mk-borderLight space-y-4">
                     <h4 class="text-sm font-semibold text-mk-text">Fonnte <span class="text-[11px] font-normal text-mk-muted">(reminder jadwal kelas)</span></h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -492,15 +492,15 @@
                                        name="integration_fonnte_token"
                                        placeholder="Token baru (kosongkan jika tidak mengubah)"
                                        autocomplete="new-password"
-                                       class="w-full h-9 rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary pr-16 @error('integration_fonnte_token') border-red-500 @enderror">
+                                       class="w-full h-9 rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 pr-16 @error('integration_fonnte_token') border-red-500 @enderror">
                                 @if($settings['integration_fonnte_token_configured'])
                                 <button type="button" @click="toggleSecret('fonnte')"
-                                        class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-mk-muted hover:text-mk-text px-2 py-1">
+                                        class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-mk-muted hover:text-mk-text px-2 py-1 focus:outline-none focus:ring-2 focus:ring-mk-accent rounded">
                                     <span x-text="showFonnteToken ? 'Sembunyi' : 'Tampil'"></span>
                                 </button>
                                 @endif
                             </div>
-                            @error('integration_fonnte_token')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                            @error('integration_fonnte_token')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Base URL API</label>
@@ -521,14 +521,14 @@
                             <input type="url" name="integration_fonnte_base_url"
                                    value="{{ old('integration_fonnte_base_url', $settings['integration_fonnte_base_url']) }}"
                                    placeholder="https://api.fonnte.com"
-                                   class="w-full h-9 rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('integration_fonnte_base_url') border-red-500 @enderror">
-                            @error('integration_fonnte_base_url')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full h-9 rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('integration_fonnte_base_url') border-red-500 @enderror">
+                            @error('integration_fonnte_base_url')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                     </div>
                 </div>
 
                 {{-- Wablas --}}
-                <div class="pt-4 border-t border-mk-borderLight space-y-4">
+                <div class="pt-5 mt-5 border-t border-mk-borderLight space-y-4">
                     <h4 class="text-sm font-semibold text-mk-text">Wablas <span class="text-[11px] font-normal text-mk-muted">(reminder tagihan & laporan sesi)</span></h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -550,15 +550,15 @@
                                        name="integration_wablas_token"
                                        placeholder="Token baru (kosongkan jika tidak mengubah)"
                                        autocomplete="new-password"
-                                       class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary pr-16 @error('integration_wablas_token') border-red-500 @enderror">
+                                       class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 pr-16 @error('integration_wablas_token') border-red-500 @enderror">
                                 @if($settings['integration_wablas_token_configured'])
                                 <button type="button" @click="toggleSecret('wablasToken')"
-                                        class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-mk-muted hover:text-mk-text px-2 py-1">
+                                        class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-mk-muted hover:text-mk-text px-2 py-1 focus:outline-none focus:ring-2 focus:ring-mk-accent rounded">
                                     <span x-text="showWablasToken ? 'Sembunyi' : 'Tampil'"></span>
                                 </button>
                                 @endif
                             </div>
-                            @error('integration_wablas_token')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                            @error('integration_wablas_token')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Secret Key</label>
@@ -579,23 +579,23 @@
                                        name="integration_wablas_secret_key"
                                        placeholder="Secret key baru (kosongkan jika tidak mengubah)"
                                        autocomplete="new-password"
-                                       class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary pr-16 @error('integration_wablas_secret_key') border-red-500 @enderror">
+                                       class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 pr-16 @error('integration_wablas_secret_key') border-red-500 @enderror">
                                 @if($settings['integration_wablas_secret_configured'])
                                 <button type="button" @click="toggleSecret('wablasSecret')"
-                                        class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-mk-muted hover:text-mk-text px-2 py-1">
+                                        class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-mk-muted hover:text-mk-text px-2 py-1 focus:outline-none focus:ring-2 focus:ring-mk-accent rounded">
                                     <span x-text="showWablasSecret ? 'Sembunyi' : 'Tampil'"></span>
                                 </button>
                                 @endif
                             </div>
-                            @error('integration_wablas_secret_key')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                            @error('integration_wablas_secret_key')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Base URL API</label>
                             <input type="url" name="integration_wablas_base_url"
                                    value="{{ old('integration_wablas_base_url', $settings['integration_wablas_base_url']) }}"
                                    placeholder="https://solo.wablas.com"
-                                   class="w-full rounded-lg text-xs shadow-sm focus:border-secondary focus:ring-secondary @error('integration_wablas_base_url') border-red-500 @enderror">
-                            @error('integration_wablas_base_url')<p class="text-[10px] text-red-600 mt-1">{{ $message }}</p>@enderror
+                                   class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('integration_wablas_base_url') border-red-500 @enderror">
+                            @error('integration_wablas_base_url')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                     </div>
                 </div>
@@ -603,7 +603,7 @@
 
             <div class="flex justify-end pt-2 pb-6">
                 <button type="submit"
-                        class="px-6 py-2.5 rounded-lg text-sm font-bold transition-colors btn-mk-primary flex items-center gap-2 shadow-sm">
+                        class="px-6 py-2.5 rounded-lg text-sm font-bold transition-colors btn-mk-primary flex items-center gap-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                     Simpan Konfigurasi
                 </button>
             </div>
