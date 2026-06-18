@@ -50,7 +50,7 @@
 
                 {{-- Topbar --}}
                 <div class="mk-topbar relative z-20 shrink-0 h-14 bg-mk-sidebar border-b border-white/[0.06]
-                            flex items-center px-4 lg:px-6 gap-3">
+                            flex items-center px-3 lg:px-6 gap-2 lg:gap-3 overflow-hidden">
 
                     {{-- Hamburger (mobile) --}}
                     <button @click="sidebarOpen = !sidebarOpen"
@@ -69,9 +69,10 @@
                              style="max-width:140px">
                     </div>
 
-                    {{-- Kanan: Tanggal + Bell Notif + Avatar + Keluar --}}
-                    <div class="flex items-center gap-3 ml-auto">
-                        <span class="hidden sm:block text-xs text-white/60 font-semibold tracking-wide font-sans">
+                    {{-- Kanan: Tanggal + Bell Notif + Jam + Keluar --}}
+                    <div class="flex items-center gap-1.5 sm:gap-3 ml-auto min-w-0">
+                        {{-- Tanggal: hanya tampil di sm ke atas --}}
+                        <span class="hidden sm:block text-xs text-white/60 font-semibold tracking-wide font-sans whitespace-nowrap">
                             {{ now()->translatedFormat('l, j F Y') }}
                         </span>
 
@@ -164,16 +165,16 @@
                         </div>
                         @endif
 
-                        {{-- Jam digital --}}
+                        {{-- Jam digital: disembunyikan di layar kecil agar tidak memenuhi topbar --}}
                         <div id="topbar-clock"
-                             class="text-xs text-[#b1f0ce] font-mono tracking-wider bg-[#2c694e]/20 border border-[#2c694e]/30 px-2.5 py-1 rounded-full shrink-0 min-w-[50px] text-center shadow-inner">
+                             class="hidden sm:block text-xs text-[#b1f0ce] font-mono tracking-wider bg-[#2c694e]/20 border border-[#2c694e]/30 px-2 py-1 rounded-full shrink-0 min-w-[46px] text-center shadow-inner">
                         </div>
 
                         {{-- Tombol keluar --}}
-                        <form method="POST" action="{{ route('logout') }}" class="m-0">
+                        <form method="POST" action="{{ route('logout') }}" class="m-0 shrink-0">
                             @csrf
                             <button type="submit"
-                                    class="text-xs text-white/70 hover:text-white/95 hover:border-white/20 border border-white/10 transition-all px-3 py-1.5 rounded-full bg-white/5 font-semibold shadow-sm">
+                                    class="text-xs text-white/70 hover:text-white/95 hover:border-white/20 border border-white/10 transition-all px-2.5 py-1.5 rounded-full bg-white/5 font-semibold shadow-sm whitespace-nowrap">
                                 Keluar
                             </button>
                         </form>
@@ -188,7 +189,7 @@
                 @endisset
 
                 {{-- Konten Halaman --}}
-                <main class="mk-content flex-1 overflow-y-auto bg-mk-bg">
+                <main class="mk-content flex-1 overflow-y-auto overflow-x-hidden bg-mk-bg">
                     {{-- Flash Messages (satu sumber — kontras tinggi agar teks terbaca di dark/light) --}}
                     @php
                         $mkFlashStyles = [
