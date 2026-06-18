@@ -22,8 +22,9 @@
     <div class="py-6 px-4 lg:px-8 space-y-6">
 
         {{-- Tanggal + progress navigation bar --}}
-        <div class="flex flex-wrap items-center justify-between gap-4 bg-mk-card p-4 rounded-xl border border-mk-borderLight shadow-sm fade-in-up" style="animation-delay:40ms">
-            <div class="flex items-center gap-2">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-mk-card p-4 rounded-xl border border-mk-borderLight shadow-sm fade-in-up" style="animation-delay:40ms">
+            {{-- Navigasi tanggal --}}
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 <a href="{{ route('absensi.index', ['date' => $tanggalObj->copy()->subDay()->toDateString()]) }}"
                    class="p-2 rounded-lg border border-mk-border hover:bg-mk-surface text-mk-muted transition-colors text-sm font-semibold"
                    title="Hari Sebelumnya">
@@ -37,14 +38,15 @@
                    title="Hari Berikutnya">
                     &rarr;
                 </a>
-                <form method="GET" action="{{ route('absensi.index') }}" class="ml-2">
+                <form method="GET" action="{{ route('absensi.index') }}" class="ml-1">
                     <input type="date" name="date" value="{{ $tanggal }}"
                         class="border border-mk-border text-mk-muted text-sm rounded-lg px-3 py-1.5 cursor-pointer focus:border-mk-accent focus:ring-1 focus:ring-mk-accent"
                         onchange="this.form.submit()">
                 </form>
             </div>
 
-            <div class="flex items-center gap-3">
+            {{-- Badge jumlah sesi --}}
+            <div class="flex items-center gap-3 flex-wrap">
                 @php
                     $belum   = $sessions->where('status', 'SCHEDULED')->count();
                     $selesai = $sessions->where('status', '!=', 'SCHEDULED')->count();
@@ -62,7 +64,7 @@
 
         {{-- Filter bar --}}
         <div class="flex flex-wrap gap-3 items-center bg-mk-card p-4 rounded-xl border border-mk-borderLight shadow-sm fade-in-up" style="animation-delay:80ms">
-            <div class="flex-1 min-w-[200px] relative">
+            <div class="flex-1 min-w-[180px] relative">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-mk-dim text-sm">🔍</span>
                 <input type="text" id="filter-murid" placeholder="Cari nama murid..."
                     class="w-full pl-9 pr-3 py-2 border border-mk-border text-mk-muted text-sm rounded-lg focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
@@ -91,7 +93,8 @@
                 🚫 Belum ada sesi terjadwal untuk tanggal ini.
             </div>
         @else
-            <div class="bg-mk-card border border-mk-borderLight shadow-sm rounded-2xl overflow-hidden fade-in-up" style="animation-delay:120ms">
+            {{-- ===== DESKTOP VIEW (md ke atas) ===== --}}
+            <div class="hidden md:block bg-mk-card border border-mk-borderLight shadow-sm rounded-2xl overflow-hidden fade-in-up" style="animation-delay:120ms">
                 <div class="overflow-x-auto">
                     <table class="w-full table-fixed text-sm divide-y divide-mk-border" id="tabel-absensi">
                         <thead>
@@ -111,17 +114,25 @@
                     </table>
                 </div>
             </div>
+
+            {{-- ===== MOBILE VIEW (di bawah md) ===== --}}
+            <div class="block md:hidden space-y-3 fade-in-up" id="list-absensi-mobile" style="animation-delay:120ms">
+                @foreach($sessions as $session)
+                    @include('absensi._row-mobile', ['session' => $session, 'teachers' => $teachers, 'rooms' => $rooms])
+                @endforeach
+            </div>
         @endif
 
     </div>
 
-    {{-- Client-side filter JS --}}
+    {{-- Client-side filter JS — mencakup tabel desktop DAN kartu mobile --}}
     <script>
         function applyFilter() {
             const guruId  = document.getElementById('filter-guru').value;
             const status  = document.getElementById('filter-status').value;
             const murid   = document.getElementById('filter-murid').value.toLowerCase();
 
+            // Filter baris tabel desktop
             document.querySelectorAll('#tabel-absensi tbody tr').forEach(row => {
                 const matchGuru   = !guruId || row.dataset.teacherId === guruId;
                 const rowStatus   = row.dataset.status;
@@ -129,6 +140,16 @@
                     || (status === 'inputted' ? rowStatus !== 'SCHEDULED' : rowStatus === status);
                 const matchMurid  = !murid || row.dataset.murid.toLowerCase().includes(murid);
                 row.style.display = (matchGuru && matchStatus && matchMurid) ? '' : 'none';
+            });
+
+            // Filter kartu mobile
+            document.querySelectorAll('#list-absensi-mobile .card-sesi-mobile').forEach(card => {
+                const matchGuru   = !guruId || card.dataset.teacherId === guruId;
+                const cardStatus  = card.dataset.status;
+                const matchStatus = !status
+                    || (status === 'inputted' ? cardStatus !== 'SCHEDULED' : cardStatus === status);
+                const matchMurid  = !murid || card.dataset.murid.toLowerCase().includes(murid);
+                card.style.display = (matchGuru && matchStatus && matchMurid) ? '' : 'none';
             });
         }
 

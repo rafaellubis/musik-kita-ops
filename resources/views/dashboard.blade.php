@@ -1,11 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
             <div>
                 <div class="text-xs text-mk-dim mb-0.5 font-medium">Selamat datang, {{ auth()->user()->name }}</div>
                 <h2 class="font-semibold text-xl text-mk-text">Dashboard — {{ $monthName }}</h2>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2 shrink-0">
                 @if($isOwner)
                 <a href="{{ route('reports.finance', ['year' => $year, 'month' => $month]) }}"
                    class="px-4 py-2 bg-mk-sidebar hover:bg-opacity-90 text-white rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center gap-1">
@@ -24,7 +24,7 @@
 
         @if(!$isAdmin)
         {{-- ===== BARIS 1: KARTU KPI ===== --}}
-        <div class="grid grid-cols-2 {{ $isOwner ? 'lg:grid-cols-4' : 'lg:grid-cols-2' }} gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 {{ $isOwner ? 'lg:grid-cols-4' : 'lg:grid-cols-2' }} gap-4">
 
             @if($isOwner)
             <div class="bg-mk-card rounded-2xl p-5 border border-mk-border shadow-sm fade-in-up" style="animation-delay:0ms">
@@ -227,42 +227,44 @@
                     <a href="{{ route('absensi.index') }}" class="text-xs text-secondary hover:text-secondary-container hover:underline transition-colors font-medium">Buka Absensi →</a>
                 </div>
                 @if($absensiHariIni->count() > 0)
-                <table class="w-full text-xs">
-                    <thead>
-                        <tr class="border-b border-mk-borderLight bg-mk-surface">
-                            <th class="px-4 py-2.5 text-left text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Jam</th>
-                            <th class="px-4 py-2.5 text-left text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Murid</th>
-                            <th class="px-4 py-2.5 text-left text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Guru</th>
-                            <th class="px-4 py-2.5 text-left text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Ruangan</th>
-                            <th class="px-4 py-2.5 text-center text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($absensiHariIni as $sesi)
-                        <tr class="border-b border-mk-borderLight hover:bg-mk-surface/40 transition-colors">
-                            <td class="px-4 py-2.5 font-mono text-mk-muted">
-                                {{ $sesi->schedule ? \Carbon\Carbon::parse($sesi->schedule->start_time)->format('H:i') : '—' }}
-                            </td>
-                            <td class="px-4 py-2.5">
-                                <a href="{{ route('students.show', $sesi->student_id) }}" class="text-secondary hover:text-secondary-container hover:underline font-semibold">
-                                    {{ $sesi->student->full_name ?? '—' }}
-                                </a>
-                            </td>
-                            <td class="px-4 py-2.5 text-mk-muted">
-                                {{ $sesi->teacher->name ?? '—' }}
-                            </td>
-                            <td class="px-4 py-2.5 text-mk-muted font-medium">
-                                {{ $sesi->schedule?->room?->code ?? '—' }}
-                            </td>
-                            <td class="px-4 py-2.5 text-center">
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#c47a45]/10 text-[#c47a45]">
-                                    Belum Diabsen
-                                </span>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs min-w-[500px]">
+                        <thead>
+                            <tr class="border-b border-mk-borderLight bg-mk-surface">
+                                <th class="px-4 py-2.5 text-left text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Jam</th>
+                                <th class="px-4 py-2.5 text-left text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Murid</th>
+                                <th class="px-4 py-2.5 text-left text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Guru</th>
+                                <th class="px-4 py-2.5 text-left text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Ruangan</th>
+                                <th class="px-4 py-2.5 text-center text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($absensiHariIni as $sesi)
+                            <tr class="border-b border-mk-borderLight hover:bg-mk-surface/40 transition-colors">
+                                <td class="px-4 py-2.5 font-mono text-mk-muted">
+                                    {{ $sesi->schedule ? \Carbon\Carbon::parse($sesi->schedule->start_time)->format('H:i') : '—' }}
+                                </td>
+                                <td class="px-4 py-2.5">
+                                    <a href="{{ route('students.show', $sesi->student_id) }}" class="text-secondary hover:text-secondary-container hover:underline font-semibold">
+                                        {{ $sesi->student->full_name ?? '—' }}
+                                    </a>
+                                </td>
+                                <td class="px-4 py-2.5 text-mk-muted">
+                                    {{ $sesi->teacher->name ?? '—' }}
+                                </td>
+                                <td class="px-4 py-2.5 text-mk-muted font-medium">
+                                    {{ $sesi->schedule?->room?->code ?? '—' }}
+                                </td>
+                                <td class="px-4 py-2.5 text-center">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#c47a45]/10 text-[#c47a45]">
+                                        Belum Diabsen
+                                    </span>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
                 @else
                 <div class="px-5 py-8 text-center text-mk-dim text-sm bg-mk-bg/5">Tidak ada sesi yang perlu diabsen hari ini.</div>
                 @endif
@@ -307,44 +309,46 @@
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/5 text-primary tracking-wide uppercase">Terlama</span>
                 </div>
                 @if($invoiceTerlama->count() > 0)
-                <table class="w-full text-xs">
-                    <thead>
-                        <tr class="border-b border-mk-borderLight bg-mk-surface">
-                            <th class="px-4 py-2.5 text-left text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Murid</th>
-                            @if(!$isAdmin)
-                            <th class="px-4 py-2.5 text-right text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Sisa</th>
-                            @endif
-                            <th class="px-4 py-2.5 text-center text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Jatuh Tempo</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($invoiceTerlama as $inv)
-                        <tr class="border-b border-mk-borderLight hover:bg-mk-surface/40 transition-colors">
-                            <td class="px-4 py-2.5">
-                                <a href="{{ route('invoices.show', $inv) }}" class="text-secondary hover:text-secondary-container hover:underline font-semibold">
-                                    {{ $inv->student->full_name ?? '—' }}
-                                </a>
-                                <div class="text-mk-dim font-mono text-[10px] mt-0.5">{{ $inv->invoice_number }}</div>
-                            </td>
-                            @if(!$isAdmin)
-                            <td class="px-4 py-2.5 text-right font-mono font-semibold text-error">
-                                Rp {{ number_format($inv->total_amount - $inv->paid_amount, 0, ',', '.') }}
-                            </td>
-                            @endif
-                            <td class="px-4 py-2.5 text-center">
-                                @if($inv->due_date)
-                                    @php $late = max(0, (int) now()->startOfDay()->diffInDays($inv->due_date, false) * -1) @endphp
-                                    <span class="{{ $late > 0 ? 'text-error font-bold' : 'text-mk-dim font-medium' }}">
-                                        {{ $inv->due_date->format('d M') }}
-                                        @if($late > 0)<span class="ml-0.5">(+{{ $late }}h)</span>@endif
-                                    </span>
-                                @else —
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs min-w-[500px]">
+                        <thead>
+                            <tr class="border-b border-mk-borderLight bg-mk-surface">
+                                <th class="px-4 py-2.5 text-left text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Murid</th>
+                                @if(!$isAdmin)
+                                <th class="px-4 py-2.5 text-right text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Sisa</th>
                                 @endif
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                <th class="px-4 py-2.5 text-center text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Jatuh Tempo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($invoiceTerlama as $inv)
+                            <tr class="border-b border-mk-borderLight hover:bg-mk-surface/40 transition-colors">
+                                <td class="px-4 py-2.5">
+                                    <a href="{{ route('invoices.show', $inv) }}" class="text-secondary hover:text-secondary-container hover:underline font-semibold">
+                                        {{ $inv->student->full_name ?? '—' }}
+                                    </a>
+                                    <div class="text-mk-dim font-mono text-[10px] mt-0.5">{{ $inv->invoice_number }}</div>
+                                </td>
+                                @if(!$isAdmin)
+                                <td class="px-4 py-2.5 text-right font-mono font-semibold text-error">
+                                    Rp {{ number_format($inv->total_amount - $inv->paid_amount, 0, ',', '.') }}
+                                </td>
+                                @endif
+                                <td class="px-4 py-2.5 text-center">
+                                    @if($inv->due_date)
+                                        @php $late = max(0, (int) now()->startOfDay()->diffInDays($inv->due_date, false) * -1) @endphp
+                                        <span class="{{ $late > 0 ? 'text-error font-bold' : 'text-mk-dim font-medium' }}">
+                                            {{ $inv->due_date->format('d M') }}
+                                            @if($late > 0)<span class="ml-0.5">(+{{ $late }}h)</span>@endif
+                                        </span>
+                                    @else —
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
                 @else
                 <div class="px-5 py-8 text-center text-mk-dim text-sm bg-mk-bg/5">Tidak ada piutang aktif.</div>
                 @endif
@@ -361,32 +365,34 @@
                 @endif
             </div>
             @if($honorBelumBayar->count() > 0)
-            <table class="w-full text-xs">
-                <thead>
-                    <tr class="border-b border-mk-borderLight bg-mk-surface">
-                        <th class="px-4 py-2.5 text-left text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Guru</th>
-                        <th class="px-4 py-2.5 text-center text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Periode</th>
-                        <th class="px-4 py-2.5 text-right text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Total Honor</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($honorBelumBayar as $slip)
-                    <tr class="border-b border-mk-borderLight hover:bg-mk-surface/40 transition-colors">
-                        <td class="px-4 py-2.5 font-medium">
-                            <a href="{{ route('honors.show', $slip) }}" class="text-secondary hover:text-secondary-container hover:underline font-semibold">
-                                {{ $slip->teacher->name }}
-                            </a>
-                        </td>
-                        <td class="px-4 py-2.5 text-center text-mk-dim font-medium">
-                            {{ str_pad($slip->month, 2, '0', STR_PAD_LEFT) }}/{{ $slip->year }}
-                        </td>
-                        <td class="px-4 py-2.5 text-right font-mono font-semibold text-secondary">
-                            Rp {{ number_format($slip->total_honor, 0, ',', '.') }}
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs min-w-[500px]">
+                    <thead>
+                        <tr class="border-b border-mk-borderLight bg-mk-surface">
+                            <th class="px-4 py-2.5 text-left text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Guru</th>
+                            <th class="px-4 py-2.5 text-center text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Periode</th>
+                            <th class="px-4 py-2.5 text-right text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Total Honor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($honorBelumBayar as $slip)
+                        <tr class="border-b border-mk-borderLight hover:bg-mk-surface/40 transition-colors">
+                            <td class="px-4 py-2.5 font-medium">
+                                <a href="{{ route('honors.show', $slip) }}" class="text-secondary hover:text-secondary-container hover:underline font-semibold">
+                                    {{ $slip->teacher->name }}
+                                </a>
+                            </td>
+                            <td class="px-4 py-2.5 text-center text-mk-dim font-medium">
+                                {{ str_pad($slip->month, 2, '0', STR_PAD_LEFT) }}/{{ $slip->year }}
+                            </td>
+                            <td class="px-4 py-2.5 text-right font-mono font-semibold text-secondary">
+                                Rp {{ number_format($slip->total_honor, 0, ',', '.') }}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
             @else
             <div class="px-5 py-8 text-center text-mk-dim text-sm bg-mk-bg/5">Semua honor sudah dibayarkan. ✓</div>
             @endif
