@@ -144,14 +144,14 @@
                         <thead class="bg-mk-surface">
                             <tr class="border-b text-left text-xs text-mk-dim uppercase">
                                 @if($isOwner)
-                                <th class="px-4 py-3 w-[20%]">No. Slip</th>
-                                <th class="px-4 py-3 w-[20%]">Guru</th>
-                                <th class="px-4 py-3 w-[13%] text-right">Honor Pokok</th>
-                                <th class="px-4 py-3 w-[12%] text-right">Transport</th>
-                                <th class="px-4 py-3 w-[12%] text-right">Lain-lain</th>
-                                <th class="px-4 py-3 w-[13%] text-right font-bold">Total</th>
-                                <th class="px-4 py-3 w-[6%] text-center">Status</th>
-                                <th class="px-4 py-3 w-[4%] text-right">Aksi</th>
+                                <th class="px-4 py-3 w-[15%]">No. Slip</th>
+                                <th class="px-4 py-3 w-[15%]">Guru</th>
+                                <th class="px-4 py-3 w-[12%] text-right">Honor Pokok</th>
+                                <th class="px-4 py-3 w-[10%] text-right">Transport</th>
+                                <th class="px-4 py-3 w-[10%] text-right">Lain-lain</th>
+                                <th class="px-4 py-3 w-[12%] text-right font-bold">Total</th>
+                                <th class="px-4 py-3 w-[12%] text-center">Status</th>
+                                <th class="px-4 py-3 w-[14%] text-right">Aksi</th>
                                 @else
                                 <th class="px-4 py-3 w-[28%]">No. Slip</th>
                                 <th class="px-4 py-3 w-[40%]">Guru</th>
