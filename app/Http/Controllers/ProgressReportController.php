@@ -103,7 +103,7 @@ class ProgressReportController extends Controller
             'layout' => 'admin',
             'backUrl' => route('progress-reports.show', $progressReport),
             'downloadUrl' => route('progress-reports.pdf.download', $progressReport),
-            'fileUrl' => route('progress-reports.pdf.file', $progressReport),
+            'fileUrl' => route('progress-reports.pdf.file', $progressReport, false),
         ];
     }
 }

@@ -479,7 +479,7 @@ class GuruController extends Controller
                 ? route('guru.laporan.edit', $progressReport)
                 : route('guru.laporan.index'),
             'downloadUrl' => route('guru.laporan.pdf.download', $progressReport),
-            'fileUrl' => route('guru.laporan.pdf.file', $progressReport),
+            'fileUrl' => route('guru.laporan.pdf.file', $progressReport, false),
         ]);
     }
 

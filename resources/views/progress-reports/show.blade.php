@@ -32,27 +32,27 @@
     <div class="py-6 px-4 lg:px-8 max-w-3xl space-y-4">
 
         {{-- Header meta --}}
-        <div class="bg-white shadow-sm rounded-lg p-5">
+        <div class="bg-white shadow-sm rounded-lg p-5 border border-mk-border-light">
             <table class="w-full text-sm">
-                <tr><td class="text-gray-500 w-40 py-0.5">Nama</td><td class="py-0.5 font-semibold">{{ $progressReport->student->full_name }}</td></tr>
-                <tr><td class="text-gray-500 py-0.5">Instrumen</td><td class="py-0.5">{{ $pkg->getReportInstrumentLabel() }}</td></tr>
-                <tr><td class="text-gray-500 py-0.5">Guru Pengajar</td><td class="py-0.5">{{ $progressReport->teacher->name }}</td></tr>
-                <tr><td class="text-gray-500 py-0.5">Bulan</td><td class="py-0.5">{{ $progressReport->namaBulan() }}</td></tr>
+                <tr><td class="text-mk-muted w-40 py-0.5">Nama</td><td class="py-0.5 font-semibold text-mk-text">{{ $progressReport->student->full_name }}</td></tr>
+                <tr><td class="text-mk-muted py-0.5">Instrumen</td><td class="py-0.5 text-mk-text">{{ $pkg->getReportInstrumentLabel() }}</td></tr>
+                <tr><td class="text-mk-muted py-0.5">Guru Pengajar</td><td class="py-0.5 text-mk-text">{{ $progressReport->teacher->name }}</td></tr>
+                <tr><td class="text-mk-muted py-0.5">Bulan</td><td class="py-0.5 text-mk-text">{{ $progressReport->namaBulan() }}</td></tr>
                 <tr>
-                    <td class="text-gray-500 py-0.5">Rating Anak</td>
-                    <td class="py-0.5 text-yellow-500 tracking-wide">{{ $headerStars }}</td>
+                    <td class="text-mk-muted py-0.5">Rating Anak</td>
+                    <td class="py-0.5 text-amber-600 tracking-wide font-medium">{{ $headerStars }}</td>
                 </tr>
             </table>
         </div>
 
         {{-- Kehadiran & Materi Minggu 1–4 --}}
-        <div class="bg-white shadow-sm rounded-lg p-5">
-            <div class="font-semibold text-sm text-gray-700 mb-3">Kehadiran dan Materi yang Dipelajari</div>
+        <div class="bg-white shadow-sm rounded-lg p-5 border border-mk-border-light">
+            <div class="font-semibold text-sm text-mk-text mb-3">Kehadiran dan Materi yang Dipelajari</div>
             <div class="space-y-2">
                 @foreach ([1 => 'Minggu 1', 2 => 'Minggu 2', 3 => 'Minggu 3', 4 => 'Minggu 4'] as $seq => $label)
                     <div class="flex items-start gap-3">
-                        <span class="text-sm text-gray-500 w-20 shrink-0 pt-2">{{ $label }}</span>
-                        <div class="flex-1 border border-gray-200 rounded-lg bg-gray-50 px-3 py-2 text-sm min-h-[2.5rem] whitespace-pre-line text-gray-700">
+                        <span class="text-sm text-mk-muted w-20 shrink-0 pt-2">{{ $label }}</span>
+                        <div class="flex-1 border border-mk-border rounded-lg bg-mk-sidebar/5 px-3 py-2 text-sm min-h-[2.5rem] whitespace-pre-line text-mk-text">
                             {{ $weekly[$seq] ?? '—' }}
                         </div>
                     </div>
@@ -61,8 +61,8 @@
         </div>
 
         {{-- Rating bulanan --}}
-        <div class="bg-white shadow-sm rounded-lg p-5">
-            <div class="font-semibold text-sm text-gray-700 mb-3">
+        <div class="bg-white shadow-sm rounded-lg p-5 border border-mk-border-light">
+            <div class="font-semibold text-sm text-mk-text mb-3">
                 Perkembangan {{ $progressReport->student->full_name }} Selama Les di Bulan {{ $progressReport->namaBulan() }}
             </div>
             <div class="space-y-3 text-sm">
@@ -72,11 +72,11 @@
                         $catatan = $progressReport->{$field['catatan']};
                     @endphp
                     <div class="flex items-start gap-3">
-                        <span class="text-gray-500 w-32 shrink-0 pt-2">{{ $field['label'] }}</span>
-                        <span class="text-yellow-500 tracking-wide w-24 shrink-0 pt-2">
+                        <span class="text-mk-muted w-32 shrink-0 pt-2">{{ $field['label'] }}</span>
+                        <span class="text-amber-600 tracking-wide w-24 shrink-0 pt-2 font-medium">
                             {{ $rating ? \App\Models\ProgressReport::renderStars($rating) : '—' }}
                         </span>
-                        <div class="flex-1 border border-gray-200 rounded-lg bg-gray-50 px-3 py-2 text-gray-700 min-h-[2.5rem] whitespace-pre-line">
+                        <div class="flex-1 border border-mk-border rounded-lg bg-mk-sidebar/5 px-3 py-2 text-mk-text min-h-[2.5rem] whitespace-pre-line">
                             {{ $catatan ?: '—' }}
                         </div>
                     </div>
@@ -86,29 +86,29 @@
 
         {{-- Catatan naratif --}}
         @if($progressReport->catatan_perkembangan_musikal)
-            <div class="bg-white shadow-sm rounded-lg p-5">
-                <div class="font-semibold text-sm text-gray-700 mb-2">Catatan Perkembangan Musikal</div>
-                <p class="text-sm text-gray-600 whitespace-pre-line">{{ $progressReport->catatan_perkembangan_musikal }}</p>
+            <div class="bg-white shadow-sm rounded-lg p-5 border border-mk-border-light">
+                <div class="font-semibold text-sm text-mk-text mb-2">Catatan Perkembangan Musikal</div>
+                <p class="text-sm text-mk-muted whitespace-pre-line">{{ $progressReport->catatan_perkembangan_musikal }}</p>
             </div>
         @endif
 
         @if($progressReport->catatan_karakter)
-            <div class="bg-white shadow-sm rounded-lg p-5">
-                <div class="font-semibold text-sm text-gray-700 mb-2">Catatan Karakter</div>
-                <p class="text-sm text-gray-600 whitespace-pre-line">{{ $progressReport->catatan_karakter }}</p>
+            <div class="bg-white shadow-sm rounded-lg p-5 border border-mk-border-light">
+                <div class="font-semibold text-sm text-mk-text mb-2">Catatan Karakter</div>
+                <p class="text-sm text-mk-muted whitespace-pre-line">{{ $progressReport->catatan_karakter }}</p>
             </div>
         @endif
 
         {{-- Kesimpulan Progress --}}
         @if($progressReport->kesimpulan_progress)
-            <div class="bg-white shadow-sm rounded-lg p-5">
-                <div class="font-semibold text-sm text-gray-700 mb-3">Laporan Progress</div>
+            <div class="bg-white shadow-sm rounded-lg p-5 border border-mk-border-light">
+                <div class="font-semibold text-sm text-mk-text mb-3">Laporan Progress</div>
                 <div class="grid grid-cols-4 gap-2 text-xs text-center">
                     @foreach (\App\Models\ProgressReport::kesimpulanLabels() as $key => $label)
                         <div class="border rounded-lg px-2 py-3
                             {{ $progressReport->kesimpulan_progress === $key
-                                ? 'border-amber-600 bg-amber-50 font-bold text-amber-800'
-                                : 'border-gray-200 text-gray-400' }}">
+                                ? 'border-warning bg-warning-bg font-bold text-warning'
+                                : 'border-mk-border-light text-mk-dim bg-white' }}">
                             {{ $label }}
                         </div>
                     @endforeach
@@ -117,26 +117,26 @@
         @endif
 
         {{-- Footer — Level + Progress bar --}}
-        <div class="bg-white shadow-sm rounded-lg p-5">
-            <div class="text-sm text-gray-700 mb-3">
+        <div class="bg-white shadow-sm rounded-lg p-5 border border-mk-border-light">
+            <div class="text-sm text-mk-text mb-3">
                 {{ $emoji }} {{ $pkg->getReportInstrumentLabel() }}
             </div>
-            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Progress</div>
+            <div class="text-xs font-semibold text-mk-muted uppercase tracking-wide mb-2">Progress</div>
             <div class="flex items-center gap-3 max-w-xs">
-                <div class="w-[150px] shrink-0 bg-gray-100 rounded-full h-2.5 overflow-hidden border border-gray-200">
-                    <div class="bg-slate-700 h-2.5 rounded-full" style="width: {{ $pct }}%;"></div>
+                <div class="w-[150px] shrink-0 bg-mk-sidebar/10 rounded-full h-2.5 overflow-hidden border border-mk-border-light">
+                    <div class="bg-mk-primary h-2.5 rounded-full" style="width: {{ $pct }}%;"></div>
                 </div>
-                <span class="text-sm font-semibold text-gray-700">{{ $pct }}%</span>
+                <span class="text-sm font-semibold text-mk-text">{{ $pct }}%</span>
             </div>
         </div>
 
         {{-- Catatan per sesi --}}
         @if($progressReport->sessionNotes->isNotEmpty())
-            <div class="bg-white shadow-sm rounded-lg p-5">
-                <div class="font-semibold text-sm text-gray-700 mb-3">Catatan Per Sesi</div>
+            <div class="bg-white shadow-sm rounded-lg p-5 border border-mk-border-light">
+                <div class="font-semibold text-sm text-mk-text mb-3">Catatan Per Sesi</div>
                 @foreach($progressReport->sessionNotes->sortBy([['session_date', 'asc'], ['sort_order', 'asc']]) as $note)
                     <x-session-note-card
-                        class="mb-4 border-gray-200 bg-gray-50/50"
+                        class="mb-4 border-mk-border-light bg-mk-sidebar/5"
                         :student-name="$progressReport->student->full_name"
                         :teacher-name="$progressReport->teacher->name"
                         :substitute-teacher-name="$note->substitute_teacher_name"
@@ -150,6 +150,6 @@
             </div>
         @endif
 
-        <a href="{{ route('progress-reports.index') }}" class="text-sm text-gray-500 hover:underline">← Kembali</a>
+        <a href="{{ route('progress-reports.index') }}" class="text-sm text-mk-muted hover:text-mk-text hover:underline">← Kembali</a>
     </div>
 </x-app-layout>

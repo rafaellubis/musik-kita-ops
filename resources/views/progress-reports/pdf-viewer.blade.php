@@ -52,7 +52,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
-                <a href="{{ $backUrl }}" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">
+                <a href="{{ $backUrl }}" class="px-4 py-2 rounded-lg text-sm font-medium border border-mk-border text-mk-text hover:bg-mk-card">
                     ← Kembali
                 </a>
                 <a href="{{ $downloadUrl }}" class="px-4 py-2 rounded-lg text-sm font-bold btn-mk-primary">
@@ -63,7 +63,7 @@
     </x-slot>
 
     <div class="py-4 px-4 lg:px-8">
-        <div class="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
+        <div class="bg-white shadow-sm rounded-lg overflow-hidden border border-mk-border-light">
             <iframe
                 src="{{ $fileUrl }}"
                 title="Laporan Progress {{ $progressReport->student->full_name }}"

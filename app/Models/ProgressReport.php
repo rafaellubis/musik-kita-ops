@@ -34,6 +34,10 @@ class ProgressReport extends Model
         'rating_reading'  => 'integer',
         'rating_repertoar' => 'integer',
         'progress_percent' => 'integer',
+        'teacher_id'      => 'integer',
+        'student_id'      => 'integer',
+        'enrollment_id'   => 'integer',
+        'report_template_id' => 'integer',
     ];
 
     public function enrollment(): BelongsTo { return $this->belongsTo(Enrollment::class); }
