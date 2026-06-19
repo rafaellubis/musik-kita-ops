@@ -15,12 +15,12 @@
     </x-slot>
 
     <div class="py-6 px-4 lg:px-8">
-        <div class="bg-mk-card shadow-sm sm:rounded-lg p-6 max-w-2xl">
+        <div class="bg-mk-card border border-mk-borderLight shadow-sm rounded-lg p-6 max-w-2xl">
 
-            <div class="mb-5 p-3 bg-mk-surface rounded text-sm text-mk-muted">
-                <div class="font-medium">{{ $honor->slip_number }} · {{ $monthName }}</div>
-                <div class="mt-1">
-                    Honor pokok (otomatis): <strong>Rp {{ number_format($honor->base_honor, 0, ',', '.') }}</strong>
+            <div class="mb-5 p-4 bg-mk-surface border border-mk-borderLight rounded-lg text-sm text-mk-text">
+                <div class="font-bold">{{ $honor->slip_number }} · {{ $monthName }}</div>
+                <div class="mt-1.5 font-medium">
+                    Honor pokok (otomatis): <strong class="text-mk-muted">Rp {{ number_format($honor->base_honor, 0, ',', '.') }}</strong>
                 </div>
                 <div class="text-xs text-mk-dim mt-1">
                     Honor pokok tidak bisa diubah di sini — berasal dari data absensi.
@@ -114,22 +114,22 @@
                 </div>
 
                 {{-- Preview total --}}
-                <div class="mb-5 p-3 bg-blue-50 rounded text-sm">
-                    <div class="text-xs text-mk-dim mb-1">Preview Total Honor</div>
-                    <div class="font-bold text-blue-700">
+                <div class="mb-5 p-4 bg-mk-surface border border-mk-borderLight rounded-lg text-sm text-mk-text">
+                    <div class="text-xs text-mk-dim mb-1 font-semibold uppercase tracking-wider">Preview Total Honor</div>
+                    <div class="font-bold text-mk-muted text-base">
                         Rp {{ number_format($honor->base_honor, 0, ',', '.') }}
-                        + <span id="preview_event">Rp {{ number_format($honor->event_honor, 0, ',', '.') }}</span>
-                        + <span id="preview_transport">Rp {{ number_format($honor->transport_honor, 0, ',', '.') }}</span>
-                        + <span id="preview_other">Rp {{ number_format($honor->other_honor, 0, ',', '.') }}</span>
-                        = <span id="preview_total" class="text-lg">Rp {{ number_format($honor->total_honor, 0, ',', '.') }}</span>
+                        + <span id="preview_event" class="text-mk-text">Rp {{ number_format($honor->event_honor, 0, ',', '.') }}</span>
+                        + <span id="preview_transport" class="text-mk-text">Rp {{ number_format($honor->transport_honor, 0, ',', '.') }}</span>
+                        + <span id="preview_other" class="text-mk-text">Rp {{ number_format($honor->other_honor, 0, ',', '.') }}</span>
+                        = <span id="preview_total" class="text-xl text-mk-accent font-extrabold block sm:inline mt-1 sm:mt-0">Rp {{ number_format($honor->total_honor, 0, ',', '.') }}</span>
                     </div>
                 </div>
 
                 <div class="flex gap-2 justify-end">
                     <a href="{{ route('honors.show', $honor) }}"
-                       class="px-4 py-2 bg-mk-surface hover:bg-mk-surfaceHover rounded text-sm">Batal</a>
+                       class="px-4 py-2 border border-mk-border text-mk-muted hover:bg-mk-surface hover:text-mk-text rounded-md text-sm font-semibold transition-colors">Batal</a>
                     <button type="submit"
-                            class="px-4 py-2 rounded text-sm font-bold transition-colors btn-mk-primary"
+                            class="px-4 py-2 rounded-md text-sm font-bold transition-colors btn-mk-primary"
                             >
                         Simpan Perubahan
                     </button>
