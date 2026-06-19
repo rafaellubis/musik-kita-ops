@@ -47,6 +47,12 @@
         part2Error: '',
         pendingNotes: '',
         async save(newStatus, extra = {}) {
+            const oldStatus = this.status;
+            // Optimistic update for simple immediate states (HADIR, HANGUS, IZIN_VIDEO, SCHEDULED)
+            const isOptimistic = ['HADIR', 'HANGUS', 'IZIN_VIDEO', 'SCHEDULED'].includes(newStatus);
+            if (isOptimistic) {
+                this.status = newStatus;
+            }
             this.loading  = true;
             this.errorMsg = '';
             try {
@@ -63,15 +69,21 @@
                 if (data.success) {
                     this.status = data.status;
                     this.dbStatus = data.status;
-                    if (data.late_minutes)            this.lateMinutes     = data.late_minutes;
+                    if (data.late_minutes !== undefined) this.lateMinutes = data.late_minutes;
                     if (data.substitute_teacher_name) this.substituteLabel = data.substitute_teacher_name;
                     if (data.replacement_label)       this.replacementLabel = data.replacement_label;
                     if (newStatus === 'IZIN_PENDING') this.pendingNotes = '';
                     this.showModal = null;
                     this.$el.dataset.status = data.status;
                 } else {
+                    this.status = oldStatus; // rollback
                     this.errorMsg = data.message || 'Gagal menyimpan.';
+                    alert(this.errorMsg);
                 }
+            } catch (err) {
+                this.status = oldStatus; // rollback
+                this.errorMsg = 'Koneksi terputus. Gagal menyimpan.';
+                alert(this.errorMsg);
             } finally { this.loading = false; }
         },
         savePending() {
@@ -88,6 +100,7 @@
         saveSplitPart1() {
             if (!this.rescheduleDate || !this.rescheduleTime) return;
             this.errorMsg = '';
+            this.loading = true;
             fetch('{{ route('absensi.split', ['classSession' => $session->id, 'part' => 1]) }}', {
                 method: 'POST',
                 headers: {
@@ -109,13 +122,18 @@
                     window.location.reload();
                 } else {
                     this.errorMsg = data.message;
+                    this.loading = false;
                 }
             })
-            .catch(() => { this.errorMsg = 'Terjadi kesalahan. Coba lagi.'; });
+            .catch(() => {
+                this.errorMsg = 'Terjadi kesalahan. Coba lagi.';
+                this.loading = false;
+            });
         },
         saveSplitPart2() {
             if (!this.part2Date || !this.part2Time) return;
             this.part2Error = '';
+            this.loading = true;
             fetch('{{ $session->origin_session_id ? route('absensi.split', ['classSession' => $session->origin_session_id, 'part' => 2]) : '' }}', {
                 method: 'POST',
                 headers: {
@@ -136,9 +154,13 @@
                     window.location.reload();
                 } else {
                     this.part2Error = data.message;
+                    this.loading = false;
                 }
             })
-            .catch(() => { this.part2Error = 'Terjadi kesalahan. Coba lagi.'; });
+            .catch(() => {
+                this.part2Error = 'Terjadi kesalahan. Coba lagi.';
+                this.loading = false;
+            });
         },
         async confirmSubstitute(action) {
             this.loading  = true;
@@ -227,8 +249,8 @@
             </span>
         @else
             {{-- Badge status jika bukan SCHEDULED --}}
-            <div x-show="status !== 'SCHEDULED'" class="flex items-center gap-1.5 flex-wrap justify-end">
-                <span x-show="status !== 'DIGANTI'" class="rounded-lg px-2.5 py-1 text-[10px] font-bold border"
+            <div x-show="status !== 'SCHEDULED'" style="display: {{ $session->status !== 'SCHEDULED' ? 'flex' : 'none' }};" class="flex items-center gap-1.5 flex-wrap justify-end">
+                <span x-show="status !== 'DIGANTI'" style="display: {{ $session->status !== 'DIGANTI' ? 'inline-flex' : 'none' }};" class="rounded-lg px-2.5 py-1 text-[10px] font-bold border inline-flex items-center gap-1"
                     :class="{
                         'bg-green-50 text-green-700 border-green-200':    status === 'HADIR',
                         'bg-orange-50 text-orange-700 border-orange-200': status === 'HADIR_TERLAMBAT',
@@ -237,8 +259,9 @@
                         'bg-amber-50 text-amber-850 border-amber-200':    status === 'IZIN_PENDING',
                         'bg-blue-50 text-blue-700 border-blue-200':       status === 'IZIN_VIDEO',
                         'bg-mk-surface text-mk-dim border-mk-border':     status === 'CANCELLED',
-                    }"
-                    x-text="
+                    }">
+                    <span x-show="loading" class="animate-spin inline-block w-2.5 h-2.5 border border-current border-t-transparent rounded-full"></span>
+                    <span x-text="
                         status === 'HADIR'            ? '✓ HADIR' :
                         status === 'HADIR_TERLAMBAT'  ? '⏱ +' + lateMinutes + ' mnt' :
                         status === 'HANGUS'            ? '✕ HANGUS' :
@@ -246,16 +269,18 @@
                         status === 'IZIN_PENDING'      ? '⏳ PENDING' :
                         status === 'IZIN_VIDEO'        ? '📹 VIDEO' :
                         status === 'CANCELLED'         ? 'CANCELLED' : status
-                    ">
+                    "></span>
                 </span>
 
                 {{-- Status DIGANTI: nama guru pengganti + konfirmasi kehadiran --}}
-                <div x-show="status === 'DIGANTI'" class="flex items-center gap-1 flex-wrap">
+                <div x-show="status === 'DIGANTI'" style="display: {{ $session->status === 'DIGANTI' ? 'flex' : 'none' }};" class="flex items-center gap-1 flex-wrap">
                     <span class="rounded-lg px-2 py-1 text-[10px] border bg-purple-50 text-purple-700 border-purple-200 font-semibold"
                           x-text="'↔ ' + substituteLabel"></span>
-                    <span class="rounded-lg px-2 py-1 text-[10px] border font-bold"
-                          :class="honorConfirmed ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'"
-                          x-text="honorConfirmed ? '✓ HADIR' : '⏳ SCHEDULED'"></span>
+                    <span class="rounded-lg px-2 py-1 text-[10px] border font-bold inline-flex items-center gap-1"
+                          :class="honorConfirmed ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'">
+                        <span x-show="loading" class="animate-spin inline-block w-2.5 h-2.5 border border-current border-t-transparent rounded-full"></span>
+                        <span x-text="honorConfirmed ? '✓ HADIR' : '⏳ SCHEDULED'"></span>
+                    </span>
                 </div>
             </div>
         @endif
@@ -274,8 +299,9 @@
         @endif
 
         {{-- ===== AKSI PEMBATALAN/UBAH (jika sudah diinput) ===== --}}
-        <div x-show="status !== 'SCHEDULED'" class="flex justify-end gap-2 mt-2 pt-2 border-t border-mk-borderLight/30">
+        <div x-show="status !== 'SCHEDULED'" style="display: {{ $session->status !== 'SCHEDULED' ? 'flex' : 'none' }};" class="flex justify-end gap-2 mt-2 pt-2 border-t border-mk-borderLight/30">
             <button x-show="status === 'HADIR' || status === 'HADIR_TERLAMBAT'"
+                style="display: {{ in_array($session->status, ['HADIR', 'HADIR_TERLAMBAT']) ? 'inline-block' : 'none' }};"
                 @click="save('SCHEDULED')"
                 :disabled="loading"
                 class="text-red-500 hover:text-red-700 text-xs font-semibold underline py-1 focus:outline-none">
@@ -283,6 +309,7 @@
             </button>
             @if(!isset($sessionIdsWithReplacement[$session->id]))
             <button x-show="status !== 'HADIR' && status !== 'HADIR_TERLAMBAT' && !(status === 'DIGANTI' && !honorConfirmed)"
+                style="display: {{ (!in_array($session->status, ['HADIR', 'HADIR_TERLAMBAT']) && !($session->status === 'DIGANTI' && $session->honor_code === null)) ? 'inline-block' : 'none' }};"
                 @click="status = 'SCHEDULED'; errorMsg = ''"
                 class="text-mk-dim hover:text-mk-muted text-xs font-semibold underline py-1 focus:outline-none">
                 Ubah
@@ -290,20 +317,23 @@
             @endif
 
             {{-- Konfirmasi kehadiran guru pengganti --}}
-            <div x-show="status === 'DIGANTI' && !honorConfirmed" class="flex items-center gap-1.5">
+            <div x-show="status === 'DIGANTI' && !honorConfirmed" style="display: {{ ($session->status === 'DIGANTI' && $session->honor_code === null) ? 'flex' : 'none' }};" class="flex items-center gap-1.5">
                 <button @click="confirmSubstitute('hadir')" :disabled="loading"
-                        class="rounded-lg px-3 py-1.5 text-xs font-bold bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors focus:outline-none">
-                    ✓ Hadir
+                        class="rounded-lg px-3 py-1.5 text-xs font-bold bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors focus:outline-none flex items-center gap-1">
+                    <span x-show="loading" class="animate-spin inline-block w-2.5 h-2.5 border border-current border-t-transparent rounded-full"></span>
+                    <span x-text="loading ? '...' : '✓ Hadir'"></span>
                 </button>
                 <button @click="confirmSubstitute('batal')" :disabled="loading"
-                        class="rounded-lg px-3 py-1.5 text-xs font-bold bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition-colors focus:outline-none">
-                    ✗ Batalkan
+                        class="rounded-lg px-3 py-1.5 text-xs font-bold bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition-colors focus:outline-none flex items-center gap-1">
+                    <span x-show="loading" class="animate-spin inline-block w-2.5 h-2.5 border border-current border-t-transparent rounded-full"></span>
+                    <span x-text="loading ? '...' : '✗ Batalkan'"></span>
                 </button>
             </div>
         </div>
 
         {{-- ===== TOMBOL AKSI ABSENSI (jika status = SCHEDULED) ===== --}}
         <div x-show="status === 'SCHEDULED'"
+            style="display: {{ $session->status === 'SCHEDULED' ? 'grid' : 'none' }};"
             class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-mk-borderLight/30"
             :class="loading ? 'opacity-50 pointer-events-none' : ''">
 
@@ -381,11 +411,13 @@
                 <div class="flex gap-2">
                     <button type="button"
                         @click="{{ $session->split_part === null ? 'splitMode ? saveSplitPart1() : saveReschedule()' : 'saveReschedule()' }}"
-                        :disabled="!rescheduleDate || !rescheduleTime"
-                        class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2.5 rounded-lg btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
-                        <span x-text="splitMode ? 'Jadwalkan Bagian 1' : 'Buat Sesi Pengganti'"></span>
+                        :disabled="!rescheduleDate || !rescheduleTime || loading"
+                        class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2.5 rounded-lg btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent flex items-center justify-center gap-1">
+                        <span x-show="loading" class="animate-spin inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full"></span>
+                        <span x-text="loading ? 'Menyimpan...' : (splitMode ? 'Jadwalkan Bagian 1' : 'Buat Sesi Pengganti')"></span>
                     </button>
                     <button @click="showModal = null; errorMsg = ''; splitMode = false"
+                        :disabled="loading"
                         class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2.5 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                         Batal
                     </button>
@@ -413,10 +445,12 @@
                     class="w-full border border-mk-border text-mk-muted rounded-lg px-3 py-1.5 text-sm mb-4 resize-none focus:border-mk-accent focus:ring-1 focus:ring-mk-accent"></textarea>
                 <div class="flex gap-2">
                     <button type="button" @click="savePending()" :disabled="loading"
-                        class="flex-1 disabled:opacity-40 font-semibold text-xs py-2.5 rounded-lg btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
-                        Simpan Pending
+                        class="flex-1 disabled:opacity-40 font-semibold text-xs py-2.5 rounded-lg btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent flex items-center justify-center gap-1">
+                        <span x-show="loading" class="animate-spin inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full"></span>
+                        <span x-text="loading ? 'Menyimpan...' : 'Simpan Pending'"></span>
                     </button>
                     <button @click="showModal = null; pendingNotes = ''"
+                        :disabled="loading"
                         class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2.5 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                         Batal
                     </button>
@@ -480,11 +514,13 @@
                                 substitute_end_time: substituteEndTime || null,
                                 substitute_room_id: substituteRoomId || null,
                               })"
-                        :disabled="!substituteId"
-                        class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded-lg btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
-                        Simpan Pengganti
+                        :disabled="!substituteId || loading"
+                        class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2 rounded-lg btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent flex items-center justify-center gap-1">
+                        <span x-show="loading" class="animate-spin inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full"></span>
+                        <span x-text="loading ? 'Menyimpan...' : 'Simpan Pengganti'"></span>
                     </button>
                     <button @click="showModal = null"
+                        :disabled="loading"
                         class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                         Batal
                     </button>
@@ -528,11 +564,13 @@
                 <div class="flex gap-2">
                     <button type="button"
                         @click="saveSplitPart2()"
-                        :disabled="!part2Date || !part2Time"
-                        class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2.5 rounded-lg btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
-                        Buat Bagian 2
+                        :disabled="!part2Date || !part2Time || loading"
+                        class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2.5 rounded-lg btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent flex items-center justify-center gap-1">
+                        <span x-show="loading" class="animate-spin inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full"></span>
+                        <span x-text="loading ? 'Menyimpan...' : 'Buat Bagian 2'"></span>
                     </button>
                     <button @click="showModal = null; part2Error = ''"
+                        :disabled="loading"
                         class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2.5 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                         Batal
                     </button>
