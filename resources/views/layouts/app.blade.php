@@ -239,15 +239,27 @@
             .catch(() => { btn.disabled = false; });
         }
 
-        // Jam digital topbar — update setiap detik
+        // Jam digital topbar — update setiap detik (disinkronkan dengan waktu server)
         (function() {
             const el = document.getElementById('topbar-clock');
+            if (!el) return;
+            // ponytail: Ambil snapshot waktu server awal (jam, menit, detik) dari PHP
+            let h = {{ now()->hour }};
+            let m = {{ now()->minute }};
+            let s = {{ now()->second }};
+            const startTime = Date.now();
+
             function tick() {
-                const now = new Date();
-                const hh  = String(now.getHours()).padStart(2, '0');
-                const mm  = String(now.getMinutes()).padStart(2, '0');
-                const ss  = String(now.getSeconds()).padStart(2, '0');
-                el.textContent = `${hh}:${mm}:${ss}`;
+                // Selisih detik sejak halaman dimuat untuk menghindari lag/drift dari setInterval
+                const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                let totalSeconds = h * 3600 + m * 60 + s + elapsedSeconds;
+
+                // Konversi kembali ke format hh:mm:ss
+                const displayH = String(Math.floor((totalSeconds / 3600) % 24)).padStart(2, '0');
+                const displayM = String(Math.floor((totalSeconds / 60) % 60)).padStart(2, '0');
+                const displayS = String(totalSeconds % 60).padStart(2, '0');
+
+                el.textContent = `${displayH}:${displayM}:${displayS}`;
             }
             tick();
             setInterval(tick, 1000);
