@@ -31,7 +31,7 @@ class SessionReportWaLogController extends Controller
         }
 
         if ($date = $request->get('date')) {
-            $query->whereHas('classSession', fn ($q) => $q->whereDate('session_date', $date));
+            $query->whereHas('classSession', fn ($q) => $q->where('session_date', $date));
         }
 
         $logs = $query->paginate(30)->withQueryString();

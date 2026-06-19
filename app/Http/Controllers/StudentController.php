@@ -123,7 +123,7 @@ class StudentController extends Controller
         // M03: Sesi mendatang (5 terdekat dari hari ini)
         $upcomingSessions = $student->classSessions()
             ->with('room', 'substituteTeacher', 'originSession')
-            ->whereDate('session_date', '>=', now()->toDateString())
+            ->where('session_date', '>=', now()->toDateString())
             ->orderBy('session_date')
             ->orderBy('start_time')
             ->limit(5)

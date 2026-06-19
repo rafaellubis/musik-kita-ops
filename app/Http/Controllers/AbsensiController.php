@@ -48,7 +48,7 @@ class AbsensiController extends Controller
                 'student', 'teacher', 'substituteTeacher', 'room',
                 'originSession', 'enrollment.package.instrument',
             ])
-            ->whereDate('session_date', $tanggal)
+            ->where('session_date', $tanggal)
             ->orderBy('start_time')
             ->get();
 
