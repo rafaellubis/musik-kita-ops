@@ -54,13 +54,14 @@
                                class="border-mk-border rounded text-sm w-48">
                     </div>
 
+                    {{-- ponytail: Menggunakan tombol filter bawaan dengan kelas tema Mahoni & Mint agar serasi --}}
                     <button type="submit"
-                            class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm">
+                            class="px-4 py-2 mk-filter-btn rounded text-sm font-semibold transition-colors">
                         Filter
                     </button>
                     @if(request()->hasAny(['action','entity_type','date_from','date_to','search']))
                     <a href="{{ route('audit-logs.index') }}"
-                       class="px-4 py-2 text-mk-muted hover:text-mk-text text-sm">Reset</a>
+                       class="px-4 py-2 mk-reset-btn rounded text-sm font-semibold transition-colors ml-1 inline-block text-center">Reset</a>
                     @endif
                 </form>
             </div>
@@ -115,11 +116,13 @@
                                             <span class="text-mk-dim">#{{ $log->entity_id }}</span>
                                         @endif
                                     </td>
-                                    <td class="px-3 py-2 font-medium">
-                                        {{ Str::limit($log->entity_label, 40) ?? '—' }}
+                                    <td class="px-3 py-2 font-medium break-words">
+                                        {{-- ponytail: Menampilkan label secara penuh tanpa batasan string (YAGNI - minimal effort) --}}
+                                        {{ $log->entity_label ?? '—' }}
                                     </td>
-                                    <td class="px-3 py-2 text-mk-dim">
-                                        {{ Str::limit($log->notes, 50) ?? '—' }}
+                                    <td class="px-3 py-2 text-mk-dim break-words whitespace-pre-line">
+                                        {{-- ponytail: Menampilkan catatan secara penuh dan mempertahankan baris baru --}}
+                                        {{ $log->notes ?? '—' }}
                                     </td>
                                 </tr>
                             @empty
