@@ -5,14 +5,14 @@
 </div>
 
 {{-- ===== RINGKASAN SLIP ===== --}}
-<div class="mx-4 mb-4 bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-5">
+<<div class="mx-4 mb-4 bg-mk-card rounded-xl border border-mk-borderLight shadow-sm px-5 py-5">
     <div class="text-xs font-semibold tracking-widest text-mk-muted uppercase mb-1">Slip Honor</div>
     <div class="text-xl font-bold text-mk-text">
         {{ \Carbon\Carbon::createFromDate($honorSlip->year, $honorSlip->month, 1)->locale('id')->isoFormat('MMMM Y') }}
     </div>
-    <div class="text-xs text-mk-muted mt-0.5 mb-4">{{ $honorSlip->slip_number }}</div>
+    <div class="text-xs text-mk-dim mt-0.5 mb-4">{{ $honorSlip->slip_number }}</div>
 
-    <div class="space-y-2 border-t border-gray-100 pt-4">
+    <div class="space-y-2 border-t border-mk-borderLight pt-4">
         <div class="flex justify-between text-sm">
             <span class="text-mk-muted">Honor Pokok</span>
             <span class="font-medium text-mk-text">Rp {{ number_format($honorSlip->base_honor, 0, ',', '.') }}</span>
@@ -35,7 +35,7 @@
                 <span class="font-medium text-mk-text">Rp {{ number_format($honorSlip->other_honor, 0, ',', '.') }}</span>
             </div>
         @endif
-        <div class="flex justify-between font-bold text-base border-t border-gray-100 pt-3 mt-1">
+        <div class="flex justify-between font-bold text-base border-t border-mk-borderLight pt-3 mt-1 text-mk-text">
             <span>Total</span>
             <span>Rp {{ number_format($honorSlip->total_honor, 0, ',', '.') }}</span>
         </div>
@@ -43,9 +43,13 @@
 
     <div class="mt-4">
         @if($honorSlip->status === 'PAID')
-            <span class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">✓ Sudah Dibayar</span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-300">
+                ✓ Sudah Dibayar
+            </span>
         @else
-            <span class="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-medium">Menunggu Pembayaran</span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-300">
+                Menunggu Pembayaran
+            </span>
         @endif
     </div>
 </div>
@@ -57,51 +61,50 @@
     {{-- Mobile: kartu --}}
     <div class="lg:hidden space-y-2">
         @forelse($sesi as $s)
-            <div class="bg-white rounded-xl border border-gray-100 px-4 py-3">
+            <div class="bg-mk-card rounded-xl border border-mk-borderLight px-4 py-3 shadow-sm">
                 <div class="flex justify-between items-start">
                     <div>
                         <div class="font-medium text-mk-text text-sm">{{ $s->student->full_name }}</div>
-                        <div class="text-xs text-mk-muted mt-0.5">
-                            {{ \Carbon\Carbon::parse($s->session_date)->locale('id')->isoFormat('D MMM') }}
-                            · {{ $s->enrollment?->package?->code ?? '—' }}
-                            · Sesi ke-{{ $s->session_sequence ?? '—' }}
+                        <div class="text-xs text-mk-dim mt-0.5">
+                            {{ \Carbon\Carbon::parse($s->session_date)->locale('id')->isoFormat('D MMM Y') }}
+                            · <span class="font-semibold text-mk-muted">{{ $s->enrollment?->package?->code ?? '—' }}</span>
                         </div>
                     </div>
                     <div class="text-right">
-                        <div class="text-sm font-semibold text-mk-text">Rp {{ number_format($s->honor_amount, 0, ',', '.') }}</div>
-                        <div class="text-[10px] text-mk-muted mt-0.5">{{ $s->honor_code }}</div>
+                        <div class="text-sm font-bold text-mk-text">Rp {{ number_format($s->honor_amount, 0, ',', '.') }}</div>
+                        <div class="text-[10px] font-mono text-mk-muted mt-0.5">{{ $s->honor_code }}</div>
                     </div>
                 </div>
             </div>
         @empty
-            <div class="bg-white rounded-xl border border-gray-100 px-4 py-8 text-center text-mk-muted text-sm">
+            <div class="bg-mk-card rounded-xl border border-mk-borderLight px-4 py-8 text-center text-mk-muted text-sm shadow-sm">
                 Tidak ada rincian sesi.
             </div>
         @endforelse
     </div>
 
     {{-- Desktop: tabel --}}
-    <div class="hidden lg:block bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="hidden lg:block bg-mk-card rounded-xl border border-mk-borderLight shadow-sm overflow-hidden">
         <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b border-gray-100">
+            <thead class="bg-mk-surface border-b border-mk-borderLight">
                 <tr>
-                    <th class="text-left px-4 py-3 text-xs font-semibold text-mk-muted uppercase tracking-wider">Tanggal</th>
-                    <th class="text-left px-4 py-3 text-xs font-semibold text-mk-muted uppercase tracking-wider">Murid</th>
-                    <th class="text-left px-4 py-3 text-xs font-semibold text-mk-muted uppercase tracking-wider">Paket</th>
-                    <th class="text-left px-4 py-3 text-xs font-semibold text-mk-muted uppercase tracking-wider">Sesi</th>
-                    <th class="text-left px-4 py-3 text-xs font-semibold text-mk-muted uppercase tracking-wider">Kode</th>
-                    <th class="text-right px-4 py-3 text-xs font-semibold text-mk-muted uppercase tracking-wider">Honor</th>
+                    <th class="text-left px-4 py-3 text-xs font-bold text-mk-muted uppercase tracking-wider">Tanggal</th>
+                    <th class="text-left px-4 py-3 text-xs font-bold text-mk-muted uppercase tracking-wider">Murid</th>
+                    <th class="text-left px-4 py-3 text-xs font-bold text-mk-muted uppercase tracking-wider">Paket</th>
+                    <th class="text-left px-4 py-3 text-xs font-bold text-mk-muted uppercase tracking-wider">Sesi</th>
+                    <th class="text-left px-4 py-3 text-xs font-bold text-mk-muted uppercase tracking-wider">Kode</th>
+                    <th class="text-right px-4 py-3 text-xs font-bold text-mk-muted uppercase tracking-wider">Honor</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50">
+            <tbody class="divide-y divide-mk-borderLight">
                 @forelse($sesi as $s)
-                    <tr>
-                        <td class="px-4 py-3 text-mk-muted">{{ \Carbon\Carbon::parse($s->session_date)->locale('id')->isoFormat('D MMM Y') }}</td>
-                        <td class="px-4 py-3 font-medium text-mk-text">{{ $s->student->full_name }}</td>
-                        <td class="px-4 py-3 text-mk-muted">{{ $s->enrollment?->package?->code ?? '—' }}</td>
+                    <tr class="hover:bg-mk-surface/30 transition-colors">
+                        <td class="px-4 py-3 text-mk-dim">{{ \Carbon\Carbon::parse($s->session_date)->locale('id')->isoFormat('D MMM Y') }}</td>
+                        <td class="px-4 py-3 font-semibold text-mk-text">{{ $s->student->full_name }}</td>
+                        <td class="px-4 py-3 text-mk-text">{{ $s->enrollment?->package?->code ?? '—' }}</td>
                         <td class="px-4 py-3 text-mk-muted">Sesi ke-{{ $s->session_sequence ?? '—' }}</td>
-                        <td class="px-4 py-3 text-mk-muted">{{ $s->honor_code }}</td>
-                        <td class="px-4 py-3 text-right font-medium text-mk-text">Rp {{ number_format($s->honor_amount, 0, ',', '.') }}</td>
+                        <td class="px-4 py-3 font-mono text-mk-muted">{{ $s->honor_code }}</td>
+                        <td class="px-4 py-3 text-right font-semibold text-mk-text">Rp {{ number_format($s->honor_amount, 0, ',', '.') }}</td>
                     </tr>
                 @empty
                     <tr>
