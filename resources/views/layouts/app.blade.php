@@ -9,7 +9,7 @@
 
         <!-- Fonts: DM Sans + Playfair Display via Bunny.net -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=dm-sans:300,400,500,600,700|playfair-display:600,700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=dm-sans:300,400,500,600,700|playfair-display:600,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
