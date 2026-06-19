@@ -95,25 +95,36 @@
                 <div x-show="showGenerate" x-cloak
                      class="mb-4 p-4 border border-mk-border bg-mk-surface rounded-lg">
                     <form method="POST" action="{{ route('sessions.generate') }}"
-                          onsubmit="return confirm('Generate sesi untuk bulan terpilih? Idempotent — sesi yang sudah ada tidak duplikat.')">
+                          x-data="{ submitting: false }"
+                          x-on:submit="if (!confirm('Generate sesi untuk bulan terpilih? Idempotent — sesi yang sudah ada tidak duplikat.')) { $event.preventDefault(); return; } submitting = true;">
                         @csrf
                         <div class="flex items-end gap-3 flex-wrap">
                             <div>
                                 <label class="block text-xs text-mk-dim mb-1">Tahun</label>
                                 <input type="number" name="year" required min="2024" max="2030"
                                        value="{{ $nextYear }}"
-                                       class="border-mk-border rounded text-sm w-24">
+                                       class="border-mk-border rounded text-sm w-24"
+                                       x-bind:disabled="submitting">
                             </div>
                             <div>
                                 <label class="block text-xs text-mk-dim mb-1">Bulan (1-12)</label>
                                 <input type="number" name="month" required min="1" max="12"
                                        value="{{ $nextMonth }}"
-                                       class="border-mk-border rounded text-sm w-20">
+                                       class="border-mk-border rounded text-sm w-20"
+                                       x-bind:disabled="submitting">
                             </div>
                             <button type="submit"
-                                    class="px-4 py-2 rounded-lg text-sm font-bold transition-colors btn-mk-primary"
+                                    class="px-4 py-2 rounded-lg text-sm font-bold transition-colors btn-mk-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                                    x-bind:disabled="submitting"
                                     >
-                                Jalankan Generator
+                                <span x-show="!submitting">Jalankan Generator</span>
+                                <span x-show="submitting" x-cloak class="flex items-center gap-2">
+                                    <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                    </svg>
+                                    Sedang generate...
+                                </span>
                             </button>
                         </div>
                         <p class="text-xs text-mk-dim mt-2">

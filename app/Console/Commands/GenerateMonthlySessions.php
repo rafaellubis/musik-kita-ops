@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Services\SessionGeneratorService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Console\Isolatable;
 
 /**
  * Generate sesi mingguan ke tabel class_sessions.
@@ -18,7 +19,7 @@ use Illuminate\Console\Command;
  * TODO: jadwalkan otomatis tanggal 25 setiap bulan via routes/console.php
  *       (CLAUDE.md M03 — generator cron tanggal 25 untuk bulan berikutnya).
  */
-class GenerateMonthlySessions extends Command
+class GenerateMonthlySessions extends Command implements Isolatable
 {
     protected $signature = 'sessions:generate-month
                             {--year= : Tahun target (default: bulan depan)}

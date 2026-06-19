@@ -8,6 +8,7 @@ use App\Models\Holiday;
 use App\Models\PayrollConfig;
 use App\Models\Schedule;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -66,24 +67,30 @@ class SessionGeneratorService
             'month'                    => $start->format('F Y'),
         ];
 
-        // Pre-load holidays bulan ini sebagai [Y-m-d => Holiday]
-        // Include 'Internal' agar Konser KITA terdeteksi
-        $holidayMap = $this->loadHolidayDates($start, $end);
+        // Seluruh proses generate dibungkus DB::transaction() agar atomic.
+        // Jika koneksi terputus di tengah proses, SEMUA insert di-rollback —
+        // tidak ada data sesi partial yang tersimpan di database.
+        // Admin cukup jalankan ulang generator setelah koneksi pulih.
+        DB::transaction(function () use ($start, $end, &$report) {
+            // Pre-load holidays bulan ini sebagai [Y-m-d => Holiday]
+            // Include 'Internal' agar Konser KITA terdeteksi
+            $holidayMap = $this->loadHolidayDates($start, $end);
 
-        // Ambil schedule aktif dengan enrollment ACTIVE dan murid berstatus Aktif.
-        // Double-filter karena enrollment bisa tertinggal ACTIVE saat murid sudah mundur.
-        // Eager-load enrollment.package untuk perhitungan honor
-        $schedules = Schedule::query()
-            ->active()
-            ->whereHas('enrollment', fn ($q) => $q->active())
-            ->whereHas('enrollment.student', fn ($q) => $q->where('status', 'Aktif'))
-            ->with(['enrollment', 'enrollment.package', 'enrollment.student', 'enrollment.teacher'])
-            ->get();
+            // Ambil schedule aktif dengan enrollment ACTIVE dan murid berstatus Aktif.
+            // Double-filter karena enrollment bisa tertinggal ACTIVE saat murid sudah mundur.
+            // Eager-load enrollment.package untuk perhitungan honor
+            $schedules = Schedule::query()
+                ->active()
+                ->whereHas('enrollment', fn ($q) => $q->active())
+                ->whereHas('enrollment.student', fn ($q) => $q->where('status', 'Aktif'))
+                ->with(['enrollment', 'enrollment.package', 'enrollment.student', 'enrollment.teacher'])
+                ->get();
 
-        foreach ($schedules as $schedule) {
-            $report['schedules_processed']++;
-            $this->generateForSchedule($schedule, $start, $end, $holidayMap, $report);
-        }
+            foreach ($schedules as $schedule) {
+                $report['schedules_processed']++;
+                $this->generateForSchedule($schedule, $start, $end, $holidayMap, $report);
+            }
+        });
 
         return $report;
     }

@@ -10,6 +10,7 @@ use App\Models\Teacher;
 use App\Services\SessionGeneratorService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * List sesi & trigger generator manual (M03 UI).
@@ -84,7 +85,24 @@ class SessionController extends Controller
             'month' => 'required|integer|min:1|max:12',
         ]);
 
-        $report = $generator->generateForMonth($data['year'], $data['month']);
+        // Atomic lock: mencegah race condition jika Admin klik Generate dua kali
+        // atau cron dan manual trigger jalan bersamaan.
+        // Lock berlaku 120 detik — cukup untuk ~1.200 INSERT per bulan.
+        $lock = Cache::lock("session-generator-{$data['year']}-{$data['month']}", 120);
+
+        if (! $lock->get()) {
+            return redirect()->route('sessions.index', [
+                'year' => $data['year'],
+                'month' => $data['month'],
+            ])->with('error', 'Generator sedang berjalan oleh proses lain. Tunggu beberapa saat lalu coba lagi.');
+        }
+
+        try {
+            $report = $generator->generateForMonth($data['year'], $data['month']);
+        } finally {
+            // Selalu release lock meskipun terjadi exception
+            $lock->release();
+        }
 
         $monthName = Carbon::create($data['year'], $data['month'], 1)->format('F Y');
         $msg = "Generator selesai untuk {$monthName}: " .
