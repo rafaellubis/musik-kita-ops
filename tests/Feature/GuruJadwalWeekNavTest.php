@@ -100,15 +100,18 @@ class GuruJadwalWeekNavTest extends TestCase
             ->assertViewHas('tanggal', Carbon::today()->toDateString());
     }
 
-    public function test_kalender_strip_menampilkan_7_hari(): void
+    public function test_kalender_strip_bootstrap_91_hari(): void
     {
         $response = $this->actingAs($this->guruUser)->get(route('guru.jadwal'));
 
         $response->assertOk()
-            ->assertViewHas('weekDates', fn ($weekDates) => $weekDates->count() === 7);
+            ->assertSee('guruJadwalCalendar', false)
+            ->assertViewHas('calendarBootstrap', fn ($data) =>
+                count($data['dates']) === (45 * 2 + 1)
+            );
     }
 
-    public function test_sesi_count_per_day_tersedia(): void
+    public function test_session_counts_ada_di_bootstrap(): void
     {
         $today = Carbon::today();
         $this->createSessionForTeacher($today, 'Murid A');
@@ -117,23 +120,17 @@ class GuruJadwalWeekNavTest extends TestCase
         $response = $this->actingAs($this->guruUser)->get(route('guru.jadwal'));
 
         $response->assertOk()
-            ->assertViewHas('sesiCountPerDay', fn ($counts) =>
-                ($counts[$today->toDateString()] ?? 0) === 2
+            ->assertViewHas('calendarBootstrap', fn ($data) =>
+                ($data['sessionCounts'][$today->toDateString()] ?? 0) === 2
             );
     }
 
-    public function test_navigasi_minggu_sebelum_dan_sesudah(): void
+    public function test_tidak_ada_panah_navigasi_minggu(): void
     {
         $response = $this->actingAs($this->guruUser)->get(route('guru.jadwal'));
 
-        $weekStart = Carbon::today()->startOfWeek(Carbon::MONDAY);
-
         $response->assertOk()
-            ->assertSee(route('guru.jadwal', [
-                'date' => $weekStart->copy()->subWeek()->format('Y-m-d'),
-            ]), false)
-            ->assertSee(route('guru.jadwal', [
-                'date' => $weekStart->copy()->addWeek()->format('Y-m-d'),
-            ]), false);
+            ->assertDontSee('Minggu sebelumnya', false)
+            ->assertDontSee('Minggu berikutnya', false);
     }
 }
