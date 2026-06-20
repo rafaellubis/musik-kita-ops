@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Invoice;
 use App\Models\Student;
-use App\Services\WablasService;
+use App\Services\FonnteService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -38,7 +38,7 @@ class SendInvoiceReminderRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v) {
-            $wablas = app(WablasService::class);
+            $fonnte = app(FonnteService::class);
             $ids = $this->input('student_ids', []);
 
             foreach ($ids as $studentId) {
@@ -47,10 +47,14 @@ class SendInvoiceReminderRequest extends FormRequest
                     continue;
                 }
 
-                if (! $wablas->isValidPhone($student->parent_phone)) {
+                // Valid jika no ortu valid, ATAU jika ortu tidak valid tapi no murid valid
+                $hasValidParent = $fonnte->isValidPhone($student->parent_phone);
+                $hasValidStudent = $fonnte->isValidPhone($student->phone);
+
+                if (! $hasValidParent && ! $hasValidStudent) {
                     $v->errors()->add(
                         'student_ids',
-                        "Murid {$student->full_name} tidak punya nomor HP ortu yang valid.",
+                        "Murid {$student->full_name} tidak punya nomor HP ortu maupun nomor HP murid sendiri yang valid untuk WA.",
                     );
                     continue;
                 }
@@ -70,3 +74,4 @@ class SendInvoiceReminderRequest extends FormRequest
         });
     }
 }
+
