@@ -26,6 +26,8 @@ class WhatsappMessageTemplate extends Model
 
     public const CODE_INVOICE_REMINDER = 'INVOICE_REMINDER';
 
+    public const CODE_INVOICE_REMINDER_STUDENT = 'INVOICE_REMINDER_STUDENT';
+
     public const CODE_SCHEDULE_REMINDER = 'SCHEDULE_REMINDER';
 
     public const CODE_SESSION_REPORT = 'SESSION_REPORT';
@@ -242,6 +244,30 @@ Kalau ada yang bingung soal materi atau tugas, kabari guru lewat admin studio.
 Salam,
 Musik KITA
 WA: {studio_wa}
+TEXT,
+            ],
+        );
+
+        static::firstOrCreate(
+            ['code' => self::CODE_INVOICE_REMINDER_STUDENT],
+            [
+                'name'       => 'Reminder Tagihan SPP Murid',
+                'sort_order' => 5,
+                'is_active'  => true,
+                'body'       => <<<'TEXT'
+Halo {nama_murid},
+
+Berikut pengingat tagihan les musik kamu di Musik KITA:
+
+{daftar_invoice}
+
+*Total sisa tagihan:* {total_tagihan}
+*Jatuh tempo terdekat:* {tempo_terdekat}
+
+Mohon lakukan pembayaran atau sampaikan informasi tagihan ini ke Orang Tua ya. Terima kasih.
+
+Musik KITA
+WhatsApp: {studio_wa}
 TEXT,
             ],
         );
