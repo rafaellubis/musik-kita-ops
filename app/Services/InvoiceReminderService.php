@@ -110,7 +110,11 @@ class InvoiceReminderService
         $lines = $invoices->map(function (Invoice $inv) {
             $kelas = $this->pdf->captionFor($inv);
             $sisa = 'Rp ' . number_format($inv->balance, 0, ',', '.');
-            $signedUrl = \Illuminate\Support\Facades\URL::signedRoute('invoices.public-pdf', ['invoice' => $inv->id]);
+            $signedUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                'invoices.public-pdf',
+                now()->addDays(30), // kadaluarsa 30 hari sejak reminder dikirim
+                ['invoice' => $inv->id],
+            );
 
             return "• {$inv->invoice_number} ({$kelas}) — sisa {$sisa}\n  Link PDF: {$signedUrl}";
         })->implode("\n");

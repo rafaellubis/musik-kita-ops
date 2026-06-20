@@ -260,6 +260,11 @@ class InvoiceController extends Controller
     // ponytail: render pdf publik aman menggunakan signed URL untuk ortu/murid tanpa login
     public function publicPdf(Invoice $invoice)
     {
+        // Guard: invoice void tidak boleh diakses — kembalikan 410 Gone
+        if ($invoice->voided_at !== null) {
+            abort(410, 'Invoice ini sudah dibatalkan dan tidak tersedia lagi.');
+        }
+
         $pdfService = app(\App\Services\InvoicePdfService::class);
         $pdfBytes = $pdfService->renderPdf($invoice);
         $filename = $pdfService->filenameFor($invoice);
