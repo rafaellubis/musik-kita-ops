@@ -75,7 +75,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 */
 Route::get('invoices/{invoice}/public-pdf', [InvoiceController::class, 'publicPdf'])
     ->name('invoices.public-pdf')
-    ->middleware(['signed', 'throttle:30,1']); // throttle: 30 req/menit per IP, cegah brute-force
+    ->middleware(['signed', 'throttle:10,1']); // throttle: 10 req/menit per IP, cegah brute-force
 
 Route::middleware('auth')->group(function () {
 
