@@ -183,7 +183,8 @@
                             </div>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" :class="!invoiceReminderEnabled && 'opacity-50'" x-show="invoiceReminderEnabled" x-cloak>
+                    {{-- ponytail: template dipilih otomatis oleh service (INVOICE_REMINDER / INVOICE_REMINDER_STUDENT via fallback no HP) --}}
+                    <div class="grid grid-cols-2 gap-4" :class="!invoiceReminderEnabled && 'opacity-50'" x-show="invoiceReminderEnabled" x-cloak>
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Kirim H-N (hari sebelum tempo)</label>
                             <input type="number" name="scheduler_invoice_reminder_days_before_due"
@@ -198,20 +199,6 @@
                                    value="{{ old('scheduler_invoice_reminder_time', $settings['scheduler_invoice_reminder_time']) }}"
                                    class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_invoice_reminder_time') border-red-500 @enderror">
                             @error('scheduler_invoice_reminder_time')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-[11px] font-semibold text-mk-muted mb-1">Template WhatsApp</label>
-                            <select name="scheduler_invoice_reminder_template_id"
-                                    class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_invoice_reminder_template_id') border-red-500 @enderror">
-                                <option value="">— Pilih template —</option>
-                                @foreach($whatsappTemplates as $tpl)
-                                    <option value="{{ $tpl->id }}"
-                                        @selected(old('scheduler_invoice_reminder_template_id', $settings['scheduler_invoice_reminder_template_id']) == $tpl->id)>
-                                        {{ $tpl->name }} ({{ $tpl->code }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('scheduler_invoice_reminder_template_id')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
                         </div>
                     </div>
                 </div>

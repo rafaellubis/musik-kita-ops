@@ -56,12 +56,6 @@ class UpdateSchedulerRequest extends FormRequest
                 'max:' . ($sppDueDay - 1),
             ],
             'scheduler_invoice_reminder_time' => [Rule::requiredIf($invoiceReminderOn), 'date_format:H:i'],
-            'scheduler_invoice_reminder_template_id' => [
-                Rule::requiredIf($invoiceReminderOn),
-                'nullable',
-                'integer',
-                'exists:whatsapp_message_templates,id',
-            ],
 
             'scheduler_cuti_return_enabled' => 'sometimes|boolean',
             'scheduler_cuti_return_time'    => [Rule::requiredIf($cutiReturnOn), 'date_format:H:i'],
@@ -149,8 +143,7 @@ class UpdateSchedulerRequest extends FormRequest
             'scheduler_invoice_reminder_days_before_due.max'      => 'Reminder harus sebelum tanggal tempo (kurang dari tempo SPP).',
             'scheduler_invoice_reminder_time.required'            => 'Jam reminder tagihan wajib diisi.',
             'scheduler_invoice_reminder_time.date_format'         => 'Format jam reminder tagihan harus HH:MM.',
-            'scheduler_invoice_reminder_template_id.required'     => 'Template WhatsApp reminder tagihan wajib dipilih.',
-            'scheduler_invoice_reminder_template_id.exists'       => 'Template WhatsApp tidak ditemukan.',
+
 
             'scheduler_cuti_return_time.required'        => 'Jam cuti→aktif wajib diisi.',
             'scheduler_cuti_return_time.date_format'     => 'Format jam cuti→aktif harus HH:MM.',

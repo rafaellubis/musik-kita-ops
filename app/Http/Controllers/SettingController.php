@@ -110,7 +110,7 @@ class SettingController extends Controller
             'scheduler_invoice_reminder_enabled'            => SchedulerSettings::invoiceReminderEnabled(),
             'scheduler_invoice_reminder_days_before_due'    => SchedulerSettings::invoiceReminderDaysBeforeDue(),
             'scheduler_invoice_reminder_time'               => SchedulerSettings::invoiceReminderTime(),
-            'scheduler_invoice_reminder_template_id'        => SchedulerSettings::invoiceReminderTemplateId(),
+            // ponytail: template_id dihapus — auto-fallback via service
 
             'scheduler_cuti_return_enabled' => SchedulerSettings::cutiReturnEnabled(),
             'scheduler_cuti_return_time'    => SchedulerSettings::cutiReturnTime(),
@@ -169,7 +169,7 @@ class SettingController extends Controller
             'scheduler_invoice_reminder_enabled'         => fn () => $request->boolean('scheduler_invoice_reminder_enabled') ? 'true' : 'false',
             'scheduler_invoice_reminder_days_before_due' => fn () => $request->input('scheduler_invoice_reminder_days_before_due'),
             'scheduler_invoice_reminder_time'            => fn () => $request->input('scheduler_invoice_reminder_time'),
-            'scheduler_invoice_reminder_template_id'     => fn () => $request->input('scheduler_invoice_reminder_template_id') ?: '',
+            // ponytail: template_id tidak disimpan dari form — field dihapus
 
             'scheduler_cuti_return_enabled' => fn () => $request->boolean('scheduler_cuti_return_enabled') ? 'true' : 'false',
             'scheduler_cuti_return_time'    => fn () => $request->input('scheduler_cuti_return_time'),
@@ -209,11 +209,7 @@ class SettingController extends Controller
             'scheduler_honor_calculate_enabled' => ['scheduler_honor_calculate_day', 'scheduler_honor_calculate_time'],
             'scheduler_fines_apply_enabled'       => ['scheduler_fines_apply_time', 'scheduler_fines_start_day'],
             'scheduler_overdue_check_enabled'     => ['scheduler_overdue_check_day', 'scheduler_overdue_check_time'],
-            'scheduler_invoice_reminder_enabled'  => [
-                'scheduler_invoice_reminder_days_before_due',
-                'scheduler_invoice_reminder_time',
-                'scheduler_invoice_reminder_template_id',
-            ],
+            'scheduler_invoice_reminder_enabled'  => ['scheduler_invoice_reminder_days_before_due', 'scheduler_invoice_reminder_time'],
             'scheduler_cuti_return_enabled'     => ['scheduler_cuti_return_time'],
             'scheduler_staff_payroll_enabled'     => ['scheduler_staff_payroll_day', 'scheduler_staff_payroll_time'],
             'schedule_reminder_enabled'           => [
