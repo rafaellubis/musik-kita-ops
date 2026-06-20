@@ -57,6 +57,22 @@
                         <span class="px-3 py-1 rounded text-sm border {{ $statusColors[$invoice->status] }}">
                             {{ $invoice->status }}
                         </span>
+                        @if(in_array($invoice->status, ['UNPAID', 'PARTIAL']))
+                            @php $remStatus = $invoice->reminder_status; @endphp
+                            @if($remStatus === 'Terkirim')
+                                <span class="px-2 py-1 rounded text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                    Reminder WA: Terkirim
+                                </span>
+                            @elseif($remStatus === 'Gagal')
+                                <span class="px-2 py-1 rounded text-xs font-semibold bg-red-100 text-red-800 border border-red-300">
+                                    Reminder WA: Gagal
+                                </span>
+                            @else
+                                <span class="px-2 py-1 rounded text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-300">
+                                    Reminder WA: Belum Dikirim
+                                </span>
+                            @endif
+                        @endif
                         @if($invoice->installment_label)
                             <span class="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-300">
                                 {{ $invoice->installment_label }}

@@ -213,6 +213,7 @@
                             <th class="px-4 py-3 text-right">Total</th>
                             <th class="px-4 py-3 text-right">Saldo</th>
                             <th class="px-4 py-3 text-center">Status</th>
+                            <th class="px-4 py-3 text-center">Reminder WA</th>
                             <th class="px-4 py-3">Jatuh Tempo</th>
                             <th class="px-4 py-3 text-center">Aksi</th>
                         </tr>
@@ -265,6 +266,18 @@
                                         </span>
                                     @endif
                                 </td>
+                                <td class="px-4 py-3 text-center">
+                                    @php $remStatus = $inv->reminder_status; @endphp
+                                    @if($remStatus === 'Terkirim')
+                                        <span class="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-100 text-emerald-800 border border-emerald-200">Terkirim</span>
+                                    @elseif($remStatus === 'Gagal')
+                                        <span class="px-2 py-0.5 text-xs font-semibold rounded bg-red-100 text-red-800 border border-red-200">Gagal</span>
+                                    @elseif($remStatus === '—')
+                                        <span class="text-mk-dim text-xs">—</span>
+                                    @else
+                                        <span class="px-2 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-700 border border-slate-200">Belum</span>
+                                    @endif
+                                </td>
                                 <td class="px-4 py-3 text-xs text-mk-text">
                                     <span class="font-medium">{{ $inv->due_date->format('d M Y') }}</span>
                                     @if($inv->balance > 0 && $inv->due_date->lt(now()))
@@ -280,7 +293,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-4 py-12 text-center text-mk-dim">
+                                <td colspan="9" class="px-4 py-12 text-center text-mk-dim">
                                     <div class="flex flex-col items-center justify-center space-y-2">
                                         <svg class="w-8 h-8 opacity-40 text-mk-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

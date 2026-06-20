@@ -318,6 +318,7 @@
                                 <th class="px-4 py-2.5 text-right text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Sisa</th>
                                 @endif
                                 <th class="px-4 py-2.5 text-center text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Jatuh Tempo</th>
+                                <th class="px-4 py-2.5 text-center text-mk-dim font-semibold uppercase tracking-wide text-[10px]">Reminder WA</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -342,6 +343,16 @@
                                             @if($late > 0)<span class="ml-0.5">(+{{ $late }}h)</span>@endif
                                         </span>
                                     @else —
+                                    @endif
+                                </td>
+                                <td class="px-4 py-2.5 text-center">
+                                    @php $remStatus = $inv->reminder_status; @endphp
+                                    @if($remStatus === 'Terkirim')
+                                        <span class="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 font-semibold text-[10px]">Terkirim</span>
+                                    @elseif($remStatus === 'Gagal')
+                                        <span class="px-1.5 py-0.5 rounded bg-red-500/10 text-red-600 font-semibold text-[10px]">Gagal</span>
+                                    @else
+                                        <span class="px-1.5 py-0.5 rounded bg-slate-500/10 text-slate-500 font-medium text-[10px]">Belum</span>
                                     @endif
                                 </td>
                             </tr>
