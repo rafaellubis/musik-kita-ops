@@ -39,7 +39,6 @@
     <x-sidebar-item route="invoices.index" icon="💳" label="Tagihan"
         :active="request()->routeIs('invoices.*')" />
     @hasanyrole('Owner|Admin')
-    {{-- Nonaktif untuk semua role: tampil abu-abu, tidak bisa diklik --}}
     <x-sidebar-item route="invoice-reminders.index" icon="💬" label="Reminder WA"
         :active="request()->routeIs('invoice-reminders.*')" 
         :disabled="false"
@@ -47,12 +46,16 @@
     @endhasanyrole
     <x-sidebar-item route="honors.index" icon="💰" label="Slip Honor"
         :active="request()->routeIs('honors.*')" />
+    @role('Owner') 
     <x-sidebar-item route="staff-payrolls.index" icon="💵" label="Gaji Staff"
         :active="request()->routeIs('staff-payrolls.*')" />
     <x-sidebar-item route="expenses.index" icon="📊" label="Pengeluaran"
         :active="request()->routeIs('expenses.*') || request()->routeIs('expense-categories.*')" />
+    @endrole
+    @hasanyrole('Owner|Admin')
     <x-sidebar-item route="petty-cash.index" icon="💵" label="Petty Cash"
         :active="request()->routeIs('petty-cash.*')" />
+        @endhasanyrole
     <x-sidebar-item route="events.index" icon="🎤" label="Event"
         :active="request()->routeIs('events.*') || request()->routeIs('event-participants.*')"
         :disabled="true"
@@ -98,9 +101,9 @@
         :active="request()->routeIs('report-templates.*')"
         :disabled="true"
         title="Sementara dinonaktifkan"/>
-    @endrole
     <x-sidebar-item route="whatsapp-templates.index" icon="💬" label="Template WA"
         :active="request()->routeIs('whatsapp-templates.*')" />
+    @endrole
     @role('Owner|Auditor')
     <x-sidebar-item route="invoice-components.index" icon="🧾" label="Komponen Invoice"
         :active="request()->routeIs('invoice-components.*')" />
