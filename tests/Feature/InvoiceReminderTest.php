@@ -219,7 +219,7 @@ class InvoiceReminderTest extends TestCase
             ->assertSee('SESSION_REPORT_STUDENT')
             ->assertSee('INVOICE_REMINDER');
 
-        $this->assertDatabaseCount('whatsapp_message_templates', 4);
+        $this->assertDatabaseCount('whatsapp_message_templates', 5);
     }
 
     public function test_whatsapp_template_crud_owner_only(): void
