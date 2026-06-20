@@ -274,3 +274,43 @@ aside           { border-right-color:  rgba(93,184,144,0.30) !important; }
     background-color: #ffffff !important;
     background-clip: padding-box;
 }
+
+/* ===== Portal Guru — Kalender Jadwal Slide ===== */
+.guru-date-strip {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.guru-date-strip::-webkit-scrollbar {
+    display: none;
+}
+
+.guru-date-chip {
+    scroll-snap-align: center;
+}
+
+.guru-sesi-fade-out {
+    opacity: 0;
+    transition: opacity 150ms ease-out;
+}
+
+.guru-sesi-fade-in {
+    opacity: 1;
+    transition: opacity 200ms ease-out;
+}
+
+.guru-month-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .guru-sesi-fade-out,
+    .guru-sesi-fade-in {
+        transition: none !important;
+    }
+
+    .guru-date-strip {
+        scroll-behavior: auto;
+    }
+}
