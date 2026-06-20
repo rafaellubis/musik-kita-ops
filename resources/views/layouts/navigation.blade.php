@@ -42,7 +42,7 @@
     {{-- Nonaktif untuk semua role: tampil abu-abu, tidak bisa diklik --}}
     <x-sidebar-item route="invoice-reminders.index" icon="💬" label="Reminder WA"
         :active="request()->routeIs('invoice-reminders.*')" 
-        :disabled="true"
+        :disabled="false"
         title="Sementara dinonaktifkan"/>
     @endhasanyrole
     <x-sidebar-item route="honors.index" icon="💰" label="Slip Honor"
