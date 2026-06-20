@@ -50,18 +50,19 @@ class InvoiceReminderTest extends TestCase
             'services.wablas.secret_key' => 'test-secret',
             'services.wablas.base_url'   => 'https://solo.wablas.com',
         ]);
+        config([
+            'services.fonnte.token'      => 'test-token',
+            'services.fonnte.base_url'   => 'https://api.fonnte.com',
+        ]);
     }
 
-    private function fakeWablas(): void
+    private function fakeFonnte(): void
     {
         Http::fake([
-            'https://solo.wablas.com/api/send-message' => Http::sequence()
-                ->push(['status' => true, 'id' => 'text-1'], 200)
-                ->push(['status' => true, 'id' => 'text-2'], 200),
-            'https://solo.wablas.com/api/send-document-from-local' => Http::sequence()
-                ->push(['status' => true, 'id' => 'doc-1'], 200)
-                ->push(['status' => true, 'id' => 'doc-2'], 200)
-                ->push(['status' => true, 'id' => 'doc-3'], 200),
+            'https://api.fonnte.com/send' => Http::sequence()
+                ->push(['status' => true, 'id' => ['text-1']], 200)
+                ->push(['status' => true, 'id' => ['text-2']], 200)
+                ->push(['status' => true, 'id' => ['text-3']], 200),
         ]);
     }
 
@@ -114,7 +115,7 @@ class InvoiceReminderTest extends TestCase
 
     public function test_send_creates_log_and_audit(): void
     {
-        $this->fakeWablas();
+        $this->fakeFonnte();
         [$student] = $this->studentWithUnpaidInvoice();
 
         $response = $this->actingAs($this->admin)
@@ -136,14 +137,13 @@ class InvoiceReminderTest extends TestCase
             'entity_label' => 'Batch Reminder WA Tagihan',
         ]);
 
-        Http::assertSentCount(2); // 1 text + 1 pdf
+        Http::assertSentCount(1);
     }
 
-    public function test_send_multi_class_sends_one_text_and_two_pdfs(): void
+    public function test_send_multi_class_sends_one_text(): void
     {
         Http::fake([
-            'https://solo.wablas.com/api/send-message' => Http::response(['status' => true, 'id' => 't1'], 200),
-            'https://solo.wablas.com/api/send-document-from-local' => Http::response(['status' => true, 'id' => 'd1'], 200),
+            'https://api.fonnte.com/send' => Http::response(['status' => true, 'id' => ['t1']], 200),
         ]);
 
         $student = Student::factory()->create([
@@ -187,13 +187,13 @@ class InvoiceReminderTest extends TestCase
             ->assertSessionHas('success');
 
         Http::assertSent(function ($request) {
-            return str_contains($request->url(), 'send-message');
+            return str_contains($request->url(), '/send');
         });
-        Http::assertSentCount(3);
+        Http::assertSentCount(1);
 
         $log = InvoiceReminderLog::where('student_id', $student->id)->first();
-        $this->assertEquals(2, $log->documents_total);
-        $this->assertEquals(2, $log->documents_sent);
+        $this->assertEquals(0, $log->documents_total);
+        $this->assertEquals(0, $log->documents_sent);
     }
 
     public function test_pdf_service_returns_non_empty_bytes(): void

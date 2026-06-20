@@ -6,7 +6,7 @@ use App\Http\Requests\SendInvoiceReminderRequest;
 use App\Models\AuditLog;
 use App\Models\WhatsappMessageTemplate;
 use App\Services\InvoiceReminderService;
-use App\Services\WablasService;
+use App\Services\FonnteService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -18,7 +18,7 @@ class InvoiceReminderController extends Controller
 {
     public function __construct(
         private readonly InvoiceReminderService $reminderService,
-        private readonly WablasService $wablas,
+        private readonly FonnteService $fonnte,
     ) {}
 
     public function index(Request $request): View
@@ -35,9 +35,9 @@ class InvoiceReminderController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        $wablasReady = $this->wablas->isConfigured();
+        $fonnteReady = $this->fonnte->isConfigured();
 
-        return view('invoice-reminders.index', compact('rows', 'templates', 'filters', 'wablasReady'));
+        return view('invoice-reminders.index', compact('rows', 'templates', 'filters', 'fonnteReady'));
     }
 
     public function send(SendInvoiceReminderRequest $request): RedirectResponse

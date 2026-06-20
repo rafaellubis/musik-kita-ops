@@ -12,12 +12,12 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Orkestrasi reminder tagihan WA: query unpaid, compose pesan, kirim via Wablas.
+ * Orkestrasi reminder tagihan WA: query unpaid, compose pesan, kirim via Fonnte.
  */
 class InvoiceReminderService
 {
     public function __construct(
-        private readonly WablasService $wablas,
+        private readonly FonnteService $fonnte,
         private readonly InvoicePdfService $pdf,
     ) {}
 
@@ -65,7 +65,8 @@ class InvoiceReminderService
 
         $rows = $grouped->map(function (Collection $studentInvoices, int $studentId) {
             $student = $studentInvoices->first()->student;
-            $phone = $this->wablas->normalizePhone($student->parent_phone);
+            $phone = $this->fonnte->normalizePhone($student->parent_phone)
+                ?? $this->fonnte->normalizePhone($student->phone);
 
             $lastLog = InvoiceReminderLog::query()
                 ->where('student_id', $studentId)
@@ -109,8 +110,9 @@ class InvoiceReminderService
         $lines = $invoices->map(function (Invoice $inv) {
             $kelas = $this->pdf->captionFor($inv);
             $sisa = 'Rp ' . number_format($inv->balance, 0, ',', '.');
+            $signedUrl = \Illuminate\Support\Facades\URL::signedRoute('invoices.public-pdf', ['invoice' => $inv->id]);
 
-            return "• {$inv->invoice_number} ({$kelas}) — sisa {$sisa}";
+            return "• {$inv->invoice_number} ({$kelas}) — sisa {$sisa}\n  Link PDF: {$signedUrl}";
         })->implode("\n");
 
         $tempo = $invoices->min('due_date');
@@ -126,7 +128,7 @@ class InvoiceReminderService
             '{jumlah_invoice}' => (string) $invoices->count(),
             '{daftar_invoice}' => $lines,
             '{tempo_terdekat}' => $tempoStr,
-            '{studio_wa}'      => WablasService::STUDIO_WA_DISPLAY,
+            '{studio_wa}'      => FonnteService::STUDIO_WA_DISPLAY,
         ];
 
         return str_replace(
@@ -137,7 +139,7 @@ class InvoiceReminderService
     }
 
     /**
-     * Kirim reminder ke satu murid: 1 teks + N PDF (jeda 500ms antar PDF).
+     * Kirim reminder ke satu murid: 1 teks berisi link PDF.
      *
      * @param  Collection<int, Invoice>  $invoices
      */
@@ -147,87 +149,58 @@ class InvoiceReminderService
         User $sender,
         ?WhatsappMessageTemplate $template = null,
     ): InvoiceReminderLog {
-        $template ??= WhatsappMessageTemplate::defaultInvoiceReminder();
+        // Tentukan nomor tujuan & jenis template yang dipakai
+        $phone = $this->fonnte->normalizePhone($student->parent_phone);
+        $isStudentFallback = false;
+
+        if (! $phone) {
+            $phone = $this->fonnte->normalizePhone($student->phone);
+            $isStudentFallback = true;
+        }
+
+        if (! $phone) {
+            throw new \InvalidArgumentException("Murid {$student->full_name} tidak punya nomor HP ortu atau murid yang valid.");
+        }
+
+        // Tentukan template default
+        if (! $template) {
+            $template = $isStudentFallback
+                ? WhatsappMessageTemplate::query()->where('code', WhatsappMessageTemplate::CODE_INVOICE_REMINDER_STUDENT)->where('is_active', true)->first()
+                : WhatsappMessageTemplate::defaultInvoiceReminder();
+        }
 
         if (! $template) {
             throw new \InvalidArgumentException('Template reminder aktif tidak ditemukan.');
         }
 
-        $phone = $this->wablas->normalizePhone($student->parent_phone);
-        if (! $phone) {
-            throw new \InvalidArgumentException("Murid {$student->full_name} tidak punya nomor HP ortu yang valid.");
-        }
-
         $message = $this->composeMessage($student, $invoices, $template);
-        $wablasIds = [];
-        $pdfNames = [];
-        $errors = [];
+        $fonnteIds = [];
 
-        $textResult = $this->wablas->sendText($phone, $message);
-        if ($textResult['message_id']) {
-            $wablasIds[] = $textResult['message_id'];
+        // ponytail: kirim text tunggal berisi link pdf tanpa mengirim file lampiran berat via WA
+        $result = $this->fonnte->sendText($phone, $message);
+        if (! empty($result['message_ids'])) {
+            $fonnteIds = $result['message_ids'];
         }
 
-        $documentsTotal = $invoices->count();
-        $documentsSent = 0;
-
-        if (! $textResult['ok']) {
-            $err = ($textResult['auth_invalid'] ?? false)
-                ? 'Token Wablas tidak valid.'
-                : ($textResult['error'] ?? 'Gagal kirim pesan teks.');
-
+        if ($result['ok']) {
             return $this->persistLog(
                 student: $student,
                 sender: $sender,
                 phone: $phone,
                 message: $message,
                 invoiceIds: $invoices->pluck('id')->all(),
-                pdfNames: [],
-                wablasIds: $wablasIds,
+                pdfNames: [], // Kosong karena dikirim via URL
+                wablasIds: $fonnteIds, // Simpan Fonnte ID ke kolom ini
                 documentsSent: 0,
-                documentsTotal: $documentsTotal,
-                status: InvoiceReminderLog::STATUS_FAILED,
-                error: $err,
+                documentsTotal: 0,
+                status: InvoiceReminderLog::STATUS_SUCCESS,
+                error: null,
             );
         }
 
-        foreach ($invoices->values() as $index => $invoice) {
-            if ($index > 0) {
-                usleep(500_000);
-            }
-
-            try {
-                $bytes = $this->pdf->renderPdf($invoice);
-            } catch (\Throwable $e) {
-                $errors[] = "{$invoice->invoice_number}: gagal render PDF — {$e->getMessage()}";
-                continue;
-            }
-
-            $filename = $this->pdf->filenameFor($invoice);
-            $caption = $this->pdf->captionFor($invoice);
-
-            $docResult = $this->wablas->sendDocumentFromLocal($phone, $bytes, $filename, $caption);
-
-            if (! empty($docResult['skipped_size'])) {
-                $errors[] = "{$invoice->invoice_number}: PDF > 2 MB, dilewati.";
-                continue;
-            }
-
-            if ($docResult['ok']) {
-                $documentsSent++;
-                $pdfNames[] = $filename;
-                if ($docResult['message_id']) {
-                    $wablasIds[] = $docResult['message_id'];
-                }
-            } else {
-                $errors[] = "{$invoice->invoice_number}: " . ($docResult['error'] ?? 'gagal kirim PDF');
-            }
-        }
-
-        $status = InvoiceReminderLog::STATUS_SUCCESS;
-        if ($documentsSent < $documentsTotal) {
-            $status = InvoiceReminderLog::STATUS_PARTIAL;
-        }
+        $err = ($result['auth_invalid'] ?? false)
+            ? 'Token Fonnte tidak valid.'
+            : ($result['error'] ?? 'Gagal kirim pengingat tagihan.');
 
         return $this->persistLog(
             student: $student,
@@ -235,12 +208,12 @@ class InvoiceReminderService
             phone: $phone,
             message: $message,
             invoiceIds: $invoices->pluck('id')->all(),
-            pdfNames: $pdfNames,
-            wablasIds: $wablasIds,
-            documentsSent: $documentsSent,
-            documentsTotal: $documentsTotal,
-            status: $status,
-            error: $errors ? implode('; ', $errors) : null,
+            pdfNames: [],
+            wablasIds: $fonnteIds,
+            documentsSent: 0,
+            documentsTotal: 0,
+            status: InvoiceReminderLog::STATUS_FAILED,
+            error: $err,
         );
     }
 
@@ -263,16 +236,16 @@ class InvoiceReminderService
     {
         set_time_limit(120);
 
-        if (! $this->wablas->isConfigured()) {
-            throw new \InvalidArgumentException('Kredensial Wablas belum dikonfigurasi di .env');
+        if (! $this->fonnte->isConfigured()) {
+            throw new \InvalidArgumentException('Kredensial Fonnte belum dikonfigurasi di .env');
         }
 
-        $template = $templateId
-            ? WhatsappMessageTemplate::query()->where('id', $templateId)->where('is_active', true)->first()
-            : WhatsappMessageTemplate::defaultInvoiceReminder();
-
-        if (! $template) {
-            throw new \InvalidArgumentException('Template pesan tidak ditemukan atau nonaktif.');
+        $template = null;
+        if ($templateId) {
+            $template = WhatsappMessageTemplate::query()->where('id', $templateId)->where('is_active', true)->first();
+            if (! $template) {
+                throw new \InvalidArgumentException('Template pesan tidak ditemukan atau nonaktif.');
+            }
         }
 
         $summary = [
@@ -290,7 +263,15 @@ class InvoiceReminderService
 
         foreach ($studentIds as $studentId) {
             $student = Student::find($studentId);
-            if (! $student || ! $this->wablas->isValidPhone($student->parent_phone)) {
+            if (! $student) {
+                $summary['skipped']++;
+                continue;
+            }
+
+            $hasValidPhone = $this->fonnte->isValidPhone($student->parent_phone)
+                || $this->fonnte->isValidPhone($student->phone);
+
+            if (! $hasValidPhone) {
                 $summary['skipped']++;
                 continue;
             }
@@ -306,7 +287,6 @@ class InvoiceReminderService
                 continue;
             }
 
-            // Cek auth dengan dry-run teks kosong tidak ideal — kirim dan tangkap auth_invalid
             try {
                 $log = $this->sendReminder($student, $invoices, $sender, $template);
             } catch (\Throwable $e) {
@@ -324,11 +304,11 @@ class InvoiceReminderService
             };
 
             if ($log->error_message) {
-                $summary['errors'][$student->student_code] = $this->humanizeWablasError($log->error_message);
+                $summary['errors'][$student->student_code] = $this->humanizeFonnteError($log->error_message);
             }
 
             if ($log->status === InvoiceReminderLog::STATUS_FAILED
-                && str_contains(strtolower($log->error_message ?? ''), 'token wablas')) {
+                && str_contains(strtolower($log->error_message ?? ''), 'token fonnte')) {
                 $summary['aborted'] = true;
                 $summary['abort_reason'] = $log->error_message;
                 break;
@@ -382,8 +362,8 @@ class InvoiceReminderService
             return $summary;
         }
 
-        if (! $this->wablas->isConfigured()) {
-            throw new \InvalidArgumentException('Kredensial Wablas belum dikonfigurasi.');
+        if (! $this->fonnte->isConfigured()) {
+            throw new \InvalidArgumentException('Kredensial Fonnte belum dikonfigurasi.');
         }
 
         $sender = User::role('Owner')->orderBy('id')->first();
@@ -392,12 +372,12 @@ class InvoiceReminderService
         }
 
         $templateId = SchedulerSettings::invoiceReminderTemplateId();
-        $template = $templateId
-            ? WhatsappMessageTemplate::query()->where('id', $templateId)->where('is_active', true)->first()
-            : WhatsappMessageTemplate::defaultInvoiceReminder();
-
-        if (! $template) {
-            throw new \InvalidArgumentException('Template reminder aktif tidak ditemukan.');
+        $template = null;
+        if ($templateId) {
+            $template = WhatsappMessageTemplate::query()->where('id', $templateId)->where('is_active', true)->first();
+            if (! $template) {
+                throw new \InvalidArgumentException('Template reminder aktif tidak ditemukan.');
+            }
         }
 
         $daysBefore = SchedulerSettings::invoiceReminderDaysBeforeDue();
@@ -423,7 +403,10 @@ class InvoiceReminderService
                 continue;
             }
 
-            if (! $this->wablas->isValidPhone($student->parent_phone)) {
+            $hasValidPhone = $this->fonnte->isValidPhone($student->parent_phone)
+                || $this->fonnte->isValidPhone($student->phone);
+
+            if (! $hasValidPhone) {
                 $summary['skipped']++;
                 continue;
             }
@@ -455,12 +438,12 @@ class InvoiceReminderService
             } else {
                 $summary['failed']++;
                 if ($log->error_message) {
-                    $summary['errors'][$student->student_code] = $this->humanizeWablasError($log->error_message);
+                    $summary['errors'][$student->student_code] = $this->humanizeFonnteError($log->error_message);
                 }
             }
 
             if ($log->status === InvoiceReminderLog::STATUS_FAILED
-                && str_contains(strtolower($log->error_message ?? ''), 'token wablas')) {
+                && str_contains(strtolower($log->error_message ?? ''), 'token fonnte')) {
                 break;
             }
         }
@@ -479,29 +462,40 @@ class InvoiceReminderService
         User $sender,
         ?WhatsappMessageTemplate $template = null,
     ): InvoiceReminderLog {
-        $template ??= WhatsappMessageTemplate::defaultInvoiceReminder();
+        $phone = $this->fonnte->normalizePhone($student->parent_phone);
+        $isStudentFallback = false;
+
+        if (! $phone) {
+            $phone = $this->fonnte->normalizePhone($student->phone);
+            $isStudentFallback = true;
+        }
+
+        if (! $phone) {
+            throw new \InvalidArgumentException("Murid {$student->full_name} tidak punya nomor HP ortu atau murid yang valid.");
+        }
+
+        if (! $template) {
+            $template = $isStudentFallback
+                ? WhatsappMessageTemplate::query()->where('code', WhatsappMessageTemplate::CODE_INVOICE_REMINDER_STUDENT)->where('is_active', true)->first()
+                : WhatsappMessageTemplate::defaultInvoiceReminder();
+        }
 
         if (! $template) {
             throw new \InvalidArgumentException('Template reminder aktif tidak ditemukan.');
         }
 
-        $phone = $this->wablas->normalizePhone($student->parent_phone);
-        if (! $phone) {
-            throw new \InvalidArgumentException("Murid {$student->full_name} tidak punya nomor HP ortu yang valid.");
-        }
-
         $message = $this->composeMessage($student, $invoices, $template);
-        $textResult = $this->wablas->sendText($phone, $message);
-        $wablasIds = [];
+        $result = $this->fonnte->sendText($phone, $message);
+        $fonnteIds = [];
 
-        if ($textResult['message_id']) {
-            $wablasIds[] = $textResult['message_id'];
+        if (! empty($result['message_ids'])) {
+            $fonnteIds = $result['message_ids'];
         }
 
-        if (! $textResult['ok']) {
-            $err = ($textResult['auth_invalid'] ?? false)
-                ? 'Token Wablas tidak valid.'
-                : ($textResult['error'] ?? 'Gagal kirim pesan teks.');
+        if (! $result['ok']) {
+            $err = ($result['auth_invalid'] ?? false)
+                ? 'Token Fonnte tidak valid.'
+                : ($result['error'] ?? 'Gagal kirim pesan teks.');
 
             return $this->persistLog(
                 student: $student,
@@ -510,7 +504,7 @@ class InvoiceReminderService
                 message: $message,
                 invoiceIds: $invoices->pluck('id')->all(),
                 pdfNames: [],
-                wablasIds: $wablasIds,
+                wablasIds: $fonnteIds,
                 documentsSent: 0,
                 documentsTotal: 0,
                 status: InvoiceReminderLog::STATUS_FAILED,
@@ -525,7 +519,7 @@ class InvoiceReminderService
             message: $message,
             invoiceIds: $invoices->pluck('id')->all(),
             pdfNames: [],
-            wablasIds: $wablasIds,
+            wablasIds: $fonnteIds,
             documentsSent: 0,
             documentsTotal: 0,
             status: InvoiceReminderLog::STATUS_SUCCESS,
@@ -533,15 +527,15 @@ class InvoiceReminderService
         );
     }
 
-    /** Terjemahkan pesan error Wablas ke Bahasa Indonesia yang mudah dipahami Admin. */
-    private function humanizeWablasError(string $raw): string
+    /** Terjemahkan pesan error Fonnte ke Bahasa Indonesia yang mudah dipahami Admin. */
+    private function humanizeFonnteError(string $raw): string
     {
         $key = strtolower(trim($raw));
 
         return match (true) {
-            str_contains($key, 'device blocked') => 'Perangkat WhatsApp di Wablas terblokir. Buka dashboard Wablas → cek status device → scan ulang QR / hubungi support Wablas.',
-            str_contains($key, 'token') && str_contains($key, 'invalid') => 'Token Wablas tidak valid. Periksa WABLAS_TOKEN dan WABLAS_SECRET_KEY di .env.',
-            str_contains($key, 'quota') => 'Kuota pesan Wablas habis. Top up atau tunggu reset kuota.',
+            str_contains($key, 'device blocked') => 'Perangkat WhatsApp di Fonnte terblokir. Buka dashboard Fonnte → cek status device → scan ulang QR / hubungi support Fonnte.',
+            str_contains($key, 'token') && str_contains($key, 'invalid') => 'Token Fonnte tidak valid. Periksa FONNTE_TOKEN di .env.',
+            str_contains($key, 'quota') => 'Kuota pesan Fonnte habis. Top up atau tunggu reset kuota.',
             str_contains($key, 'phone') && str_contains($key, 'invalid') => 'Nomor WhatsApp tujuan tidak valid.',
             default => $raw,
         };

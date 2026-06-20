@@ -86,7 +86,7 @@
                 <div class="studio-name">Musik KITA</div>
                 <div class="studio-sub">Les Musik · Toko Alat Musik</div>
                 <div class="studio-sub">Ruko Serpong Garden 1 Ruko 2 No. 19, Tangerang</div>
-                <div class="studio-sub">WA: {{ \App\Services\WablasService::STUDIO_WA_DISPLAY }}</div>
+                <div class="studio-sub">WA: {{ \App\Services\FonnteService::STUDIO_WA_DISPLAY }}</div>
             </td>
             <td width="45%">
                 <div class="inv-title">INVOICE</div>

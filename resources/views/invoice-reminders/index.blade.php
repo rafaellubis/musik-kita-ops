@@ -15,7 +15,7 @@
     </x-slot>
 
     <div class="py-6 px-4 lg:px-8"
-         x-data="reminderPage(@js($wablasReady), @js($rows->map(fn ($r) => [
+         x-data="reminderPage(@js($fonnteReady), @js($rows->map(fn ($r) => [
              'id' => $r->student->id,
              'name' => $r->student->full_name,
              'code' => $r->student->student_code,
@@ -39,9 +39,9 @@
         </div>
         @endif
 
-        @unless($wablasReady)
+        @unless($fonnteReady)
         <div class="mb-4 p-3 rounded-lg text-sm bg-yellow-50 text-yellow-800 border border-yellow-200">
-            Kredensial Wablas belum dikonfigurasi. Isi WABLAS_TOKEN dan WABLAS_SECRET_KEY di file .env.
+            Kredensial Fonnte belum dikonfigurasi. Isi FONNTE_TOKEN di file .env.
         </div>
         @endunless
 
@@ -86,7 +86,7 @@
                     <span class="text-mk-dim text-xs" x-text="selectedCount + ' murid dipilih'"></span>
                     <button type="button"
                             @click="showModal = true"
-                            :disabled="selectedCount === 0 || !wablasReady"
+                            :disabled="selectedCount === 0 || !fonnteReady"
                             class="ml-auto px-4 py-2 rounded-lg text-sm font-bold btn-mk-primary disabled:opacity-40">
                         Preview & Kirim
                     </button>
@@ -201,10 +201,10 @@
     </div>
 
     <script>
-        function reminderPage(wablasReady, rows) {
+        function reminderPage(fonnteReady, rows) {
             const validIds = rows.filter(r => r.phone_valid).map(r => r.id);
             return {
-                wablasReady,
+                fonnteReady,
                 rows,
                 selected: [],
                 showModal: false,

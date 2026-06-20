@@ -45,17 +45,20 @@ class ScheduledInvoiceReminderTest extends TestCase
             'services.wablas.secret_key' => 'test-secret',
             'services.wablas.base_url'   => 'https://solo.wablas.com',
         ]);
+        config([
+            'services.fonnte.token'      => 'test-token',
+            'services.fonnte.base_url'   => 'https://api.fonnte.com',
+        ]);
 
         Setting::set('scheduler_invoice_reminder_enabled', 'true');
         Setting::set('scheduler_invoice_reminder_days_before_due', '3');
         Setting::set('scheduler_invoice_reminder_time', '10:00');
     }
 
-    private function fakeWablasTextOnly(): void
+    private function fakeFonnteTextOnly(): void
     {
         Http::fake([
-            'https://solo.wablas.com/api/send-message' => Http::response(['status' => true, 'id' => 'text-1'], 200),
-            'https://solo.wablas.com/api/send-document-from-local' => Http::response(['status' => true, 'id' => 'doc-1'], 200),
+            'https://api.fonnte.com/send' => Http::response(['status' => true, 'id' => ['text-1']], 200),
         ]);
     }
 
@@ -85,7 +88,7 @@ class ScheduledInvoiceReminderTest extends TestCase
 
     public function test_due_date_today_plus_n_eligible_hari_ini(): void
     {
-        $this->fakeWablasTextOnly();
+        $this->fakeFonnteTextOnly();
         Carbon::setTestNow(Carbon::parse('2026-06-15 10:00:00'));
 
         $student = Student::factory()->create([
@@ -113,7 +116,7 @@ class ScheduledInvoiceReminderTest extends TestCase
 
     public function test_due_date_today_plus_5_tidak_eligible_saat_n_3(): void
     {
-        $this->fakeWablasTextOnly();
+        $this->fakeFonnteTextOnly();
         Carbon::setTestNow(Carbon::parse('2026-06-15 10:00:00'));
 
         $student = Student::factory()->create([
@@ -136,7 +139,7 @@ class ScheduledInvoiceReminderTest extends TestCase
 
     public function test_run_kedua_bulan_sama_dilewati(): void
     {
-        $this->fakeWablasTextOnly();
+        $this->fakeFonnteTextOnly();
         Carbon::setTestNow(Carbon::parse('2026-06-15 10:00:00'));
 
         $student = Student::factory()->create([
@@ -199,7 +202,7 @@ class ScheduledInvoiceReminderTest extends TestCase
 
     public function test_kirim_berhasil_mencatat_audit_log(): void
     {
-        $this->fakeWablasTextOnly();
+        $this->fakeFonnteTextOnly();
         Carbon::setTestNow(Carbon::parse('2026-06-15 10:00:00'));
 
         $student = Student::factory()->create([
