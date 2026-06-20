@@ -623,6 +623,8 @@ Route::middleware(['auth', 'verified', 'role:Guru'])
     ->group(function () {
         Route::get('/dashboard',                     [GuruController::class, 'dashboard'])->name('dashboard');
         Route::get('/jadwal',                        [GuruController::class, 'jadwal'])->name('jadwal');
+        Route::get('/jadwal/sessions',               [GuruController::class, 'jadwalSessions'])->name('jadwal.sessions');
+        Route::get('/jadwal/dates',                  [GuruController::class, 'jadwalDates'])->name('jadwal.dates');
         Route::get('/honor',                         [GuruController::class, 'honor'])->name('honor');
         Route::get('/honor/{honorSlip}',             [GuruController::class, 'honorShow'])->name('honor.show');
         Route::patch('/sesi/{classSession}/absensi', [GuruController::class, 'updateAbsensi'])->name('absensi.update');

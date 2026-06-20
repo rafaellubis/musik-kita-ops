@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ClassSession;
 use App\Models\Enrollment;
 use App\Models\HonorSlip;
+use App\Models\Teacher;
 use App\Models\ProgressReport;
 use App\Models\ProgressReportItem;
 use App\Models\ProgressReportSection;
@@ -17,7 +18,9 @@ use App\Services\ReportTemplateResolverService;
 use App\Services\SessionNoteSyncService;
 use App\Services\SessionReportWaService;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 
 /**
@@ -37,6 +40,21 @@ use Illuminate\Validation\Rule;
  */
 class GuruController extends Controller
 {
+    /** Buffer awal strip tanggal (±N hari dari tanggal terpilih). */
+    private const JADWAL_INITIAL_BUFFER_DAYS = 45;
+
+    /** Batch lazy-load saat scroll mendekati ujung strip. */
+    private const JADWAL_LAZY_BATCH_DAYS = 30;
+
+    /** Maks rentang query endpoint /jadwal/dates. */
+    private const JADWAL_MAX_DATE_RANGE = 90;
+
+    /** Batas navigasi tanggal dari hari ini (tahun). */
+    private const JADWAL_DATE_BOUND_YEARS = 2;
+
+    /** Nama hari singkat Sen–Min (iso: 1=Sen … 7=Min). */
+    private const JADWAL_DAY_NAMES = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+
     /**
      * AttendanceService diinjeksi via constructor agar honor_code dan
      * honor_amount ikut terset saat guru submit absensi (Issue 1 fix).
@@ -102,63 +120,228 @@ class GuruController extends Controller
 
     /**
      * Jadwal guru: sesi per hari, navigasi via ?date=YYYY-MM-DD.
-     * Juga menyediakan data minggu (Senin–Minggu) untuk strip kalender horizontal.
+     * Strip kalender di-bootstrap ke Alpine untuk slide lintas bulan + AJAX sesi.
      */
     public function jadwal(Request $request)
     {
         $teacher = auth()->user()->teacher;
         abort_if(!$teacher, 403);
 
-        try {
-            $selectedDate = $request->filled('date')
-                ? Carbon::parse($request->input('date'))->startOfDay()
-                : Carbon::today();
-        } catch (\Exception $e) {
-            $selectedDate = Carbon::today();
-        }
+        $selectedDate = $this->parseJadwalDate(
+            $request->filled('date') ? $request->input('date') : null
+        );
 
         $tanggal = $selectedDate->toDateString();
         $today   = today()->toDateString();
 
-        // Sesi untuk hari terpilih
-        $sesi = ClassSession::where(function ($q) use ($teacher) {
-                $q->where('teacher_id', $teacher->id)
-                  ->orWhere('substitute_teacher_id', $teacher->id);
-            })
-            ->where('session_date', $tanggal)
-            ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher', 'teacherNote', 'originSession'])
-            ->orderBy('start_time')
-            ->get();
+        $sesi = $this->sessionsForTeacherOnDate($teacher, $selectedDate);
 
-        // Kalender strip: tanggal Senin–Minggu dari minggu terpilih
-        $weekStart = $selectedDate->copy()->startOfWeek(Carbon::MONDAY);
-        $weekDates = collect();
-        for ($i = 0; $i < 7; $i++) {
-            $weekDates->push($weekStart->copy()->addDays($i));
-        }
+        $stripFrom = $selectedDate->copy()->subDays(self::JADWAL_INITIAL_BUFFER_DAYS);
+        $stripTo   = $selectedDate->copy()->addDays(self::JADWAL_INITIAL_BUFFER_DAYS);
+        $dates     = $this->buildDateStripData($stripFrom, $stripTo);
+        $sessionCounts = $this->sessionCountsForTeacherBetween(
+            $teacher,
+            $stripFrom->toDateString(),
+            $stripTo->toDateString()
+        );
 
-        // Hitung jumlah sesi per hari di minggu ini (untuk indikator dot)
-        $weekStartStr = $weekStart->toDateString();
-        $weekEndStr   = $weekStart->copy()->addDays(6)->toDateString();
-
-        $sesiCountPerDay = ClassSession::where(function ($q) use ($teacher) {
-                $q->where('teacher_id', $teacher->id)
-                  ->orWhere('substitute_teacher_id', $teacher->id);
-            })
-            ->whereBetween('session_date', [$weekStartStr, $weekEndStr])
-            ->whereNotIn('status', ['CANCELLED'])
-            ->selectRaw('session_date, count(*) as cnt')
-            ->groupBy('session_date')
-            ->pluck('cnt', 'session_date');
-
-        $prevWeekNav = ['date' => $weekStart->copy()->subWeek()->toDateString()];
-        $nextWeekNav = ['date' => $weekStart->copy()->addWeek()->toDateString()];
+        $calendarBootstrap = [
+            'selectedDate'        => $tanggal,
+            'today'               => $today,
+            'dates'               => $dates,
+            'sessionCounts'       => $sessionCounts,
+            'initialBufferDays'   => self::JADWAL_INITIAL_BUFFER_DAYS,
+            'lazyBatchDays'       => self::JADWAL_LAZY_BATCH_DAYS,
+            'tapDragThresholdPx'  => 8,
+            'dateBoundYears'      => self::JADWAL_DATE_BOUND_YEARS,
+            'routes'              => [
+                'sessions' => route('guru.jadwal.sessions'),
+                'dates'    => route('guru.jadwal.dates'),
+                'jadwal'   => route('guru.jadwal'),
+            ],
+        ];
 
         return view('guru.jadwal', compact(
             'teacher', 'sesi', 'today', 'tanggal', 'selectedDate',
-            'weekDates', 'sesiCountPerDay', 'weekStart',
-            'prevWeekNav', 'nextWeekNav',
+            'calendarBootstrap', 'sessionCounts',
         ));
+    }
+
+    /**
+     * AJAX: fragment HTML daftar sesi untuk tanggal terpilih.
+     */
+    public function jadwalSessions(Request $request): JsonResponse
+    {
+        $teacher = auth()->user()->teacher;
+        abort_if(!$teacher, 403);
+
+        $request->validate([
+            'date' => ['required', 'date_format:Y-m-d'],
+        ]);
+
+        $selectedDate = $this->parseJadwalDate($request->input('date'));
+        $tanggal      = $selectedDate->toDateString();
+        $today        = today()->toDateString();
+        $sesi         = $this->sessionsForTeacherOnDate($teacher, $selectedDate);
+
+        $showSessionActionsMap = $sesi->mapWithKeys(fn ($s) => [
+            $s->id => $this->shouldShowSessionActions($s, $tanggal, $today, $teacher),
+        ]);
+
+        $html = view('guru._jadwal-sesi-list', [
+            'sesi'                  => $sesi,
+            'tanggal'               => $tanggal,
+            'today'                 => $today,
+            'teacher'               => $teacher,
+            'selectedDate'          => $selectedDate,
+            'showSessionActionsMap' => $showSessionActionsMap,
+        ])->render();
+
+        return response()->json([
+            'date'           => $tanggal,
+            'is_today'       => $tanggal === $today,
+            'session_count'  => $sesi->count(),
+            'has_live'       => $tanggal === $today
+                && $sesi->where('status', 'SCHEDULED')->isNotEmpty(),
+            'html'           => $html,
+        ]);
+    }
+
+    /**
+     * AJAX: metadata strip tanggal + indikator dot sesi (lazy-load edge).
+     */
+    public function jadwalDates(Request $request): JsonResponse
+    {
+        $teacher = auth()->user()->teacher;
+        abort_if(!$teacher, 403);
+
+        $validated = $request->validate([
+            'from' => ['required', 'date_format:Y-m-d'],
+            'to'   => ['required', 'date_format:Y-m-d', 'after_or_equal:from'],
+        ]);
+
+        $from = Carbon::parse($validated['from'])->startOfDay();
+        $to   = Carbon::parse($validated['to'])->startOfDay();
+
+        if ($from->diffInDays($to) + 1 > self::JADWAL_MAX_DATE_RANGE) {
+            return response()->json([
+                'message' => 'Rentang tanggal maksimal ' . self::JADWAL_MAX_DATE_RANGE . ' hari.',
+            ], 422);
+        }
+
+        $boundStart = today()->copy()->subYears(self::JADWAL_DATE_BOUND_YEARS);
+        $boundEnd   = today()->copy()->addYears(self::JADWAL_DATE_BOUND_YEARS);
+
+        if ($from->lt($boundStart) || $to->gt($boundEnd)) {
+            return response()->json([
+                'message' => 'Tanggal di luar rentang yang diizinkan.',
+            ], 422);
+        }
+
+        $counts = $this->sessionCountsForTeacherBetween(
+            $teacher,
+            $from->toDateString(),
+            $to->toDateString()
+        );
+
+        $dates = collect($this->buildDateStripData($from, $to))
+            ->map(fn (array $d) => array_merge($d, [
+                'has_sessions' => ($counts[$d['date']] ?? 0) > 0,
+            ]))
+            ->values()
+            ->all();
+
+        return response()->json(['dates' => $dates]);
+    }
+
+    /**
+     * Parse tanggal jadwal; fallback ke hari ini jika invalid.
+     */
+    private function parseJadwalDate(?string $input): Carbon
+    {
+        try {
+            return $input
+                ? Carbon::parse($input)->startOfDay()
+                : Carbon::today();
+        } catch (\Exception $e) {
+            return Carbon::today();
+        }
+    }
+
+    /**
+     * Query sesi guru (asli atau pengganti) untuk satu tanggal.
+     */
+    private function sessionsForTeacherOnDate(Teacher $teacher, Carbon $date): Collection
+    {
+        return ClassSession::where(function ($q) use ($teacher) {
+                $q->where('teacher_id', $teacher->id)
+                  ->orWhere('substitute_teacher_id', $teacher->id);
+            })
+            ->where('session_date', $date->toDateString())
+            ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher', 'teacherNote', 'originSession'])
+            ->orderBy('start_time')
+            ->get();
+    }
+
+    /**
+     * Hitung jumlah sesi per tanggal (dot indikator), exclude CANCELLED.
+     *
+     * @return array<string, int>
+     */
+    private function sessionCountsForTeacherBetween(Teacher $teacher, string $from, string $to): array
+    {
+        return ClassSession::where(function ($q) use ($teacher) {
+                $q->where('teacher_id', $teacher->id)
+                  ->orWhere('substitute_teacher_id', $teacher->id);
+            })
+            ->whereBetween('session_date', [$from, $to])
+            ->whereNotIn('status', ['CANCELLED'])
+            ->selectRaw('session_date, count(*) as cnt')
+            ->groupBy('session_date')
+            ->pluck('cnt', 'session_date')
+            ->all();
+    }
+
+    /**
+     * Bangun array metadata chip tanggal untuk strip horizontal.
+     *
+     * @return list<array{date: string, day_name: string, day_number: int, is_today: bool}>
+     */
+    private function buildDateStripData(Carbon $from, Carbon $to): array
+    {
+        $todayStr = today()->toDateString();
+        $dates    = [];
+        $cursor   = $from->copy();
+
+        while ($cursor->lte($to)) {
+            $dates[] = [
+                'date'       => $cursor->toDateString(),
+                'day_name'   => self::JADWAL_DAY_NAMES[$cursor->dayOfWeekIso - 1],
+                'day_number' => (int) $cursor->day,
+                'is_today'   => $cursor->toDateString() === $todayStr,
+            ];
+            $cursor->addDay();
+        }
+
+        return $dates;
+    }
+
+    /**
+     * Apakah tombol absensi ditampilkan untuk sesi ini (logic existing jadwal.blade.php).
+     */
+    private function shouldShowSessionActions(
+        ClassSession $session,
+        string $tanggal,
+        string $today,
+        Teacher $teacher
+    ): bool {
+        return $tanggal === $today
+            || in_array($session->status, ['HADIR', 'HADIR_TERLAMBAT'], true)
+            || (
+                (int) $session->substitute_teacher_id === (int) $teacher->id
+                && $session->status === 'DIGANTI'
+                && $session->honor_code !== null
+            );
     }
 
     /**
