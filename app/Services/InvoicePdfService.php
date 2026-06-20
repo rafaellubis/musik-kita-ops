@@ -52,12 +52,21 @@ class InvoicePdfService
     {
         $pkg = $invoice->enrollment?->package;
         if (! $pkg) {
-            return $invoice->description ?? 'Tagihan';
+            $label = $invoice->description ?? 'Tagihan';
+            if ($invoice->isInstallment() && $invoice->installment_number) {
+                $label .= " (Termin {$invoice->installment_number}/3)";
+            }
+            return $label;
         }
 
         $instrument = $pkg->instrument?->name ?? '';
         $type = Str::title(str_replace('_', ' ', strtolower($pkg->class_type ?? '')));
+        $label = trim("{$instrument} {$type}");
 
-        return trim("{$instrument} {$type}") ?: $invoice->invoice_number;
+        if ($invoice->isInstallment() && $invoice->installment_number) {
+            $label .= " (Termin {$invoice->installment_number}/3)";
+        }
+
+        return $label ?: $invoice->invoice_number;
     }
 }

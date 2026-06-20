@@ -257,6 +257,18 @@ class InvoiceController extends Controller
         return view('invoices.print', compact('invoice'));
     }
 
+    // ponytail: render pdf publik aman menggunakan signed URL untuk ortu/murid tanpa login
+    public function publicPdf(Invoice $invoice)
+    {
+        $pdfService = app(\App\Services\InvoicePdfService::class);
+        $pdfBytes = $pdfService->renderPdf($invoice);
+        $filename = $pdfService->filenameFor($invoice);
+
+        return response($pdfBytes)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+    }
+
     /**
      * Generate invoice Final Project Kids Class (KIDS_FP).
      * Hanya untuk murid KIDS_CLASS yang belum punya invoice KIDS_FP.

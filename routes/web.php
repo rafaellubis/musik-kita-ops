@@ -73,6 +73,10 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 | Karena itu kita daftarkan write group dulu (punya /students/create),
 | baru read group di akhir (punya /students/{student}).
 */
+Route::get('invoices/{invoice}/public-pdf', [InvoiceController::class, 'publicPdf'])
+    ->name('invoices.public-pdf')
+    ->middleware('signed');
+
 Route::middleware('auth')->group(function () {
 
     // ============= Profil Pribadi =============

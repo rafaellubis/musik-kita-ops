@@ -87,6 +87,27 @@ class Invoice extends Model
 
     // ============= ACCESSORS =============
 
+    // ponytail: dapatkan status reminder tagihan secara dinamis dari tabel log
+    public function getReminderStatusAttribute(): string
+    {
+        if ($this->status === self::STATUS_PAID || $this->status === self::STATUS_VOID) {
+            return '—';
+        }
+
+        $latestLog = InvoiceReminderLog::query()
+            ->whereJsonContains('invoice_ids', $this->id)
+            ->latest('sent_at')
+            ->first();
+
+        if (! $latestLog) {
+            return 'Belum';
+        }
+
+        return $latestLog->status === InvoiceReminderLog::STATUS_SUCCESS
+            ? 'Terkirim'
+            : 'Gagal';
+    }
+
     public function getBalanceAttribute(): int
     {
         return max(0, $this->total_amount - $this->paid_amount);
