@@ -402,7 +402,7 @@ button[type="submit"]:focus-visible {
             <input type="text" id="login" name="login"
                    class="login-field"
                    value="{{ old('login') }}"
-                   placeholder="thomas atau nama@musikkita.local"
+                   placeholder="Username atau Email Anda"
                    required autofocus
                    autocomplete="username"
                    autocapitalize="off"
