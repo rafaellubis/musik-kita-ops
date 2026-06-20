@@ -3,7 +3,7 @@
         <div class="flex justify-between items-center">
             <div>
                 <h2 class="font-semibold text-xl text-mk-text">Reminder WA Tagihan</h2>
-                <div class="text-xs text-mk-muted mt-0.5">Kirim pengingat ke ortu murid via WhatsApp (Wablas)</div>
+                <div class="text-xs text-mk-muted mt-0.5">Kirim pengingat ke ortu murid via WhatsApp (Fonnte)</div>
             </div>
             @role('Owner')
             <a href="{{ route('whatsapp-templates.index') }}"
@@ -156,14 +156,14 @@
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Konfirmasi Kirim Reminder</h3>
                 <p class="text-sm text-gray-600 mb-4">
                     Akan mengirim <strong x-text="selectedCount"></strong> murid:
-                    1 pesan teks + <strong x-text="totalPdfs"></strong> file PDF (terpisah per invoice).
+                    1 pesan teks via WhatsApp (Fonnte) dengan link PDF invoice di dalamnya.
                 </p>
                 <ul class="text-xs text-gray-600 max-h-40 overflow-y-auto mb-4 space-y-1">
                     <template x-for="item in selectedDetails" :key="item.id">
                         <li>
                             <span x-text="item.name"></span>
                             (<span x-text="item.code"></span>) —
-                            <span x-text="item.invoice_count"></span> PDF
+                            (dengan link PDF)
                         </li>
                     </template>
                 </ul>

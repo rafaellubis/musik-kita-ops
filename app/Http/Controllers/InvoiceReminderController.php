@@ -86,7 +86,7 @@ class InvoiceReminderController extends Controller
         $message = 'Pengiriman selesai: ' . (implode(', ', $parts) ?: 'tidak ada yang terkirim');
 
         if ($summary['aborted']) {
-            return back()->with('error', $message . ' — ' . ($summary['abort_reason'] ?? 'Token Wablas tidak valid.'));
+            return back()->with('error', $message . ' — ' . ($summary['abort_reason'] ?? 'Token Fonnte tidak valid.'));
         }
 
         if ($summary['failed'] > 0 && $summary['success'] === 0 && $summary['partial'] === 0) {
