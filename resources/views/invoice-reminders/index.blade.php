@@ -175,16 +175,7 @@
                     <template x-for="id in selected" :key="id">
                         <input type="hidden" name="student_ids[]" :value="id">
                     </template>
-                    @if($templates->count() > 1)
-                    <div class="mb-4">
-                        <label class="block text-xs text-gray-500 mb-1">Template pesan</label>
-                        <select name="template_id" class="w-full rounded border-gray-300 text-sm">
-                            @foreach($templates as $tpl)
-                                <option value="{{ $tpl->id }}">{{ $tpl->name }} ({{ $tpl->code }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    @endif
+                    {{-- ponytail: template dipilih otomatis oleh service (INVOICE_REMINDER jika no ortu ada, INVOICE_REMINDER_STUDENT jika tidak) --}}
                     <div class="flex justify-end gap-2">
                         <button type="button" @click="showModal = false"
                                 class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm">

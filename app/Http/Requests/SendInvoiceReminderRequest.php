@@ -17,10 +17,10 @@ class SendInvoiceReminderRequest extends FormRequest
 
     public function rules(): array
     {
+        // ponytail: template_id dihapus — sistem auto-pilih template via fallback no HP
         return [
             'student_ids'   => ['required', 'array', 'min:1', 'max:30'],
             'student_ids.*' => ['integer', 'exists:students,id'],
-            'template_id'   => ['nullable', 'integer', 'exists:whatsapp_message_templates,id'],
         ];
     }
 
@@ -31,7 +31,6 @@ class SendInvoiceReminderRequest extends FormRequest
             'student_ids.min'      => 'Pilih minimal satu murid.',
             'student_ids.max'      => 'Maksimal 30 murid per pengiriman.',
             'student_ids.*.exists' => 'Murid tidak valid.',
-            'template_id.exists'   => 'Template pesan tidak ditemukan.',
         ];
     }
 

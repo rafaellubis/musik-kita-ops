@@ -232,7 +232,7 @@ class InvoiceReminderService
      *   log_ids: array<int>,
      * }
      */
-    public function sendBatch(array $studentIds, User $sender, ?int $templateId = null): array
+    public function sendBatch(array $studentIds, User $sender): array
     {
         set_time_limit(120);
 
@@ -240,13 +240,8 @@ class InvoiceReminderService
             throw new \InvalidArgumentException('Kredensial Fonnte belum dikonfigurasi di .env');
         }
 
-        $template = null;
-        if ($templateId) {
-            $template = WhatsappMessageTemplate::query()->where('id', $templateId)->where('is_active', true)->first();
-            if (! $template) {
-                throw new \InvalidArgumentException('Template pesan tidak ditemukan atau nonaktif.');
-            }
-        }
+        // ponytail: template selalu null — auto-fallback di sendReminder() yang menentukan
+        // INVOICE_REMINDER (no ortu) atau INVOICE_REMINDER_STUDENT (no murid)
 
         $summary = [
             'success'       => 0,
@@ -288,7 +283,7 @@ class InvoiceReminderService
             }
 
             try {
-                $log = $this->sendReminder($student, $invoices, $sender, $template);
+                $log = $this->sendReminder($student, $invoices, $sender, null); // auto-fallback template
             } catch (\Throwable $e) {
                 $summary['failed']++;
                 $summary['errors'][$student->student_code] = $e->getMessage();

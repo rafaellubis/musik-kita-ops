@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\SendInvoiceReminderRequest;
 use App\Models\AuditLog;
-use App\Models\WhatsappMessageTemplate;
 use App\Services\InvoiceReminderService;
 use App\Services\FonnteService;
 use Illuminate\Http\RedirectResponse;
@@ -30,14 +29,11 @@ class InvoiceReminderController extends Controller
         ];
 
         $rows = $this->reminderService->getUnpaidGroupedByStudent($filters);
-        $templates = WhatsappMessageTemplate::query()
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->get();
 
+        // ponytail: template tidak lagi dipilih manual — auto-fallback di service
         $fonnteReady = $this->fonnte->isConfigured();
 
-        return view('invoice-reminders.index', compact('rows', 'templates', 'filters', 'fonnteReady'));
+        return view('invoice-reminders.index', compact('rows', 'filters', 'fonnteReady'));
     }
 
     public function send(SendInvoiceReminderRequest $request): RedirectResponse
@@ -46,7 +42,6 @@ class InvoiceReminderController extends Controller
             $summary = $this->reminderService->sendBatch(
                 $request->validated('student_ids'),
                 $request->user(),
-                $request->validated('template_id'),
             );
         } catch (\InvalidArgumentException $e) {
             return back()->with('error', $e->getMessage());
