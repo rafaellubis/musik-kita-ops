@@ -35,30 +35,38 @@
         .header-table { width: 100%; border-collapse: collapse; }
         .header-table td { vertical-align: top; border: none; padding: 0; }
 
-        .brand-stack {
-            display: block;
+        .brand-table {
+            width: auto;
+            border-collapse: collapse;
+        }
+
+        .brand-table td {
+            border: none;
+            padding: 0;
+            vertical-align: top;
+        }
+
+        .brand-tagline-cell {
+            padding-top: 6px;
         }
 
         .studio-logo {
             height: 48px;
             max-width: 190px;
-            display: block;
         }
 
         .studio-name {
             font-size: 18px;
             font-weight: bold;
             color: #4A1F0A;
-            display: block;
         }
 
         .tagline-badge {
             display: inline-block;
-            border: 1px solid rgba(74, 31, 10, 0.18);
+            border: 1px solid #d4c4b0;
             color: #7A3818;
             font-size: 9px;
             padding: 2px 8px;
-            margin-top: 10px;
             text-transform: uppercase;
         }
 
@@ -261,14 +269,23 @@
         <table class="header-table">
             <tr>
                 <td width="58%">
-                    <div class="brand-stack">
-                        @if(! empty($logoPath))
-                            <img class="studio-logo" src="{{ $logoPath }}" alt="Musik KITA">
-                        @else
-                            <div class="studio-name">Musik KITA</div>
-                        @endif
-                        <div class="tagline-badge">Les Musik · Toko Alat Musik</div>
-                    </div>
+                    {{-- DomPDF: stack logo + tagline pakai baris tabel, bukan div/flex --}}
+                    <table class="brand-table">
+                        <tr>
+                            <td>
+                                @if(! empty($logoPath))
+                                    <img class="studio-logo" src="{{ $logoPath }}" alt="Musik KITA">
+                                @else
+                                    <div class="studio-name">Musik KITA</div>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="brand-tagline-cell">
+                                <span class="tagline-badge">Les Musik · Toko Alat Musik</span>
+                            </td>
+                        </tr>
+                    </table>
                     <div class="contact-info">
                         Ruko Serpong Garden 1 Ruko 2 No. 19, Tangerang - Banten<br>
                         WA: {{ \App\Services\FonnteService::STUDIO_WA_DISPLAY }}
