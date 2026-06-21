@@ -7,8 +7,8 @@
         @page {
             margin: 18mm 15mm;
         }
-        /* Reset eksplisit untuk DomPDF tanpa wildcard * selector */
-        html, body, div, p, table, tr, th, td, h1, h2, h3, img, span {
+        /* Reset eksplisit untuk DomPDF tanpa wildcard * selector (kecualikan body) */
+        html, div, p, table, tr, th, td, h1, h2, h3, img, span {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -109,10 +109,12 @@
                 <div class="studio-sub">Ruko Serpong Garden 1 Ruko 2 No. 19, Tangerang</div>
                 <div class="studio-sub">WA: {{ \App\Services\FonnteService::STUDIO_WA_DISPLAY }}</div>
             </td>
-            <td width="45%">
+            <td width="45%" class="right">
                 <div class="inv-title">INVOICE</div>
                 <div class="inv-number">{{ $invoice->invoice_number }}</div>
-                <div class="status status-{{ $invoice->status }}">{{ $invoice->status }}</div>
+                <div style="margin-top: 6px;">
+                    <span class="status status-{{ $invoice->status }}">{{ $invoice->status }}</span>
+                </div>
             </td>
         </tr>
     </table>
