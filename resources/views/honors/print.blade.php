@@ -4,72 +4,170 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $honor->slip_number }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
     <style>
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial, sans-serif; font-size: 12px; color: #111; background: #fff; }
+        body {
+            font-family: 'Hanken Grotesk', 'DM Sans', sans-serif;
+            font-size: 11px;
+            color: #3A2015;
+            background: #F5F9F7;
+            line-height: 1.5;
+        }
 
-        .page { max-width: 680px; margin: 0 auto; padding: 32px 28px; }
+        .page {
+            max-width: 720px;
+            margin: 20px auto;
+            padding: 40px 36px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(74, 31, 10, 0.08);
+            border: 1px solid rgba(93, 184, 144, 0.15);
+        }
 
         /* Header */
-        .header { display: flex; justify-content: space-between; align-items: flex-start;
-                  border-bottom: 2px solid #111; padding-bottom: 12px; margin-bottom: 16px; }
-        .studio-name { font-size: 20px; font-weight: bold; }
-        .studio-sub  { font-size: 11px; color: #555; margin-top: 2px; }
-        .bank-info   { margin-top: 5px; font-size: 9.5px; color: #555; font-style: italic; line-height: 1.6; }
-        .slip-title  { text-align: right; }
-        .slip-title .label  { font-size: 11px; color: #666; }
-        .slip-title .number { font-size: 14px; font-weight: bold; font-family: monospace; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2.5px solid #4A1F0A;
+            padding-bottom: 14px;
+            margin-bottom: 20px;
+        }
+        .studio-name {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: #4A1F0A;
+        }
+        .studio-sub {
+            font-size: 11px;
+            color: #7A3818;
+            margin-top: 2px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .bank-info {
+            margin-top: 6px;
+            font-size: 9.5px;
+            color: #7A3818;
+            font-style: italic;
+            line-height: 1.5;
+            opacity: 0.9;
+        }
+        .slip-title { text-align: right; }
+        .slip-title .label { font-size: 10px; color: #7A3818; text-transform: uppercase; letter-spacing: 0.5px; }
+        .slip-title .number { font-size: 14px; font-weight: 700; font-family: monospace; color: #4A1F0A; margin-top: 2px; }
 
         /* Info guru */
-        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px;
-                     background: #f9f9f9; padding: 12px; border-radius: 4px; margin-bottom: 16px; }
-        .meta-item .label { font-size: 10px; color: #666; }
-        .meta-item .value { font-size: 13px; font-weight: 500; }
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 24px;
+            background: rgba(93, 184, 144, 0.06);
+            padding: 14px 18px;
+            border-radius: 6px;
+            border: 1px solid rgba(93, 184, 144, 0.12);
+            margin-bottom: 24px;
+        }
+        .meta-item .label { font-size: 10px; color: #7A3818; text-transform: uppercase; letter-spacing: 0.5px; }
+        .meta-item .value { font-size: 12px; font-weight: 600; color: #3A2015; margin-top: 2px; }
 
         /* Section heading */
-        h2 { font-size: 12px; font-weight: bold; border-bottom: 1px solid #ddd;
-             padding-bottom: 4px; margin-bottom: 8px; }
+        h2 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: #4A1F0A;
+            border-bottom: 1.5px solid rgba(93, 184, 144, 0.22);
+            padding-bottom: 6px;
+            margin-bottom: 12px;
+            margin-top: 8px;
+        }
 
         /* Tabel umum */
-        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px; }
-        th { text-align: left; font-size: 10px; text-transform: uppercase;
-             color: #666; border-bottom: 1px solid #ccc; padding: 4px 6px; font-weight: normal; }
-        td { padding: 5px 6px; border-bottom: 1px solid #eee; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; }
+        th {
+            text-align: left;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #7A3818;
+            border-bottom: 1.5px solid rgba(93, 184, 144, 0.3);
+            padding: 6px 8px;
+            font-weight: 600;
+        }
+        td { padding: 7px 8px; border-bottom: 1px solid rgba(93, 184, 144, 0.08); color: #3A2015; }
         .text-right { text-align: right; }
-        .font-mono  { font-family: monospace; }
-        .font-bold  { font-weight: bold; }
+        .font-mono { font-family: monospace; font-size: 11px; }
+        .font-bold { font-weight: bold; }
 
         /* Baris Kids Class */
-        .row-kids { background: #fffbf0; }
-        .row-kids td:nth-child(2) { font-size: 10px; color: #888; }
+        .row-kids { background: rgba(93, 184, 144, 0.03); }
+        .row-kids td:nth-child(2) { font-size: 10px; color: #7A3818; }
 
         /* Footer tabel per-murid */
-        .subtotal-row td { border-top: 2px solid #aaa; border-bottom: none; font-weight: bold; }
+        .subtotal-row td {
+            border-top: 2px solid rgba(93, 184, 144, 0.3);
+            border-bottom: none;
+            font-weight: 700;
+            color: #4A1F0A;
+            background: rgba(93, 184, 144, 0.03);
+        }
 
         /* Baris total komponen honor */
-        .total-row td { border-top: 2px solid #111; border-bottom: none; font-weight: bold; }
+        .total-row td {
+            border-top: 2px solid #4A1F0A;
+            border-bottom: none;
+            font-weight: 700;
+            color: #4A1F0A;
+            font-size: 12px;
+            background: rgba(93, 184, 144, 0.05);
+        }
 
         /* Catatan kaki Kids Class */
-        .kids-note { font-size: 10px; color: #888; font-style: italic;
-                     margin-top: 4px; margin-bottom: 16px; padding-left: 6px; }
+        .kids-note { font-size: 10px; color: #7A3818; font-style: italic;
+                     margin-top: 4px; margin-bottom: 20px; padding-left: 8px; }
 
         /* Status badge */
-        .status-badge { display: inline-block; padding: 2px 8px; border-radius: 3px;
-                        font-size: 10px; font-weight: bold; }
-        .status-paid  { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
-        .status-calc  { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
-        .status-draft { background: #f3f4f6; color: #6b7280; border: 1px solid #d1d5db; }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-paid  { background: rgba(52, 211, 153, 0.15); color: #065f46; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .status-calc  { background: rgba(59, 130, 246, 0.15); color: #1e40af; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .status-draft { background: rgba(107, 114, 128, 0.15); color: #374151; border: 1px solid rgba(107, 114, 128, 0.3); }
 
         /* Tanda tangan */
-        .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 28px; }
+        .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 36px; }
         .sign-box { text-align: center; }
-        .sign-box .role { font-size: 10px; color: #666; }
-        .sign-box .line { border-bottom: 1px solid #111; height: 50px; margin: 6px 10px; }
-        .sign-box .name { font-size: 11px; }
+        .sign-box .role { font-size: 10px; color: #7A3818; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sign-box .line { border-bottom: 1.5px solid #4A1F0A; height: 55px; margin: 8px 24px; }
+        .sign-box .name { font-size: 11px; font-weight: 600; color: #3A2015; }
 
         @media print {
             .no-print { display: none !important; }
-            body { background: #fff; }
+            body { background: #fff; color: #3A2015; }
+            .page {
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+                border: none;
+                background: transparent;
+            }
         }
     </style>
 </head>
