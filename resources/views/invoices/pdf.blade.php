@@ -47,7 +47,7 @@
         }
 
         .brand-tagline-cell {
-            padding-top: 6px;
+            padding-top: 10px;
         }
 
         .studio-logo {
