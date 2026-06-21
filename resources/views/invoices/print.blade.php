@@ -59,7 +59,7 @@
             font-size: 9px;
             padding: 2px 8px;
             border-radius: 3px;
-            margin-top: 6px;
+            margin-top: 10px;
             letter-spacing: 0.5px;
             font-weight: 500;
             text-transform: uppercase;
