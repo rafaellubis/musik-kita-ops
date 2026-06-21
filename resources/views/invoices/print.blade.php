@@ -37,10 +37,13 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            background: rgba(93, 184, 144, 0.06);
+            background: #ffffff;
             border-bottom: 3px solid #4A1F0A;
             padding: 20px 28px 18px;
             gap: 12px;
+        }
+        .brand-stack {
+            display: block;
         }
         .studio-logo {
             height: 48px;
@@ -50,8 +53,8 @@
             display: block;
         }
         .tagline-badge {
-            display: inline-block;
-            border: 1px solid rgba(93, 184, 144, 0.3);
+            display: block;
+            border: 1px solid rgba(74, 31, 10, 0.18);
             color: #7A3818;
             font-size: 9px;
             padding: 2px 8px;
@@ -60,6 +63,7 @@
             letter-spacing: 0.5px;
             font-weight: 500;
             text-transform: uppercase;
+            width: fit-content;
         }
         .contact-info {
             font-size: 10px;
@@ -283,10 +287,12 @@
 
     <div class="header">
         <div>
-            <img class="studio-logo"
-                 src="{{ asset('images/logo-musikkita-light-mode.PNG') }}"
-                 alt="Musik KITA">
-            <div class="tagline-badge">Les Musik &nbsp;·&nbsp; Toko Alat Musik</div>
+            <div class="brand-stack">
+                <img class="studio-logo"
+                     src="{{ asset('images/logo-musikkita-light-mode.PNG') }}"
+                     alt="Musik KITA">
+                <div class="tagline-badge">Les Musik · Toko Alat Musik</div>
+            </div>
             <div class="contact-info">
                 <div class="contact-row">
                     <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

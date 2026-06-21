@@ -27,13 +27,17 @@
         }
 
         .header {
-            background-color: #f3faf6;
+            background-color: #ffffff;
             border-bottom: 3px solid #4A1F0A;
             padding: 20px 28px 18px;
         }
 
         .header-table { width: 100%; border-collapse: collapse; }
         .header-table td { vertical-align: top; border: none; padding: 0; }
+
+        .brand-stack {
+            display: block;
+        }
 
         .studio-logo {
             height: 48px;
@@ -45,11 +49,12 @@
             font-size: 18px;
             font-weight: bold;
             color: #4A1F0A;
+            display: block;
         }
 
         .tagline-badge {
             display: inline-block;
-            border: 1px solid #b8dcc8;
+            border: 1px solid rgba(74, 31, 10, 0.18);
             color: #7A3818;
             font-size: 9px;
             padding: 2px 8px;
@@ -256,12 +261,14 @@
         <table class="header-table">
             <tr>
                 <td width="58%">
-                    @if(! empty($logoPath))
-                        <img class="studio-logo" src="{{ $logoPath }}" alt="Musik KITA">
-                    @else
-                        <div class="studio-name">Musik KITA</div>
-                    @endif
-                    <div class="tagline-badge">Les Musik · Toko Alat Musik</div>
+                    <div class="brand-stack">
+                        @if(! empty($logoPath))
+                            <img class="studio-logo" src="{{ $logoPath }}" alt="Musik KITA">
+                        @else
+                            <div class="studio-name">Musik KITA</div>
+                        @endif
+                        <div class="tagline-badge">Les Musik · Toko Alat Musik</div>
+                    </div>
                     <div class="contact-info">
                         Ruko Serpong Garden 1 Ruko 2 No. 19, Tangerang - Banten<br>
                         WA: {{ \App\Services\FonnteService::STUDIO_WA_DISPLAY }}
