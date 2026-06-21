@@ -206,6 +206,8 @@ class InvoiceReminderTest extends TestCase
 
         $this->assertNotEmpty($pdf);
         $this->assertStringStartsWith('%PDF', $pdf);
+        // Font subsetting aktif — invoice sederhana harus jauh di bawah 200 KB
+        $this->assertLessThan(200_000, strlen($pdf), 'PDF invoice terlalu besar; cek font subsetting DomPDF.');
     }
 
     public function test_index_provisions_system_templates_when_database_empty(): void

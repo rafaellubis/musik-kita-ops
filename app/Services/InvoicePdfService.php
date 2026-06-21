@@ -7,10 +7,14 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
 
 /**
- * Generate PDF bytes per invoice (DomPDF) untuk lampiran WhatsApp.
+ * Generate PDF bytes per invoice (DomPDF) untuk link publik reminder WA.
  */
 class InvoicePdfService
 {
+    public function __construct(
+        private readonly ProgressReportPdfAssetService $pdfAssets,
+    ) {}
+
     /**
      * Render satu invoice ke raw PDF bytes.
      */
@@ -22,13 +26,20 @@ class InvoicePdfService
             'items' => fn ($q) => $q->whereNull('parent_item_id')->with('discountItem'),
         ]);
 
-        return Pdf::loadView('invoices.pdf', ['invoice' => $invoice])
+        $logoPath = $this->pdfAssets->optimizedLogoPath();
+
+        return Pdf::loadView('invoices.pdf', [
+            'invoice' => $invoice,
+            'logoPath' => $logoPath,
+        ])
             ->setPaper('a4', 'portrait')
+            ->setOption('default_media_type', 'print')
+            ->setOption('enable_font_subsetting', true)
             ->output();
     }
 
     /**
-     * Nama file aman untuk Wablas (slash → dash).
+     * Nama file aman untuk unduhan (slash → dash).
      * Contoh: INV/2026/06/0001 → INV-2026-06-0001.pdf
      */
     public function filenameFor(Invoice $invoice): string

@@ -177,6 +177,8 @@
         tr:last-child td { border-bottom: none; }
         td.right, th.right { text-align: right; }
         td.code { font-family: monospace; font-size: 10px; color: #4A1F0A; font-weight: 600; }
+        tr.item-discount td { color: #b45309; font-size: 11px; font-weight: 500; background: rgba(245, 158, 11, 0.03); }
+        tr.item-discount .code { padding-left: 16px; color: #b45309; }
 
         /* SUMMARY */
         .summary-wrap { display: flex; justify-content: flex-end; margin-top: 14px; }
@@ -349,41 +351,13 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($invoice->items as $item)
-                    <tr>
-                        <td class="code">{{ $item->item_code }}</td>
-                        <td>{{ $item->description }}</td>
-                        <td class="right">Rp {{ number_format($item->amount, 0, ',', '.') }}</td>
-                    </tr>
-                    @if($item->discountItem)
-                        <tr style="color: #b45309; font-size: 11px; font-weight: 500; background: rgba(245, 158, 11, 0.03);">
-                            <td class="code" style="padding-left: 16px; color: #b45309;">DISKON</td>
-                            <td>↳ {{ $item->discountItem->discount_reason }}
-                                @if($item->discountItem->discount_type === 'PERCENT')
-                                    ({{ $item->discountItem->discount_value }}%)
-                                @endif
-                            </td>
-                            <td class="right">–Rp {{ number_format(abs($item->discountItem->amount), 0, ',', '.') }}</td>
-                        </tr>
-                    @endif
-                @endforeach
+                @include('invoices.partials._item-rows', ['invoice' => $invoice])
             </tbody>
         </table>
 
         <div class="summary-wrap">
             <table class="summary-table">
-                <tr>
-                    <td>Total Tagihan</td>
-                    <td class="right">Rp {{ number_format($invoice->total_amount, 0, ',', '.') }}</td>
-                </tr>
-                <tr class="summary-paid">
-                    <td>Sudah Dibayar</td>
-                    <td class="right">Rp {{ number_format($invoice->paid_amount, 0, ',', '.') }}</td>
-                </tr>
-                <tr class="summary-total">
-                    <td>TOTAL</td>
-                    <td class="right">Rp {{ number_format($invoice->balance, 0, ',', '.') }}</td>
-                </tr>
+                @include('invoices.partials._summary-rows', ['invoice' => $invoice])
             </table>
         </div>
 
