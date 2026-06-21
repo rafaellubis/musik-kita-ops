@@ -58,7 +58,7 @@
             color: #7A3818;
             font-size: 9px;
             padding: 2px 8px;
-            margin-top: 6px;
+            margin-top: 10px;
             text-transform: uppercase;
         }
 
