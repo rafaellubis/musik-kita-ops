@@ -221,4 +221,41 @@ class ScheduledInvoiceReminderTest extends TestCase
 
         Carbon::setTestNow();
     }
+
+    public function test_new_placeholders_single_and_multiple_invoices(): void
+    {
+        $student = Student::factory()->create([
+            'status'       => 'Aktif',
+            'full_name'    => 'Aditya Pratama',
+            'student_code' => 'M-2026-06-0042',
+            'parent_name'  => 'Bapak Budi',
+            'parent_phone' => '0816920592',
+        ]);
+
+        $invoice1 = $this->createEligibleInvoice($student, '2026-06-18');
+        $invoice1->update(['month' => 6, 'year' => 2026, 'invoice_number' => 'INV/2026/06/0001']);
+
+        $service = app(InvoiceReminderService::class);
+
+        // Test Single Invoice
+        $template = new WhatsappMessageTemplate([
+            'body' => "Tagihan {paket_murid} bulan {Bulan_tahun} invoice {invoice_number} link {pdf_link}",
+        ]);
+
+        $msgSingle = $service->composeMessage($student, collect([$invoice1]), $template);
+        $this->assertStringContainsString('Tagihan Tagihan bulan Juni 2026', $msgSingle); // falls back to 'Tagihan' description since no package
+        $this->assertStringContainsString('invoice INV/2026/06/0001', $msgSingle);
+        $this->assertStringContainsString('public-pdf', $msgSingle);
+
+        // Test Multiple Invoices
+        $invoice2 = $this->createEligibleInvoice($student, '2026-05-18');
+        $invoice2->update(['month' => 5, 'year' => 2026, 'invoice_number' => 'INV/2026/05/0010']);
+
+        $msgMultiple = $service->composeMessage($student, collect([$invoice1, $invoice2]), $template);
+        $this->assertStringContainsString("- Tagihan\n- Tagihan", $msgMultiple);
+        $this->assertStringContainsString("- Juni 2026\n- Mei 2026", $msgMultiple);
+        $this->assertStringContainsString("- INV/2026/06/0001\n- INV/2026/05/0010", $msgMultiple);
+        $this->assertStringContainsString("- INV/2026/06/0001: ", $msgMultiple);
+        $this->assertStringContainsString("- INV/2026/05/0010: ", $msgMultiple);
+    }
 }

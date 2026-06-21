@@ -132,18 +132,16 @@ class WhatsappMessageTemplate extends Model
      */
     public static function ensureSystemDefaults(): void
     {
-        static::firstOrCreate(
-            ['code' => self::CODE_INVOICE_REMINDER],
-            [
-                'name'       => 'Reminder Tagihan SPP',
-                'sort_order' => 1,
-                'is_active'  => true,
-                'body'       => <<<'TEXT'
+        $defaultReminderBody = <<<'TEXT'
 Yth. {nama_ortu},
 
 Berikut pengingat tagihan les musik untuk *{nama_murid}* ({kode_murid}).
 
-{daftar_invoice}
+Tagihan untuk {paket_murid} bulan {Bulan_tahun} dengan nomor invoice:
+{invoice_number}
+
+Silakan unduh detail tagihan di:
+{pdf_link}
 
 *Total sisa tagihan:* {total_tagihan}
 *Jatuh tempo terdekat:* {tempo_terdekat}
@@ -152,7 +150,46 @@ Mohon pembayaran dilakukan sebelum tanggal tempo. Terima kasih.
 
 Musik KITA
 WhatsApp: {studio_wa}
-TEXT,
+TEXT;
+
+        $defaultReminderStudentBody = <<<'TEXT'
+Halo {nama_murid},
+
+Berikut pengingat tagihan les musik kamu di Musik KITA:
+
+Tagihan untuk {paket_murid} bulan {Bulan_tahun} dengan nomor invoice:
+{invoice_number}
+
+Silakan unduh detail tagihan di:
+{pdf_link}
+
+*Total sisa tagihan:* {total_tagihan}
+*Jatuh tempo terdekat:* {tempo_terdekat}
+
+Mohon lakukan pembayaran atau sampaikan informasi tagihan ini ke Orang Tua ya. Terima kasih.
+
+Musik KITA
+WhatsApp: {studio_wa}
+TEXT;
+
+        // ponytail: self-healing check to upgrade legacy templates that still use {daftar_invoice}
+        $existingReminder = static::where('code', self::CODE_INVOICE_REMINDER)->first();
+        if ($existingReminder && str_contains($existingReminder->body, '{daftar_invoice}')) {
+            $existingReminder->update(['body' => $defaultReminderBody]);
+        }
+
+        $existingStudentReminder = static::where('code', self::CODE_INVOICE_REMINDER_STUDENT)->first();
+        if ($existingStudentReminder && str_contains($existingStudentReminder->body, '{daftar_invoice}')) {
+            $existingStudentReminder->update(['body' => $defaultReminderStudentBody]);
+        }
+
+        static::firstOrCreate(
+            ['code' => self::CODE_INVOICE_REMINDER],
+            [
+                'name'       => 'Reminder Tagihan SPP',
+                'sort_order' => 1,
+                'is_active'  => true,
+                'body'       => $defaultReminderBody,
             ],
         );
 
@@ -254,21 +291,7 @@ TEXT,
                 'name'       => 'Reminder Tagihan SPP Murid',
                 'sort_order' => 5,
                 'is_active'  => true,
-                'body'       => <<<'TEXT'
-Halo {nama_murid},
-
-Berikut pengingat tagihan les musik kamu di Musik KITA:
-
-{daftar_invoice}
-
-*Total sisa tagihan:* {total_tagihan}
-*Jatuh tempo terdekat:* {tempo_terdekat}
-
-Mohon lakukan pembayaran atau sampaikan informasi tagihan ini ke Orang Tua ya. Terima kasih.
-
-Musik KITA
-WhatsApp: {studio_wa}
-TEXT,
+                'body'       => $defaultReminderStudentBody,
             ],
         );
 

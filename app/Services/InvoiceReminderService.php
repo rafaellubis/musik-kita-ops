@@ -107,6 +107,8 @@ class InvoiceReminderService
     public function composeMessage(Student $student, Collection $invoices, WhatsappMessageTemplate $template): string
     {
         $total = $invoices->sum(fn (Invoice $i) => $i->balance);
+        
+        // ponytail: fallback support for legacy {daftar_invoice} template variable
         $lines = $invoices->map(function (Invoice $inv) {
             $kelas = $this->pdf->captionFor($inv);
             $sisa = 'Rp ' . number_format($inv->balance, 0, ',', '.');
@@ -119,20 +121,75 @@ class InvoiceReminderService
             return "• {$inv->invoice_number} ({$kelas}) — sisa {$sisa}\n  Link PDF: {$signedUrl}";
         })->implode("\n");
 
+        $count = $invoices->count();
+
+        // 1. {invoice_number}
+        $invoiceNumberVal = $count === 1 
+            ? $invoices->first()->invoice_number 
+            : $invoices->map(fn (Invoice $inv) => "- {$inv->invoice_number}")->implode("\n");
+
+        // 2. {pdf_link}
+        $getSignedUrl = function (Invoice $inv) {
+            return \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                'invoices.public-pdf',
+                now()->addDays(30),
+                ['invoice' => $inv->id],
+            );
+        };
+        $pdfLinkVal = $count === 1
+            ? $getSignedUrl($invoices->first())
+            : $invoices->map(fn (Invoice $inv) => "- {$inv->invoice_number}: " . $getSignedUrl($inv))->implode("\n");
+
+        // 3. {paket_murid}
+        $getClassLabel = function (Invoice $inv) {
+            $pkg = $inv->enrollment?->package;
+            if (! $pkg) {
+                return $inv->description ?? 'Tagihan';
+            }
+            $instrument = $pkg->instrument?->name ?? '';
+            $type = \Illuminate\Support\Str::title(str_replace('_', ' ', strtolower($pkg->class_type ?? '')));
+            $grade = ($pkg->class_type === 'REGULER' && $pkg->grade) ? " {$pkg->grade}" : '';
+            return trim("{$instrument} {$type}{$grade}");
+        };
+        $paketMuridVal = $count === 1
+            ? $getClassLabel($invoices->first())
+            : $invoices->map(fn (Invoice $inv) => "- " . $getClassLabel($inv))->implode("\n");
+
+        // 4. {Bulan_tahun}
+        $indoMonths = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+        $getBulanTahun = function (Invoice $inv) use ($indoMonths) {
+            $m = $inv->month;
+            $y = $inv->year;
+            $mStr = $indoMonths[$m] ?? Carbon::parse($inv->due_date)->format('F');
+            return "{$mStr} {$y}";
+        };
+        $bulanTahunVal = $count === 1
+            ? $getBulanTahun($invoices->first())
+            : $invoices->map(fn (Invoice $inv) => "- " . $getBulanTahun($inv))->implode("\n");
+
         $tempo = $invoices->min('due_date');
         $tempoStr = $tempo
             ? Carbon::parse($tempo)->format('d M Y')
             : '-';
 
         $replacements = [
-            '{nama_murid}'     => $student->full_name,
-            '{kode_murid}'     => $student->student_code,
-            '{nama_ortu}'      => $student->parent_name ?? 'Bapak/Ibu',
-            '{total_tagihan}'  => 'Rp ' . number_format($total, 0, ',', '.'),
-            '{jumlah_invoice}' => (string) $invoices->count(),
-            '{daftar_invoice}' => $lines,
-            '{tempo_terdekat}' => $tempoStr,
-            '{studio_wa}'      => FonnteService::STUDIO_WA_DISPLAY,
+            '{nama_murid}'      => $student->full_name,
+            '{kode_murid}'      => $student->student_code,
+            '{nama_ortu}'       => $student->parent_name ?? 'Bapak/Ibu',
+            '{total_tagihan}'   => 'Rp ' . number_format($total, 0, ',', '.'),
+            '{jumlah_invoice}'  => (string) $count,
+            '{daftar_invoice}'  => $lines,
+            '{invoice_number}'  => $invoiceNumberVal,
+            '{ivoice_number}'   => $invoiceNumberVal, // ponytail: catch typo from request
+            '{pdf_link}'        => $pdfLinkVal,
+            '{paket_murid}'     => $paketMuridVal,
+            '{Bulan_tahun}'     => $bulanTahunVal,
+            '{tempo_terdekat}'  => $tempoStr,
+            '{studio_wa}'       => FonnteService::STUDIO_WA_DISPLAY,
         ];
 
         return str_replace(
