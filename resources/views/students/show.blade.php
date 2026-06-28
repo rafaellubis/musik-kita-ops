@@ -126,6 +126,10 @@
                 @endif
 
                 @if($student->status === 'Trial')
+                <button type="button" @click="openForm = openForm === 'reschedule-trial' ? null : 'reschedule-trial'"
+                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100">
+                    📅 Ubah Jadwal Trial
+                </button>
                 <button type="button" @click="openForm = openForm === 'convert' ? null : 'convert'"
                         class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100">
                     ✅ Konversi → Aktif
@@ -244,6 +248,78 @@
                     </div>
                     <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold bg-purple-600 hover:bg-purple-700 text-white transition-colors">
                         Simpan Jadwal Trial
+                    </button>
+                </form>
+            </div>
+
+            {{-- Ubah Jadwal Trial (status Trial — recovery setelah cancel/hapus sesi) --}}
+            <div x-show="openForm === 'reschedule-trial'" x-cloak
+                 class="mt-4 rounded-xl p-4"
+                 style="background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2)">
+                <form method="POST" action="{{ route('students.reschedule-trial', $student->id) }}">
+                    @csrf
+                    <div class="text-sm font-semibold mb-1" style="color:#A78BFA">Ubah Jadwal Trial</div>
+                    <div class="text-xs text-mk-dim mb-3">
+                        Sesi trial lama akan dihapus dan diganti jadwal baru (30 menit).
+                        @if($trialSession && $trialSession->status === 'CANCELLED')
+                        <span class="text-amber-600">Sesi sebelumnya dibatalkan — isi jadwal baru di bawah.</span>
+                        @elseif(!$trialSession)
+                        <span class="text-amber-600">Tidak ada sesi trial aktif — jadwal baru akan dibuat.</span>
+                        @endif
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-mk-dim mb-1">Tanggal & Jam Baru <span class="text-red-400">*</span></label>
+                            <input type="datetime-local" name="trial_date" required
+                                   min="{{ now()->format('Y-m-d\TH:i') }}"
+                                   value="{{ old('trial_date', $student->trial_date?->format('Y-m-d\TH:i')) }}"
+                                   class="block w-full rounded-lg text-sm px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-mk-dim mb-1">Paket Diminati <span class="text-red-400">*</span></label>
+                            <select name="package_id" required class="block w-full rounded-lg text-sm px-3 py-2">
+                                <option value="">— Pilih —</option>
+                                @foreach($packages as $pkg)
+                                <option value="{{ $pkg->id }}"
+                                    {{ (string) old('package_id', $trialEnrollment?->package_id) === (string) $pkg->id ? 'selected' : '' }}>
+                                    [{{ $pkg->code }}] {{ $pkg->instrument->name }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-mk-dim mb-1">Guru Trial <span class="text-red-400">*</span></label>
+                            <select name="assigned_teacher_id" required class="block w-full rounded-lg text-sm px-3 py-2">
+                                <option value="">— Pilih —</option>
+                                @foreach($teachers as $t)
+                                <option value="{{ $t->id }}"
+                                    {{ (string) old('assigned_teacher_id', $trialEnrollment?->teacher_id) === (string) $t->id ? 'selected' : '' }}>
+                                    [{{ $t->code }}] {{ $t->name }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-mk-dim mb-1">Ruangan</label>
+                            <select name="assigned_room_id" class="block w-full rounded-lg text-sm px-3 py-2">
+                                <option value="">— Pilih —</option>
+                                @foreach($rooms as $r)
+                                <option value="{{ $r->id }}"
+                                    {{ (string) old('assigned_room_id', $trialSession?->room_id) === (string) $r->id ? 'selected' : '' }}>
+                                    [{{ $r->code }}] {{ $r->name }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs text-mk-dim mb-1">Catatan</label>
+                            <textarea name="notes" rows="2" maxlength="500"
+                                      class="block w-full rounded-lg text-sm px-3 py-2"
+                                      placeholder="Alasan reschedule, mis. murid minta pindah hari.">{{ old('notes') }}</textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold bg-purple-600 hover:bg-purple-700 text-white transition-colors">
+                        Simpan Jadwal Baru
                     </button>
                 </form>
             </div>

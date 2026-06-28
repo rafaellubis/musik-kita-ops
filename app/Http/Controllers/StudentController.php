@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use App\Models\AuditLog;
+use App\Models\ClassSession;
+use App\Models\Enrollment;
 use App\Models\Instrument;
 use App\Models\InvoiceItem;
 use App\Models\Package;
@@ -222,6 +224,16 @@ class StudentController extends Controller
             ];
         }
 
+        // M02: enrollment + sesi trial aktif (untuk form ubah jadwal trial)
+        $trialEnrollment = $student->enrollments()
+            ->where('status', Enrollment::STATUS_TRIAL)
+            ->with(['package.instrument', 'teacher'])
+            ->first();
+
+        $trialSession = $trialEnrollment
+            ? ClassSession::where('enrollment_id', $trialEnrollment->id)->latest('id')->first()
+            : null;
+
         return view('students.show', compact(
             'student', 'packages', 'teachers', 'rooms',
             'roomsForFilter', 'bookedSchedules',
@@ -232,6 +244,7 @@ class StudentController extends Controller
             'kidsInstallments',
             'tampilKidsFpButton', 'kidsFpFee',
             'enrollmentSlotSummaries',
+            'trialEnrollment', 'trialSession',
         ));
     }
 
@@ -362,6 +375,29 @@ class StudentController extends Controller
             fn () => $this->lifecycle->mulaiTrial($student, $data),
             $student,
             'Jadwal trial berhasil disimpan. Status sekarang: Trial.'
+        );
+    }
+
+    public function rescheduleTrial(Request $request, string $id)
+    {
+        $student = Student::findOrFail($id);
+        $data = $request->validate([
+            'trial_date'          => 'required|date|after:now',
+            'package_id'          => 'required|exists:packages,id',
+            'assigned_teacher_id' => 'required|exists:teachers,id',
+            'assigned_room_id'    => 'nullable|exists:rooms,id',
+            'notes'               => 'nullable|string|max:500',
+        ], [
+            'trial_date.required'          => 'Tanggal trial wajib diisi.',
+            'trial_date.after'             => 'Jadwal trial harus setelah sekarang.',
+            'package_id.required'          => 'Paket yang diminati wajib dipilih.',
+            'assigned_teacher_id.required' => 'Guru trial wajib dipilih.',
+        ]);
+
+        return $this->runLifecycle(
+            fn () => $this->lifecycle->rescheduleTrial($student, $data),
+            $student,
+            'Jadwal trial berhasil diubah.'
         );
     }
 

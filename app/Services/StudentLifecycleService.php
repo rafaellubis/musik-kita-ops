@@ -39,6 +39,19 @@ class StudentLifecycleService
     /** Pesan warning dari operasi terakhir, jika ada. Dibaca oleh controller. */
     public ?string $lastWarning = null;
 
+    /**
+     * Status sesi trial yang sudah diabsen — jadwal tidak boleh diubah lagi.
+     */
+    private const TRIAL_SESSION_RESCHEDULE_BLOCK = [
+        ClassSession::STATUS_HADIR,
+        ClassSession::STATUS_HADIR_TERLAMBAT,
+        ClassSession::STATUS_HANGUS,
+        ClassSession::STATUS_IZIN_RESCHEDULE,
+        ClassSession::STATUS_IZIN_PENDING,
+        ClassSession::STATUS_IZIN_VIDEO,
+        ClassSession::STATUS_DIGANTI,
+    ];
+
     public function __construct(
         private readonly InvoiceService $invoiceService,
         private readonly EnrollmentSessionCleanupService $sessionCleanup,
@@ -136,6 +149,150 @@ class StudentLifecycleService
 
             return $student->fresh();
         });
+    }
+
+    /**
+     * Ubah jadwal trial (Opsi B): hapus sesi trial lama, buat sesi SCHEDULED baru.
+     * Hanya untuk murid status Trial — recovery setelah sesi di-cancel atau dihapus.
+     *
+     * @param array{
+     *     trial_date: string,
+     *     package_id: int,
+     *     assigned_teacher_id: int,
+     *     assigned_room_id?: int|null,
+     *     notes?: string|null,
+     * } $data
+     */
+    public function rescheduleTrial(Student $student, array $data): Student
+    {
+        if ($student->status !== 'Trial') {
+            throw new InvalidArgumentException(
+                'Ubah jadwal trial hanya bisa untuk murid berstatus Trial. Status sekarang: ' . $student->status
+            );
+        }
+
+        if (empty($data['assigned_teacher_id'])) {
+            throw new InvalidArgumentException('assigned_teacher_id wajib diisi untuk jadwal trial.');
+        }
+
+        if (empty($data['package_id'])) {
+            throw new InvalidArgumentException('package_id wajib diisi untuk jadwal trial.');
+        }
+
+        return DB::transaction(function () use ($student, $data) {
+            $enrollment = $student->enrollments()
+                ->where('status', Enrollment::STATUS_TRIAL)
+                ->first();
+
+            if (! $enrollment) {
+                throw new InvalidArgumentException(
+                    'Enrollment trial tidak ditemukan. Hubungi admin sistem.'
+                );
+            }
+
+            $existingSessions = ClassSession::where('enrollment_id', $enrollment->id)->get();
+
+            foreach ($existingSessions as $session) {
+                if (in_array($session->status, self::TRIAL_SESSION_RESCHEDULE_BLOCK, true)) {
+                    throw new InvalidArgumentException(
+                        'Trial sudah pernah diabsen — jadwal tidak dapat diubah. ' .
+                        'Gunakan Konversi → Aktif atau Tandai Mundur.'
+                    );
+                }
+            }
+
+            $oldTrialDate = $student->trial_date
+                ? \Carbon\Carbon::parse($student->trial_date)->format('Y-m-d H:i')
+                : null;
+
+            // Opsi B: hard delete sesi lama (SCHEDULED / CANCELLED / LIBUR)
+            foreach ($existingSessions as $session) {
+                $session->delete();
+            }
+
+            $trialDateTime = \Carbon\Carbon::parse($data['trial_date']);
+            $sessionDate   = $trialDateTime->toDateString();
+            $startTime     = $trialDateTime->format('H:i:s');
+            $endTime       = $trialDateTime->copy()->addMinutes(30)->format('H:i:s');
+
+            $this->assertTrialSlotAvailable(
+                sessionDate: $sessionDate,
+                startTime: $startTime,
+                endTime: $endTime,
+                teacherId: (int) $data['assigned_teacher_id'],
+                roomId: isset($data['assigned_room_id']) ? (int) $data['assigned_room_id'] : null,
+            );
+
+            $student->update(['trial_date' => $data['trial_date']]);
+
+            $enrollment->update([
+                'package_id' => $data['package_id'],
+                'teacher_id' => $data['assigned_teacher_id'],
+            ]);
+
+            ClassSession::create([
+                'schedule_id'   => null,
+                'enrollment_id' => $enrollment->id,
+                'student_id'    => $student->id,
+                'teacher_id'    => $data['assigned_teacher_id'],
+                'room_id'       => $data['assigned_room_id'] ?? null,
+                'session_date'  => $sessionDate,
+                'start_time'    => $startTime,
+                'end_time'      => $endTime,
+                'status'        => ClassSession::STATUS_SCHEDULED,
+            ]);
+
+            $this->recordHistory(
+                student:  $student,
+                from:     'Trial',
+                to:       'Trial',
+                reason:   $data['notes'] ?? 'Jadwal trial diubah',
+                metadata: [
+                    'action'            => 'reschedule_trial',
+                    'rescheduled_from'  => $oldTrialDate,
+                    'rescheduled_to'    => $data['trial_date'],
+                    'package_id'        => $data['package_id'],
+                    'assigned_teacher_id' => $data['assigned_teacher_id'],
+                ],
+            );
+
+            return $student->fresh();
+        });
+    }
+
+    /**
+     * Cek konflik guru/ruang untuk slot trial baru (sama seperti SessionController::update).
+     */
+    private function assertTrialSlotAvailable(
+        string $sessionDate,
+        string $startTime,
+        string $endTime,
+        int $teacherId,
+        ?int $roomId,
+    ): void {
+        $teacherConflict = ClassSession::where('session_date', $sessionDate)
+            ->where('teacher_id', $teacherId)
+            ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
+            ->where('start_time', '<', $endTime)
+            ->where('end_time', '>', $startTime)
+            ->exists();
+
+        if ($teacherConflict) {
+            throw new InvalidArgumentException('Guru sudah punya sesi lain di jam yang sama.');
+        }
+
+        if ($roomId) {
+            $roomConflict = ClassSession::where('session_date', $sessionDate)
+                ->where('room_id', $roomId)
+                ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
+                ->where('start_time', '<', $endTime)
+                ->where('end_time', '>', $startTime)
+                ->exists();
+
+            if ($roomConflict) {
+                throw new InvalidArgumentException('Ruang sudah dipakai sesi lain di jam yang sama.');
+            }
+        }
     }
 
     /**

@@ -123,6 +123,9 @@ Route::middleware('auth')->group(function () {
         Route::post('students/{student}/lifecycle/start-trial',
             [StudentController::class, 'startTrial']
         )->name('students.start-trial');
+        Route::post('students/{student}/lifecycle/reschedule-trial',
+            [StudentController::class, 'rescheduleTrial']
+        )->name('students.reschedule-trial');
         Route::post('students/{student}/lifecycle/convert-active',
             [StudentController::class, 'convertActive']
         )->name('students.convert-active');
