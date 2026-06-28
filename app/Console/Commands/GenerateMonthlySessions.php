@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Models\User;
+use App\Services\SessionGeneratorAuditLogger;
 use App\Services\SessionGeneratorService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -42,6 +44,16 @@ class GenerateMonthlySessions extends Command implements Isolatable
         $this->info("Generate sesi untuk: " . Carbon::create($year, $month, 1)->format('F Y'));
 
         $report = $generator->generateForMonth($year, $month);
+
+        $owner = User::role('Owner')->orderBy('id')->first();
+
+        SessionGeneratorAuditLogger::record(
+            report: $report,
+            year: $year,
+            month: $month,
+            user: $owner,
+            source: 'scheduler',
+        );
 
         $this->table(
             ['Metrik', 'Jumlah'],

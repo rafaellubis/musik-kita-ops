@@ -7,6 +7,7 @@ use App\Models\ClassSession;
 use App\Models\Room;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Services\SessionGeneratorAuditLogger;
 use App\Services\SessionGeneratorService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -103,6 +104,14 @@ class SessionController extends Controller
             // Selalu release lock meskipun terjadi exception
             $lock->release();
         }
+
+        SessionGeneratorAuditLogger::record(
+            report: $report,
+            year: $data['year'],
+            month: $data['month'],
+            user: $request->user(),
+            source: 'manual',
+        );
 
         $monthName = Carbon::create($data['year'], $data['month'], 1)->format('F Y');
         $msg = "Generator selesai untuk {$monthName}: " .
