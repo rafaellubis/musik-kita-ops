@@ -63,11 +63,8 @@ class HonorCalculationService
             return 'skipped';
         }
 
-        // H-2 sebelum akhir bulan (BRD revisi v1.1)
-        $cutoffDate = Carbon::create($year, $month, 1)
-            ->endOfMonth()
-            ->subDays(2)
-            ->toDateString();
+        // H-2 = jadwal auto-generate slip via cron (tgl 28), BUKAN filter data sesi.
+        // Semua sesi dalam bulan ini yang sudah diinput absensinya tetap dihitung.
 
         // Ambil semua sesi yang honor-nya ke guru ini di bulan & tahun ini
         // Guru berhak honor jika:
@@ -82,7 +79,6 @@ class HonorCalculationService
             })
             ->whereYear('session_date', $year)
             ->whereMonth('session_date', $month)
-            ->whereDate('session_date', '<=', $cutoffDate)
             ->whereNotIn('status', [
                 ClassSession::STATUS_SCHEDULED,
                 ClassSession::STATUS_IZIN_RESCHEDULE,
@@ -131,17 +127,12 @@ class HonorCalculationService
 
     /**
      * Rincian sesi per honor_code untuk ditampilkan di halaman show slip.
-     * Hanya sesi dalam rentang cutoff yang diikutkan.
+     * Semua sesi dalam bulan slip yang sudah diinput absensinya.
      *
      * @return Collection — groupBy honor_code, tiap item: [{code, count, total}]
      */
     public function getSessionBreakdown(HonorSlip $slip): Collection
     {
-        $cutoffDate = Carbon::create($slip->year, $slip->month, 1)
-            ->endOfMonth()
-            ->subDays(2)
-            ->toDateString();
-
         $sessions = ClassSession::query()
             ->with('student:id,full_name,student_code', 'enrollment.package.instrument')
             ->where(function ($q) use ($slip) {
@@ -152,7 +143,6 @@ class HonorCalculationService
             })
             ->whereYear('session_date', $slip->year)
             ->whereMonth('session_date', $slip->month)
-            ->whereDate('session_date', '<=', $cutoffDate)
             ->whereNotIn('status', [
                 ClassSession::STATUS_SCHEDULED,
                 ClassSession::STATUS_IZIN_RESCHEDULE,
@@ -173,18 +163,12 @@ class HonorCalculationService
      */
     public function countPendingSubstituteSessions(HonorSlip $slip): int
     {
-        $cutoffDate = Carbon::create($slip->year, $slip->month, 1)
-            ->endOfMonth()
-            ->subDays(2)
-            ->toDateString();
-
         return ClassSession::query()
             ->where('substitute_teacher_id', $slip->teacher_id)
             ->where('status', ClassSession::STATUS_DIGANTI)
             ->whereNull('honor_code')
             ->whereYear('session_date', $slip->year)
             ->whereMonth('session_date', $slip->month)
-            ->whereDate('session_date', '<=', $cutoffDate)
             ->count();
     }
 

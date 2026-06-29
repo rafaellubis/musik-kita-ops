@@ -243,8 +243,8 @@
         </div>
 
         <p class="text-xs text-mk-dim text-right">
-            * Sesi dihitung hingga H-2 sebelum akhir bulan
-            ({{ \Carbon\Carbon::create($honor->year, $honor->month, 1)->endOfMonth()->subDays(2)->format('d M Y') }}).
+            * Semua sesi bulan ini yang sudah diinput absensinya akan dihitung.
+            Slip otomatis di-generate H-2 sebelum akhir bulan.
         </p>
 
     </div>
