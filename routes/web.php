@@ -213,9 +213,6 @@ Route::middleware('auth')->group(function () {
             [AbsensiController::class, 'convertPendingToVideo']
         )->name('absensi.open-slots.video');
 
-        // Tambahkan route print absensi harian
-        Route::get('/absensi/print', [AbsensiController::class, 'print'])
-            ->name('absensi.print');
 
         // ===== M04: Absensi Harian — update inline per sesi via AJAX =====
         Route::patch('/absensi/{classSession}',
@@ -515,6 +512,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/absensi',
             [AbsensiController::class, 'index']
         )->name('absensi.index');
+        Route::get('/absensi/print', [AbsensiController::class, 'print'])
+            ->name('absensi.print');
 
         // ===== Kalender Jadwal Mingguan (read-only, semua role) =====
         Route::get('/kalender',
