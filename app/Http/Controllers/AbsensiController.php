@@ -94,6 +94,32 @@ class AbsensiController extends Controller
     }
 
     /**
+     * Tampilkan halaman khusus cetak absensi harian.
+     * Default: hari ini. Bisa difilter via ?date=YYYY-MM-DD
+     */
+    public function print(Request $request): View
+    {
+        $tanggal = $request->date
+            ? Carbon::parse($request->date)->toDateString()
+            : today()->toDateString();
+
+        $sessions = ClassSession::with([
+                'student', 'teacher', 'substituteTeacher', 'room',
+                'enrollment.package.instrument',
+            ])
+            ->where('session_date', $tanggal)
+            ->orderBy('start_time')
+            ->orderBy('room_id')
+            ->get();
+
+        return view('absensi.print', [
+            'sessions'   => $sessions,
+            'tanggal'    => $tanggal,
+            'tanggalObj' => Carbon::parse($tanggal),
+        ]);
+    }
+
+    /**
      * Update status absensi satu sesi (AJAX inline).
      *
      * Business rules:

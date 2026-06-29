@@ -213,6 +213,10 @@ Route::middleware('auth')->group(function () {
             [AbsensiController::class, 'convertPendingToVideo']
         )->name('absensi.open-slots.video');
 
+        // Tambahkan route print absensi harian
+        Route::get('/absensi/print', [AbsensiController::class, 'print'])
+            ->name('absensi.print');
+
         // ===== M04: Absensi Harian — update inline per sesi via AJAX =====
         Route::patch('/absensi/{classSession}',
             [AbsensiController::class, 'update']
