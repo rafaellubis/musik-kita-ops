@@ -19,12 +19,22 @@ class AbsensiPrintTest extends TestCase
         Role::create(['name' => 'Owner']);
         Role::create(['name' => 'Admin']);
         Role::create(['name' => 'Auditor']);
+        Role::create(['name' => 'Guru']);
     }
 
     public function test_guest_cannot_access_print_page(): void
     {
         $response = $this->get(route('absensi.print'));
         $response->assertRedirect(route('login'));
+    }
+
+    public function test_unauthorized_roles_cannot_access_print_page(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('Guru');
+
+        $response = $this->actingAs($user)->get(route('absensi.print'));
+        $response->assertStatus(403);
     }
 
     public function test_authorized_roles_can_access_print_page(): void

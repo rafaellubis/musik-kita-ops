@@ -195,7 +195,7 @@
                         </span>
                     </td>
                     <td>
-                        {{ $session->substituteTeacher->name ?? $session->teacher->name }}
+                        {{ $session->substituteTeacher->name ?? $session->teacher->name ?? '-' }}
                         @if($session->substitute_teacher_id)
                             <br><span style="font-size: 9px; color: #666; font-style: italic;">(Guru Pengganti)</span>
                         @endif
