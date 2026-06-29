@@ -133,6 +133,12 @@
             th {
                 background-color: #fff !important;
             }
+            tr {
+                page-break-inside: avoid;
+            }
+            thead {
+                display: table-header-group;
+            }
         }
     </style>
 </head>
@@ -185,17 +191,17 @@
                         <strong>{{ $session->student->full_name }}</strong>
                         <br>
                         <span style="font-size: 10px; color: #555;">
-                            {{ $session->enrollment->package->class_type ?? '' }} 
-                            @if(isset($session->enrollment->package->instrument))
+                            {{ $session->enrollment?->package?->class_type ?? '' }} 
+                            @if(isset($session->enrollment?->package?->instrument))
                                 ({{ $session->enrollment->package->instrument->name }})
                             @endif
-                            @if(isset($session->enrollment->package->grade))
+                            @if(isset($session->enrollment?->package?->grade))
                                 - {{ $session->enrollment->package->grade }}
                             @endif
                         </span>
                     </td>
                     <td>
-                        {{ $session->substituteTeacher->name ?? $session->teacher->name ?? '-' }}
+                        {{ $session->substituteTeacher?->name ?? $session->teacher?->name ?? '-' }}
                         @if($session->substitute_teacher_id)
                             <br><span style="font-size: 9px; color: #666; font-style: italic;">(Guru Pengganti)</span>
                         @endif
