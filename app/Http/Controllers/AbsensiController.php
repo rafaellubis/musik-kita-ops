@@ -103,19 +103,36 @@ class AbsensiController extends Controller
             ? Carbon::parse($request->date)->toDateString()
             : today()->toDateString();
 
-        $sessions = ClassSession::with([
+        $teacherId = $request->teacher_id;
+        $selectedTeacher = null;
+
+        $query = ClassSession::with([
                 'student', 'teacher', 'substituteTeacher', 'room',
                 'enrollment.package.instrument',
             ])
             ->where('session_date', $tanggal)
             ->orderBy('start_time')
-            ->orderBy('room_id')
-            ->get();
+            ->orderBy('room_id');
+
+        if ($teacherId) {
+            $selectedTeacher = Teacher::findOrFail($teacherId);
+            $query->where(function($q) use ($teacherId) {
+                $q->where(function($sub) use ($teacherId) {
+                    $sub->where('teacher_id', $teacherId)
+                        ->whereNull('substitute_teacher_id');
+                })->orWhere('substitute_teacher_id', $teacherId);
+            });
+        }
+
+        $sessions = $query->get();
+        $teachers = Teacher::where('is_active', true)->orderBy('name')->get();
 
         return view('absensi.print', [
-            'sessions'   => $sessions,
-            'tanggal'    => $tanggal,
-            'tanggalObj' => Carbon::parse($tanggal),
+            'sessions'        => $sessions,
+            'teachers'        => $teachers,
+            'selectedTeacher' => $selectedTeacher,
+            'tanggal'         => $tanggal,
+            'tanggalObj'      => Carbon::parse($tanggal),
         ]);
     }
 

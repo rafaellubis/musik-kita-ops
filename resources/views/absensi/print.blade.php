@@ -151,6 +151,16 @@
                 &larr; Kembali ke Absensi Harian
             </a>
         </div>
+        <!-- Dropdown Filter Guru -->
+        <div>
+            <label for="print-filter-guru" style="font-weight: 600; margin-right: 8px; font-size: 12px;">Filter Guru:</label>
+            <select id="print-filter-guru" onchange="switchPrintTeacher(this.value)" style="padding: 6px 12px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; outline: none; background: white;">
+                <option value="">Semua Guru</option>
+                @foreach($teachers as $t)
+                    <option value="{{ $t->id }}" {{ request('teacher_id') == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                @endforeach
+            </select>
+        </div>
         <div>
             <button onclick="window.print()" class="btn btn-primary">
                 Cetak Halaman (Print)
@@ -161,7 +171,7 @@
     <!-- Kop Cetakan -->
     <div class="header">
         <h1>Musik KITA</h1>
-        <p>Daftar Absensi Harian - {{ $tanggalObj->locale('id')->translatedFormat('l, d F Y') }}</p>
+        <p>Daftar Absensi Harian @if($selectedTeacher)(Guru: {{ $selectedTeacher->name }})@endif - {{ $tanggalObj->locale('id')->translatedFormat('l, d F Y') }}</p>
     </div>
 
     <!-- Tabel Data Sesi -->
@@ -199,6 +209,9 @@
                                 - {{ $session->enrollment->package->grade }}
                             @endif
                         </span>
+                        @if($session->notes)
+                            <br><span style="font-size: 9px; color: #666; font-style: italic;">Notes: {{ $session->notes }}</span>
+                        @endif
                     </td>
                     <td>
                         {{ $session->substituteTeacher?->name ?? $session->teacher?->name ?? '-' }}
@@ -242,6 +255,16 @@
     </div>
 
     <script>
+        function switchPrintTeacher(teacherId) {
+            const url = new URL(window.location.href);
+            if (teacherId) {
+                url.searchParams.set('teacher_id', teacherId);
+            } else {
+                url.searchParams.delete('teacher_id');
+            }
+            window.location.href = url.toString();
+        }
+
         // Picu cetak browser otomatis saat halaman selesai dimuat
         window.onload = function() {
             window.print();
