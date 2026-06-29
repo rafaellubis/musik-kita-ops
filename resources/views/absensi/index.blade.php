@@ -46,6 +46,7 @@
 
                 <!-- Tombol Cetak Absensi Harian -->
                 <a href="{{ route('absensi.print', ['date' => $tanggal]) }}" 
+                   id="btn-cetak-absensi"
                    target="_blank" 
                    class="inline-flex items-center px-3 py-1.5 bg-white dark:bg-gray-800 border border-mk-border dark:border-gray-700 rounded-lg text-sm font-semibold text-mk-muted dark:text-gray-300 shadow-sm hover:bg-mk-surface dark:hover:bg-gray-700 transition ease-in-out duration-150"
                    title="Cetak Absensi Harian">
@@ -162,11 +163,26 @@
                 const matchMurid  = !murid || card.dataset.murid.toLowerCase().includes(murid);
                 card.style.display = (matchGuru && matchStatus && matchMurid) ? '' : 'none';
             });
+
+            // Perbarui URL tombol cetak absensi
+            const btnCetak = document.getElementById('btn-cetak-absensi');
+            if (btnCetak) {
+                const url = new URL(btnCetak.href);
+                if (guruId) {
+                    url.searchParams.set('teacher_id', guruId);
+                } else {
+                    url.searchParams.delete('teacher_id');
+                }
+                btnCetak.href = url.toString();
+            }
         }
 
         ['filter-guru', 'filter-status'].forEach(id =>
             document.getElementById(id).addEventListener('change', applyFilter)
         );
         document.getElementById('filter-murid').addEventListener('input', applyFilter);
+
+        // Pemicu awal agar link cetak tetap sinkron apabila input tersimpan otomatis oleh browser
+        document.addEventListener('DOMContentLoaded', applyFilter);
     </script>
 </x-app-layout>

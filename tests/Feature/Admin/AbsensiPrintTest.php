@@ -248,6 +248,18 @@ class AbsensiPrintTest extends TestCase
         $response->assertSee('THOMAS_DROPDOWN');
         $response->assertSee('ADI_DROPDOWN');
     }
+
+    public function test_index_page_renders_print_button_and_teacher_dropdown(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('Admin');
+
+        $response = $this->actingAs($user)->get(route('absensi.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('id="btn-cetak-absensi"', false);
+        $response->assertSee('id="filter-guru"', false);
+    }
 }
 
 
