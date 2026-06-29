@@ -84,6 +84,13 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // ===== M04: Absensi Harian — cetak (Auditor juga boleh) =====
+    // PENTING: route statis /absensi/print harus SEBELUM wildcard /absensi/{classSession}
+    Route::middleware('role:Owner|Admin|Auditor')->group(function () {
+        Route::get('/absensi/print', [AbsensiController::class, 'print'])
+            ->name('absensi.print');
+    });
+
     /* ======================================================================
      | WRITE OPERASIONAL (Owner + Admin)
      | Master data yang aman diubah Admin sehari-hari.
@@ -512,8 +519,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/absensi',
             [AbsensiController::class, 'index']
         )->name('absensi.index');
-        Route::get('/absensi/print', [AbsensiController::class, 'print'])
-            ->name('absensi.print');
 
         // ===== Kalender Jadwal Mingguan (read-only, semua role) =====
         Route::get('/kalender',
