@@ -140,6 +140,8 @@
                                      clearInterval(interval);
                                  }
                              }, 1000);
+                             // ponytail: bersihkan timer ketika elemen dihancurkan dari DOM
+                             this.$cleanup(() => clearInterval(interval));
                          }
                      }
                  }"

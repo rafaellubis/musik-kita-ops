@@ -68,6 +68,7 @@
                      }
                  } catch (e) {
                      console.error('Gagal memuat ulang sesi dashboard:', e);
+                     alert('Gagal memuat ulang jadwal sesi. Silakan segarkan halaman.');
                  } finally {
                      this.loading = false;
                  }

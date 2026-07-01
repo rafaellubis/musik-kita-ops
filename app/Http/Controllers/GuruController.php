@@ -793,10 +793,24 @@ class GuruController extends Controller
         ]);
 
         if ($classSession->status !== ClassSession::STATUS_DIGANTI) {
+            // ponytail: handle respons error AJAX untuk status tidak valid
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sesi bukan berstatus DIGANTI.',
+                ], 422);
+            }
             return back()->with('error', 'Sesi bukan berstatus DIGANTI.');
         }
 
         if ($classSession->honor_code !== null) {
+            // ponytail: handle respons error AJAX untuk honor sudah dikonfirmasi
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sesi sudah dikonfirmasi sebelumnya.',
+                ], 422);
+            }
             return back()->with('error', 'Sesi sudah dikonfirmasi sebelumnya.');
         }
 
