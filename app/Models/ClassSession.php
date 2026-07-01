@@ -316,6 +316,32 @@ class ClassSession extends Model
 
     // ============= SCOPES =============
 
+    /**
+     * Scope untuk memfilter sesi yang honornya diberikan kepada guru tertentu.
+     */
+    public function scopeHonoredForTeacher($query, int $teacherId)
+    {
+        return $query->where(function ($q) use ($teacherId) {
+            $q->where(function ($qq) use ($teacherId) {
+                $qq->where('teacher_id', $teacherId)
+                   ->whereNull('substitute_teacher_id');
+            })->orWhere('substitute_teacher_id', $teacherId);
+        });
+    }
+
+    /**
+     * Scope untuk memfilter sesi yang statusnya menghasilkan honor (berbayar).
+     */
+    public function scopeHonoredStatus($query)
+    {
+        return $query->whereNotIn('status', [
+            self::STATUS_SCHEDULED,
+            self::STATUS_IZIN_RESCHEDULE,
+            self::STATUS_IZIN_PENDING,
+            self::STATUS_CANCELLED,
+        ])->whereNotNull('honor_code');
+    }
+
     public function scopeForAttributionMonth($query, int $year, int $month)
     {
         return $query->where('attribution_year', $year)
