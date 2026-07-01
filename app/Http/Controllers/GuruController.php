@@ -759,6 +759,14 @@ class GuruController extends Controller
                 : null,
         ]);
 
+        // ponytail: mengembalikan JSON untuk AJAX request tanpa merubah alur redirect fallback
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Absensi berhasil disimpan.',
+            ]);
+        }
+
         return back()->with('success', 'Absensi berhasil disimpan.');
     }
 
@@ -818,6 +826,14 @@ class GuruController extends Controller
                     ->setTimeFromTimeString($classSession->start_time),
             ]);
 
+            // ponytail: support respons JSON untuk flow AJAX absensi pengganti
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Kehadiran sebagai pengganti dikonfirmasi. Honor akan masuk slip bulan ini.',
+                ]);
+            }
+
             return back()->with('success', 'Kehadiran sebagai pengganti dikonfirmasi. Honor akan masuk slip bulan ini.');
         }
 
@@ -833,6 +849,14 @@ class GuruController extends Controller
             'end_time'              => $schedule?->end_time   ?? $classSession->end_time,
             'room_id'               => $schedule?->room_id    ?? $classSession->room_id,
         ]);
+
+        // ponytail: support respons JSON untuk flow AJAX pembatalan substitute
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Penugasan pengganti dibatalkan. Admin perlu atur ulang jika masih diperlukan.',
+            ]);
+        }
 
         return back()->with('success', 'Penugasan pengganti dibatalkan. Admin perlu atur ulang jika masih diperlukan.');
     }

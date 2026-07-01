@@ -173,6 +173,8 @@ class GuruUpdateAbsensiTest extends TestCase
             'substitute_teacher_id' => $this->teacher->id,
             'student_id'            => $this->sesiHariIni->student_id,
             'session_date'          => today()->toDateString(),
+            'start_time'            => now()->subMinutes(10)->toTimeString(),
+            'end_time'              => now()->addMinutes(20)->toTimeString(),
             'status'                => 'SCHEDULED',
         ]);
 
@@ -315,4 +317,62 @@ class GuruUpdateAbsensiTest extends TestCase
 
         \Carbon\Carbon::setTestNow(); // Reset mock waktu
     }
+
+    public function test_guru_bisa_set_hadir_via_ajax(): void
+    {
+        $response = $this->actingAs($this->guruUser)
+            ->patchJson(route('guru.absensi.update', $this->sesiHariIni), ['status' => 'HADIR']);
+            
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+                'message' => 'Absensi berhasil disimpan.',
+            ]);
+
+        $this->assertEquals('HADIR', $this->sesiHariIni->fresh()->status);
+    }
+
+    public function test_guru_pengganti_bisa_konfirmasi_hadir_via_ajax(): void
+    {
+        $guruAsli = Teacher::factory()->create();
+        $instr    = Instrument::factory()->create(['name' => 'Vocal', 'code' => 'VOC2']);
+        $package  = Package::factory()->create([
+            'class_type'    => 'REGULER',
+            'instrument_id' => $instr->id,
+            'duration_min'  => 30,
+            'price_per_month' => 400000,
+        ]);
+        $student = Student::factory()->create();
+        $enroll  = Enrollment::factory()->create([
+            'student_id' => $student->id,
+            'teacher_id' => $guruAsli->id,
+            'package_id' => $package->id,
+            'status'     => 'ACTIVE',
+        ]);
+        $sesi = ClassSession::factory()->create([
+            'enrollment_id'         => $enroll->id,
+            'student_id'            => $student->id,
+            'teacher_id'            => $guruAsli->id,
+            'substitute_teacher_id' => $this->teacher->id,
+            'session_date'          => today()->toDateString(),
+            'start_time'            => now()->subMinutes(10)->toTimeString(),
+            'end_time'              => now()->addMinutes(20)->toTimeString(),
+            'status'                => 'DIGANTI',
+            'honor_code'            => null,
+            'honor_amount'          => 0,
+        ]);
+
+        $response = $this->actingAs($this->guruUser)
+            ->postJson(route('guru.absensi.confirm-substitute', $sesi), ['action' => 'hadir']);
+
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+                'message' => 'Kehadiran sebagai pengganti dikonfirmasi. Honor akan masuk slip bulan ini.',
+            ]);
+
+        $sesi->refresh();
+        $this->assertSame('H_PENG', $sesi->honor_code);
+    }
 }
+
