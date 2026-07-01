@@ -42,7 +42,11 @@
                 <!-- Tombol Riwayat Sesi -->
                 <button type="button"
                         class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#e8f5e9] text-[#2c694e] hover:bg-[#c8e6c9] hover:text-[#1b5e20] transition-all shrink-0 shadow-sm flex items-center gap-1 border border-[#a5d6a7] cursor-pointer"
-                        @click.stop.prevent="$dispatch('open-session-history', { sessionId: {{ $sesi->id }}, studentName: '{{ addslashes($sesi->student->full_name) }}' })">
+                        @click.stop.prevent="$dispatch('open-session-history', { 
+                            sessionId: {{ $sesi->id }}, 
+                            studentName: '{{ addslashes($sesi->student->full_name) }}',
+                            sessionDate: '{{ $sesi->session_date }}'
+                        })">
                     ⏳ Riwayat Sesi
                 </button>
             </div>
