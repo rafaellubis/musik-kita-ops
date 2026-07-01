@@ -31,18 +31,63 @@
         <span class="flex-1 h-px bg-outline-variant/15"></span>
     </h2>
 
-    <div class="space-y-3">
-        @forelse($sesiHariIni as $idx => $sesi)
-            @include('guru._sesi-card', ['sesi' => $sesi, 'teacher' => $teacher, 'sIdx' => $idx])
-        @empty
-            <div class="bg-white rounded-2xl border border-outline-variant/20 px-4 py-12 text-center shadow-[rgba(44,105,78,0.04)_0px_2px_8px] fade-in-up">
-                <div class="w-12 h-12 bg-surface-container-low rounded-full flex items-center justify-center mx-auto text-xl mb-3 border border-outline-variant/20">
-                    🎵
+    <div x-data="{
+             loading: false,
+             today: '{{ \Carbon\Carbon::today()->toDateString() }}',
+             init() {
+                 window.addEventListener('session-updated', () => this.fetchTodaySessions());
+             },
+             async fetchTodaySessions() {
+                 this.loading = true;
+                 try {
+                     const response = await fetch('{{ route('guru.jadwal.sessions') }}?date=' + this.today, {
+                         headers: {
+                             'Accept': 'application/json',
+                             'X-Requested-With': 'XMLHttpRequest'
+                         }
+                     });
+                     if (response.ok) {
+                         const data = await response.json();
+                         // ponytail: parse HTML partial list sesi untuk menghindari duplikasi layout
+                         const parser = new DOMParser();
+                         const doc = parser.parseFromString(data.html, 'text/html');
+                         const spaceY3 = doc.querySelector('.space-y-3');
+                         const emptyState = doc.querySelector('.bg-surface-container-lowest');
+                         
+                         if (spaceY3) {
+                             this.$refs.sessionContainer.innerHTML = spaceY3.innerHTML;
+                         } else if (emptyState) {
+                             this.$refs.sessionContainer.innerHTML = `
+                                 <div class='bg-white rounded-2xl border border-outline-variant/20 px-4 py-12 text-center shadow-[rgba(44,105,78,0.04)_0px_2px_8px]'>
+                                     <div class='w-12 h-12 bg-surface-container-low rounded-full flex items-center justify-center mx-auto text-xl mb-3 border border-outline-variant/20'>🎵</div>
+                                     <div class='text-primary font-semibold text-sm'>Tenang &amp; Damai</div>
+                                     <div class='text-outline text-xs mt-1'>Tidak ada jadwal sesi mengajar untuk hari ini.</div>
+                                 </div>
+                             `;
+                         }
+                     }
+                 } catch (e) {
+                     console.error('Gagal memuat ulang sesi dashboard:', e);
+                 } finally {
+                     this.loading = false;
+                 }
+             }
+         }"
+         :class="{ 'opacity-50 pointer-events-none': loading }"
+         class="transition-opacity duration-150">
+        <div x-ref="sessionContainer" class="space-y-3">
+            @forelse($sesiHariIni as $idx => $sesi)
+                @include('guru._sesi-card', ['sesi' => $sesi, 'teacher' => $teacher, 'sIdx' => $idx])
+            @empty
+                <div class="bg-white rounded-2xl border border-outline-variant/20 px-4 py-12 text-center shadow-[rgba(44,105,78,0.04)_0px_2px_8px] fade-in-up">
+                    <div class="w-12 h-12 bg-surface-container-low rounded-full flex items-center justify-center mx-auto text-xl mb-3 border border-outline-variant/20">
+                        🎵
+                    </div>
+                    <div class="text-primary font-semibold text-sm">Tenang &amp; Damai</div>
+                    <div class="text-outline text-xs mt-1">Tidak ada jadwal sesi mengajar untuk hari ini.</div>
                 </div>
-                <div class="text-primary font-semibold text-sm">Tenang &amp; Damai</div>
-                <div class="text-outline text-xs mt-1">Tidak ada jadwal sesi mengajar untuk hari ini.</div>
-            </div>
-        @endforelse
+            @endforelse
+        </div>
     </div>
 </div>
 
