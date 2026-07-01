@@ -148,7 +148,37 @@
             @include('guru._badge-status', ['status' => $sesi->status])
             @if($showSessionActions && ($isOwnScheduled || $isSubstitutePending))
                 @if($isOwnScheduled)
-                    <form method="POST" action="{{ route('guru.absensi.update', $sesi) }}" class="m-0 flex flex-col items-end">
+                    <form method="POST" action="{{ route('guru.absensi.update', $sesi) }}" class="m-0 flex flex-col items-end"
+                          @submit.prevent="
+                              // ponytail: handle submit via Fetch API secara non-blocking
+                              $el.querySelectorAll('button').forEach(b => b.disabled = true);
+                              fetch($el.action, {
+                                  method: 'POST',
+                                  headers: {
+                                      'Content-Type': 'application/json',
+                                      'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                      'Accept': 'application/json',
+                                      'X-Requested-With': 'XMLHttpRequest'
+                                  },
+                                  body: JSON.stringify({
+                                      _method: 'PATCH',
+                                      status: 'HADIR'
+                                  })
+                              })
+                              .then(res => res.json())
+                              .then(data => {
+                                  if (data.success) {
+                                      window.dispatchEvent(new CustomEvent('session-updated', { detail: { date: '{{ $sesi->session_date }}' } }));
+                                  } else {
+                                      alert(data.message || 'Terjadi kesalahan');
+                                      $el.querySelectorAll('button').forEach(b => b.disabled = false);
+                                  }
+                              })
+                              .catch(err => {
+                                  alert('Gagal mencatat absensi.');
+                                  $el.querySelectorAll('button').forEach(b => b.disabled = false);
+                              });
+                          ">
                         @csrf @method('PATCH')
                         <input type="hidden" name="status" value="HADIR">
                         <button type="submit"
@@ -161,7 +191,36 @@
                         <span x-show="isDisabled" class="text-[9px] text-amber-700 leading-none mt-1 whitespace-nowrap bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-medium" x-text="timeLabel" style="display: none;"></span>
                     </form>
                 @elseif($isSubstitutePending)
-                    <form method="POST" action="{{ route('guru.absensi.confirm-substitute', $sesi) }}" class="m-0 flex flex-col items-end">
+                    <form method="POST" action="{{ route('guru.absensi.confirm-substitute', $sesi) }}" class="m-0 flex flex-col items-end"
+                          @submit.prevent="
+                              // ponytail: konfirmasi kehadiran pengganti secara asynchronous
+                              $el.querySelectorAll('button').forEach(b => b.disabled = true);
+                              fetch($el.action, {
+                                  method: 'POST',
+                                  headers: {
+                                      'Content-Type': 'application/json',
+                                      'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                      'Accept': 'application/json',
+                                      'X-Requested-With': 'XMLHttpRequest'
+                                  },
+                                  body: JSON.stringify({
+                                      action: 'hadir'
+                                  })
+                              })
+                              .then(res => res.json())
+                              .then(data => {
+                                  if (data.success) {
+                                      window.dispatchEvent(new CustomEvent('session-updated', { detail: { date: '{{ $sesi->session_date }}' } }));
+                                  } else {
+                                      alert(data.message || 'Terjadi kesalahan');
+                                      $el.querySelectorAll('button').forEach(b => b.disabled = false);
+                                  }
+                              })
+                              .catch(err => {
+                                  alert('Gagal melakukan konfirmasi.');
+                                  $el.querySelectorAll('button').forEach(b => b.disabled = false);
+                              });
+                          ">
                         @csrf
                         <input type="hidden" name="action" value="hadir">
                         <button type="submit"

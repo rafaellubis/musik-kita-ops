@@ -37,6 +37,14 @@ export function guruJadwalCalendar(initial) {
                 this.bindSesiListActions();
             });
 
+            // ponytail: dengarkan perubahan sesi dan load ulang list sesi tanpa reload halaman
+            window.addEventListener('session-updated', (e) => {
+                const targetDate = e.detail?.date;
+                if (targetDate === this.selectedDate) {
+                    this.fetchSessions(this.selectedDate);
+                }
+            });
+
             window.addEventListener('popstate', () => {
                 const params = new URLSearchParams(window.location.search);
                 const date = params.get('date') || this.today;
