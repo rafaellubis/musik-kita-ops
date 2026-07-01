@@ -240,4 +240,41 @@ class GuruSessionHistoryTest extends TestCase
         // Pastikan sesi aktif itu sendiri ($this->session) tidak masuk
         $this->assertNotContains($this->session->id, $historyIds);
     }
+
+    public function test_can_filter_history_by_month_and_year_parameters(): void
+    {
+        $year = $this->session->attribution_year;
+        $month = $this->session->attribution_month;
+
+        // Tentukan bulan & tahun target filter (1 bulan sebelumnya)
+        $targetMonth = $month == 1 ? 12 : $month - 1;
+        $targetYear = $month == 1 ? $year - 1 : $year;
+
+        // Buat sesi historis di bulan target (Mei)
+        $pastSession = ClassSession::factory()->create([
+            'enrollment_id' => $this->session->enrollment_id,
+            'student_id' => $this->session->student_id,
+            'teacher_id' => $this->teacher->id,
+            'session_date' => sprintf('%04d-%02d-15', $targetYear, $targetMonth),
+            'attribution_month' => $targetMonth,
+            'attribution_year' => $targetYear,
+            'status' => 'HADIR',
+        ]);
+
+        // Panggil endpoint dengan parameter target
+        $response = $this->actingAs($this->guruUser)
+            ->get(route('guru.sesi.history', [
+                'classSession' => $this->session->id,
+                'month' => $targetMonth,
+                'year' => $targetYear
+            ]));
+
+        $response->assertStatus(200);
+        $history = $response->viewData('history');
+
+        // Pastikan hanya $pastSession yang dikembalikan
+        $this->assertCount(1, $history);
+        $this->assertEquals($pastSession->id, $history->first()->id);
+    }
 }
+
