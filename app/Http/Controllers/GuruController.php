@@ -92,13 +92,10 @@ class GuruController extends Controller
         $startBulan = now()->startOfMonth()->toDateString();
         $endBulan   = now()->endOfMonth()->toDateString();
 
-        // Total sesi terlaksana bulan ini (tidak hitung CANCELLED, LIBUR, atau belum terjadi)
-        $totalSesiBulan = ClassSession::where(function ($q) use ($teacher) {
-                $q->where('teacher_id', $teacher->id)
-                  ->orWhere('substitute_teacher_id', $teacher->id);
-            })
+        // Total sesi terlaksana bulan ini (sesuai sesi berbayar pada slip honor)
+        $totalSesiBulan = ClassSession::honoredForTeacher($teacher->id)
             ->whereBetween('session_date', [$startBulan, $endBulan])
-            ->whereNotIn('status', ['CANCELLED', 'LIBUR', 'SCHEDULED'])
+            ->honoredStatus()
             ->count();
 
         // Slip honor bulan ini (jika sudah dikalkulasi atau dibayar)

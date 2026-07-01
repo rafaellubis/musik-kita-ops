@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\ClassSession;
 use App\Models\Teacher;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -85,5 +86,39 @@ class GuruSessionCalculationTest extends TestCase
 
         $this->assertEquals(2, $count1, 'Teacher 1 harus memiliki 2 sesi berbayar (Hadir, Libur)');
         $this->assertEquals(1, $count2, 'Teacher 2 harus memiliki 1 sesi berbayar (Pengganti terkonfirmasi)');
+    }
+
+    public function test_dashboard_shows_correct_honored_sessions_count(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+        $user->assignRole('Guru');
+        $teacher = Teacher::factory()->create(['user_id' => $user->id]);
+
+        $today = today()->toDateString();
+        $startBulan = now()->startOfMonth()->toDateString();
+
+        // Sesi terbayar guru
+        ClassSession::factory()->create([
+            'teacher_id' => $teacher->id,
+            'session_date' => $today,
+            'status' => ClassSession::STATUS_HADIR,
+            'honor_code' => 'H_REG',
+            'honor_amount' => 42500,
+        ]);
+
+        // Sesi reschedule (tidak terbayar)
+        ClassSession::factory()->create([
+            'teacher_id' => $teacher->id,
+            'session_date' => $today,
+            'status' => ClassSession::STATUS_IZIN_RESCHEDULE,
+            'honor_code' => 'H_IZIN',
+            'honor_amount' => 0,
+        ]);
+
+        $response = $this->actingAs($user)->get('/guru/dashboard');
+        $response->assertOk();
+        
+        // Memastikan total sesi terlaksana di dashboard adalah 1 (hanya yang HADIR)
+        $response->assertViewHas('totalSesiBulan', 1);
     }
 }

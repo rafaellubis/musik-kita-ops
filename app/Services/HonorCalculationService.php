@@ -71,22 +71,10 @@ class HonorCalculationService
         //   - dia guru asli DAN tidak ada pengganti (substitute_teacher_id IS NULL)
         //   - ATAU dia adalah guru pengganti (substitute_teacher_id = teacher_id)
         $sessions = ClassSession::query()
-            ->where(function ($q) use ($teacher) {
-                $q->where(function ($qq) use ($teacher) {
-                    $qq->where('teacher_id', $teacher->id)
-                       ->whereNull('substitute_teacher_id');
-                })->orWhere('substitute_teacher_id', $teacher->id);
-            })
+            ->honoredForTeacher($teacher->id)
             ->whereYear('session_date', $year)
             ->whereMonth('session_date', $month)
-            ->whereNotIn('status', [
-                ClassSession::STATUS_SCHEDULED,
-                ClassSession::STATUS_IZIN_RESCHEDULE,
-                ClassSession::STATUS_IZIN_PENDING,
-                ClassSession::STATUS_CANCELLED,
-            ])
-            // DIGANTI two-phase: honor belum dikonfirmasi (null) tidak dihitung
-            ->whereNotNull('honor_code')
+            ->honoredStatus()
             ->get(['id', 'honor_code', 'honor_amount', 'session_date', 'status',
                    'teacher_id', 'substitute_teacher_id', 'student_id', 'enrollment_id']);
 
@@ -135,23 +123,12 @@ class HonorCalculationService
     {
         $sessions = ClassSession::query()
             ->with('student:id,full_name,student_code', 'enrollment.package.instrument')
-            ->where(function ($q) use ($slip) {
-                $q->where(function ($qq) use ($slip) {
-                    $qq->where('teacher_id', $slip->teacher_id)
-                       ->whereNull('substitute_teacher_id');
-                })->orWhere('substitute_teacher_id', $slip->teacher_id);
-            })
+            ->honoredForTeacher($slip->teacher_id)
             ->whereYear('session_date', $slip->year)
             ->whereMonth('session_date', $slip->month)
-            ->whereNotIn('status', [
-                ClassSession::STATUS_SCHEDULED,
-                ClassSession::STATUS_IZIN_RESCHEDULE,
-                ClassSession::STATUS_IZIN_PENDING,
-                ClassSession::STATUS_CANCELLED,
-            ])
-            // DIGANTI two-phase: sesi pengganti belum dikonfirmasi tidak tampil di rincian slip
-            ->whereNotNull('honor_code')
+            ->honoredStatus()
             ->orderBy('session_date')
+            ->orderBy('start_time')
             ->get();
 
         return $sessions;
