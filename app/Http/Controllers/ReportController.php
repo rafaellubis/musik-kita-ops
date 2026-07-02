@@ -94,9 +94,11 @@ class ReportController extends Controller
             - (int) PettyCashExpense::whereDate('expense_date', '<=', $monthEnd)->sum('amount');
 
         // ===== PENGELUARAN OPERASIONAL — TRANSFER saja (bukan petty cash) =====
+        // Exclude GAJI_STAFF karena sudah dihitung terpisah dari StaffPayrollSlip
         $expenseByCategory = Expense::forMonth($year, $month)
             ->where('expenses.payment_method', Expense::METHOD_TRANSFER)
             ->join('expense_categories', 'expenses.expense_category_id', '=', 'expense_categories.id')
+            ->where('expense_categories.code', '!=', 'GAJI_STAFF')
             ->select(
                 'expense_categories.name as cat_name',
                 'expense_categories.code as cat_code',
