@@ -7,7 +7,6 @@ use App\Models\HonorSlip;
 use App\Models\PettyCashExpense;
 use App\Models\PettyCashTopup;
 use App\Models\StaffPayrollSlip;
-use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Student;
 use Carbon\Carbon;
@@ -18,19 +17,40 @@ use Illuminate\Support\Facades\DB;
  * Laporan keuangan dan operasional (M09).
  *
  * Route:
- *   GET /reports/finance  -> laporan P&L bulanan (printable)
- *   GET /reports/students -> laporan statistik murid
+ *   GET /reports/finance       -> laporan P&L bulanan (tampilan web)
+ *   GET /reports/finance/print -> standalone print view untuk cetak PDF
+ *   GET /reports/students      -> laporan statistik murid
  */
 class ReportController extends Controller
 {
     /**
-     * Laporan keuangan bulanan: Revenue, Honor, Pengeluaran, Laba/Rugi.
+     * Laporan keuangan bulanan: tampilan web biasa.
      */
     public function finance(Request $request)
     {
         $year  = (int) $request->get('year', now()->year);
         $month = (int) $request->get('month', now()->month);
 
+        return view('reports.finance', $this->buildFinanceData($year, $month));
+    }
+
+    /**
+     * Laporan keuangan: standalone print view untuk cetak PDF profesional.
+     */
+    public function financePrint(Request $request)
+    {
+        $year  = (int) $request->get('year', now()->year);
+        $month = (int) $request->get('month', now()->month);
+
+        return view('reports.finance-print', $this->buildFinanceData($year, $month));
+    }
+
+    /**
+     * Kumpulkan semua data keuangan untuk bulan & tahun tertentu.
+     * Digunakan bersama oleh finance() dan financePrint() — tidak ada duplikasi query.
+     */
+    private function buildFinanceData(int $year, int $month): array
+    {
         // ===== REVENUE — breakdown per jenis item =====
         $revenueByType = DB::table('payments')
             ->join('invoices', 'payments.invoice_id', '=', 'invoices.id')
@@ -81,7 +101,7 @@ class ReportController extends Controller
             ->where('status', StaffPayrollSlip::STATUS_PAID)
             ->sum('net_salary');
 
-        // ===== PETTY CASH (top-up masuk P&L; expense petty informatif saja) =====
+        // ===== PETTY CASH =====
         $totalPettyCashTopup = (int) PettyCashTopup::forMonth($year, $month)->sum('amount');
         $pettyCashExpenses = PettyCashExpense::forMonth($year, $month)
             ->with('category')
@@ -93,8 +113,7 @@ class ReportController extends Controller
         $saldoPettyCashAkhir = (int) PettyCashTopup::whereDate('topup_date', '<=', $monthEnd)->sum('amount')
             - (int) PettyCashExpense::whereDate('expense_date', '<=', $monthEnd)->sum('amount');
 
-        // ===== PENGELUARAN OPERASIONAL — TRANSFER saja (bukan petty cash) =====
-        // Exclude GAJI_STAFF karena sudah dihitung terpisah dari StaffPayrollSlip
+        // ===== PENGELUARAN OPERASIONAL — TRANSFER saja, exclude GAJI_STAFF =====
         $expenseByCategory = Expense::forMonth($year, $month)
             ->where('expenses.payment_method', Expense::METHOD_TRANSFER)
             ->join('expense_categories', 'expenses.expense_category_id', '=', 'expense_categories.id')
@@ -110,8 +129,7 @@ class ReportController extends Controller
             ->get();
         $totalPengeluaranOperasional = (int) $expenseByCategory->sum('total');
 
-        // ===== LABA / RUGI =====
-        // Top-up petty cash = pengeluaran dari rekening studio; expense petty tidak double-hit
+        // ===== LABA / RUGI BERSIH =====
         $labaBersih = $totalRevenue
             - $honorPaid
             - $staffPayrollPaid
@@ -120,7 +138,7 @@ class ReportController extends Controller
 
         $monthName = Carbon::create($year, $month, 1)->format('F Y');
 
-        return view('reports.finance', compact(
+        return compact(
             'year', 'month', 'monthName',
             'revenueByType', 'totalRevenue', 'revenueByMethod',
             'honorSlips', 'totalHonor', 'honorPaid',
@@ -128,7 +146,7 @@ class ReportController extends Controller
             'expenseByCategory', 'totalPengeluaranOperasional',
             'totalPettyCashTopup', 'pettyCashExpenses', 'totalPettyCashExpense', 'saldoPettyCashAkhir',
             'labaBersih',
-        ));
+        );
     }
 
     /**
@@ -139,14 +157,12 @@ class ReportController extends Controller
         $year  = (int) $request->get('year', now()->year);
         $month = (int) $request->get('month', now()->month);
 
-        // Distribusi per status
         $byStatus = Student::selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->orderBy('total', 'desc')
             ->pluck('total', 'status')
             ->toArray();
 
-        // Distribusi murid Aktif per instrumen
         $byInstrument = DB::table('students')
             ->join('enrollments', function ($j) {
                 $j->on('students.id', '=', 'enrollments.student_id')
@@ -160,12 +176,10 @@ class ReportController extends Controller
             ->orderBy('total', 'desc')
             ->get();
 
-        // Murid masuk bulan ini (status pernah jadi Aktif di bulan ini)
         $muridBaru = Student::where('active_since', '>=', Carbon::create($year, $month, 1)->startOfMonth())
             ->where('active_since', '<=', Carbon::create($year, $month, 1)->endOfMonth())
             ->count();
 
-        // Murid mundur bulan ini
         $muridMundur = Student::whereIn('status', ['Mengundurkan Diri', 'Selesai'])
             ->whereYear('updated_at', $year)
             ->whereMonth('updated_at', $month)

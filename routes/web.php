@@ -620,6 +620,11 @@ Route::middleware('auth')->group(function () {
             [ReportController::class, 'finance']
         )->name('reports.finance');
 
+        // Cetak PDF laporan keuangan — standalone print view
+        Route::get('reports/finance/print',
+            [ReportController::class, 'financePrint']
+        )->name('reports.finance.print');
+
         // Audit Log
         Route::get('audit-logs',
             [AuditLogController::class, 'index']
