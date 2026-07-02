@@ -148,10 +148,10 @@
             <div class="px-4 py-3 bg-mk-surface border-b flex justify-between">
                 <h3 class="font-semibold text-sm text-mk-muted">Honor Guru</h3>
                 <span class="text-sm font-semibold">
-                    Total: Rp {{ number_format($totalHonor, 0, ',', '.') }}
+                    Dibayar: Rp {{ number_format($honorPaid, 0, ',', '.') }}
                     @if($honorPaid < $totalHonor)
                         <span class="text-xs text-orange-600 ml-2">
-                            (dibayar: Rp {{ number_format($honorPaid, 0, ',', '.') }})
+                            (total: Rp {{ number_format($totalHonor, 0, ',', '.') }})
                         </span>
                     @endif
                 </span>
@@ -210,10 +210,10 @@
             <div class="px-4 py-3 bg-mk-surface border-b flex justify-between">
                 <h3 class="font-semibold text-sm text-mk-muted">Gaji Staff Non-Guru</h3>
                 <span class="text-sm font-semibold">
-                    Total: Rp {{ number_format($totalStaffPayroll, 0, ',', '.') }}
+                    Dibayar: Rp {{ number_format($staffPayrollPaid, 0, ',', '.') }}
                     @if($staffPayrollPaid < $totalStaffPayroll)
                         <span class="text-xs text-orange-600 ml-2">
-                            (dibayar: Rp {{ number_format($staffPayrollPaid, 0, ',', '.') }})
+                            (total: Rp {{ number_format($totalStaffPayroll, 0, ',', '.') }})
                         </span>
                     @endif
                 </span>
