@@ -453,7 +453,7 @@ button[type="submit"]:focus-visible {
     </form>
 
     <div class="card-footer">
-        <span>Musik KITA</span> &mdash; Sistem Studio &mdash; <span>v2.06.21</span>
+        <span>Musik KITA</span> &mdash; Sistem Studio &mdash; <span>v2.07.02</span>
     </div>
 </div>
 
