@@ -116,20 +116,7 @@ class ReportController extends Controller
             - $totalPengeluaranOperasional
             - $totalPettyCashTopup;
 
-        // ===== INVOICE OVERVIEW =====
-        $invoiceStats = Invoice::where('year', $year)->where('month', $month)
-            ->selectRaw('status, COUNT(*) as cnt, SUM(total_amount) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status')
-            ->toArray();
-
         $monthName = Carbon::create($year, $month, 1)->format('F Y');
-
-        // Daftar bulan tersedia (untuk dropdown navigasi)
-        $availableMonths = Invoice::selectRaw('DISTINCT year, month')
-            ->orderBy('year', 'desc')
-            ->orderBy('month', 'desc')
-            ->get();
 
         return view('reports.finance', compact(
             'year', 'month', 'monthName',
@@ -139,8 +126,6 @@ class ReportController extends Controller
             'expenseByCategory', 'totalPengeluaranOperasional',
             'totalPettyCashTopup', 'pettyCashExpenses', 'totalPettyCashExpense', 'saldoPettyCashAkhir',
             'labaBersih',
-            'invoiceStats',
-            'availableMonths',
         ));
     }
 
