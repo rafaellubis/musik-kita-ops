@@ -90,6 +90,11 @@ class ReportController extends Controller
         $totalHonor = $honorSlips->sum('total_honor');
         $honorPaid  = $honorSlips->where('status', HonorSlip::STATUS_PAID)->sum('total_honor');
 
+        // Guru aktif tanpa slip bulan ini
+        $activeTeachers = \App\Models\Teacher::where('is_active', true)->pluck('name', 'id');
+        $teachersWithSlip = $honorSlips->pluck('teacher_id')->toArray();
+        $teachersWithoutSlip = $activeTeachers->reject(fn($name, $id) => in_array($id, $teachersWithSlip))->values()->toArray();
+
         // ===== GAJI STAFF (M12) =====
         $staffPayrollSlips = StaffPayrollSlip::where('year', $year)
             ->where('month', $month)
@@ -141,7 +146,7 @@ class ReportController extends Controller
         return compact(
             'year', 'month', 'monthName',
             'revenueByType', 'totalRevenue', 'revenueByMethod',
-            'honorSlips', 'totalHonor', 'honorPaid',
+            'honorSlips', 'totalHonor', 'honorPaid', 'teachersWithoutSlip',
             'staffPayrollSlips', 'totalStaffPayroll', 'staffPayrollPaid',
             'expenseByCategory', 'totalPengeluaranOperasional',
             'totalPettyCashTopup', 'pettyCashExpenses', 'totalPettyCashExpense', 'saldoPettyCashAkhir',

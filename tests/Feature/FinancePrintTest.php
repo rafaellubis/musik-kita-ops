@@ -11,8 +11,7 @@ class FinancePrintTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
-    public function owner_bisa_akses_finance_print(): void
+    public function test_owner_bisa_akses_finance_print(): void
     {
         Role::firstOrCreate(['name' => 'Owner', 'guard_name' => 'web']);
         $owner = User::factory()->create();
@@ -23,11 +22,11 @@ class FinancePrintTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertViewIs('reports.finance-print');
+        $response->assertViewHas('teachersWithoutSlip');
         $response->assertSee('Laporan Keuangan');
     }
 
-    /** @test */
-    public function admin_tidak_bisa_akses_finance_print(): void
+    public function test_admin_tidak_bisa_akses_finance_print(): void
     {
         Role::firstOrCreate(['name' => 'Owner', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
@@ -40,8 +39,7 @@ class FinancePrintTest extends TestCase
         $response->assertStatus(403);
     }
 
-    /** @test */
-    public function guest_redirect_ke_login(): void
+    public function test_guest_redirect_ke_login(): void
     {
         $response = $this->get('/reports/finance/print');
         $response->assertRedirect('/login');

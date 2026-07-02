@@ -260,10 +260,33 @@
                 border-radius: 0;
                 background: transparent;
             }
+            .print-footer {
+                position: fixed;
+                bottom: -10mm;
+                left: 0;
+                right: 0;
+                display: flex !important;
+                justify-content: space-between;
+                font-size: 8px;
+                color: #7A3818;
+                border-top: 1px solid rgba(93, 184, 144, 0.15);
+                padding-top: 4px;
+            }
+            .print-footer-page::after {
+                content: "Halaman " counter(page);
+            }
+        }
+        .print-footer {
+            display: none;
         }
     </style>
 </head>
 <body>
+
+<div class="print-footer">
+    <span>Musik KITA — Laporan Keuangan Bulanan ({{ $monthName }})</span>
+    <span class="print-footer-page"></span>
+</div>
 
 {{-- ============================================================
      TOOLBAR — browser only
@@ -470,6 +493,11 @@
             Hanya honor berstatus PAID yang masuk perhitungan P&L.
             Honor event sudah termasuk dalam komponen slip masing-masing guru.
         </div>
+        @if(!empty($teachersWithoutSlip))
+            <div class="footnote" style="margin-top: 8px; border-left: 2px solid #b91c1c; color: #b91c1c;">
+                Guru aktif tanpa slip bulan ini: {{ implode(', ', $teachersWithoutSlip) }}
+            </div>
+        @endif
     @endif
 
 
