@@ -232,28 +232,63 @@
         studentName: '',
         sessionId: null,
         contentHtml: '',
+        monthsList: [],
+        activeTab: '',
+        
         init() {
             window.addEventListener('open-session-history', (e) => {
                 this.sessionId = e.detail.sessionId;
                 this.studentName = e.detail.studentName;
-                this.open = true;
-                this.loading = true;
-                this.contentHtml = '';
                 
-                fetch('{{ url('/guru/sesi') }}/' + this.sessionId + '/history')
-                    .then(res => {
-                        if (!res.ok) throw new Error();
-                        return res.text();
-                    })
-                    .then(html => {
-                        this.contentHtml = html;
-                        this.loading = false;
-                    })
-                    .catch(() => {
-                        this.contentHtml = '<div class=\'py-8 text-center text-red-500 text-xs font-semibold\'>Gagal memuat riwayat. Silakan coba lagi.</div>';
-                        this.loading = false;
-                    });
+                // ponytail: kalkulasi daftar 3 bulan terakhir di sisi client dari sessionDate
+                const sessionDate = new Date(e.detail.sessionDate);
+                this.monthsList = this.calculateMonthsList(sessionDate);
+                
+                const baseMonth = sessionDate.getMonth() + 1;
+                const baseYear = sessionDate.getFullYear();
+                this.activeTab = `${baseMonth}-${baseYear}`;
+                
+                this.open = true;
+                this.fetchHistory(baseMonth, baseYear);
             });
+        },
+
+        calculateMonthsList(baseDate) {
+            const list = [];
+            const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            
+            for (let i = 0; i < 3; i++) {
+                const tempDate = new Date(baseDate.getFullYear(), baseDate.getMonth() - i, 1);
+                const m = tempDate.getMonth() + 1;
+                const y = tempDate.getFullYear();
+                list.push({
+                    label: `${monthNames[tempDate.getMonth()]} ${y}`,
+                    shortLabel: `${monthNames[tempDate.getMonth()].substring(0, 3)} ${y.toString().substring(2)}`,
+                    month: m,
+                    year: y,
+                    key: `${m}-${y}`
+                });
+            }
+            return list;
+        },
+
+        fetchHistory(month, year) {
+            this.loading = true;
+            this.contentHtml = '';
+            
+            fetch('{{ url('/guru/sesi') }}/' + this.sessionId + '/history?month=' + month + '&year=' + year)
+                .then(res => {
+                    if (!res.ok) throw new Error();
+                    return res.text();
+                })
+                .then(html => {
+                    this.contentHtml = html;
+                    this.loading = false;
+                })
+                .catch(() => {
+                    this.contentHtml = '<div class=\'py-8 text-center text-red-500 text-xs font-semibold\'>Gagal memuat riwayat. Silakan coba lagi.</div>';
+                    this.loading = false;
+                });
         }
      }"
      x-cloak>
@@ -298,6 +333,21 @@
                     @click="open = false">
                 &times;
             </button>
+        </div>
+
+        <!-- Aksen Filter Tab (impeccable: modern style, high contrast) -->
+        <div x-show="open && monthsList.length > 0" class="px-5 py-2.5 bg-slate-50 border-b border-outline-variant/15 shrink-0">
+            <div class="flex gap-1.5 p-1 bg-slate-200/60 rounded-xl">
+                <template x-for="item in monthsList" :key="item.key">
+                    <button type="button"
+                            @click="activeTab = item.key; fetchHistory(item.month, item.year)"
+                            :class="activeTab === item.key ? 'bg-white text-teal-800 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                            class="flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all duration-200 focus:outline-none cursor-pointer">
+                        <span class="block sm:hidden" x-text="item.shortLabel"></span>
+                        <span class="hidden sm:block" x-text="item.label"></span>
+                    </button>
+                </template>
+            </div>
         </div>
 
         <!-- Area Konten Utama -->
