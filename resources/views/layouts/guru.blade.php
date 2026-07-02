@@ -241,7 +241,8 @@
                 this.studentName = e.detail.studentName;
                 
                 // ponytail: kalkulasi daftar 3 bulan terakhir di sisi client dari sessionDate
-                const sessionDate = new Date(e.detail.sessionDate);
+                const [y, m, d] = e.detail.sessionDate.split('-').map(Number);
+                const sessionDate = new Date(y, m - 1, d);
                 this.monthsList = this.calculateMonthsList(sessionDate);
                 
                 const baseMonth = sessionDate.getMonth() + 1;
@@ -341,7 +342,7 @@
                 <template x-for="item in monthsList" :key="item.key">
                     <button type="button"
                             @click="activeTab = item.key; fetchHistory(item.month, item.year)"
-                            :class="activeTab === item.key ? 'bg-white text-teal-800 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                            :class="activeTab === item.key ? 'bg-white text-secondary shadow-sm' : 'text-slate-600 hover:text-slate-900'"
                             class="flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all duration-200 focus:outline-none cursor-pointer">
                         <span class="block sm:hidden" x-text="item.shortLabel"></span>
                         <span class="hidden sm:block" x-text="item.label"></span>
