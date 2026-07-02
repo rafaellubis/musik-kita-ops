@@ -22,10 +22,11 @@
                     <button type="submit"
                             class="px-3 py-1 bg-mk-surface hover:bg-mk-surfaceHover rounded text-sm">Tampil</button>
                 </form>
-                <button onclick="window.print()"
-                        class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm no-print">
+                <a href="{{ route('reports.finance.print', ['year' => $year, 'month' => $month]) }}"
+                   target="_blank"
+                   class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm no-print inline-block">
                     Cetak PDF
-                </button>
+                </a>
             </div>
         </div>
     </x-slot>
