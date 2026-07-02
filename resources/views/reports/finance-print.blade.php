@@ -148,8 +148,8 @@
             margin-top: 2px;
         }
         .pl-row.grand-total {
-            border-top: 2.5px solid #4A1F0A;
-            border-bottom: 2.5px solid #4A1F0A;
+            border-top: 4px double #4A1F0A;
+            border-bottom: 4px double #4A1F0A;
             font-weight: 700;
             font-size: 13px;
             margin-top: 4px;
