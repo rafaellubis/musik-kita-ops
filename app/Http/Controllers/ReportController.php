@@ -110,7 +110,11 @@ class ReportController extends Controller
 
         // ===== LABA / RUGI =====
         // Top-up petty cash = pengeluaran dari rekening studio; expense petty tidak double-hit
-        $labaBersih = $totalRevenue - $totalHonor - $totalPengeluaranOperasional - $totalPettyCashTopup;
+        $labaBersih = $totalRevenue
+            - $honorPaid
+            - $staffPayrollPaid
+            - $totalPengeluaranOperasional
+            - $totalPettyCashTopup;
 
         // ===== INVOICE OVERVIEW =====
         $invoiceStats = Invoice::where('year', $year)->where('month', $month)
