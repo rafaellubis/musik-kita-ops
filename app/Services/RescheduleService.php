@@ -74,6 +74,8 @@ class RescheduleService
         }
 
         // Buat sesi pengganti (ad-hoc — schedule_id null)
+        // ponytail: attribution bulan/tahun WAJIB dari sesi origin, bukan session_date baru.
+        // Tanpa ini, reschedule lintas bulan (misal Juni→Juli) salah label.
         $replacement = ClassSession::create([
             'schedule_id'           => null,
             'enrollment_id'         => $enrollmentId,
@@ -90,6 +92,8 @@ class RescheduleService
             'notes'                 => "Sesi pengganti dari " . \Carbon\Carbon::parse($original->session_date)->format('d/m/Y'),
             'session_sequence'      => $original->session_sequence,  // mewarisi dari sesi asli
             'origin_session_id'     => $original->id,                // referensi ke sesi asli
+            'attribution_month'     => $original->attributionMonth(),
+            'attribution_year'      => $original->attributionYear(),
         ]);
 
         // Update notes sesi asli dengan referensi tanggal pengganti
@@ -148,6 +152,7 @@ class RescheduleService
             $honorAmount = (int) round($package->price_per_month * 0.5 / 4 / 2);
         }
 
+        // ponytail: attribution dari origin, sama seperti createReplacement()
         return ClassSession::create([
             'schedule_id'           => null,
             'enrollment_id'         => $original->enrollment_id,
@@ -165,6 +170,8 @@ class RescheduleService
             'session_sequence'      => $original->session_sequence,
             'origin_session_id'     => $original->id,
             'split_part'            => $part,
+            'attribution_month'     => $original->attributionMonth(),
+            'attribution_year'      => $original->attributionYear(),
         ]);
     }
 
