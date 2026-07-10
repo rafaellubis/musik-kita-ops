@@ -232,7 +232,7 @@ class ClassSession extends Model
         // Sesi split (bagian 1 atau 2) — label lebih spesifik dari reschedule biasa.
         // Dicek SEBELUM blok origin biasa agar split tidak salah masuk ke label reschedule.
         if ($this->split_part && $this->origin_session_id && $this->originSession) {
-            $bulan = Carbon::parse($this->originSession->session_date)
+            $bulan = Carbon::create($this->attributionYear(), $this->attributionMonth(), 1)
                            ->locale('id')->translatedFormat('F Y');
             $seq   = $this->session_sequence;
             return "Bagian {$this->split_part}/2 — Reschedule dari Sesi ke-{$seq} Bulan {$bulan}";
@@ -258,7 +258,7 @@ class ClassSession extends Model
             // Bulan dari tanggal ORIGIN (kapan sesi aslinya harusnya berlangsung).
             // Sequence dari sesi INI sendiri: sudah mewarisi slot dari origin,
             // tapi origin LIBUR selalu punya sequence=null.
-            $bulan = Carbon::parse($this->originSession->session_date)
+            $bulan = Carbon::create($this->attributionYear(), $this->attributionMonth(), 1)
                            ->locale('id')->translatedFormat('F Y');
             $seq   = $this->session_sequence;
             return "Reschedule dari Sesi ke-{$seq} Bulan {$bulan}";
