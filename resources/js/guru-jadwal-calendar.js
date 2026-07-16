@@ -21,7 +21,11 @@ export function guruJadwalCalendar(initial) {
         monthPickerYear: parseInt(initial.selectedDate.slice(0, 4), 10),
         monthNames: MONTH_NAMES,
         pointerStartX: null,
+        pointerStartScrollLeft: 0,
+        activePointerId: null,
         didDrag: false,
+        canScrollLeft: true,
+        canScrollRight: true,
         sessionRequestId: 0,
         scrollDebounce: null,
         reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -34,6 +38,7 @@ export function guruJadwalCalendar(initial) {
         init() {
             this.$nextTick(() => {
                 this.scrollChipToCenter(this.selectedDate, false);
+                this.updateScrollControls();
                 this.bindSesiListActions();
             });
 
@@ -81,26 +86,165 @@ export function guruJadwalCalendar(initial) {
                 : 'bg-surface-container-low hover:bg-secondary/10 text-on-surface';
         },
 
-        onChipPointerDown(event) {
-            this.pointerStartX = event.clientX ?? event.touches?.[0]?.clientX ?? null;
+        /**
+         * Touch tetap memakai native swipe browser. Drag manual hanya diaktifkan
+         * untuk mouse agar strip tanggal nyaman dipakai di desktop Windows.
+         */
+        onStripPointerDown(event) {
+            if (event.pointerType !== 'mouse') {
+                this.didDrag = false;
+                return;
+            }
+
+            if (event.button !== 0) {
+                return;
+            }
+
+            const strip = this.$refs.strip;
+            if (!strip) {
+                return;
+            }
+
+            this.pointerStartX = event.clientX;
+            this.pointerStartScrollLeft = strip.scrollLeft;
+            this.activePointerId = event.pointerId;
             this.didDrag = false;
+
+            strip.setPointerCapture?.(event.pointerId);
         },
 
-        onChipPointerMove(event) {
-            if (this.pointerStartX === null) {
+        onStripPointerMove(event) {
+            if (
+                this.pointerStartX === null
+                || this.activePointerId === null
+                || event.pointerId !== this.activePointerId
+            ) {
                 return;
             }
-            const x = event.clientX ?? event.touches?.[0]?.clientX ?? this.pointerStartX;
-            if (Math.abs(x - this.pointerStartX) > this.tapDragThresholdPx) {
+
+            if ((event.buttons & 1) !== 1) {
+                this.onStripPointerEnd(event);
+                return;
+            }
+
+            const strip = this.$refs.strip;
+            if (!strip) {
+                return;
+            }
+
+            const deltaX = event.clientX - this.pointerStartX;
+            if (!this.didDrag && Math.abs(deltaX) > this.tapDragThresholdPx) {
                 this.didDrag = true;
+                strip.classList.add('is-mouse-dragging');
+            }
+
+            if (this.didDrag) {
+                event.preventDefault();
+                strip.scrollLeft = this.pointerStartScrollLeft - deltaX;
             }
         },
 
-        onChipTap(date) {
-            if (this.didDrag) {
+        onStripPointerEnd(event) {
+            if (
+                this.activePointerId === null
+                || (event.pointerId !== undefined && event.pointerId !== this.activePointerId)
+            ) {
                 return;
             }
+
+            const strip = this.$refs.strip;
+            const pointerId = this.activePointerId;
+
+            this.pointerStartX = null;
+            this.activePointerId = null;
+            strip?.classList.remove('is-mouse-dragging');
+
+            if (
+                event.type !== 'lostpointercapture'
+                && strip?.hasPointerCapture?.(pointerId)
+            ) {
+                strip.releasePointerCapture(pointerId);
+            }
+
+            this.updateScrollControls();
+        },
+
+        onChipTap(date, event = null) {
+            // Klik yang terbit setelah mouse drag tidak boleh memilih tanggal.
+            if (this.didDrag && (event?.detail ?? 1) > 0) {
+                this.didDrag = false;
+                return;
+            }
+
+            this.didDrag = false;
             this.selectDate(date);
+        },
+
+        /**
+         * Roda mouse vertikal menggeser strip secara horizontal. Scroll halaman
+         * tetap diteruskan ketika strip sudah mencapai ujung arah tersebut.
+         */
+        onStripWheel(event) {
+            if (event.ctrlKey || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) {
+                return;
+            }
+
+            const strip = this.$refs.strip;
+            if (!strip || event.deltaY === 0) {
+                return;
+            }
+
+            const multiplier = event.deltaMode === 1
+                ? 24
+                : event.deltaMode === 2
+                    ? strip.clientWidth
+                    : 1;
+            const delta = event.deltaY * multiplier;
+            const maxScrollLeft = Math.max(0, strip.scrollWidth - strip.clientWidth);
+            const nextScrollLeft = Math.min(maxScrollLeft, Math.max(0, strip.scrollLeft + delta));
+
+            if (nextScrollLeft === strip.scrollLeft) {
+                return;
+            }
+
+            event.preventDefault();
+            strip.scrollLeft = nextScrollLeft;
+        },
+
+        /** Geser tampilan sekitar tujuh tanggal tanpa mengubah tanggal terpilih. */
+        scrollDateStrip(direction) {
+            const strip = this.$refs.strip;
+            const chips = strip?.querySelectorAll('[data-date]') ?? [];
+            if (!strip || chips.length === 0) {
+                return;
+            }
+
+            const chipStep = chips.length > 1
+                ? chips[1].offsetLeft - chips[0].offsetLeft
+                : chips[0].clientWidth;
+            const distance = chipStep * 7;
+
+            strip.scrollBy({
+                left: direction * distance,
+                behavior: this.reducedMotion ? 'instant' : 'smooth',
+            });
+        },
+
+        /** Pilih tanggal sebelahnya saat pengguna menekan panah keyboard. */
+        async moveDateSelection(direction) {
+            const target = this.addDays(this.selectedDate, direction);
+            if (!this.isWithinBounds(target)) {
+                return;
+            }
+
+            this.didDrag = false;
+            await this.ensureDateLoaded(target);
+            const selectionPromise = this.selectDate(target);
+            await this.$nextTick();
+            this.$refs.strip
+                ?.querySelector(`[data-date="${target}"]`)
+                ?.focus({ preventScroll: true });
+            await selectionPromise;
         },
 
         async selectDate(date, { scroll = true } = {}) {
@@ -204,8 +348,25 @@ export function guruJadwalCalendar(initial) {
         },
 
         onStripScroll() {
+            this.updateScrollControls();
             clearTimeout(this.scrollDebounce);
             this.scrollDebounce = setTimeout(() => this.checkStripEdges(), 300);
+        },
+
+        updateScrollControls() {
+            const strip = this.$refs.strip;
+            if (!strip || this.dates.length === 0) {
+                this.canScrollLeft = false;
+                this.canScrollRight = false;
+                return;
+            }
+
+            const maxScrollLeft = Math.max(0, strip.scrollWidth - strip.clientWidth);
+            const hasEarlierDates = this.isWithinBounds(this.addDays(this.dates[0].date, -1));
+            const hasLaterDates = this.isWithinBounds(this.addDays(this.dates[this.dates.length - 1].date, 1));
+
+            this.canScrollLeft = strip.scrollLeft > 1 || hasEarlierDates;
+            this.canScrollRight = strip.scrollLeft < maxScrollLeft - 1 || hasLaterDates;
         },
 
         async checkStripEdges() {
@@ -275,9 +436,11 @@ export function guruJadwalCalendar(initial) {
                         if (strip) {
                             strip.scrollLeft += strip.scrollWidth - prevScrollWidth;
                         }
+                        this.updateScrollControls();
                     });
                 } else {
                     this.dates = [...this.dates, ...newItems];
+                    this.$nextTick(() => this.updateScrollControls());
                 }
             } finally {
                 this[flag] = false;

@@ -125,12 +125,15 @@ class GuruJadwalWeekNavTest extends TestCase
             );
     }
 
-    public function test_tidak_ada_panah_navigasi_minggu(): void
+    public function test_kalender_menyediakan_tombol_navigasi_tanggal_desktop(): void
     {
         $response = $this->actingAs($this->guruUser)->get(route('guru.jadwal'));
 
         $response->assertOk()
-            ->assertDontSee('Minggu sebelumnya', false)
-            ->assertDontSee('Minggu berikutnya', false);
+            ->assertSee('Geser tanggal 7 hari ke belakang', false)
+            ->assertSee('Geser tanggal 7 hari ke depan', false)
+            ->assertSee('onStripPointerDown', false)
+            ->assertSee('onStripWheel', false)
+            ->assertSee('moveDateSelection', false);
     }
 }

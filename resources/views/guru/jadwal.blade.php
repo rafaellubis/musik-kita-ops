@@ -27,33 +27,77 @@
             </button>
         </div>
 
-        <div x-ref="strip"
-             class="guru-date-strip overflow-x-auto pb-1.5 -mx-1 px-1"
-             @scroll.passive="onStripScroll()">
-            <div x-ref="stripInner" class="flex gap-1 min-w-min py-0.5">
-                <template x-for="d in dates" :key="d.date">
-                    <button type="button"
-                            :data-date="d.date"
-                            @pointerdown="onChipPointerDown($event)"
-                            @pointermove="onChipPointerMove($event)"
-                            @click="onChipTap(d.date)"
-                            :aria-selected="d.date === selectedDate"
-                            :aria-label="d.day_name + ' ' + d.day_number"
-                            class="guru-date-chip h-12 w-11 shrink-0 flex flex-col items-center justify-center rounded-md
-                                   transition-all duration-200 active:scale-90 relative border"
-                            :class="chipClasses(d)">
-                        <span class="text-[8px] font-semibold tracking-wider uppercase"
-                              :class="d.date === selectedDate ? 'opacity-80' : 'text-on-surface-variant'"
-                              x-text="d.day_name"></span>
-                        <span class="text-sm font-bold leading-tight"
-                              :class="d.date === selectedDate ? '' : 'text-on-surface'"
-                              x-text="d.day_number"></span>
-                        <span x-show="hasSessionDot(d)"
-                              class="absolute bottom-0.5 w-1 h-1 rounded-full"
-                              :class="d.date === selectedDate ? 'bg-on-secondary/60' : 'bg-secondary'"></span>
-                    </button>
-                </template>
+        <p id="guru-date-strip-help" class="sr-only">
+            Gunakan tombol panah, roda mouse, drag dengan mouse, atau tombol panah keyboard untuk berpindah tanggal.
+        </p>
+
+        <div class="flex items-center gap-2">
+            <button type="button"
+                    @click="scrollDateStrip(-1)"
+                    :disabled="!canScrollLeft"
+                    class="hidden lg:inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg
+                           border border-outline-variant/30 bg-surface-container-lowest text-on-surface-variant
+                           hover:bg-secondary/10 hover:text-secondary focus-visible:outline-none focus-visible:ring-2
+                           focus-visible:ring-secondary focus-visible:ring-offset-2 disabled:cursor-not-allowed
+                           disabled:opacity-35 disabled:hover:bg-surface-container-lowest transition-colors"
+                    aria-label="Geser tanggal 7 hari ke belakang">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+
+            <div x-ref="strip"
+                 role="group"
+                 aria-label="Pilihan tanggal jadwal"
+                 aria-describedby="guru-date-strip-help"
+                 class="guru-date-strip min-w-0 flex-1 overflow-x-auto pb-1.5 -mx-1 px-1"
+                 @scroll.passive="onStripScroll()"
+                 @wheel="onStripWheel($event)"
+                 @pointerdown="onStripPointerDown($event)"
+                 @pointermove="onStripPointerMove($event)"
+                 @pointerup="onStripPointerEnd($event)"
+                 @pointercancel="onStripPointerEnd($event)"
+                 @lostpointercapture="onStripPointerEnd($event)"
+                 @keydown.arrow-left.prevent="moveDateSelection(-1)"
+                 @keydown.arrow-right.prevent="moveDateSelection(1)">
+                <div x-ref="stripInner" class="flex gap-1 min-w-min py-0.5">
+                    <template x-for="d in dates" :key="d.date">
+                        <button type="button"
+                                :data-date="d.date"
+                                @click="onChipTap(d.date, $event)"
+                                :tabindex="d.date === selectedDate ? 0 : -1"
+                                :aria-current="d.date === selectedDate ? 'date' : null"
+                                :aria-label="d.day_name + ' ' + d.day_number"
+                                class="guru-date-chip h-12 w-11 shrink-0 flex flex-col items-center justify-center rounded-md
+                                       transition-all duration-200 active:scale-90 relative border"
+                                :class="chipClasses(d)">
+                            <span class="text-[8px] font-semibold tracking-wider uppercase"
+                                  :class="d.date === selectedDate ? 'opacity-80' : 'text-on-surface-variant'"
+                                  x-text="d.day_name"></span>
+                            <span class="text-sm font-bold leading-tight"
+                                  :class="d.date === selectedDate ? '' : 'text-on-surface'"
+                                  x-text="d.day_number"></span>
+                            <span x-show="hasSessionDot(d)"
+                                  class="absolute bottom-0.5 w-1 h-1 rounded-full"
+                                  :class="d.date === selectedDate ? 'bg-on-secondary/60' : 'bg-secondary'"></span>
+                        </button>
+                    </template>
+                </div>
             </div>
+
+            <button type="button"
+                    @click="scrollDateStrip(1)"
+                    :disabled="!canScrollRight"
+                    class="hidden lg:inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg
+                           border border-outline-variant/30 bg-surface-container-lowest text-on-surface-variant
+                           hover:bg-secondary/10 hover:text-secondary focus-visible:outline-none focus-visible:ring-2
+                           focus-visible:ring-secondary focus-visible:ring-offset-2 disabled:cursor-not-allowed
+                           disabled:opacity-35 disabled:hover:bg-surface-container-lowest transition-colors"
+                    aria-label="Geser tanggal 7 hari ke depan">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
         </div>
     </section>
 

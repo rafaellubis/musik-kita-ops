@@ -280,6 +280,7 @@ aside           { border-right-color:  rgba(93,184,144,0.30) !important; }
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    overscroll-behavior-x: contain;
 }
 
 .guru-date-strip::-webkit-scrollbar {
@@ -288,6 +289,29 @@ aside           { border-right-color:  rgba(93,184,144,0.30) !important; }
 
 .guru-date-chip {
     scroll-snap-align: center;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.guru-date-chip:focus-visible {
+    outline: 2px solid theme('colors.secondary');
+    outline-offset: 2px;
+}
+
+@media (pointer: fine) {
+    .guru-date-strip,
+    .guru-date-strip .guru-date-chip {
+        cursor: grab;
+    }
+
+    .guru-date-strip.is-mouse-dragging {
+        cursor: grabbing;
+        scroll-snap-type: none;
+    }
+
+    .guru-date-strip.is-mouse-dragging .guru-date-chip {
+        cursor: grabbing;
+    }
 }
 
 .guru-sesi-fade-out {
