@@ -12,7 +12,7 @@ export function guruJadwalCalendar(initial) {
         sessionCounts: { ...initial.sessionCounts },
         routes: initial.routes,
         lazyBatchDays: initial.lazyBatchDays ?? 30,
-        tapDragThresholdPx: initial.tapDragThresholdPx ?? 8,
+        dragThresholdPx: initial.tapDragThresholdPx ?? 8,
         dateBoundYears: initial.dateBoundYears ?? 2,
 
         loadingSessions: false,
@@ -20,10 +20,11 @@ export function guruJadwalCalendar(initial) {
         loadingDatesRight: false,
         monthPickerYear: parseInt(initial.selectedDate.slice(0, 4), 10),
         monthNames: MONTH_NAMES,
-        pointerStartX: null,
-        pointerStartScrollLeft: 0,
-        activePointerId: null,
-        didDrag: false,
+        dragStartX: null,
+        dragStartScrollLeft: 0,
+        dragPointerId: null,
+        isMouseDragging: false,
+        suppressClickAfterDrag: false,
         canScrollLeft: true,
         canScrollRight: true,
         sessionRequestId: 0,
@@ -87,16 +88,11 @@ export function guruJadwalCalendar(initial) {
         },
 
         /**
-         * Touch tetap memakai native swipe browser. Drag manual hanya diaktifkan
-         * untuk mouse agar strip tanggal nyaman dipakai di desktop Windows.
+         * Tekan biasa tetap menjadi klik. Mode drag baru aktif setelah mouse
+         * bergerak melewati threshold agar pemilihan tanggal tidak terganggu.
          */
         onStripPointerDown(event) {
-            if (event.pointerType !== 'mouse') {
-                this.didDrag = false;
-                return;
-            }
-
-            if (event.button !== 0) {
+            if (event.pointerType !== 'mouse' || event.button !== 0) {
                 return;
             }
 
@@ -105,19 +101,18 @@ export function guruJadwalCalendar(initial) {
                 return;
             }
 
-            this.pointerStartX = event.clientX;
-            this.pointerStartScrollLeft = strip.scrollLeft;
-            this.activePointerId = event.pointerId;
-            this.didDrag = false;
-
-            strip.setPointerCapture?.(event.pointerId);
+            this.suppressClickAfterDrag = false;
+            this.dragStartX = event.clientX;
+            this.dragStartScrollLeft = strip.scrollLeft;
+            this.dragPointerId = event.pointerId;
+            this.isMouseDragging = false;
         },
 
         onStripPointerMove(event) {
             if (
-                this.pointerStartX === null
-                || this.activePointerId === null
-                || event.pointerId !== this.activePointerId
+                this.dragStartX === null
+                || this.dragPointerId === null
+                || event.pointerId !== this.dragPointerId
             ) {
                 return;
             }
@@ -132,31 +127,36 @@ export function guruJadwalCalendar(initial) {
                 return;
             }
 
-            const deltaX = event.clientX - this.pointerStartX;
-            if (!this.didDrag && Math.abs(deltaX) > this.tapDragThresholdPx) {
-                this.didDrag = true;
-                strip.classList.add('is-mouse-dragging');
+            const deltaX = event.clientX - this.dragStartX;
+            if (!this.isMouseDragging && Math.abs(deltaX) <= this.dragThresholdPx) {
+                return;
             }
 
-            if (this.didDrag) {
-                event.preventDefault();
-                strip.scrollLeft = this.pointerStartScrollLeft - deltaX;
+            if (!this.isMouseDragging) {
+                this.isMouseDragging = true;
+                strip.classList.add('is-mouse-dragging');
+                strip.setPointerCapture?.(event.pointerId);
             }
+
+            event.preventDefault();
+            strip.scrollLeft = this.dragStartScrollLeft - deltaX;
         },
 
         onStripPointerEnd(event) {
             if (
-                this.activePointerId === null
-                || (event.pointerId !== undefined && event.pointerId !== this.activePointerId)
+                this.dragPointerId === null
+                || (event.pointerId !== undefined && event.pointerId !== this.dragPointerId)
             ) {
                 return;
             }
 
             const strip = this.$refs.strip;
-            const pointerId = this.activePointerId;
+            const pointerId = this.dragPointerId;
+            const wasDragging = this.isMouseDragging;
 
-            this.pointerStartX = null;
-            this.activePointerId = null;
+            this.dragStartX = null;
+            this.dragPointerId = null;
+            this.isMouseDragging = false;
             strip?.classList.remove('is-mouse-dragging');
 
             if (
@@ -166,18 +166,24 @@ export function guruJadwalCalendar(initial) {
                 strip.releasePointerCapture(pointerId);
             }
 
+            if (wasDragging) {
+                this.suppressClickAfterDrag = true;
+            }
+
             this.updateScrollControls();
         },
 
-        onChipTap(date, event = null) {
-            // Klik yang terbit setelah mouse drag tidak boleh memilih tanggal.
-            if (this.didDrag && (event?.detail ?? 1) > 0) {
-                this.didDrag = false;
+        /** Batalkan hanya klik yang terbit tepat setelah gesture drag. */
+        onStripClickCapture(event) {
+            // detail === 0 adalah aktivasi keyboard dan harus tetap diizinkan.
+            if (!this.suppressClickAfterDrag || event.detail === 0) {
+                this.suppressClickAfterDrag = false;
                 return;
             }
 
-            this.didDrag = false;
-            this.selectDate(date);
+            event.preventDefault();
+            event.stopPropagation();
+            this.suppressClickAfterDrag = false;
         },
 
         /**
@@ -237,7 +243,6 @@ export function guruJadwalCalendar(initial) {
                 return;
             }
 
-            this.didDrag = false;
             await this.ensureDateLoaded(target);
             const selectionPromise = this.selectDate(target);
             await this.$nextTick();

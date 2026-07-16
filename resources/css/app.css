@@ -301,16 +301,17 @@ aside           { border-right-color:  rgba(93,184,144,0.30) !important; }
 @media (pointer: fine) {
     .guru-date-strip,
     .guru-date-strip .guru-date-chip {
-        cursor: grab;
+        cursor: pointer;
+    }
+
+    .guru-date-strip.is-mouse-dragging,
+    .guru-date-strip.is-mouse-dragging .guru-date-chip {
+        cursor: grabbing;
     }
 
     .guru-date-strip.is-mouse-dragging {
-        cursor: grabbing;
         scroll-snap-type: none;
-    }
-
-    .guru-date-strip.is-mouse-dragging .guru-date-chip {
-        cursor: grabbing;
+        user-select: none;
     }
 }
 

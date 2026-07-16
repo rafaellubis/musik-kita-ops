@@ -133,6 +133,7 @@ class GuruJadwalWeekNavTest extends TestCase
             ->assertSee('Geser tanggal 7 hari ke belakang', false)
             ->assertSee('Geser tanggal 7 hari ke depan', false)
             ->assertSee('onStripPointerDown', false)
+            ->assertSee('onStripClickCapture', false)
             ->assertSee('onStripWheel', false)
             ->assertSee('moveDateSelection', false);
     }

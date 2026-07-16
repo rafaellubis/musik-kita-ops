@@ -28,7 +28,7 @@
         </div>
 
         <p id="guru-date-strip-help" class="sr-only">
-            Gunakan tombol panah, roda mouse, drag dengan mouse, atau tombol panah keyboard untuk berpindah tanggal.
+            Gunakan tombol panah, roda mouse, drag dengan mouse, swipe touchscreen, atau tombol panah keyboard untuk berpindah tanggal.
         </p>
 
         <div class="flex items-center gap-2">
@@ -53,6 +53,7 @@
                  class="guru-date-strip min-w-0 flex-1 overflow-x-auto pb-1.5 -mx-1 px-1"
                  @scroll.passive="onStripScroll()"
                  @wheel="onStripWheel($event)"
+                 @click.capture="onStripClickCapture($event)"
                  @pointerdown="onStripPointerDown($event)"
                  @pointermove="onStripPointerMove($event)"
                  @pointerup="onStripPointerEnd($event)"
@@ -64,7 +65,7 @@
                     <template x-for="d in dates" :key="d.date">
                         <button type="button"
                                 :data-date="d.date"
-                                @click="onChipTap(d.date, $event)"
+                                @click="selectDate(d.date)"
                                 :tabindex="d.date === selectedDate ? 0 : -1"
                                 :aria-current="d.date === selectedDate ? 'date' : null"
                                 :aria-label="d.day_name + ' ' + d.day_number"
