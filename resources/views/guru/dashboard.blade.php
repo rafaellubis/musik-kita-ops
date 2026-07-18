@@ -11,7 +11,7 @@
 @if($jumlahPending > 0)
 <div class="mx-4 mb-4">
     <a href="{{ route('guru.sesi-pending.index') }}"
-       class="flex items-center gap-4 bg-white border border-outline-variant/15 rounded-2xl px-4 py-3.5 hover:bg-surface-container-low transition-all duration-300 shadow-[rgba(44,105,78,0.04)_0px_2px_8px] hover:shadow-[rgba(44,105,78,0.08)_0px_4px_12px] group">
+       class="flex items-center gap-4 bg-surface-container-lowest border border-outline-variant/15 rounded-2xl px-4 py-3.5 hover:bg-surface-container-low transition-all duration-300 shadow-sm hover:shadow group">
         <span class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 text-xl font-bold border border-amber-100">
             📋
         </span>
@@ -58,7 +58,7 @@
                              this.$refs.sessionContainer.innerHTML = spaceY3.innerHTML;
                          } else if (emptyState) {
                              this.$refs.sessionContainer.innerHTML = `
-                                 <div class='bg-white rounded-2xl border border-outline-variant/20 px-4 py-12 text-center shadow-[rgba(44,105,78,0.04)_0px_2px_8px]'>
+                                 <div class='bg-surface-container-lowest rounded-2xl border border-outline-variant/20 px-4 py-12 text-center shadow-sm'>
                                      <div class='w-12 h-12 bg-surface-container-low rounded-full flex items-center justify-center mx-auto text-xl mb-3 border border-outline-variant/20'>🎵</div>
                                      <div class='text-primary font-semibold text-sm'>Tenang &amp; Damai</div>
                                      <div class='text-outline text-xs mt-1'>Tidak ada jadwal sesi mengajar untuk hari ini.</div>
@@ -80,7 +80,7 @@
             @forelse($sesiHariIni as $idx => $sesi)
                 @include('guru._sesi-card', ['sesi' => $sesi, 'teacher' => $teacher, 'sIdx' => $idx])
             @empty
-                <div class="bg-white rounded-2xl border border-outline-variant/20 px-4 py-12 text-center shadow-[rgba(44,105,78,0.04)_0px_2px_8px] fade-in-up">
+                <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 px-4 py-12 text-center shadow-sm fade-in-up">
                     <div class="w-12 h-12 bg-surface-container-low rounded-full flex items-center justify-center mx-auto text-xl mb-3 border border-outline-variant/20">
                         🎵
                     </div>
@@ -100,12 +100,12 @@
     </h2>
     
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <div class="bg-white rounded-2xl border border-outline-variant/20 px-4 py-4.5 shadow-[rgba(44,105,78,0.04)_0px_2px_8px] hover:shadow-[rgba(44,105,78,0.08)_0px_4px_12px] transition-shadow duration-300">
+        <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 px-4 py-4.5 shadow-sm hover:shadow transition-shadow duration-300">
             <div class="text-xs font-semibold text-outline uppercase tracking-wider">Sesi Terlaksana</div>
             <div class="text-2xl font-bold text-primary mt-2 font-sans">{{ $totalSesiBulan }}</div>
         </div>
         
-        <div class="bg-white rounded-2xl border border-outline-variant/20 px-4 py-4.5 shadow-[rgba(44,105,78,0.04)_0px_2px_8px] hover:shadow-[rgba(44,105,78,0.08)_0px_4px_12px] transition-shadow duration-300">
+        <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 px-4 py-4.5 shadow-sm hover:shadow transition-shadow duration-300">
             <div class="text-xs font-semibold text-outline uppercase tracking-wider">Estimasi Honor</div>
             @if($slipBulanIni)
                 <div class="text-xl font-bold text-secondary mt-2 font-sans leading-none">
@@ -123,7 +123,7 @@
         {{-- Kartu Sesi Pending — hanya tampil jika ada pending --}}
         @if($jumlahPending > 0)
         <a href="{{ route('guru.sesi-pending.index') }}"
-           class="bg-white rounded-2xl border border-outline-variant/20 px-4 py-4.5 shadow-[rgba(44,105,78,0.04)_0px_2px_8px] hover:shadow-[rgba(44,105,78,0.08)_0px_4px_12px] transition-all duration-300">
+           class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 px-4 py-4.5 shadow-sm hover:shadow transition-all duration-300">
             <div class="text-xs font-semibold text-outline uppercase tracking-wider">Sesi Pending</div>
             <div class="text-2xl font-bold text-error mt-2 font-sans flex items-center gap-1.5">
                 <span>{{ $jumlahPending }}</span>

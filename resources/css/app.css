@@ -276,6 +276,20 @@ aside           { border-right-color:  rgba(93,184,144,0.30) !important; }
 }
 
 /* ===== Portal Guru — Kalender Jadwal Slide ===== */
+.guru-portal-root {
+    height: 100vh;
+    height: 100dvh;
+}
+
+.guru-portal-main {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.guru-bottom-nav {
+    height: calc(4rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 .guru-date-strip {
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
@@ -330,6 +344,14 @@ aside           { border-right-color:  rgba(93,184,144,0.30) !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .guru-portal-root *,
+    .guru-portal-root *::before,
+    .guru-portal-root *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
     .guru-sesi-fade-out,
     .guru-sesi-fade-in {
         transition: none !important;

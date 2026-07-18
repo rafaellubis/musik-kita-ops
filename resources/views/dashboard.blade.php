@@ -416,6 +416,7 @@
     @push('scripts')
     <script>
     document.addEventListener('DOMContentLoaded', function () {
+        import('apexcharts').then(({ default: ApexCharts }) => {
 
         // Warna chart — theme-aware (dark/light sesuai preferensi user)
         const isDark = (localStorage.getItem('mk-theme') || 'dark') === 'dark';
@@ -525,6 +526,15 @@
             tooltip: { theme: chartTooltipTheme },
         }).render();
 
+        }).catch(() => {
+            document.querySelectorAll('[id^="chart-"]').forEach(chart => {
+                const fallback = document.createElement('p');
+                fallback.setAttribute('role', 'alert');
+                fallback.className = 'py-8 text-center text-sm font-medium text-error';
+                fallback.textContent = 'Grafik tidak dapat dimuat.';
+                chart.replaceChildren(fallback);
+            });
+        });
     });
     </script>
     @endpush

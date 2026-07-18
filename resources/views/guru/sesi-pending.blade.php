@@ -74,24 +74,24 @@
                     }
                 }
             }"
-             class="bg-white rounded-2xl border border-[#E0EAE5] shadow-[0_2px_12px_rgba(74,14,14,0.04)] overflow-hidden">
+             class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm overflow-hidden">
 
             {{-- Header card: nama murid, detail, badge hari pending --}}
-            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 px-4 py-4 border-b border-[#E0EAE5]">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 px-4 py-4 border-b border-outline-variant/20">
                 <div class="flex-1 min-w-0">
                     <div class="font-bold text-primary text-base">{{ $sesi->student->full_name }}</div>
                     <div class="text-xs text-mk-muted mt-1 flex flex-wrap items-center gap-1.5">
                         <span>Sesi ke-{{ $sesi->session_sequence ?? '?' }}</span>
-                        <span class="text-gray-300">•</span>
+                        <span class="text-outline-variant">•</span>
                         <span class="font-medium">{{ $sesi->enrollment?->package?->code ?? '—' }}</span>
-                        <span class="text-gray-300">•</span>
+                        <span class="text-outline-variant">•</span>
                         <span>{{ \Carbon\Carbon::parse($sesi->session_date)->locale('id')->isoFormat('D MMMM Y') }}</span>
                     </div>
                 </div>
                 <div class="flex items-center sm:flex-col sm:items-end gap-1.5 shrink-0 mt-1 sm:mt-0">
                     {{-- Badge berapa hari sudah pending — merah jika > 14 hari, kuning jika <= 14 --}}
                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide border
-                        {{ $hariPending > 14 ? 'bg-error-container text-on-error-container border-error/15' : 'bg-[#FFF9E6] text-amber-800 border-amber-200/50' }}">
+                        {{ $hariPending > 14 ? 'bg-error-container text-on-error-container border-error/15' : 'bg-surface-container-low text-amber-800 border-amber-200/50' }}">
                         {{ $hariPending }} hari pending
                     </span>
                     {{-- Badge jumlah suggest guru --}}
@@ -107,27 +107,29 @@
             <div class="px-4 py-4 space-y-4">
 
                 {{-- Pesan sukses sementara setelah submit --}}
-                <div x-show="showSuccess" x-transition x-cloak
+                <div x-show="showSuccess" x-transition x-cloak role="status"
                      class="flex items-center gap-2.5 rounded-lg bg-secondary-container/45 border border-secondary/20 px-3.5 py-3">
-                    <svg class="w-4 h-4 text-secondary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg class="w-4 h-4 text-secondary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
                     <span class="text-on-secondary-container text-xs font-semibold tracking-wide" x-text="message"></span>
                 </div>
 
                 {{-- Riwayat saran guru --}}
-                <div x-show="history.length > 0" x-cloak class="bg-background/40 border border-[#E0EAE5] rounded-xl p-3">
+                <div x-show="history.length > 0" x-cloak class="bg-background/40 border border-outline-variant/20 rounded-xl p-3">
                     <button type="button"
                             @click="showHistory = !showHistory"
+                            :aria-expanded="showHistory"
+                            aria-controls="pending-history-{{ $sesi->id }}"
                             class="flex items-center justify-between w-full text-xs font-bold text-mk-muted hover:text-primary transition-colors">
                         <span x-text="'Riwayat Saran (' + history.length + ')'"></span>
                         <svg :class="showHistory ? 'rotate-180' : ''"
                              class="w-3.5 h-3.5 transition-transform duration-200"
-                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                             fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </button>
-                    <ul x-show="showHistory" x-transition class="mt-3.5 space-y-2 border-l-2 border-[#D1EADF] pl-3.5">
+                    <ul id="pending-history-{{ $sesi->id }}" x-show="showHistory" x-transition class="mt-3.5 space-y-2 border-l-2 border-outline-variant/30 pl-3.5">
                         <template x-for="item in history" :key="item.index">
                             <li class="text-xs text-mk-text flex items-start gap-1">
                                 <span class="font-bold text-secondary shrink-0" x-text="'#' + item.index"></span>
@@ -140,17 +142,19 @@
                 {{-- Tombol toggle accordion form suggest --}}
                 <button @click="open = !open"
                         type="button"
+                        :aria-expanded="open"
+                        aria-controls="pending-form-{{ $sesi->id }}"
                         class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-secondary-container/10 border border-secondary/10 hover:bg-secondary-container/20 transition-all">
                     <span class="text-sm font-bold text-secondary" x-text="suggestCount > 0 ? 'Kirim Usulan Tanggal Baru' : 'Kirim Usulan Tanggal ke Admin'"></span>
                     <svg :class="open ? 'rotate-180' : ''"
                          class="w-4 h-4 text-secondary transition-transform duration-200"
-                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
 
                 {{-- Form suggest tanggal (accordion body) --}}
-                <div x-show="open" x-transition class="space-y-4 pt-2">
+                <div id="pending-form-{{ $sesi->id }}" x-show="open" x-transition class="space-y-4 pt-2">
 
                     {{-- Input tanggal --}}
                     <div>
@@ -160,7 +164,7 @@
                         <input type="date"
                                x-model="tanggal"
                                min="{{ today()->toDateString() }}"
-                               class="w-full bg-white border border-[#D1EADF] rounded-lg px-3.5 py-2.5 text-sm text-primary
+                               class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-3.5 py-2.5 text-sm text-primary
                                       focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all">
                     </div>
 
@@ -170,7 +174,7 @@
                             Jam Mulai <span class="text-error font-sans">*</span>
                         </label>
                         <select x-model="jam"
-                                class="w-full bg-white border border-[#D1EADF] rounded-lg px-3.5 py-2.5 text-sm text-primary
+                                class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-3.5 py-2.5 text-sm text-primary
                                        focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all">
                             <option value="">-- Pilih jam --</option>
                             @for($h = 7; $h <= 21; $h++)
@@ -193,7 +197,7 @@
                                x-model="catatan"
                                maxlength="200"
                                placeholder="Misal: Murid bilang bisa Rabu pagi"
-                               class="w-full bg-white border border-[#D1EADF] rounded-lg px-3.5 py-2.5 text-sm text-primary placeholder-[#A8C4B8]
+                               class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-3.5 py-2.5 text-sm text-primary placeholder:text-outline
                                       focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all">
                     </div>
 
@@ -202,11 +206,11 @@
                             :disabled="!tanggal || !jam || loading"
                             type="button"
                             class="w-full py-2.5 rounded-lg font-bold text-sm transition-all shadow-sm
-                                   bg-primary hover:bg-[#3f0709] text-white
+                                   bg-primary hover:bg-primary-container text-on-primary
                                    disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-primary/50">
                         <span x-show="!loading">Kirim Saran ke Admin</span>
                         <span x-show="loading" class="flex items-center justify-center gap-2">
-                            <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                             </svg>
@@ -220,7 +224,7 @@
 
     @empty
         {{-- State kosong --}}
-        <div class="bg-white rounded-2xl border border-[#E0EAE5] shadow-[0_2px_12px_rgba(74,14,14,0.04)] px-4 py-12 text-center">
+        <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 shadow-sm px-4 py-12 text-center">
             <div class="text-4xl mb-3">✅</div>
             <div class="font-bold text-primary text-sm">Tidak ada sesi pending.</div>
             <div class="text-xs text-mk-muted mt-1">

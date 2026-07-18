@@ -38,15 +38,18 @@ class SessionReportWaService
             return 'DISABLED';
         }
 
-        $latest = $this->latestSuccessLog($session->id);
+        $latestAny = $session->relationLoaded('latestSessionReportWaLog')
+            ? $session->latestSessionReportWaLog
+            : SessionReportWaLog::query()
+                ->where('class_session_id', $session->id)
+                ->latest('sent_at')
+                ->first();
+        $latest = $session->relationLoaded('latestSuccessfulSessionReportWaLog')
+            ? $session->latestSuccessfulSessionReportWaLog
+            : $this->latestSuccessLog($session->id);
         if ($latest && $note->updated_at && $latest->sent_at->gte($note->updated_at)) {
             return 'SENT';
         }
-
-        $latestAny = SessionReportWaLog::query()
-            ->where('class_session_id', $session->id)
-            ->latest('sent_at')
-            ->first();
 
         if ($latestAny?->status === SessionReportWaLog::STATUS_FAILED) {
             return 'FAILED';

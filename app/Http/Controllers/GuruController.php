@@ -85,7 +85,7 @@ class GuruController extends Controller
             })
             ->where('session_date', $today)
             ->whereNotIn('status', ['CANCELLED'])
-            ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher', 'teacherNote', 'originSession'])
+            ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher', 'teacherNote', 'originSession', 'latestSessionReportWaLog', 'latestSuccessfulSessionReportWaLog'])
             ->orderBy('start_time')
             ->get();
 
@@ -105,13 +105,10 @@ class GuruController extends Controller
             ->where('year', now()->year)
             ->first();
 
-        // Jumlah sesi IZIN_PENDING milik guru ini — untuk banner + counter di dashboard
-        $jumlahPending = ClassSession::where('teacher_id', $teacher->id)
-            ->where('status', ClassSession::STATUS_IZIN_PENDING)
-            ->count();
+        $waDisplayMap = $this->waDisplayMap($sesiHariIni);
 
         return view('guru.dashboard', compact(
-            'teacher', 'sesiHariIni', 'totalSesiBulan', 'slipBulanIni', 'jumlahPending'
+            'teacher', 'sesiHariIni', 'totalSesiBulan', 'slipBulanIni', 'waDisplayMap'
         ));
     }
 
@@ -132,6 +129,7 @@ class GuruController extends Controller
         $today   = today()->toDateString();
 
         $sesi = $this->sessionsForTeacherOnDate($teacher, $selectedDate);
+        $waDisplayMap = $this->waDisplayMap($sesi);
 
         $stripFrom = $selectedDate->copy()->subDays(self::JADWAL_INITIAL_BUFFER_DAYS);
         $stripTo   = $selectedDate->copy()->addDays(self::JADWAL_INITIAL_BUFFER_DAYS);
@@ -160,7 +158,7 @@ class GuruController extends Controller
 
         return view('guru.jadwal', compact(
             'teacher', 'sesi', 'today', 'tanggal', 'selectedDate',
-            'calendarBootstrap', 'sessionCounts',
+            'calendarBootstrap', 'sessionCounts', 'waDisplayMap',
         ));
     }
 
@@ -180,6 +178,7 @@ class GuruController extends Controller
         $tanggal      = $selectedDate->toDateString();
         $today        = today()->toDateString();
         $sesi         = $this->sessionsForTeacherOnDate($teacher, $selectedDate);
+        $waDisplayMap = $this->waDisplayMap($sesi);
 
         $showSessionActionsMap = $sesi->mapWithKeys(fn ($s) => [
             $s->id => $this->shouldShowSessionActions($s, $tanggal, $today, $teacher),
@@ -192,6 +191,7 @@ class GuruController extends Controller
             'teacher'               => $teacher,
             'selectedDate'          => $selectedDate,
             'showSessionActionsMap' => $showSessionActionsMap,
+            'waDisplayMap'          => $waDisplayMap,
         ])->render();
 
         return response()->json([
@@ -275,9 +275,29 @@ class GuruController extends Controller
                   ->orWhere('substitute_teacher_id', $teacher->id);
             })
             ->where('session_date', $date->toDateString())
-            ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher', 'teacherNote', 'originSession'])
+            ->with(['student', 'room', 'enrollment.package', 'teacher', 'substituteTeacher', 'teacherNote', 'originSession', 'latestSessionReportWaLog', 'latestSuccessfulSessionReportWaLog'])
             ->orderBy('start_time')
             ->get();
+    }
+
+    private function waDisplayMap(Collection $sessions): array
+    {
+        return $sessions->mapWithKeys(function (ClassSession $session) {
+            $recipientType = $session->student
+                ? $this->sessionReportWaService->resolveRecipientType($session->student)
+                : null;
+            $phone = $recipientType === 'student'
+                ? $session->student?->phone
+                : ($session->student?->parent_phone ?: $session->student?->phone);
+
+            return [$session->id => [
+                'state' => $session->teacherNote
+                    ? $this->sessionReportWaService->deliveryState($session)
+                    : 'DISABLED',
+                'recipient_label' => $recipientType === 'student' ? 'murid' : 'ortu',
+                'masked_phone' => $this->sessionReportWaService->maskPhone($phone),
+            ]];
+        })->all();
     }
 
     /**
@@ -302,7 +322,7 @@ class GuruController extends Controller
     /**
      * Bangun array metadata chip tanggal untuk strip horizontal.
      *
-     * @return list<array{date: string, day_name: string, day_number: int, is_today: bool}>
+     * @return list<array{date: string, day_name: string, day_number: int, is_today: bool, accessible_label: string}>
      */
     private function buildDateStripData(Carbon $from, Carbon $to): array
     {
@@ -316,6 +336,8 @@ class GuruController extends Controller
                 'day_name'   => self::JADWAL_DAY_NAMES[$cursor->dayOfWeekIso - 1],
                 'day_number' => (int) $cursor->day,
                 'is_today'   => $cursor->toDateString() === $todayStr,
+                'accessible_label' => $cursor->locale('id')->isoFormat('dddd, D MMMM Y')
+                    . ($cursor->toDateString() === $todayStr ? ', hari ini' : ''),
             ];
             $cursor->addDay();
         }

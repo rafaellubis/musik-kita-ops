@@ -153,6 +153,22 @@ class ClassSession extends Model
         return $this->hasOne(SessionTeacherNote::class);
     }
 
+    public function sessionReportWaLogs(): HasMany
+    {
+        return $this->hasMany(SessionReportWaLog::class)->latest('sent_at');
+    }
+
+    public function latestSessionReportWaLog(): HasOne
+    {
+        return $this->hasOne(SessionReportWaLog::class)->ofMany(['sent_at' => 'max', 'id' => 'max']);
+    }
+
+    public function latestSuccessfulSessionReportWaLog(): HasOne
+    {
+        return $this->hasOne(SessionReportWaLog::class)
+            ->ofMany(['sent_at' => 'max', 'id' => 'max'], fn ($query) => $query->where('status', SessionReportWaLog::STATUS_SUCCESS));
+    }
+
     /** Pola blok saran tanggal guru di kolom notes (IZIN_PENDING). */
     private const TEACHER_SUGGESTION_PATTERN = '/\[SARAN GURU: (\d{4}-\d{2}-\d{2}) (\d{2}:\d{2})(?: — (.+?))?\]/u';
 

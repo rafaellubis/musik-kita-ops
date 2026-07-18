@@ -60,6 +60,24 @@ class GuruJadwalCalendarTest extends TestCase
         ], $overrides));
     }
 
+    public function test_p3_calendar_dates_expose_full_indonesian_accessible_labels(): void
+    {
+        Carbon::setTestNow('2026-07-18 10:00:00');
+
+        try {
+            $response = $this->actingAs($this->guruUser)->get(route('guru.jadwal'))->assertOk();
+            $dates = $response->viewData('calendarBootstrap')['dates'];
+            $today = collect($dates)->firstWhere('date', '2026-07-18');
+            $tomorrow = collect($dates)->firstWhere('date', '2026-07-19');
+
+            $this->assertSame('Sabtu, 18 Juli 2026, hari ini', $today['accessible_label']);
+            $this->assertSame('Minggu, 19 Juli 2026', $tomorrow['accessible_label']);
+            $response->assertSee(':aria-label="d.accessible_label"', false);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
     public function test_jadwal_page_contains_alpine_calendar_bootstrap(): void
     {
         $response = $this->actingAs($this->guruUser)->get(route('guru.jadwal'));
@@ -70,6 +88,20 @@ class GuruJadwalCalendarTest extends TestCase
                 isset($data['selectedDate'], $data['dates'], $data['sessionCounts'], $data['routes'])
                 && count($data['dates']) === (45 * 2 + 1)
             );
+    }
+
+    public function test_jadwal_renders_accessible_native_session_history_dialog(): void
+    {
+        $html = $this->actingAs($this->guruUser)->get(route('guru.jadwal'))->assertOk()->getContent();
+        $dom = new \DOMDocument();
+        @$dom->loadHTML($html);
+        $xpath = new \DOMXPath($dom);
+
+        $dialog = $xpath->query('//dialog[@aria-labelledby="session-history-title"]')->item(0);
+        $this->assertNotNull($dialog);
+        $this->assertNotNull($xpath->query('//*[@id="session-history-title"]')->item(0));
+        $this->assertNotNull($xpath->query('//button[@aria-label="Tutup riwayat sesi"]')->item(0));
+        $this->assertStringContainsString('!this.$refs.historyDialog.open', $html);
     }
 
     public function test_jadwal_sessions_endpoint_returns_json_with_html(): void

@@ -34,12 +34,15 @@ class GuruNavigationTest extends TestCase
             ->assertDontSee('Isi laporan perkembangan murid bulanan', false);
     }
 
-    public function test_layout_menampilkan_menu_laporan_progress_di_navigasi(): void
+    public function test_p3_navigasi_menggunakan_copy_indonesia(): void
     {
         $response = $this->actingAs($this->guruUser)->get('/guru/dashboard');
 
         $response->assertOk()
-            ->assertSee('Laporan Progress', false)
+            ->assertSee('Beranda', false)
+            ->assertSee('Jadwal', false)
+            ->assertSee('Pending', false)
+            ->assertSee('Laporan', false)
             ->assertSee(route('guru.laporan.index'), false);
     }
 
@@ -51,7 +54,7 @@ class GuruNavigationTest extends TestCase
             ->getContent();
 
         // Bottom nav mobile: class unik di layout guru
-        $marker = '<nav class="lg:hidden fixed bottom-0';
+        $marker = '<nav class="guru-bottom-nav lg:hidden fixed bottom-0';
         $start = strrpos($html, $marker);
         $this->assertNotFalse($start);
         $bottomNav = substr($html, $start);
@@ -73,12 +76,32 @@ class GuruNavigationTest extends TestCase
         $this->assertStringContainsString('Keluar', $topbarActions);
     }
 
+    public function test_navigasi_aktif_menandai_destinasi_halaman_saat_ini(): void
+    {
+        foreach ([
+            '/guru/dashboard' => route('guru.dashboard'),
+            '/guru/laporan' => route('guru.laporan.index'),
+        ] as $path => $activeDestination) {
+            $html = $this->actingAs($this->guruUser)
+                ->get($path)
+                ->assertOk()
+                ->getContent();
+
+            preg_match_all('/<a\s+href="([^"]+)"\s+aria-current="page"/', $html, $activeLinks);
+
+            $this->assertNotEmpty($activeLinks[1]);
+            foreach ($activeLinks[1] as $href) {
+                $this->assertSame($activeDestination, $href);
+            }
+        }
+    }
+
     public function test_halaman_laporan_menyalakan_menu_aktif(): void
     {
         $this->actingAs($this->guruUser)
             ->get('/guru/laporan')
             ->assertOk()
-            ->assertSee('Laporan Progress', false)
+            ->assertSee('Laporan', false)
             ->assertSee(route('guru.laporan.index'), false);
     }
 }

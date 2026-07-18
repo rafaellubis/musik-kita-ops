@@ -5,12 +5,12 @@
 </div>
 
 {{-- ===== RINGKASAN SLIP ===== --}}
-<<div class="mx-4 mb-4 bg-mk-card rounded-xl border border-mk-borderLight shadow-sm px-5 py-5">
+<div class="mx-4 mb-4 bg-mk-card rounded-xl border border-mk-borderLight shadow-sm px-5 py-5">
     <div class="text-xs font-semibold tracking-widest text-mk-muted uppercase mb-1">Slip Honor</div>
     <div class="text-xl font-bold text-mk-text">
         {{ \Carbon\Carbon::createFromDate($honorSlip->year, $honorSlip->month, 1)->locale('id')->isoFormat('MMMM Y') }}
     </div>
-    <div class="text-xs text-mk-dim mt-0.5 mb-4">{{ $honorSlip->slip_number }}</div>
+    <h1 class="text-xs text-mk-dim mt-0.5 mb-4">{{ $honorSlip->slip_number }}</h1>
 
     <div class="space-y-2 border-t border-mk-borderLight pt-4">
         <div class="flex justify-between text-sm">
