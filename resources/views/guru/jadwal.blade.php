@@ -1,7 +1,5 @@
 <x-guru-layout title="Jadwal Saya">
 
-<h1 class="sr-only">Jadwal Saya</h1>
-
 @php
     $showSessionActionsMap = $sesi->mapWithKeys(fn ($s) => [
         $s->id => $tanggal === $today
@@ -70,7 +68,7 @@
                                 @click="selectDate(d.date)"
                                 :tabindex="d.date === selectedDate ? 0 : -1"
                                 :aria-current="d.date === selectedDate ? 'date' : null"
-                                :aria-label="d.accessible_label"
+                                :aria-label="d.day_name + ' ' + d.day_number"
                                 class="guru-date-chip h-12 w-11 shrink-0 flex flex-col items-center justify-center rounded-md
                                        transition-all duration-200 active:scale-90 relative border"
                                 :class="chipClasses(d)">
@@ -114,7 +112,7 @@
                     @click="shiftPickerYear(-1)"
                     class="p-2 rounded-full hover:bg-surface-container transition-colors"
                     aria-label="Tahun sebelumnya">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
             </button>
@@ -123,7 +121,7 @@
                     @click="shiftPickerYear(1)"
                     class="p-2 rounded-full hover:bg-surface-container transition-colors"
                     aria-label="Tahun berikutnya">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </button>
@@ -133,7 +131,6 @@
             <template x-for="(label, index) in monthNames" :key="index">
                 <button type="button"
                         @click="pickMonth(index)"
-                        :aria-current="monthCellIsCurrent(index) ? 'date' : null"
                         class="py-2.5 rounded-lg text-sm font-semibold transition-colors min-h-[44px]"
                         :class="monthCellClasses(index)"
                         x-text="label">

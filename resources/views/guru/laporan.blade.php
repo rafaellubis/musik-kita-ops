@@ -97,7 +97,7 @@
                     <div class="text-xs text-mk-muted mt-0.5">{{ $r->enrollment->package->code }} · {{ $r->namaBulan() }}</div>
                 </div>
                 <span class="text-xs px-2 py-1 rounded-full font-medium {{ $r->status === 'SUBMITTED' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700' }}">
-                    {{ $r->status === 'SUBMITTED' ? 'Terkirim' : 'Draf' }}
+                    {{ $r->status === 'SUBMITTED' ? 'Submitted' : 'Draft' }}
                 </span>
             </div>
             @if($r->status === 'DRAFT')
@@ -108,7 +108,7 @@
             @else
                 <a href="{{ route('guru.laporan.pdf', $r) }}"
                    class="mt-3 block text-center py-2 rounded-lg text-sm font-semibold border border-mk-accent/40 text-mk-accent hover:bg-mk-accent/10">
-                    Lihat PDF
+                    View PDF
                 </a>
             @endif
         </div>

@@ -47,8 +47,8 @@
 
 {{-- Session Card --}}
 <div class="bg-surface-container-lowest border border-outline-variant/20 rounded-2xl
-            shadow-sm
-            hover:shadow
+            shadow-[rgba(44,105,78,0.04)_0px_2px_8px]
+            hover:shadow-[rgba(44,105,78,0.08)_0px_4px_12px]
             transition-all duration-300
             {{ $isMuted ? 'opacity-70' : '' }}
             fade-in-up"
@@ -100,7 +100,7 @@
                 <div class="text-[10px] text-amber-600 font-medium mt-0.5">
                     Digantikan oleh: {{ $sesi->substituteTeacher?->name ?? '?' }}
                     @if($sesi->honor_code === null)
-                        <span class="text-outline/60 font-normal">(menunggu konfirmasi)</span>
+                        <span class="text-gray-400 font-normal">(menunggu konfirmasi)</span>
                     @else
                         <span class="text-green-600 font-normal">✓</span>
                     @endif
@@ -110,7 +110,6 @@
 
         {{-- Status badge + Hadir Button / Completed Icon --}}
         <div class="flex flex-col items-end gap-2.5 shrink-0"
-             @if($showSessionActions && ($isOwnScheduled || $isSubstitutePending)) :aria-busy="loading" @endif
              @if($showSessionActions && ($isOwnScheduled || $isSubstitutePending))
                  @php
                      $sessionStart = \Carbon\Carbon::parse($sesi->session_date)
@@ -118,10 +117,34 @@
                          ->subMinutes(15);
                      $sessionStartEpoch = $sessionStart->getTimestamp() * 1000;
                  @endphp
-                  x-data="guruSessionActivation({
-                      startEpoch: {{ $sessionStartEpoch }},
-                      timeLabel: 'Absensi aktif pkl {{ \Carbon\Carbon::parse($sesi->start_time)->subMinutes(15)->format('H:i') }}'
-                  })"
+                 x-data="{
+                     isDisabled: true,
+                     timeLabel: '',
+                     init() {
+                         const startEpoch = {{ $sessionStartEpoch }};
+                         const updateStatus = () => {
+                             const now = Date.now();
+                             if (now >= startEpoch) {
+                                 this.isDisabled = false;
+                                 this.timeLabel = '';
+                             } else {
+                                 this.isDisabled = true;
+                                 this.timeLabel = 'Absensi aktif pkl {{ \Carbon\Carbon::parse($sesi->start_time)->subMinutes(15)->format('H:i') }}';
+                             }
+                         };
+                         updateStatus();
+                         if (this.isDisabled) {
+                             const interval = setInterval(() => {
+                                 updateStatus();
+                                 if (!this.isDisabled) {
+                                     clearInterval(interval);
+                                 }
+                             }, 1000);
+                             // ponytail: bersihkan timer ketika elemen dihancurkan dari DOM
+                             this.$cleanup(() => clearInterval(interval));
+                         }
+                     }
+                 }"
              @endif
         >
             @include('guru._badge-status', ['status' => $sesi->status])
@@ -130,9 +153,8 @@
                     <form method="POST" action="{{ route('guru.absensi.update', $sesi) }}" class="m-0 flex flex-col items-end"
                           @submit.prevent="
                               // ponytail: handle submit via Fetch API secara non-blocking
-                               loading = true; feedback = ''; errorFeedback = '';
-                               $el.querySelectorAll('button').forEach(b => b.disabled = true);
-                               fetch($el.action, {
+                              $el.querySelectorAll('button').forEach(b => b.disabled = true);
+                              fetch($el.action, {
                                   method: 'POST',
                                   headers: {
                                       'Content-Type': 'application/json',
@@ -147,19 +169,15 @@
                               })
                               .then(res => res.json())
                               .then(data => {
-                                   if (data.success) {
-                                        loading = false;
-                                        feedback = 'Kehadiran berhasil disimpan.';
-                                        window.dispatchEvent(new CustomEvent('session-updated', { detail: { date: '{{ $sesi->session_date }}' } }));
+                                  if (data.success) {
+                                      window.dispatchEvent(new CustomEvent('session-updated', { detail: { date: '{{ $sesi->session_date }}' } }));
                                   } else {
-                                       errorFeedback = data.message || 'Terjadi kesalahan';
-                                       loading = false;
+                                      alert(data.message || 'Terjadi kesalahan');
                                       $el.querySelectorAll('button').forEach(b => b.disabled = false);
                                   }
                               })
                               .catch(err => {
-                                   errorFeedback = 'Gagal mencatat absensi.';
-                                   loading = false;
+                                  alert('Gagal mencatat absensi.');
                                   $el.querySelectorAll('button').forEach(b => b.disabled = false);
                               });
                           ">
@@ -167,7 +185,7 @@
                         <input type="hidden" name="status" value="HADIR">
                         <button type="submit"
                                 :disabled="isDisabled"
-                                class="w-14 h-14 rounded-2xl font-bold bg-secondary text-on-secondary hover:bg-secondary/90 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none flex flex-col items-center justify-center gap-0.5"
+                                class="w-14 h-14 rounded-2xl font-bold bg-secondary text-on-secondary hover:bg-secondary/90 transition-all shadow-[rgba(44,105,78,0.15)_0px_2px_8px] active:scale-95 disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none flex flex-col items-center justify-center gap-0.5"
                                 title="Absen Hadir">
                             <span class="text-base leading-none">✓</span>
                             <span class="text-[10px] uppercase tracking-wider leading-none">Hadir</span>
@@ -178,9 +196,8 @@
                     <form method="POST" action="{{ route('guru.absensi.confirm-substitute', $sesi) }}" class="m-0 flex flex-col items-end"
                           @submit.prevent="
                               // ponytail: konfirmasi kehadiran pengganti secara asynchronous
-                               loading = true; feedback = ''; errorFeedback = '';
-                               $el.querySelectorAll('button').forEach(b => b.disabled = true);
-                               fetch($el.action, {
+                              $el.querySelectorAll('button').forEach(b => b.disabled = true);
+                              fetch($el.action, {
                                   method: 'POST',
                                   headers: {
                                       'Content-Type': 'application/json',
@@ -194,19 +211,15 @@
                               })
                               .then(res => res.json())
                               .then(data => {
-                                   if (data.success) {
-                                        loading = false;
-                                        feedback = 'Kehadiran berhasil disimpan.';
-                                        window.dispatchEvent(new CustomEvent('session-updated', { detail: { date: '{{ $sesi->session_date }}' } }));
+                                  if (data.success) {
+                                      window.dispatchEvent(new CustomEvent('session-updated', { detail: { date: '{{ $sesi->session_date }}' } }));
                                   } else {
-                                       errorFeedback = data.message || 'Terjadi kesalahan';
-                                       loading = false;
+                                      alert(data.message || 'Terjadi kesalahan');
                                       $el.querySelectorAll('button').forEach(b => b.disabled = false);
                                   }
                               })
                               .catch(err => {
-                                   errorFeedback = 'Gagal melakukan konfirmasi.';
-                                   loading = false;
+                                  alert('Gagal melakukan konfirmasi.');
                                   $el.querySelectorAll('button').forEach(b => b.disabled = false);
                               });
                           ">
@@ -214,7 +227,7 @@
                         <input type="hidden" name="action" value="hadir">
                         <button type="submit"
                                 :disabled="isDisabled"
-                                class="w-14 h-14 rounded-2xl font-bold bg-secondary text-on-secondary hover:bg-secondary/90 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none flex flex-col items-center justify-center gap-0.5"
+                                class="w-14 h-14 rounded-2xl font-bold bg-secondary text-on-secondary hover:bg-secondary/90 transition-all shadow-[rgba(44,105,78,0.15)_0px_2px_8px] active:scale-95 disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none flex flex-col items-center justify-center gap-0.5"
                                 title="Konfirmasi Hadir (Pengganti)">
                             <span class="text-base leading-none">✓</span>
                             <span class="text-[10px] uppercase tracking-wider leading-none">Hadir</span>
@@ -222,8 +235,6 @@
                         <span x-show="isDisabled" class="text-[9px] text-amber-700 leading-none mt-1 whitespace-nowrap bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-medium" x-text="timeLabel" style="display: none;"></span>
                     </form>
                 @endif
-                <span x-show="feedback" role="status" class="sr-only" x-text="feedback"></span>
-                <span x-show="errorFeedback" role="alert" class="sr-only" x-text="errorFeedback"></span>
             @elseif($isCompleted)
                 <div class="w-8 h-8 rounded-full bg-secondary/10 text-secondary flex items-center justify-center border border-secondary/20">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">

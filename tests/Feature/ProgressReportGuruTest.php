@@ -420,51 +420,6 @@ class ProgressReportGuruTest extends TestCase
         ]);
     }
 
-    public function test_laporan_form_renders_accessible_controls_and_validation_errors(): void
-    {
-        $report = ProgressReport::create([
-            'enrollment_id' => $this->enrollment->id,
-            'student_id' => $this->enrollment->student_id,
-            'teacher_id' => $this->teacher->id,
-            'report_template_id' => $this->template->id,
-            'month' => 5, 'year' => 2026, 'status' => 'DRAFT',
-        ]);
-
-        $this->actingAs($this->guruUser)
-            ->put("/guru/laporan/{$report->id}", ['submit' => '1'])
-            ->assertSessionHasErrors(['rating_teknik', 'kesimpulan_progress', 'progress_percent']);
-
-        $html = $this->get("/guru/laporan/{$report->id}/edit")
-            ->assertOk()
-            ->getContent();
-
-        $dom = new \DOMDocument();
-        @$dom->loadHTML($html);
-        $xpath = new \DOMXPath($dom);
-
-        foreach (['rating_teknik', 'rating_materi', 'rating_reading', 'rating_repertoar', 'catatan_teknik', 'catatan_materi', 'catatan_reading', 'catatan_repertoar', 'catatan_perkembangan_musikal', 'catatan_karakter', 'progress_percent'] as $id) {
-            $control = $xpath->query("//*[@id='{$id}']")->item(0);
-            $this->assertNotNull($control, "Kontrol {$id} harus memiliki ID unik.");
-            $this->assertNotNull($xpath->query("//label[@for='{$id}']")->item(0), "Kontrol {$id} harus memiliki label.");
-        }
-
-        $this->assertSame('true', $xpath->query('//*[@id="rating_teknik"]')->item(0)->getAttribute('aria-invalid'));
-        $this->assertSame('rating_teknik-error', $xpath->query('//*[@id="rating_teknik"]')->item(0)->getAttribute('aria-describedby'));
-        $this->assertNotNull($xpath->query('//*[@id="rating_teknik-error"]')->item(0));
-
-        $radios = $xpath->query('//input[@name="kesimpulan_progress"]');
-        $this->assertCount(4, $radios);
-        $radioIds = [];
-        foreach ($radios as $radio) {
-            $radioIds[] = $radio->getAttribute('id');
-            $this->assertSame('true', $radio->getAttribute('aria-invalid'));
-            $this->assertSame('kesimpulan_progress-error', $radio->getAttribute('aria-describedby'));
-            $this->assertNotNull($xpath->query("//label[@for='{$radio->getAttribute('id')}']")->item(0));
-        }
-        $this->assertCount(4, array_unique($radioIds));
-        $this->assertNotNull($xpath->query('//fieldset[legend[contains(normalize-space(.), "Kesimpulan Progress")]]')->item(0));
-    }
-
     public function test_guru_bisa_simpan_draft_dengan_field_baru(): void
     {
         $report = ProgressReport::create([

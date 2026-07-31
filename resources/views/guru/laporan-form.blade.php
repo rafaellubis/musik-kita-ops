@@ -64,13 +64,10 @@
         </div>
         <div class="space-y-6">
             @foreach (\App\Models\ProgressReport::monthlyRatingFields() as $field)
-                <fieldset class="flex flex-col md:flex-row md:items-start gap-2 md:gap-3">
-                    <legend class="text-sm font-semibold text-on-surface md:w-36 shrink-0 md:pt-2">{{ $field['label'] }}</legend>
+                <div class="flex flex-col md:flex-row md:items-start gap-2 md:gap-3">
+                    <span class="text-sm font-semibold text-on-surface md:w-36 shrink-0 md:pt-2">{{ $field['label'] }}</span>
                     <div class="md:w-36 shrink-0">
-                        <label for="{{ $field['rating'] }}" class="sr-only">Rating {{ $field['label'] }}</label>
-                        <select id="{{ $field['rating'] }}" name="{{ $field['rating'] }}"
-                                aria-describedby="{{ $errors->has($field['rating']) ? $field['rating'].'-error' : null }}"
-                                aria-invalid="{{ $errors->has($field['rating']) ? 'true' : 'false' }}"
+                        <select name="{{ $field['rating'] }}"
                                 class="w-full bg-background border border-outline-variant/50 rounded-lg px-2 py-2 text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-colors shadow-sm">
                             <option value="">—</option>
                             @for ($i = 1; $i <= 5; $i++)
@@ -79,56 +76,47 @@
                                 </option>
                             @endfor
                         </select>
-                        @error($field['rating'])<p id="{{ $field['rating'] }}-error" class="text-error text-xs mt-1">{{ $message }}</p>@enderror
+                        @error($field['rating'])<p class="text-error text-xs mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div class="flex-1 min-w-0">
-                        <label for="{{ $field['catatan'] }}" class="sr-only">Catatan {{ $field['label'] }}</label>
-                        <textarea id="{{ $field['catatan'] }}" name="{{ $field['catatan'] }}" rows="2"
-                                  aria-describedby="{{ $errors->has($field['catatan']) ? $field['catatan'].'-error' : null }}"
-                                  aria-invalid="{{ $errors->has($field['catatan']) ? 'true' : 'false' }}"
+                        <textarea name="{{ $field['catatan'] }}" rows="2"
                                   placeholder="Catatan (opsional)..."
                                   class="w-full bg-background border border-outline-variant/50 rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-colors shadow-sm">{{ old($field['catatan'], $progressReport->{$field['catatan']}) }}</textarea>
-                        @error($field['catatan'])<p id="{{ $field['catatan'] }}-error" class="text-error text-xs mt-1">{{ $message }}</p>@enderror
+                        @error($field['catatan'])<p class="text-error text-xs mt-1">{{ $message }}</p>@enderror
                     </div>
-                </fieldset>
+                </div>
             @endforeach
         </div>
     </div>
 
     {{-- Catatan naratif --}}
     <div class="mx-4 mb-4 bg-white border border-outline-variant/30 rounded-2xl p-4 shadow-sm">
-        <label for="catatan_perkembangan_musikal" class="block font-semibold text-sm text-on-surface mb-3">Catatan Guru Terhadap Perkembangan Musikal</label>
-        <textarea id="catatan_perkembangan_musikal" name="catatan_perkembangan_musikal" rows="4"
-                  aria-describedby="{{ $errors->has('catatan_perkembangan_musikal') ? 'catatan_perkembangan_musikal-error' : null }}"
-                  aria-invalid="{{ $errors->has('catatan_perkembangan_musikal') ? 'true' : 'false' }}"
+        <div class="font-semibold text-sm text-on-surface mb-3">Catatan Guru Terhadap Perkembangan Musikal</div>
+        <textarea name="catatan_perkembangan_musikal" rows="4"
                   placeholder="Tuliskan catatan perkembangan musikal murid..."
                   class="w-full bg-background border border-outline-variant/50 rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-colors shadow-sm">{{ old('catatan_perkembangan_musikal', $progressReport->catatan_perkembangan_musikal) }}</textarea>
-        @error('catatan_perkembangan_musikal')<p id="catatan_perkembangan_musikal-error" class="text-error text-xs mt-1">{{ $message }}</p>@enderror
+        @error('catatan_perkembangan_musikal')<p class="text-error text-xs mt-1">{{ $message }}</p>@enderror
     </div>
 
     <div class="mx-4 mb-4 bg-white border border-outline-variant/30 rounded-2xl p-4 shadow-sm">
-        <label for="catatan_karakter" class="block font-semibold text-sm text-on-surface mb-3">Catatan Lainnya (jika ada):</label>
-        <textarea id="catatan_karakter" name="catatan_karakter" rows="4"
-                  aria-describedby="{{ $errors->has('catatan_karakter') ? 'catatan_karakter-error' : null }}"
-                  aria-invalid="{{ $errors->has('catatan_karakter') ? 'true' : 'false' }}"
+        <div class="font-semibold text-sm text-on-surface mb-3">Catatan Lainnya (jika ada):</div>
+        <textarea name="catatan_karakter" rows="4"
                   placeholder="Tuliskan catatan lainnya (jika ada)..."
                   class="w-full bg-background border border-outline-variant/50 rounded-lg px-3 py-2 text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-colors shadow-sm">{{ old('catatan_karakter', $progressReport->catatan_karakter) }}</textarea>
-        @error('catatan_karakter')<p id="catatan_karakter-error" class="text-error text-xs mt-1">{{ $message }}</p>@enderror
+        @error('catatan_karakter')<p class="text-error text-xs mt-1">{{ $message }}</p>@enderror
     </div>
 
     {{-- Kesimpulan Progress --}}
     <div class="mx-4 mb-4 bg-white border border-outline-variant/30 rounded-2xl p-4 shadow-sm">
-        <x-kesimpulan-progress-select :value="$progressReport->kesimpulan_progress" :id-prefix="'progress-report-'.$progressReport->id" />
+        <x-kesimpulan-progress-select :value="$progressReport->kesimpulan_progress" />
     </div>
 
     {{-- Progress percent + bar preview --}}
     <div class="mx-4 mb-4 bg-white border border-outline-variant/30 rounded-2xl p-4 shadow-sm"
          x-data="{ pct: {{ (int) old('progress_percent', $progressReport->progress_percent ?? 0) }} }">
-        <label for="progress_percent" class="block font-semibold text-sm text-on-surface mb-3">Progress Keseluruhan (%)</label>
+        <div class="font-semibold text-sm text-on-surface mb-3">Progress Keseluruhan (%)</div>
         <div class="flex items-center gap-3 mb-3">
-            <input id="progress_percent" type="number" name="progress_percent" min="0" max="100"
-                   aria-describedby="{{ $errors->has('progress_percent') ? 'progress_percent-error' : null }}"
-                   aria-invalid="{{ $errors->has('progress_percent') ? 'true' : 'false' }}"
+            <input type="number" name="progress_percent" min="0" max="100"
                    x-model.number="pct"
                    class="w-24 bg-background border border-outline-variant/50 rounded-lg px-3 py-2 text-sm text-center text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-colors shadow-sm">
             <span class="text-sm text-outline">%</span>
@@ -137,7 +125,7 @@
             <div class="bg-secondary h-3 rounded-full transition-all"
                  :style="'width:' + Math.min(pct, 100) + '%'"></div>
         </div>
-        @error('progress_percent')<p id="progress_percent-error" class="text-error text-xs mt-1">{{ $message }}</p>@enderror
+        @error('progress_percent')<p class="text-error text-xs mt-1">{{ $message }}</p>@enderror
     </div>
 
     {{-- Catatan per sesi — read-only --}}
@@ -165,19 +153,19 @@
     <div class="mx-4 mb-3">
         <a href="{{ route('guru.laporan.pdf', $progressReport) }}" target="_blank"
            class="block text-center py-2.5 rounded-xl text-sm font-semibold border border-outline text-on-surface hover:bg-surface-container-low transition-colors shadow-sm">
-            Lihat PDF
+            View PDF
         </a>
-        <p class="text-xs text-outline text-center mt-3">Simpan draf terlebih dahulu agar perubahan terbaru tampil di pratinjau.</p>
+        <p class="text-xs text-outline text-center mt-3">Simpan draft dulu agar perubahan terbaru muncul di preview.</p>
     </div>
 
     <div class="mx-4 mb-8 flex flex-col md:flex-row gap-3">
         <button type="submit"
                 class="flex-1 py-3 rounded-xl font-semibold text-sm border border-secondary text-secondary hover:bg-secondary/10 transition-colors shadow-sm">
-            Simpan Draf
+            Simpan Draft
         </button>
         <button type="submit" name="submit" value="1"
                 class="flex-1 py-3 rounded-xl font-semibold text-sm bg-primary text-on-primary hover:bg-primary-container transition-colors shadow-sm">
-            Kirim Laporan
+            Submit Laporan
         </button>
     </div>
 </form>
@@ -192,8 +180,8 @@ function confirmSubmit(event) {
             blank($n->material_learned) && blank($n->homework_notes) && blank($n->notes)
         )
     );
-    if (hasEmptyNotes && !confirm('Masih ada sesi tanpa catatan. Tetap kirim laporan?')) return false;
-    return confirm('Kirim laporan? Setelah dikirim, laporan tidak dapat diedit.');
+    if (hasEmptyNotes && !confirm('Masih ada sesi tanpa catatan. Lanjut submit?')) return false;
+    return confirm('Submit laporan? Setelah disubmit, laporan tidak bisa diedit.');
 }
 </script>
 

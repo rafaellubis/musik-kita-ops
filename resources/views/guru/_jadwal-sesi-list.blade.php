@@ -5,14 +5,14 @@
 
 {{-- Header jumlah sesi + badge LIVE --}}
 <div class="flex items-center justify-between mb-4 px-1">
-    <h2 class="text-sm text-on-surface-variant font-medium">
+    <h3 class="text-sm text-on-surface-variant font-medium">
         {{ $sesi->count() }} Sesi
         @if($isToday)
             Hari Ini
         @else
             — {{ $selectedDate->locale('id')->isoFormat('dddd, D MMM') }}
         @endif
-    </h2>
+    </h3>
     @if($isToday && $sesi->where('status', 'SCHEDULED')->count() > 0)
         <span class="text-[11px] font-semibold bg-secondary-container text-on-secondary-container
                      px-2.5 py-1 rounded-full animate-pulse">

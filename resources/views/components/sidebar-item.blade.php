@@ -32,7 +32,6 @@
     </span>
 @else
     <a href="{{ route($route) }}"
-       @if($active) aria-current="page" @endif
        @class([$baseClass, $stateClass])>
         <span class="text-base leading-none shrink-0">{{ $icon }}</span>
         <span class="flex-1 truncate text-[13px]">{{ $label }}</span>

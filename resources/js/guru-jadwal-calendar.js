@@ -79,13 +79,10 @@ export function guruJadwalCalendar(initial) {
             return (this.sessionCounts[d.date] ?? 0) > 0;
         },
 
-        monthCellIsCurrent(index) {
-            const d = new Date(`${this.selectedDate}T12:00:00`);
-            return d.getFullYear() === this.monthPickerYear && d.getMonth() === index;
-        },
-
         monthCellClasses(index) {
-            return this.monthCellIsCurrent(index)
+            const d = new Date(`${this.selectedDate}T12:00:00`);
+            const isActive = d.getFullYear() === this.monthPickerYear && d.getMonth() === index;
+            return isActive
                 ? 'bg-secondary text-on-secondary'
                 : 'bg-surface-container-low hover:bg-secondary/10 text-on-surface';
         },
@@ -320,14 +317,7 @@ export function guruJadwalCalendar(initial) {
                     this.bindSesiListActions();
                 }
             } catch (error) {
-                if (requestId === this.sessionRequestId && listEl) {
-                    listEl.classList.remove('guru-sesi-fade-out');
-                    listEl.innerHTML = `<div role="alert" class="rounded-xl border border-error/30 bg-error-container p-4 text-center text-sm text-on-error-container">
-                        <p>Gagal memuat sesi untuk tanggal ini.</p>
-                        <button type="button" data-action="retry-sessions" class="mt-3 rounded-full border border-error/40 px-4 py-2 font-semibold hover:bg-error/10">Coba lagi</button>
-                    </div>`;
-                    this.bindSesiListActions(date);
-                }
+                console.error(error);
             } finally {
                 if (requestId === this.sessionRequestId) {
                     this.loadingSessions = false;
@@ -335,7 +325,7 @@ export function guruJadwalCalendar(initial) {
             }
         },
 
-        bindSesiListActions(retryDate = this.selectedDate) {
+        bindSesiListActions() {
             const listEl = document.getElementById('jadwal-sesi-list');
             if (!listEl) {
                 return;
@@ -345,9 +335,6 @@ export function guruJadwalCalendar(initial) {
                     e.preventDefault();
                     this.goToday();
                 });
-            });
-            listEl.querySelector('[data-action="retry-sessions"]')?.addEventListener('click', () => {
-                this.fetchSessions(retryDate);
             });
         },
 

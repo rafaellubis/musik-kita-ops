@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Models\ClassSession;
 use App\Notifications\MuridOverdueNotification;
 use App\Services\ProtectedDatabaseGuard;
 use Illuminate\Support\Facades\View;
@@ -65,22 +64,6 @@ class AppServiceProvider extends ServiceProvider
             $data = $request->attributes->get('overdueNotifData');
             $view->with('overdueNotifs', $data['notifs']);
             $view->with('overdueNotifCount', $data['count']);
-        });
-
-        View::composer(['layouts.guru', 'guru.dashboard'], function ($view) {
-            $request = request();
-            if (! $request->attributes->has('guruPendingCount')) {
-                $teacherId = auth()->user()?->teacher?->id;
-                $request->attributes->set('guruPendingCount', $teacherId
-                    ? ClassSession::where('teacher_id', $teacherId)
-                        ->where('status', ClassSession::STATUS_IZIN_PENDING)
-                        ->count()
-                    : 0);
-            }
-
-            $guruPendingCount = $request->attributes->get('guruPendingCount');
-            $view->with('guruPendingCount', $guruPendingCount);
-            $view->with('jumlahPending', $guruPendingCount);
         });
 
         // Kustomisasi pengalihan untuk pengguna terautentikasi (middleware guest / RedirectIfAuthenticated)

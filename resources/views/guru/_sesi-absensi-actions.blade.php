@@ -17,44 +17,49 @@
         && (int) $sesi->teacher_id === (int) $teacher->id
     ) || $isSubstituteConfirmed;
     $teacherNote = $sesi->teacherNote;
-    $waDisplay = $waDisplayMap[$sesi->id] ?? [
-        'state' => 'DISABLED',
-        'recipient_label' => 'ortu',
-        'masked_phone' => '—',
-    ];
-    $waState = $waDisplay['state'];
-    $waRecipientLabel = $waDisplay['recipient_label'];
-    $waMaskedPhone = $waDisplay['masked_phone'];
+    $waService = app(\App\Services\SessionReportWaService::class);
+    $waState = $teacherNote ? $waService->deliveryState($sesi) : 'DISABLED';
+    $waRecipientType = $sesi->student ? $waService->resolveRecipientType($sesi->student) : null;
+    $waRecipientLabel = $waRecipientType === 'student' ? 'murid' : 'ortu';
+    $waMaskedPhone = $waService->maskPhone(
+        $waRecipientType === 'student'
+            ? $sesi->student?->phone
+            : ($sesi->student?->parent_phone ?: $sesi->student?->phone)
+    );
 @endphp
 <div class="px-4 py-3 bg-surface-container-low/20" x-data="{}">
-    <details class="group relative"
+    <details class="group"
              @if($errors->any() || filled(old('material_learned')) || filled(old('homework_notes')) || filled(old('notes')) || filled(old('session_rating'))) open @endif>
-        <summary class="flex items-center justify-between py-2 pr-36 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-            <span class="text-sm font-semibold text-primary flex items-center gap-1.5">
-                Catatan Sesi
-                @if(!$teacherNote)
-                    <span class="text-secondary font-normal text-xs ml-1.5 hidden sm:inline">— tap untuk mengisi laporan</span>
-                @endif
-            </span>
+        <summary class="flex items-center justify-between py-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+            <div class="flex items-center justify-between flex-1 pr-4">
+                <span class="text-sm font-semibold text-primary flex items-center gap-1.5">
+                    Catatan Sesi
+                    @if(!$teacherNote)
+                        <span class="text-[#2c694e] font-normal text-xs ml-1.5 hidden sm:inline">— tap untuk mengisi laporan</span>
+                    @endif
+                </span>
+                
+                <!-- Tombol Riwayat Sesi -->
+                <button type="button"
+                        class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#e8f5e9] text-[#2c694e] hover:bg-[#c8e6c9] hover:text-[#1b5e20] transition-all shrink-0 shadow-sm flex items-center gap-1 border border-[#a5d6a7] cursor-pointer"
+                        @click.stop.prevent="$dispatch('open-session-history', { 
+                            sessionId: {{ $sesi->id }}, 
+                            studentName: '{{ addslashes($sesi->student->full_name) }}',
+                            sessionDate: '{{ $sesi->session_date }}'
+                        })">
+                    ⏳ Riwayat Sesi
+                </button>
+            </div>
             <span class="text-xs text-outline group-open:hidden">▼</span>
             <span class="text-xs text-outline hidden group-open:inline">▲</span>
         </summary>
-        <button type="button"
-                class="absolute right-0 top-2 px-2.5 py-1 rounded-full text-[11px] font-bold bg-secondary-container/40 text-secondary hover:bg-secondary-container/70 hover:text-on-secondary-container transition-all shrink-0 shadow-sm flex items-center gap-1 border border-secondary/30 cursor-pointer"
-                @click="$dispatch('open-session-history', {
-                    sessionId: {{ $sesi->id }},
-                    studentName: '{{ addslashes($sesi->student->full_name) }}',
-                    sessionDate: '{{ $sesi->session_date }}'
-                })">
-            ⏳ Riwayat Sesi
-        </button>
         <div class="space-y-4 pt-2.5">
             <form method="POST" action="{{ route('guru.sesi.catatan.update', $sesi) }}" class="space-y-3">
                 @csrf @method('PATCH')
                 
                 <div>
-                    <label for="session_rating-{{ $sesi->id }}" class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Rating Anak Hari Ini</label>
-                    <select id="session_rating-{{ $sesi->id }}" name="session_rating"
+                    <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Rating Anak Hari Ini</label>
+                    <select name="session_rating"
                             class="w-full border border-outline-variant/35 rounded-xl px-3 py-2 text-sm bg-white
                                    focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary">
                         <option value="">— Pilih rating (opsional) —</option>
@@ -67,30 +72,30 @@
                 </div>
 
                 <div>
-                    <label for="material_learned-{{ $sesi->id }}" class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Materi yang Dipelajari</label>
-                    <textarea id="material_learned-{{ $sesi->id }}" name="material_learned" rows="2" maxlength="2000"
+                    <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Materi yang Dipelajari</label>
+                    <textarea name="material_learned" rows="2" maxlength="2000"
                               class="w-full border border-outline-variant/35 rounded-xl px-3 py-2 text-sm bg-white
                                      focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary resize-y"
                               placeholder="Contoh: Scales mayor, teknik pernafasan">{{ old('material_learned', $teacherNote?->material_learned) }}</textarea>
                 </div>
 
                 <div>
-                    <label for="homework_notes-{{ $sesi->id }}" class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Tugas &amp; Latihan (1 Minggu Kedepan)</label>
-                    <textarea id="homework_notes-{{ $sesi->id }}" name="homework_notes" rows="2" maxlength="2000"
+                    <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Tugas &amp; Latihan (1 Minggu Kedepan)</label>
+                    <textarea name="homework_notes" rows="2" maxlength="2000"
                               class="w-full border border-outline-variant/35 rounded-xl px-3 py-2 text-sm bg-white
                                      focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary resize-y"
                               placeholder="Contoh: Latihan 15 menit per hari">{{ old('homework_notes', $teacherNote?->homework_notes) }}</textarea>
                 </div>
 
                 <div>
-                    <label for="notes-{{ $sesi->id }}" class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Catatan Tambahan</label>
-                    <textarea id="notes-{{ $sesi->id }}" name="notes" rows="2" maxlength="2000"
+                    <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Catatan Tambahan</label>
+                    <textarea name="notes" rows="2" maxlength="2000"
                               class="w-full border border-outline-variant/35 rounded-xl px-3 py-2 text-sm bg-white
                                      focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary resize-y"
                               placeholder="Catatan tambahan untuk murid/orang tua">{{ old('notes', $teacherNote?->notes) }}</textarea>
                 </div>
 
-                <button type="submit" class="w-full py-2.5 rounded-xl font-bold text-sm bg-primary text-on-primary hover:bg-primary-container transition-colors shadow-sm cursor-pointer">
+                <button type="submit" class="w-full py-2.5 rounded-xl font-bold text-sm bg-[#2a0002] text-white hover:bg-[#4a0e0e] transition-colors shadow-sm cursor-pointer">
                     Simpan Catatan Sesi
                 </button>
 
@@ -98,7 +103,7 @@
                     <div class="text-xs rounded-xl px-3 py-2.5 border mt-3
                         @if($waState === 'SENT') border-green-200 bg-green-50/70 text-green-700
                         @elseif($waState === 'FAILED') border-red-200 bg-red-50/70 text-red-700
-                        @elseif($waState === 'SKIPPED') border-outline-variant/30 bg-surface-container-low/70 text-on-surface-variant
+                        @elseif($waState === 'SKIPPED') border-gray-200 bg-gray-50/70 text-gray-600
                         @else border-amber-200 bg-amber-50/70 text-amber-700
                         @endif">
                         @if($waState === 'SENT')
@@ -112,7 +117,7 @@
                                 <span>Gagal kirim WA — hubungi admin</span>
                             </div>
                         @elseif($waState === 'SKIPPED')
-                            <div class="flex items-center gap-1.5 text-on-surface-variant/70">
+                            <div class="flex items-center gap-1.5 text-gray-500">
                                 <span>ℹ</span>
                                 <span>Nomor WA tidak tersedia (pesan dilewati)</span>
                             </div>
