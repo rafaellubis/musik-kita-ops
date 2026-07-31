@@ -85,6 +85,7 @@ class InvoiceService
      * @param  int|null     $installmentNumber  Nomor termin 1/2/3 (hanya untuk INSTALLMENT).
      * @param  string|null  $installmentGroupId UUID pengikat 3 invoice cicilan (hanya untuk INSTALLMENT).
      * @param  int|null     $enrollmentId       FK ke enrollment spesifik (multi-kelas: 1 invoice per enrollment).
+     * @param  Carbon|null  $periodDate          Bulan tagihan; default mengikuti tanggal terbit.
      */
     public function createOneOff(
         Student $student,
@@ -97,20 +98,22 @@ class InvoiceService
         ?int $installmentNumber = null,
         ?string $installmentGroupId = null,
         ?int $enrollmentId = null,
+        ?Carbon $periodDate = null,
     ): Invoice {
         if (empty($items)) {
             throw new \InvalidArgumentException('Items invoice tidak boleh kosong.');
         }
 
         $issuedAt ??= now();
-        $dueDate ??= $issuedAt->copy()->day($this->dueDay())->endOfDay();
+        $periodDate ??= $issuedAt;
+        $dueDate ??= $periodDate->copy()->day($this->dueDay())->endOfDay();
         // Kalau sudah lewat tanggal 10 saat issue, due date pindah ke akhir bulan.
         if ($dueDate->lt($issuedAt)) {
-            $dueDate = $issuedAt->copy()->endOfMonth();
+            $dueDate = $periodDate->copy()->endOfMonth();
         }
 
-        $year = $issuedAt->year;
-        $month = $issuedAt->month;
+        $year = $periodDate->year;
+        $month = $periodDate->month;
 
         return DB::transaction(function () use (
             $student, $items, $description, $year, $month, $dueDate, $issuedAt,
@@ -253,6 +256,12 @@ class InvoiceService
             // Loop per enrollment — multi-kelas: 1 murid bisa dapat 2+ invoice SPP
             foreach ($student->enrollments as $enrollment) {
                 if (!$enrollment->package) continue;
+
+                // Enrollment yang baru mulai bulan depan belum boleh ditagih bulan ini.
+                if ($enrollment->effective_date?->gt($issuedAt->copy()->endOfMonth())) {
+                    $report['skipped']++;
+                    continue;
+                }
 
                 $package = $enrollment->package;
 

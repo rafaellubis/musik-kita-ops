@@ -413,8 +413,24 @@
                 <form method="POST" action="{{ route('students.convert-active', $student->id) }}">
                     @csrf
                     <div class="text-sm font-semibold mb-1" style="color:#34D399">Konversi Trial → Aktif</div>
-                    <div class="text-xs text-mk-dim mb-3">Tagihan REG (Rp 250.000) + SPP bulan pertama akan di-flag.</div>
+                    <div class="text-xs text-mk-muted mb-3">Status langsung menjadi Aktif. Sesi dan periode tagihan mengikuti tanggal mulai yang dipilih.</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="md:col-span-2">
+                            <label for="convert-active-since" class="block text-xs text-mk-muted mb-1">
+                                Tanggal Mulai Aktif <span class="text-red-400">*</span>
+                            </label>
+                            <input id="convert-active-since" type="date" name="active_since" required
+                                   value="{{ old('active_since', now()->toDateString()) }}"
+                                   aria-describedby="convert-active-since-help"
+                                   @error('active_since') aria-invalid="true" @enderror
+                                   class="block w-full rounded-lg text-sm px-3 py-2">
+                            <p id="convert-active-since-help" class="text-xs text-mk-muted mt-1">
+                                REG dan SPP masuk ke bulan tanggal ini. Tidak ada sesi atau SPP sebelum tanggal mulai.
+                            </p>
+                            @error('active_since')
+                                <p class="text-xs text-red-600 mt-1" role="alert">{{ $message }}</p>
+                            @enderror
+                        </div>
                         <div>
                             <label class="block text-xs text-mk-dim mb-1">Paket <span class="text-red-400">*</span></label>
                             <select name="package_id" required

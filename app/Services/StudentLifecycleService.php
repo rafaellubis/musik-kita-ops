@@ -7,6 +7,7 @@ use App\Models\Enrollment;
 use App\Models\Invoice;
 use App\Models\Student;
 use App\Models\StudentStatusHistory;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -302,6 +303,7 @@ class StudentLifecycleService
      * @param array{
      *     package_id: int,
      *     assigned_teacher_id: int,
+     *     active_since: string,
      *     notes?: string|null,
      * } $data
      */
@@ -311,10 +313,11 @@ class StudentLifecycleService
 
         return DB::transaction(function () use ($student, $data) {
             $from = $student->status;
+            $activationDate = Carbon::parse($data['active_since'])->startOfDay();
 
             $student->update([
                 'status'       => 'Aktif',
-                'active_since' => now()->toDateString(),
+                'active_since' => $activationDate->toDateString(),
             ]);
 
             // Tutup enrollment TRIAL jika ada (murid berhasil convert dari trial)
@@ -325,14 +328,16 @@ class StudentLifecycleService
                 $student,
                 $data['package_id'],
                 $data['assigned_teacher_id'],
+                $activationDate,
             );
 
-            // Terbitkan invoice REG + SPP bulan ini (BR-1.5, BR-1.8).
+            // Terbitkan invoice REG + SPP untuk bulan mulai aktif (BR-1.5, BR-1.8).
             // payment_mode: FULL atau INSTALLMENT, relevan untuk KIDS_CLASS_BUNDLE.
             $invoice = $this->issueActivationInvoice(
                 $student, $enrollment,
                 includeReg: true,
                 paymentMode: $data['payment_mode'] ?? 'FULL',
+                activationDate: $activationDate,
             );
 
             $this->recordHistory(
@@ -343,6 +348,7 @@ class StudentLifecycleService
                 metadata: [
                     'invoice_id'     => $invoice->id,
                     'invoice_number' => $invoice->invoice_number,
+                    'active_since'   => $activationDate->toDateString(),
                 ],
             );
 
@@ -827,6 +833,7 @@ class StudentLifecycleService
      * @param  bool    $includeReg   Apakah include item REG Rp 250.000.
      *                               False kalau lulus_kids re-enroll (BR-10.7).
      * @param  string  $paymentMode  'FULL' atau 'INSTALLMENT' (hanya relevan untuk KIDS_CLASS_BUNDLE).
+     * @param  Carbon|null  $activationDate  Penentu periode invoice; default hari ini.
      * @return Invoice  Invoice pertama yang dibuat (untuk dicatat di history).
      */
     private function issueActivationInvoice(
@@ -834,7 +841,9 @@ class StudentLifecycleService
         Enrollment $enrollment,
         bool $includeReg,
         string $paymentMode = 'FULL',
+        ?Carbon $activationDate = null,
     ): Invoice {
+        $activationDate ??= now();
         $package = $enrollment->package ?? \App\Models\Package::find($enrollment->package_id);
 
         // === KIDS_CLASS_BUNDLE: buat 3 cicilan atau 1 invoice lunas ===
@@ -851,13 +860,14 @@ class StudentLifecycleService
                         ]],
                         description: 'Biaya Pendaftaran',
                         classType: $package->class_type,
+                        periodDate: $activationDate,
                     );
                 }
 
                 $cicilans = $this->invoiceService->createKidsBundleInstallments(
                     student: $student,
                     enrollment: $enrollment,
-                    startDate: now(),
+                    startDate: $activationDate,
                 );
 
                 // Kembalikan invoice cicilan pertama untuk dicatat di history.
@@ -877,7 +887,7 @@ class StudentLifecycleService
 
             $items[] = [
                 'code'        => 'SPP',
-                'description' => "SPP Kids Class Bundle " . now()->format('F Y') . " (Lunas)",
+                'description' => "SPP Kids Class Bundle " . $activationDate->format('F Y') . " (Lunas)",
                 'amount'      => $package->price_per_month,
                 'metadata'    => [
                     'package_id'    => $package->id,
@@ -892,6 +902,7 @@ class StudentLifecycleService
                 classType: $package->class_type,
                 paymentMode: 'FULL',
                 enrollmentId: $enrollment->id,
+                periodDate: $activationDate,
             );
         }
 
@@ -908,7 +919,7 @@ class StudentLifecycleService
 
         $items[] = [
             'code'        => 'SPP',
-            'description' => "SPP {$package->code} " . now()->format('F Y'),
+            'description' => "SPP {$package->code} " . $activationDate->format('F Y'),
             'amount'      => $package->price_per_month,
             'metadata'    => [
                 'package_id'    => $package->id,
@@ -922,6 +933,7 @@ class StudentLifecycleService
             description: $includeReg ? 'Aktivasi murid (REG + SPP bulan ke-1)' : 'SPP bulan ke-1',
             classType: $package->class_type,
             enrollmentId: $enrollment->id,
+            periodDate: $activationDate,
         );
     }
 
@@ -934,7 +946,12 @@ class StudentLifecycleService
      * primary_enrollment_id di student diupdate agar accessor ->package,
      * ->teacher, dll bisa berjalan tanpa kolom denormalisasi di students.
      */
-    private function openEnrollment(Student $student, int $packageId, int $teacherId): Enrollment
+    private function openEnrollment(
+        Student $student,
+        int $packageId,
+        int $teacherId,
+        ?Carbon $effectiveDate = null,
+    ): Enrollment
     {
         // Defensive: tutup ACTIVE existing kalau paket/guru beda dengan yang baru.
         $this->closeActiveEnrollments($student, status: 'INACTIVE');
@@ -943,7 +960,7 @@ class StudentLifecycleService
             'student_id'     => $student->id,
             'package_id'     => $packageId,
             'teacher_id'     => $teacherId,
-            'effective_date' => now()->toDateString(),
+            'effective_date' => ($effectiveDate ?? now())->toDateString(),
             'status'         => 'ACTIVE',
             'is_primary'     => true,
         ]);

@@ -405,12 +405,15 @@ class StudentController extends Controller
     {
         $student = Student::findOrFail($id);
         $data = $request->validate([
+            'active_since'        => 'required|date',
             'package_id'          => 'required|exists:packages,id',
             'assigned_teacher_id' => 'required|exists:teachers,id',
             'assigned_room_id'    => 'nullable|exists:rooms,id',
             'notes'               => 'nullable|string|max:500',
             'payment_mode'        => 'nullable|in:FULL,INSTALLMENT',
         ], [
+            'active_since.required'        => 'Tanggal mulai aktif wajib diisi.',
+            'active_since.date'            => 'Tanggal mulai aktif tidak valid.',
             'package_id.required'          => 'Paket wajib dipilih sebelum konversi Aktif.',
             'assigned_teacher_id.required' => 'Guru wajib dipilih sebelum konversi Aktif.',
         ]);

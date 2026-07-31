@@ -4,11 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\ClassSession;
 use App\Models\Enrollment;
+use App\Models\Invoice;
 use App\Models\Package;
 use App\Models\Room;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Services\InvoiceService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -176,6 +178,7 @@ class TrialEnrollmentTest extends TestCase
         // Konversi ke aktif
         $this->actingAs($this->admin)
             ->post(route('students.convert-active', $student->id), [
+                'active_since'        => now()->toDateString(),
                 'package_id'          => $package->id,
                 'assigned_teacher_id' => $teacher->id,
             ])
@@ -194,6 +197,46 @@ class TrialEnrollmentTest extends TestCase
             'status'     => Enrollment::STATUS_ACTIVE,
             'is_primary' => true,
         ]);
+    }
+
+    public function test_konversi_aktif_masa_depan_mengikuti_bulan_mulai(): void
+    {
+        $this->travelTo(now()->setDate(2026, 7, 20)->setTime(10, 0));
+
+        $student = Student::factory()->create(['status' => 'Trial']);
+        $teacher = Teacher::factory()->create();
+        $package = Package::factory()->create([
+            'class_type'      => 'REGULER',
+            'price_per_month' => 340000,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('students.convert-active', $student->id), [
+                'active_since'        => '2026-08-05',
+                'package_id'          => $package->id,
+                'assigned_teacher_id' => $teacher->id,
+            ])
+            ->assertRedirect();
+
+        $student->refresh();
+        $enrollment = $student->primaryEnrollment;
+        $invoice = Invoice::where('student_id', $student->id)->firstOrFail();
+
+        $this->assertSame('Aktif', $student->status);
+        $this->assertSame('2026-08-05', $student->active_since->toDateString());
+        $this->assertSame('2026-08-05', $enrollment->effective_date->toDateString());
+        $this->assertSame(2026, $invoice->year);
+        $this->assertSame(8, $invoice->month);
+        $this->assertSame('2026-07-20', $invoice->issued_at->toDateString());
+        $this->assertSame('2026-08-10', $invoice->due_date->toDateString());
+        $this->assertStringStartsWith('INV/2026/08/', $invoice->invoice_number);
+        $this->assertEqualsCanonicalizing(['REG', 'SPP'], $invoice->items->pluck('item_code')->all());
+
+        app(InvoiceService::class)->generateMonthlySPP(2026, 7);
+        $this->assertFalse(Invoice::where('student_id', $student->id)
+            ->where('year', 2026)
+            ->where('month', 7)
+            ->exists());
     }
 
     /** mundurkan menutup enrollment TRIAL (→ COMPLETED) */
