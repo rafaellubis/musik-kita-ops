@@ -5,7 +5,7 @@
                 <h2 class="font-semibold text-xl text-mk-text leading-tight">
                     Open Slot Board
                 </h2>
-                <div class="text-xs text-mk-dim mt-0.5">Daftar sesi murid izin pending yang belum terjadwal penggantinya</div>
+                <div class="text-xs text-mk-dim mt-0.5">Daftar sesi pending yang belum terjadwal penggantinya</div>
             </div>
             <a href="{{ route('absensi.index') }}"
                class="px-4 py-2 border border-mk-border hover:bg-mk-surface text-mk-muted rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
@@ -28,7 +28,7 @@
         {{-- Flash success / error --}}
         <div id="flash-msg" class="hidden mb-4 px-4 py-3 rounded-lg text-sm font-medium"></div>
 
-        {{-- Filter guru menggunakan query server agar hasil tetap akurat untuk data yang banyak. --}}
+        {{-- Filter menggunakan query server agar hasil tetap akurat untuk data yang banyak. --}}
         <form method="GET" action="{{ route('absensi.open-slots') }}"
               class="flex flex-col sm:flex-row sm:items-end gap-3 bg-mk-card border border-mk-borderLight rounded-xl p-4 shadow-sm fade-in-up"
               style="animation-delay:60ms">
@@ -46,7 +46,18 @@
                 </select>
             </div>
 
-            @if($selectedTeacherId)
+            <div class="w-full sm:max-w-xs">
+                <label for="pending_requested_by" class="block text-xs font-semibold text-mk-muted mb-1.5">Filter Peminta Pending</label>
+                <select id="pending_requested_by" name="pending_requested_by"
+                        class="w-full border border-mk-border text-mk-text text-sm rounded-lg px-3 py-2 bg-white focus:border-mk-accent focus:ring-1 focus:ring-mk-accent"
+                        onchange="this.form.submit()">
+                    <option value="">Semua Peminta</option>
+                    <option value="MURID" @selected($selectedPendingRequester === 'MURID')>Murid</option>
+                    <option value="GURU" @selected($selectedPendingRequester === 'GURU')>Guru</option>
+                </select>
+            </div>
+
+            @if($selectedTeacherId || $selectedPendingRequester)
                 <a href="{{ route('absensi.open-slots') }}"
                    class="inline-flex min-h-10 items-center justify-center px-3 py-2 border border-mk-border rounded-lg text-sm font-semibold text-mk-muted hover:bg-mk-surface transition-colors">
                     Reset Filter
@@ -62,7 +73,7 @@
             <div class="text-center py-12 bg-mk-card border border-mk-borderLight rounded-2xl shadow-sm fade-in-up" style="animation-delay:80ms">
                 <div class="text-3xl mb-2">✅</div>
                 <p class="text-mk-dim text-sm font-medium">
-                    {{ $selectedTeacherId ? 'Tidak ada sesi pending untuk guru yang dipilih.' : 'Tidak ada Sesi Pending terbuka saat ini.' }}
+                    {{ ($selectedTeacherId || $selectedPendingRequester) ? 'Tidak ada sesi pending yang sesuai filter.' : 'Tidak ada Sesi Pending terbuka saat ini.' }}
                 </p>
             </div>
         @else
@@ -76,6 +87,7 @@
                                 <th class="px-4 py-3 text-left">Ruang</th>
                                 <th class="px-4 py-3 text-left">Murid Asli</th>
                                 <th class="px-4 py-3 text-center">Sesi ke-</th>
+                                <th class="px-4 py-3 text-center">Peminta</th>
                                 <th class="px-4 py-3 text-center">Pending</th>
                                 <th class="px-4 py-3 text-left">Catatan Admin</th>
                                 <th class="px-4 py-3 text-left">Saran Guru</th>
@@ -207,6 +219,19 @@
                                     {{ $slot->session_sequence ?? '—' }}
                                 </td>
 
+                                {{-- Pihak yang meminta sesi pending --}}
+                                <td class="px-4 py-3.5 text-center">
+                                    @if($slot->pending_requested_by === 'GURU')
+                                        <span class="inline-flex items-center gap-1 rounded-full border border-mk-warningBorder bg-mk-warningBg px-2.5 py-0.5 text-xs font-semibold text-mk-warning">
+                                            <span aria-hidden="true">●</span> Guru
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 rounded-full border border-mk-border bg-mk-accentDim px-2.5 py-0.5 text-xs font-semibold text-mk-muted">
+                                            <span aria-hidden="true">●</span> Murid
+                                        </span>
+                                    @endif
+                                </td>
+
                                 {{-- Pending sejak --}}
                                 <td class="px-4 py-3.5 text-center">
                                     <span class="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full
@@ -310,7 +335,7 @@
 
                             {{-- Expand: form Isi Slot --}}
                             <tr x-show="showAction === 'isi'" x-cloak class="bg-mk-surface">
-                                <td colspan="9" class="px-6 py-4">
+                                <td colspan="10" class="px-6 py-4">
                                     <p class="text-xs font-bold text-mk-muted mb-3 uppercase tracking-wider">
                                         Isi slot dengan murid lain — sesi IZIN PENDING murid asli tetap pending
                                     </p>
@@ -353,7 +378,7 @@
 
                             {{-- Expand: form Jadwalkan Pengganti --}}
                             <tr x-show="showAction === 'jadwal'" x-cloak class="bg-mk-surface">
-                                <td colspan="9" class="px-6 py-4">
+                                <td colspan="10" class="px-6 py-4">
                                     <p class="text-xs font-bold text-mk-muted mb-3 uppercase tracking-wider">
                                         Jadwalkan sesi pengganti untuk murid asli
                                     </p>

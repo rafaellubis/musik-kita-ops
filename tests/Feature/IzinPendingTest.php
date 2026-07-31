@@ -47,9 +47,13 @@ class IzinPendingTest extends TestCase
         $session = $this->makeSession();
         $service = app(AttendanceService::class);
 
-        $result = $service->recordAttendance($session, ['status' => 'IZIN_PENDING']);
+        $result = $service->recordAttendance($session, [
+            'status'               => 'IZIN_PENDING',
+            'pending_requested_by' => 'MURID',
+        ]);
 
         $this->assertEquals('IZIN_PENDING', $result->status);
+        $this->assertEquals('MURID', $result->pending_requested_by);
         $this->assertEquals('H_IZIN', $result->honor_code);
         $this->assertEquals(0, $result->honor_amount);
     }
@@ -66,18 +70,38 @@ class IzinPendingTest extends TestCase
 
         $response = $this->actingAs($admin)->patchJson(
             route('absensi.update', $session),
-            ['status' => 'IZIN_PENDING']
+            [
+                'status'               => 'IZIN_PENDING',
+                'pending_requested_by' => 'MURID',
+            ]
         );
 
         $response->assertOk()->assertJson(['success' => true]);
         $this->assertDatabaseHas('class_sessions', [
             'id'           => $session->id,
             'status'       => 'IZIN_PENDING',
+            'pending_requested_by' => 'MURID',
             'honor_code'   => 'H_IZIN',
             'honor_amount' => 0,
         ]);
         // Tidak ada sesi pengganti yang dibuat — masih 1 sesi di DB
         $this->assertDatabaseCount('class_sessions', 1);
+    }
+
+    /** @test */
+    public function admin_wajib_memilih_peminta_saat_set_izin_pending(): void
+    {
+        Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $admin = User::factory()->create();
+        $admin->assignRole('Admin');
+
+        $response = $this->actingAs($admin)->patchJson(
+            route('absensi.update', $this->makeSession()),
+            ['status' => 'IZIN_PENDING']
+        );
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors('pending_requested_by');
     }
 
     /** @test */
@@ -93,7 +117,8 @@ class IzinPendingTest extends TestCase
             route('absensi.update', $session),
             [
                 'status' => 'IZIN_PENDING',
-                'notes'  => 'Murid izin sakit, jadwal menyusul',
+                'pending_requested_by' => 'GURU',
+                'notes'  => 'Guru berhalangan, jadwal menyusul',
             ]
         );
 
@@ -101,7 +126,8 @@ class IzinPendingTest extends TestCase
         $this->assertDatabaseHas('class_sessions', [
             'id'     => $session->id,
             'status' => 'IZIN_PENDING',
-            'notes'  => 'Murid izin sakit, jadwal menyusul',
+            'pending_requested_by' => 'GURU',
+            'notes'  => 'Guru berhalangan, jadwal menyusul',
         ]);
     }
 
@@ -291,6 +317,7 @@ class IzinPendingTest extends TestCase
         // Sesi IZIN_PENDING milik Budi
         $sessionBudi = $this->makeSession([
             'status'       => 'IZIN_PENDING',
+            'pending_requested_by' => 'GURU',
             'honor_code'   => 'H_IZIN',
             'honor_amount' => 0,
             'session_date' => today()->toDateString(),
@@ -319,6 +346,7 @@ class IzinPendingTest extends TestCase
         $this->assertDatabaseHas('class_sessions', [
             'id'     => $sessionBudi->id,
             'status' => 'IZIN_PENDING',
+            'pending_requested_by' => 'GURU',
         ]);
 
         // Sesi baru untuk Cici dibuat di slot yang sama
@@ -339,6 +367,7 @@ class IzinPendingTest extends TestCase
         $admin->assignRole('Admin');
         $session = $this->makeSession([
             'status'       => 'IZIN_PENDING',
+            'pending_requested_by' => 'MURID',
             'honor_code'   => 'H_IZIN',
             'honor_amount' => 0,
             'notes'        => 'Murid izin sakit',
@@ -352,6 +381,7 @@ class IzinPendingTest extends TestCase
         $this->assertDatabaseHas('class_sessions', [
             'id'           => $session->id,
             'status'       => 'SCHEDULED',
+            'pending_requested_by' => null,
             'notes'        => null,
             'honor_code'   => null,
             'honor_amount' => null,
@@ -442,6 +472,7 @@ class IzinPendingTest extends TestCase
         $response = $this->actingAs($admin)
             ->patchJson(route('absensi.update', $sesiAsli), [
                 'status' => 'IZIN_PENDING',
+                'pending_requested_by' => 'MURID',
             ]);
 
         $response->assertStatus(422);
@@ -514,6 +545,32 @@ class IzinPendingTest extends TestCase
         $response->assertOk();
         $ids = collect($response->json('slots'))->pluck('id');
         $this->assertSame([$milikGuruDipilih->id], $ids->all());
+    }
+
+    /** @test */
+    public function admin_dapat_memfilter_open_slot_board_berdasarkan_peminta_pending(): void
+    {
+        Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $admin = User::factory()->create();
+        $admin->assignRole('Admin');
+
+        $pendingMurid = $this->makeSession([
+            'status'               => 'IZIN_PENDING',
+            'pending_requested_by' => 'MURID',
+        ]);
+        $pendingGuru = $this->makeSession([
+            'status'               => 'IZIN_PENDING',
+            'pending_requested_by' => 'GURU',
+        ]);
+
+        $response = $this->actingAs($admin)->getJson(route('absensi.open-slots', [
+            'pending_requested_by' => 'GURU',
+        ]));
+
+        $response->assertOk();
+        $ids = collect($response->json('slots'))->pluck('id');
+        $this->assertSame([$pendingGuru->id], $ids->all());
+        $this->assertFalse($ids->contains($pendingMurid->id));
     }
 
     /** @test */

@@ -53,6 +53,11 @@ class UpdateAbsensiRequest extends FormRequest
                 'nullable', 'exists:teachers,id',
             ],
             'notes' => ['nullable', 'string', 'max:500'],
+            'pending_requested_by' => [
+                'required_if:status,' . ClassSession::STATUS_IZIN_PENDING,
+                'nullable',
+                Rule::in(ClassSession::PENDING_REQUESTERS),
+            ],
             // Tanggal pengganti — wajib jika status IZIN_RESCHEDULE
             'replacement_date' => [
                 'required_if:status,' . ClassSession::STATUS_IZIN_RESCHEDULE,
@@ -96,6 +101,8 @@ class UpdateAbsensiRequest extends FormRequest
             'late_minutes.max'                      => 'Maksimal 60 menit.',
             'substitute_teacher_id.required_if'     => 'Guru pengganti wajib dipilih.',
             'substitute_teacher_id.exists'          => 'Guru pengganti tidak ditemukan.',
+            'pending_requested_by.required_if'      => 'Pilih siapa yang meminta sesi pending.',
+            'pending_requested_by.in'               => 'Peminta sesi pending tidak valid.',
             'replacement_date.required_if'          => 'Tanggal pengganti wajib diisi.',
             'replacement_date.date_format'          => 'Format tanggal harus YYYY-MM-DD.',
             'replacement_time.required_if'          => 'Jam mulai pengganti wajib diisi.',

@@ -58,6 +58,7 @@ class AttendanceService
      *     status: string,
      *     late_minutes?: int|null,
      *     substitute_teacher_id?: int|null,
+     *     pending_requested_by?: string|null,
      *     notes?: string|null,
      * } $data
      */
@@ -85,6 +86,9 @@ class AttendanceService
                     : null,
                 'substitute_teacher_id' => $status === 'DIGANTI'
                     ? $data['substitute_teacher_id']
+                    : null,
+                'pending_requested_by' => $status === ClassSession::STATUS_IZIN_PENDING
+                    ? $data['pending_requested_by']
                     : null,
                 'notes'                 => $data['notes'] ?? $session->notes,
             ];
@@ -290,6 +294,13 @@ class AttendanceService
                     }
                 }
             }
+        }
+
+        if ($status === ClassSession::STATUS_IZIN_PENDING
+            && ! in_array($data['pending_requested_by'] ?? null, ClassSession::PENDING_REQUESTERS, true)) {
+            throw new InvalidArgumentException(
+                'Status IZIN_PENDING wajib disertai peminta pending yang valid.'
+            );
         }
     }
 

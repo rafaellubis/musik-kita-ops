@@ -216,6 +216,7 @@ class AbsensiController extends Controller
                         'substitute_start_time' => $request->substitute_start_time,
                         'substitute_end_time'   => $request->substitute_end_time,
                         'substitute_room_id'    => $request->substitute_room_id,
+                        'pending_requested_by'  => $request->pending_requested_by,
                         'notes'                 => $request->notes,
                         '__session'             => $classSession,
                     ]);
@@ -237,6 +238,7 @@ class AbsensiController extends Controller
             'status'                  => $classSession->status,
             'late_minutes'            => $classSession->late_minutes,
             'substitute_teacher_name' => $classSession->substituteTeacher?->name,
+            'pending_requested_by'    => $classSession->pending_requested_by,
             // notes berisi "Sesi pengganti: 2026-06-05 14:00" untuk IZIN_RESCHEDULE
             'replacement_label'       => $classSession->status === ClassSession::STATUS_IZIN_RESCHEDULE
                                             ? str_replace('Sesi pengganti: ', '', $classSession->notes ?? '')
@@ -318,6 +320,11 @@ class AbsensiController extends Controller
     public function openSlotBoard(Request $request): View|JsonResponse
     {
         $selectedTeacherId = $request->integer('teacher_id');
+        $selectedPendingRequester = strtoupper((string) $request->query('pending_requested_by', ''));
+
+        if (! in_array($selectedPendingRequester, ClassSession::PENDING_REQUESTERS, true)) {
+            $selectedPendingRequester = '';
+        }
 
         // Kumpulkan ID sesi asli yang sudah punya replacement reguler (bukan split)
         $sessionIdsWithReplacement = ClassSession::whereNotNull('origin_session_id')
@@ -331,6 +338,10 @@ class AbsensiController extends Controller
 
         if ($selectedTeacherId > 0) {
             $slotQuery->where('teacher_id', $selectedTeacherId);
+        }
+
+        if ($selectedPendingRequester !== '') {
+            $slotQuery->where('pending_requested_by', $selectedPendingRequester);
         }
 
         $slots = $slotQuery
@@ -358,7 +369,8 @@ class AbsensiController extends Controller
         }
 
         return view('absensi.open-slots', compact(
-            'slots', 'teachers', 'rooms', 'enrollments', 'selectedTeacherId'
+            'slots', 'teachers', 'rooms', 'enrollments', 'selectedTeacherId',
+            'selectedPendingRequester'
         ));
     }
 
@@ -421,7 +433,10 @@ class AbsensiController extends Controller
                     $request->room_id,
                 );
                 // Tandai sesi asli sebagai IZIN_RESCHEDULE — pengganti sudah dijadwalkan
-                $session->update(['status' => ClassSession::STATUS_IZIN_RESCHEDULE]);
+                $session->update([
+                    'status'               => ClassSession::STATUS_IZIN_RESCHEDULE,
+                    'pending_requested_by' => null,
+                ]);
             });
         } catch (\InvalidArgumentException $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
@@ -452,6 +467,7 @@ class AbsensiController extends Controller
 
         $session->update([
             'status'                => ClassSession::STATUS_SCHEDULED,
+            'pending_requested_by'  => null,
             'notes'                 => null,
             'honor_code'            => null,
             'honor_amount'          => null,

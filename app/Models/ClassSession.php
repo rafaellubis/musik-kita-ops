@@ -30,7 +30,7 @@ class ClassSession extends Model
         'schedule_id', 'enrollment_id',
         'student_id', 'teacher_id', 'substitute_teacher_id',
         'session_date', 'start_time', 'end_time',
-        'room_id', 'status',
+        'room_id', 'status', 'pending_requested_by',
         'late_minutes', 'notes',
         'honor_code', 'honor_amount',
         'session_sequence', 'origin_session_id', 'split_part',
@@ -79,6 +79,14 @@ class ClassSession extends Model
     public const STATUS_LIBUR            = 'LIBUR';
     public const STATUS_DIGANTI          = 'DIGANTI';
     public const STATUS_CANCELLED        = 'CANCELLED';
+
+    public const PENDING_REQUESTED_BY_STUDENT = 'MURID';
+    public const PENDING_REQUESTED_BY_TEACHER = 'GURU';
+
+    public const PENDING_REQUESTERS = [
+        self::PENDING_REQUESTED_BY_STUDENT,
+        self::PENDING_REQUESTED_BY_TEACHER,
+    ];
 
     /**
      * Status yang tidak memblok slot guru/ruang saat cek konflik jadwal.

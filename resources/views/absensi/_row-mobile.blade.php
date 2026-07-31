@@ -45,6 +45,7 @@
         part2Time: '',
         part2RoomId: '',
         part2Error: '',
+        pendingRequestedBy: '',
         pendingNotes: '',
         async save(newStatus, extra = {}) {
             const oldStatus = this.status;
@@ -72,7 +73,10 @@
                     if (data.late_minutes !== undefined) this.lateMinutes = data.late_minutes;
                     if (data.substitute_teacher_name) this.substituteLabel = data.substitute_teacher_name;
                     if (data.replacement_label)       this.replacementLabel = data.replacement_label;
-                    if (newStatus === 'IZIN_PENDING') this.pendingNotes = '';
+                    if (newStatus === 'IZIN_PENDING') {
+                        this.pendingRequestedBy = '';
+                        this.pendingNotes = '';
+                    }
                     this.showModal = null;
                     this.$el.dataset.status = data.status;
                 } else {
@@ -87,7 +91,11 @@
             } finally { this.loading = false; }
         },
         savePending() {
-            this.save('IZIN_PENDING', { notes: this.pendingNotes.trim() || null });
+            if (!this.pendingRequestedBy) return;
+            this.save('IZIN_PENDING', {
+                pending_requested_by: this.pendingRequestedBy,
+                notes: this.pendingNotes.trim() || null,
+            });
         },
         saveReschedule() {
             if (!this.rescheduleDate || !this.rescheduleTime) return;
@@ -430,7 +438,7 @@
             x-transition
             class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
             style="display: none;"
-            @click.self="showModal = null; pendingNotes = ''">
+            @click.self="showModal = null; pendingRequestedBy = ''; pendingNotes = ''">
             <div class="bg-mk-card border border-mk-border rounded-xl shadow-xl w-[92%] max-w-sm p-5 text-left" @click.stop>
                 <p class="text-mk-muted text-sm font-bold mb-1">Izin — Tanggal Menyusul</p>
                 <p class="text-mk-dim text-xs mb-3 truncate font-medium">
@@ -439,17 +447,36 @@
                 <p class="text-xs mb-3 p-2 rounded-lg border text-mk-warning bg-mk-warningBg border-mk-warningBorder">
                     Sesi masuk Open Slot Board. Jadwal pengganti diatur belakangan.
                 </p>
+                <fieldset class="mb-4">
+                    <legend class="block text-mk-muted text-xs mb-2 font-semibold">
+                        Pending diminta oleh <span class="text-red-500">*</span>
+                    </legend>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 text-xs font-semibold transition-colors"
+                            :class="pendingRequestedBy === 'MURID' ? 'border-mk-accent bg-mk-accentDim text-mk-text' : 'border-mk-border bg-white text-mk-muted hover:bg-mk-surface'">
+                            <input type="radio" x-model="pendingRequestedBy" value="MURID"
+                                class="text-mk-accent focus:ring-mk-accent">
+                            Murid
+                        </label>
+                        <label class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 text-xs font-semibold transition-colors"
+                            :class="pendingRequestedBy === 'GURU' ? 'border-mk-accent bg-mk-accentDim text-mk-text' : 'border-mk-border bg-white text-mk-muted hover:bg-mk-surface'">
+                            <input type="radio" x-model="pendingRequestedBy" value="GURU"
+                                class="text-mk-accent focus:ring-mk-accent">
+                            Guru
+                        </label>
+                    </div>
+                </fieldset>
                 <label class="block text-mk-dim text-xs mb-1 font-semibold">Keterangan <span class="text-mk-dim font-normal">(opsional)</span></label>
                 <textarea x-model="pendingNotes" maxlength="500" rows="3"
-                    placeholder="Misal: Murid izin sakit, belum tahu jadwal pengganti"
+                    placeholder="Misal: Berhalangan hadir, jadwal pengganti menyusul"
                     class="w-full border border-mk-border text-mk-muted rounded-lg px-3 py-1.5 text-sm mb-4 resize-none focus:border-mk-accent focus:ring-1 focus:ring-mk-accent"></textarea>
                 <div class="flex gap-2">
-                    <button type="button" @click="savePending()" :disabled="loading"
-                        class="flex-1 disabled:opacity-40 font-semibold text-xs py-2.5 rounded-lg btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent flex items-center justify-center gap-1">
+                    <button type="button" @click="savePending()" :disabled="!pendingRequestedBy || loading"
+                        class="flex-1 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs py-2.5 rounded-lg btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent flex items-center justify-center gap-1">
                         <span x-show="loading" class="animate-spin inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full"></span>
                         <span x-text="loading ? 'Menyimpan...' : 'Simpan Pending'"></span>
                     </button>
-                    <button @click="showModal = null; pendingNotes = ''"
+                    <button @click="showModal = null; pendingRequestedBy = ''; pendingNotes = ''"
                         :disabled="loading"
                         class="border border-mk-border text-mk-dim hover:bg-mk-surface text-xs py-2.5 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-accent">
                         Batal
