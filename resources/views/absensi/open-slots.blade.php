@@ -28,10 +28,42 @@
         {{-- Flash success / error --}}
         <div id="flash-msg" class="hidden mb-4 px-4 py-3 rounded-lg text-sm font-medium"></div>
 
+        {{-- Filter guru menggunakan query server agar hasil tetap akurat untuk data yang banyak. --}}
+        <form method="GET" action="{{ route('absensi.open-slots') }}"
+              class="flex flex-col sm:flex-row sm:items-end gap-3 bg-mk-card border border-mk-borderLight rounded-xl p-4 shadow-sm fade-in-up"
+              style="animation-delay:60ms">
+            <div class="w-full sm:max-w-xs">
+                <label for="teacher_id" class="block text-xs font-semibold text-mk-muted mb-1.5">Filter Guru</label>
+                <select id="teacher_id" name="teacher_id"
+                        class="w-full border border-mk-border text-mk-text text-sm rounded-lg px-3 py-2 bg-white focus:border-mk-accent focus:ring-1 focus:ring-mk-accent"
+                        onchange="this.form.submit()">
+                    <option value="">Semua Guru</option>
+                    @foreach($teachers as $teacher)
+                        <option value="{{ $teacher->id }}" @selected($selectedTeacherId === $teacher->id)>
+                            {{ $teacher->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            @if($selectedTeacherId)
+                <a href="{{ route('absensi.open-slots') }}"
+                   class="inline-flex min-h-10 items-center justify-center px-3 py-2 border border-mk-border rounded-lg text-sm font-semibold text-mk-muted hover:bg-mk-surface transition-colors">
+                    Reset Filter
+                </a>
+            @endif
+
+            <p class="text-xs text-mk-dim sm:ml-auto sm:pb-2" aria-live="polite">
+                {{ $slots->count() }} sesi ditampilkan
+            </p>
+        </form>
+
         @if($slots->isEmpty())
             <div class="text-center py-12 bg-mk-card border border-mk-borderLight rounded-2xl shadow-sm fade-in-up" style="animation-delay:80ms">
                 <div class="text-3xl mb-2">✅</div>
-                <p class="text-mk-dim text-sm font-medium">Tidak ada Sesi Pending terbuka saat ini.</p>
+                <p class="text-mk-dim text-sm font-medium">
+                    {{ $selectedTeacherId ? 'Tidak ada sesi pending untuk guru yang dipilih.' : 'Tidak ada Sesi Pending terbuka saat ini.' }}
+                </p>
             </div>
         @else
             <div class="bg-mk-card border border-mk-borderLight shadow-sm rounded-2xl overflow-hidden fade-in-up" style="animation-delay:80ms">

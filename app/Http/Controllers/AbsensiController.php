@@ -317,19 +317,32 @@ class AbsensiController extends Controller
      */
     public function openSlotBoard(Request $request): View|JsonResponse
     {
+        $selectedTeacherId = $request->integer('teacher_id');
+
         // Kumpulkan ID sesi asli yang sudah punya replacement reguler (bukan split)
         $sessionIdsWithReplacement = ClassSession::whereNotNull('origin_session_id')
             ->whereNull('split_part')
             ->pluck('origin_session_id');
 
         // Ambil semua sesi IZIN_PENDING yang belum punya replacement
-        $slots = ClassSession::with(['student', 'teacher', 'room', 'enrollment.package'])
+        $slotQuery = ClassSession::with(['student', 'teacher', 'room', 'enrollment.package'])
             ->where('status', ClassSession::STATUS_IZIN_PENDING)
-            ->whereNotIn('id', $sessionIdsWithReplacement)
+            ->whereNotIn('id', $sessionIdsWithReplacement);
+
+        if ($selectedTeacherId > 0) {
+            $slotQuery->where('teacher_id', $selectedTeacherId);
+        }
+
+        $slots = $slotQuery
             ->orderBy('session_date')
             ->get();
 
-        $teachers = Teacher::where('is_active', true)->orderBy('name')->get();
+        // Guru nonaktif tetap ditampilkan jika masih memiliki sesi pending historis.
+        $pendingTeacherIds = ClassSession::where('status', ClassSession::STATUS_IZIN_PENDING)
+            ->whereNotIn('id', $sessionIdsWithReplacement)
+            ->distinct()
+            ->pluck('teacher_id');
+        $teachers = Teacher::whereIn('id', $pendingTeacherIds)->orderBy('name')->get();
         $rooms    = Room::where('is_active', true)->orderBy('code')->get();
 
         // Semua enrollment ACTIVE untuk dropdown "Isi Slot" — di-load sekali di sini
@@ -344,7 +357,9 @@ class AbsensiController extends Controller
             return response()->json(['slots' => $slots]);
         }
 
-        return view('absensi.open-slots', compact('slots', 'teachers', 'rooms', 'enrollments'));
+        return view('absensi.open-slots', compact(
+            'slots', 'teachers', 'rooms', 'enrollments', 'selectedTeacherId'
+        ));
     }
 
     /**

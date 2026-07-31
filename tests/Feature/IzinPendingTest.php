@@ -490,6 +490,33 @@ class IzinPendingTest extends TestCase
     }
 
     /** @test */
+    public function admin_dapat_memfilter_open_slot_board_per_guru(): void
+    {
+        Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $admin = User::factory()->create();
+        $admin->assignRole('Admin');
+
+        $guruDipilih = Teacher::factory()->create(['name' => 'Guru Dipilih']);
+        $guruLain = Teacher::factory()->create(['name' => 'Guru Lain']);
+        $milikGuruDipilih = $this->makeSession([
+            'teacher_id' => $guruDipilih->id,
+            'status' => 'IZIN_PENDING',
+        ]);
+        $this->makeSession([
+            'teacher_id' => $guruLain->id,
+            'status' => 'IZIN_PENDING',
+        ]);
+
+        $response = $this->actingAs($admin)->getJson(route('absensi.open-slots', [
+            'teacher_id' => $guruDipilih->id,
+        ]));
+
+        $response->assertOk();
+        $ids = collect($response->json('slots'))->pluck('id');
+        $this->assertSame([$milikGuruDipilih->id], $ids->all());
+    }
+
+    /** @test */
     public function finalize_pending_as_video_sets_h_video_honor(): void
     {
         $session = $this->makeSession([
