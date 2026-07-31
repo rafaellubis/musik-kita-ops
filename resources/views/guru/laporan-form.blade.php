@@ -149,15 +149,6 @@
         @endforelse
     </div>
 
-    {{-- Submit buttons --}}
-    <div class="mx-4 mb-3">
-        <a href="{{ route('guru.laporan.pdf', $progressReport) }}" target="_blank"
-           class="block text-center py-2.5 rounded-xl text-sm font-semibold border border-outline text-on-surface hover:bg-surface-container-low transition-colors shadow-sm">
-            View PDF
-        </a>
-        <p class="text-xs text-outline text-center mt-3">Simpan draft dulu agar perubahan terbaru muncul di preview.</p>
-    </div>
-
     <div class="mx-4 mb-8 flex flex-col md:flex-row gap-3">
         <button type="submit"
                 class="flex-1 py-3 rounded-xl font-semibold text-sm border border-secondary text-secondary hover:bg-secondary/10 transition-colors shadow-sm">
