@@ -288,6 +288,7 @@
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     <a href="{{ route('invoices.show', $inv->id) }}"
+                                       target="_blank" rel="noopener noreferrer"
                                        class="text-mk-muted hover:text-mk-accent hover:underline text-xs font-bold transition-colors">Detail</a>
                                 </td>
                             </tr>
