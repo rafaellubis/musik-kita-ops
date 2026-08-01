@@ -107,10 +107,15 @@
                                        class="border-mk-border rounded text-sm w-24">
                             </div>
                             <div>
-                                <label class="block text-xs text-mk-dim mb-1">Bulan (1-12)</label>
-                                <input type="number" name="month" required min="1" max="12"
-                                       value="{{ $nextMonth }}"
-                                       class="border-mk-border rounded text-sm w-20">
+                                <label class="block text-xs text-mk-dim mb-1">Bulan</label>
+                                <select name="month" required
+                                        class="border-mk-border rounded text-sm w-36">
+                                    @for($m = 1; $m <= 12; $m++)
+                                        <option value="{{ $m }}" {{ $nextMonth == $m ? 'selected' : '' }}>
+                                            {{ \Carbon\Carbon::create(2026, $m, 1)->locale('id')->translatedFormat('F') }}
+                                        </option>
+                                    @endfor
+                                </select>
                             </div>
                             <button type="submit"
                                     class="px-4 py-2 rounded-lg text-sm font-bold transition-colors btn-mk-primary disabled:opacity-50 disabled:cursor-not-allowed"

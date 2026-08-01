@@ -108,9 +108,14 @@
                             </div>
                             <div>
                                 <label class="block text-xs text-mk-dim mb-1 font-medium">Bulan</label>
-                                <input type="number" name="month" required min="1" max="12"
-                                       value="{{ now()->addMonth()->month }}"
-                                       class="border-mk-border rounded-lg px-3 py-1.5 text-sm w-20 focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
+                                <select name="month" required
+                                        class="border-mk-border rounded-lg px-3 py-1.5 text-sm w-36 focus:border-mk-accent focus:ring-1 focus:ring-mk-accent">
+                                    @for($m = 1; $m <= 12; $m++)
+                                        <option value="{{ $m }}" {{ now()->addMonth()->month == $m ? 'selected' : '' }}>
+                                            {{ \Carbon\Carbon::create(2026, $m, 1)->locale('id')->translatedFormat('F') }}
+                                        </option>
+                                    @endfor
+                                </select>
                             </div>
                             <button type="submit"
                                     class="px-4 py-2 rounded-lg text-sm font-bold transition-all btn-mk-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-mk-sidebar"
