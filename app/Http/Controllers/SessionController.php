@@ -194,8 +194,12 @@ class SessionController extends Controller
     /**
      * Hapus sesi. Hanya status SCHEDULED atau LIBUR yang boleh dihapus. Owner+Admin only.
      */
-    public function destroy(ClassSession $classSession): \Illuminate\Http\RedirectResponse
+    public function destroy(Request $request, ClassSession $classSession): \Illuminate\Http\RedirectResponse
     {
+        if ($request->input('active_tab') === 'jadwal') {
+            $request->session()->flash('active_tab', 'jadwal');
+        }
+
         $statusBolehHapus = [ClassSession::STATUS_SCHEDULED, ClassSession::STATUS_LIBUR];
 
         if (!in_array($classSession->status, $statusBolehHapus)) {

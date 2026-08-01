@@ -634,7 +634,7 @@
         </div>
 
         {{-- ===== TAB NAVIGASI ===== --}}
-        <div x-data="{ activeTab: 'info', openSchedule: null, editSchedule: null }" class="space-y-0">
+        <div x-data="{ activeTab: @js(session('active_tab', 'info')), openSchedule: null, editSchedule: null }" class="space-y-0">
 
             {{-- Tab pills --}}
             <div class="flex gap-1 p-1 bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm mb-5 fade-in-up"
@@ -1202,6 +1202,7 @@
                                           onsubmit="return confirm('Hapus sesi {{ \Carbon\Carbon::parse($sess->session_date)->format('d M Y') }} ({{ $sess->status }})?')">
                                         @csrf
                                         @method('DELETE')
+                                        <input type="hidden" name="active_tab" value="jadwal">
                                         <button type="submit" class="text-[10px] text-red-600 hover:underline">Hapus</button>
                                     </form>
                                     @endif

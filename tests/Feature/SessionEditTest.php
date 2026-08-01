@@ -245,6 +245,19 @@ class SessionEditTest extends TestCase
         $this->assertDatabaseMissing('class_sessions', ['id' => $this->session->id]);
     }
 
+    public function test_hapus_sesi_dari_detail_murid_mempertahankan_tab_jadwal(): void
+    {
+        $this->actingAs($this->admin)
+            ->from(route('students.show', $this->session->student_id))
+            ->delete(route('sessions.destroy', $this->session->id), [
+                'active_tab' => 'jadwal',
+            ])
+            ->assertRedirect(route('students.show', $this->session->student_id))
+            ->assertSessionHas('active_tab', 'jadwal');
+
+        $this->assertDatabaseMissing('class_sessions', ['id' => $this->session->id]);
+    }
+
     public function test_admin_bisa_hapus_sesi_libur(): void
     {
         $this->session->update(['status' => 'LIBUR']);
