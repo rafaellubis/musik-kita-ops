@@ -107,10 +107,8 @@
                     <div class="text-2xl font-bold text-primary mt-2 font-sans">{{ $totalSesiTerlaksana }}</div>
                 </div>
                 <div class="px-3">
-                    <div class="text-xs font-semibold text-outline">Honor Libur Dibayar</div>
-                    <div class="text-base font-bold text-secondary mt-2 font-sans leading-tight">
-                        Rp {{ number_format($totalHonorLibur, 0, ',', '.') }}
-                    </div>
+                    <div class="text-xs font-semibold text-outline">Sesi Libur</div>
+                    <div class="text-2xl font-bold text-secondary mt-2 font-sans">{{ $totalSesiLibur }}</div>
                 </div>
                 <div class="pl-3">
                     <div class="text-xs font-semibold text-outline">Sesi Hangus</div>

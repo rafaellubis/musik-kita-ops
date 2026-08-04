@@ -151,11 +151,10 @@ class GuruSessionCalculationTest extends TestCase
         $response = $this->actingAs($user)->get('/guru/dashboard');
         $response->assertOk();
         $response->assertViewHas('totalSesiTerlaksana', 2);
-        $response->assertViewHas('totalHonorLibur', 42500);
+        $response->assertViewHas('totalSesiLibur', 1);
         $response->assertViewHas('totalSesiHangus', 1);
         $response->assertSeeText('Sesi Terlaksana');
-        $response->assertSeeText('Honor Libur Dibayar');
+        $response->assertSeeText('Sesi Libur');
         $response->assertSeeText('Sesi Hangus');
-        $response->assertSeeText('Rp 42.500');
     }
 }
