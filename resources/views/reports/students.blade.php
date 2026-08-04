@@ -35,7 +35,7 @@
     <div class="py-6 px-4 lg:px-8 space-y-5">
 
         {{-- ===== STATISTIK BULAN INI ===== --}}
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {{-- Card 1: Murid Baru --}}
             <div class="bg-mk-card rounded-2xl p-5 border border-mk-borderLight shadow-sm fade-in-up" style="animation-delay:0ms">
                 <div class="flex justify-between items-start">
@@ -58,8 +58,19 @@
                 </div>
             </div>
 
-            {{-- Card 3: Murid Aktif --}}
+            {{-- Card 3: Murid Trial --}}
             <div class="bg-mk-card rounded-2xl p-5 border border-mk-borderLight shadow-sm fade-in-up" style="animation-delay:120ms">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="text-[10px] text-mk-dim uppercase tracking-widest font-semibold mb-2">Murid Trial</div>
+                        <div class="text-3xl font-bold text-[#7C3AED] leading-none">{{ $muridTrial }}</div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 bg-[#A78BFA]/15">🎹</div>
+                </div>
+            </div>
+
+            {{-- Card 4: Murid Aktif --}}
+            <div class="bg-mk-card rounded-2xl p-5 border border-mk-borderLight shadow-sm fade-in-up" style="animation-delay:180ms">
                 <div class="flex justify-between items-start">
                     <div>
                         <div class="text-[10px] text-mk-dim uppercase tracking-widest font-semibold mb-2">Murid Aktif</div>
@@ -69,8 +80,8 @@
                 </div>
             </div>
 
-            {{-- Card 4: Total Terdaftar --}}
-            <div class="bg-mk-card rounded-2xl p-5 border border-mk-borderLight shadow-sm fade-in-up" style="animation-delay:180ms">
+            {{-- Card 5: Total Terdaftar --}}
+            <div class="bg-mk-card rounded-2xl p-5 border border-mk-borderLight shadow-sm fade-in-up" style="animation-delay:240ms">
                 <div class="flex justify-between items-start">
                     <div>
                         <div class="text-[10px] text-mk-dim uppercase tracking-widest font-semibold mb-2">Total Terdaftar</div>

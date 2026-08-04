@@ -185,6 +185,10 @@ class ReportController extends Controller
             ->where('active_since', '<=', Carbon::create($year, $month, 1)->endOfMonth())
             ->count();
 
+        $muridTrial = Student::whereYear('trial_date', $year)
+            ->whereMonth('trial_date', $month)
+            ->count();
+
         $muridMundur = Student::whereIn('status', ['Mengundurkan Diri', 'Selesai'])
             ->whereYear('updated_at', $year)
             ->whereMonth('updated_at', $month)
@@ -195,7 +199,7 @@ class ReportController extends Controller
         return view('reports.students', compact(
             'year', 'month', 'monthName',
             'byStatus', 'byInstrument',
-            'muridBaru', 'muridMundur',
+            'muridBaru', 'muridTrial', 'muridMundur',
         ));
     }
 }
