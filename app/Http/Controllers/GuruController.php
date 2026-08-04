@@ -90,12 +90,19 @@ class GuruController extends Controller
             ->get();
 
         $startBulan = now()->startOfMonth()->toDateString();
-        $endBulan   = now()->endOfMonth()->toDateString();
 
-        // Total sesi terlaksana bulan ini (sesuai sesi berbayar pada slip honor)
-        $totalSesiBulan = ClassSession::honoredForTeacher($teacher->id)
-            ->whereBetween('session_date', [$startBulan, $endBulan])
-            ->honoredStatus()
+        // Ringkasan operasional bulan berjalan hanya menghitung sesi sampai hari ini.
+        $sesiBulanBerjalan = ClassSession::honoredForTeacher($teacher->id)
+            ->whereBetween('session_date', [$startBulan, $today]);
+
+        $totalSesiTerlaksana = (clone $sesiBulanBerjalan)
+            ->whereIn('status', [ClassSession::STATUS_HADIR, ClassSession::STATUS_HADIR_TERLAMBAT])
+            ->count();
+        $totalSesiLibur = (clone $sesiBulanBerjalan)
+            ->where('status', ClassSession::STATUS_LIBUR)
+            ->count();
+        $totalSesiHangus = (clone $sesiBulanBerjalan)
+            ->where('status', ClassSession::STATUS_HANGUS)
             ->count();
 
         // Slip honor bulan ini (jika sudah dikalkulasi atau dibayar)
@@ -111,7 +118,8 @@ class GuruController extends Controller
             ->count();
 
         return view('guru.dashboard', compact(
-            'teacher', 'sesiHariIni', 'totalSesiBulan', 'slipBulanIni', 'jumlahPending'
+            'teacher', 'sesiHariIni', 'totalSesiTerlaksana', 'totalSesiLibur',
+            'totalSesiHangus', 'slipBulanIni', 'jumlahPending'
         ));
     }
 
@@ -988,4 +996,3 @@ class GuruController extends Controller
         return view('guru._sesi-history-timeline', compact('history', 'classSession'));
     }
 }
-

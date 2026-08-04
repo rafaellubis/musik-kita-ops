@@ -100,9 +100,21 @@
     </h2>
     
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <div class="bg-white rounded-2xl border border-outline-variant/20 px-4 py-4.5 shadow-[rgba(44,105,78,0.04)_0px_2px_8px] hover:shadow-[rgba(44,105,78,0.08)_0px_4px_12px] transition-shadow duration-300">
-            <div class="text-xs font-semibold text-outline uppercase tracking-wider">Sesi Terlaksana</div>
-            <div class="text-2xl font-bold text-primary mt-2 font-sans">{{ $totalSesiBulan }}</div>
+        <div class="col-span-2 bg-white rounded-2xl border border-outline-variant/20 px-4 py-4.5 shadow-[rgba(44,105,78,0.04)_0px_2px_8px]">
+            <div class="grid grid-cols-3 divide-x divide-outline-variant/20">
+                <div class="pr-3">
+                    <div class="text-xs font-semibold text-outline">Sesi Terlaksana</div>
+                    <div class="text-2xl font-bold text-primary mt-2 font-sans">{{ $totalSesiTerlaksana }}</div>
+                </div>
+                <div class="px-3">
+                    <div class="text-xs font-semibold text-outline">Sesi Libur</div>
+                    <div class="text-2xl font-bold text-secondary mt-2 font-sans">{{ $totalSesiLibur }}</div>
+                </div>
+                <div class="pl-3">
+                    <div class="text-xs font-semibold text-outline">Sesi Hangus</div>
+                    <div class="text-2xl font-bold text-error mt-2 font-sans">{{ $totalSesiHangus }}</div>
+                </div>
+            </div>
         </div>
         
         <div class="bg-white rounded-2xl border border-outline-variant/20 px-4 py-4.5 shadow-[rgba(44,105,78,0.04)_0px_2px_8px] hover:shadow-[rgba(44,105,78,0.08)_0px_4px_12px] transition-shadow duration-300">

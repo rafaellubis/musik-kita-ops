@@ -88,16 +88,15 @@ class GuruSessionCalculationTest extends TestCase
         $this->assertEquals(1, $count2, 'Teacher 2 harus memiliki 1 sesi berbayar (Pengganti terkonfirmasi)');
     }
 
-    public function test_dashboard_shows_correct_honored_sessions_count(): void
+    public function test_dashboard_separates_completed_holiday_and_forfeited_sessions_until_today(): void
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
         $user->assignRole('Guru');
         $teacher = Teacher::factory()->create(['user_id' => $user->id]);
 
         $today = today()->toDateString();
-        $startBulan = now()->startOfMonth()->toDateString();
 
-        // Sesi terbayar guru
+        // Sesi yang benar-benar terlaksana.
         ClassSession::factory()->create([
             'teacher_id' => $teacher->id,
             'session_date' => $today,
@@ -106,7 +105,41 @@ class GuruSessionCalculationTest extends TestCase
             'honor_amount' => 42500,
         ]);
 
-        // Sesi reschedule (tidak terbayar)
+        ClassSession::factory()->create([
+            'teacher_id' => $teacher->id,
+            'session_date' => $today,
+            'status' => ClassSession::STATUS_HADIR_TERLAMBAT,
+            'honor_code' => 'H_REG',
+            'honor_amount' => 42500,
+        ]);
+
+        // Libur dan hangus ditampilkan pada penghitungnya masing-masing.
+        ClassSession::factory()->create([
+            'teacher_id' => $teacher->id,
+            'session_date' => $today,
+            'status' => ClassSession::STATUS_LIBUR,
+            'honor_code' => 'H_LIBUR',
+            'honor_amount' => 42500,
+        ]);
+
+        ClassSession::factory()->create([
+            'teacher_id' => $teacher->id,
+            'session_date' => $today,
+            'status' => ClassSession::STATUS_HANGUS,
+            'honor_code' => 'H_HANGUS',
+            'honor_amount' => 42500,
+        ]);
+
+        // Sesi masa depan belum masuk ringkasan operasional.
+        ClassSession::factory()->create([
+            'teacher_id' => $teacher->id,
+            'session_date' => today()->addDay()->toDateString(),
+            'status' => ClassSession::STATUS_LIBUR,
+            'honor_code' => 'H_LIBUR',
+            'honor_amount' => 42500,
+        ]);
+
+        // Sesi izin tidak masuk ketiga penghitung.
         ClassSession::factory()->create([
             'teacher_id' => $teacher->id,
             'session_date' => $today,
@@ -117,8 +150,11 @@ class GuruSessionCalculationTest extends TestCase
 
         $response = $this->actingAs($user)->get('/guru/dashboard');
         $response->assertOk();
-        
-        // Memastikan total sesi terlaksana di dashboard adalah 1 (hanya yang HADIR)
-        $response->assertViewHas('totalSesiBulan', 1);
+        $response->assertViewHas('totalSesiTerlaksana', 2);
+        $response->assertViewHas('totalSesiLibur', 1);
+        $response->assertViewHas('totalSesiHangus', 1);
+        $response->assertSeeText('Sesi Terlaksana');
+        $response->assertSeeText('Sesi Libur');
+        $response->assertSeeText('Sesi Hangus');
     }
 }
