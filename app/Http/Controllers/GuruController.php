@@ -98,9 +98,10 @@ class GuruController extends Controller
         $totalSesiTerlaksana = (clone $sesiBulanBerjalan)
             ->whereIn('status', [ClassSession::STATUS_HADIR, ClassSession::STATUS_HADIR_TERLAMBAT])
             ->count();
-        $totalSesiLibur = (clone $sesiBulanBerjalan)
+        $totalHonorLibur = (clone $sesiBulanBerjalan)
             ->where('status', ClassSession::STATUS_LIBUR)
-            ->count();
+            ->where('honor_amount', '>', 0)
+            ->sum('honor_amount');
         $totalSesiHangus = (clone $sesiBulanBerjalan)
             ->where('status', ClassSession::STATUS_HANGUS)
             ->count();
@@ -118,7 +119,7 @@ class GuruController extends Controller
             ->count();
 
         return view('guru.dashboard', compact(
-            'teacher', 'sesiHariIni', 'totalSesiTerlaksana', 'totalSesiLibur',
+            'teacher', 'sesiHariIni', 'totalSesiTerlaksana', 'totalHonorLibur',
             'totalSesiHangus', 'slipBulanIni', 'jumlahPending'
         ));
     }
