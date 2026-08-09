@@ -232,6 +232,9 @@
                                        class="text-mk-muted hover:text-mk-accent hover:underline transition-colors font-medium">
                                         {{ $inv->student->full_name ?? '?' }}
                                     </a>
+                                    @if($inv->student?->nickname)
+                                        <div class="text-xs text-mk-muted mt-0.5">"{{ $inv->student->nickname }}"</div>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3 text-xs">
                                     @foreach($inv->items as $item)

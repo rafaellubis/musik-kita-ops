@@ -118,6 +118,12 @@
             color: #4A1F0A;
         }
 
+        .student-nickname {
+            font-size: 10px;
+            color: #7A3818;
+            margin-top: 2px;
+        }
+
         .student-code {
             font-family: DejaVu Sans Mono, monospace;
             font-size: 10px;
@@ -306,6 +312,9 @@
             <tr>
                 <td width="50%">
                     <div class="student-name">{{ $invoice->student->full_name }}</div>
+                    @if($invoice->student->nickname)
+                        <div class="student-nickname">"{{ $invoice->student->nickname }}"</div>
+                    @endif
                     <div class="student-code">{{ $invoice->student->student_code }}</div>
                     @if($invoice->student->phone)
                         <div class="student-phone">{{ $invoice->student->phone }}</div>

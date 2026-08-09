@@ -47,6 +47,9 @@
                 <div>
                     <div class="font-mono text-sm text-mk-dim">{{ $invoice->invoice_number }}</div>
                     <div class="text-2xl font-bold mt-1">{{ $invoice->student->full_name ?? '?' }}</div>
+                    @if($invoice->student?->nickname)
+                        <div class="text-sm text-mk-muted mt-0.5">"{{ $invoice->student->nickname }}"</div>
+                    @endif
                     <div class="text-mk-muted text-sm">
                         <a href="{{ route('students.show', $invoice->student_id) }}"
                            class="text-blue-600 hover:underline">
