@@ -18,7 +18,10 @@
 
         {{-- Layout: Sidebar gelap (kiri) + Area Konten (kanan) --}}
         <div class="flex h-screen overflow-hidden"
-             x-data="{ sidebarOpen: false }"
+             x-data="{ sidebarOpen: false, showMoney: {{ $hideMoney ? 'false' : 'true' }} }"
+             data-money-hidden="{{ $hideMoney ? 'true' : 'false' }}"
+             :data-money-hidden="showMoney ? 'false' : 'true'"
+             data-money-privacy="{{ $hideMoney ? 'enabled' : 'disabled' }}"
              data-theme="mahogany-mint">
 
             {{-- ===== MOBILE OVERLAY ===== --}}
@@ -139,7 +142,10 @@
                                             </div>
                                             <div class="text-[10px] text-mk-muted mt-0.5">
                                                 Tunggakan {{ $d['invoice_month'] }} ·
-                                                <span class="text-error font-semibold">
+                                                <span class="money-value text-error font-semibold"
+                                                      data-money-mask="Rp •••••••"
+                                                      aria-hidden="{{ $hideMoney ? 'true' : 'false' }}"
+                                                      :aria-hidden="(! showMoney).toString()">
                                                     Rp {{ number_format($d['total_overdue'], 0, ',', '.') }}
                                                 </span>
                                             </div>

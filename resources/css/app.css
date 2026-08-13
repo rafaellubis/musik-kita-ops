@@ -5,6 +5,25 @@
 /* Sembunyikan elemen x-cloak sampai Alpine.js siap */
 [x-cloak] { display: none !important; }
 
+/* Privasi visual nominal pada dashboard Owner. Teks asli tetap mengambil ruang agar layout tidak bergeser. */
+.money-value { font-variant-numeric: tabular-nums; }
+[data-money-hidden="true"] .money-value {
+    position: relative;
+    color: transparent !important;
+    text-shadow: none !important;
+    user-select: none;
+}
+[data-money-hidden="true"] .money-value::after {
+    content: attr(data-money-mask);
+    position: absolute;
+    inset: 50% 0 auto;
+    transform: translateY(-50%);
+    color: #7A3818;
+    text-align: inherit;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
 /* ================================================================
    SCROLLBAR — mint accent
 ================================================================ */

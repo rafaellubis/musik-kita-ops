@@ -99,6 +99,8 @@ class DashboardRoleViewTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Saldo Petty Cash');
         $response->assertDontSee('Saldo Kas');
+        $response->assertSee('data-money-privacy="disabled"', false);
+        $response->assertDontSee('data-money-toggle', false);
     }
 
     public function test_auditor_masih_melihat_aging_piutang(): void
@@ -146,6 +148,10 @@ class DashboardRoleViewTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Saldo Petty Cash');
         $response->assertDontSee('Saldo Kas');
+        $response->assertSee('data-money-privacy="enabled"', false);
+        $response->assertSee('data-money-hidden="true"', false);
+        $response->assertSee('showMoney: false', false);
+        $response->assertSee('data-money-toggle', false);
     }
 
     public function test_owner_masih_melihat_aging_piutang(): void

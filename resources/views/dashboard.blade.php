@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :hide-money="$isOwner">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
             <div>
@@ -7,6 +7,30 @@
             </div>
             <div class="flex flex-wrap gap-2 shrink-0">
                 @if($isOwner)
+                <button type="button"
+                        data-money-toggle
+                        @click="showMoney = ! showMoney; $dispatch('dashboard-money-visibility', { visible: showMoney })"
+                        aria-label="Tampilkan nominal"
+                        :aria-label="showMoney ? 'Sembunyikan nominal' : 'Tampilkan nominal'"
+                        title="Tampilkan nominal"
+                        :title="showMoney ? 'Sembunyikan nominal' : 'Tampilkan nominal'"
+                        class="w-11 h-11 inline-flex items-center justify-center border border-mk-border text-mk-muted
+                               hover:text-secondary hover:bg-secondary/10 hover:border-secondary/40
+                               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary
+                               active:bg-secondary/15 rounded-lg transition-colors"
+                        :class="showMoney ? 'bg-secondary/10 text-secondary border-secondary/40' : 'bg-mk-card'">
+                    <svg x-show="! showMoney" x-cloak aria-hidden="true" class="w-5 h-5" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/>
+                        <circle cx="12" cy="12" r="2.75"/>
+                    </svg>
+                    <svg x-show="showMoney" x-cloak aria-hidden="true" class="w-5 h-5" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3l18 18"/>
+                        <path d="M10.6 6.1A10.6 10.6 0 0 1 12 6c6 0 9.5 6 9.5 6a17.1 17.1 0 0 1-2.1 2.8M6.2 6.2C3.8 7.8 2.5 12 2.5 12s3.5 6 9.5 6a9.6 9.6 0 0 0 3.1-.5"/>
+                        <path d="M10.1 10.1a2.75 2.75 0 0 0 3.8 3.8"/>
+                    </svg>
+                </button>
                 <a href="{{ route('reports.finance', ['year' => $year, 'month' => $month]) }}"
                    class="px-4 py-2 bg-mk-sidebar hover:bg-opacity-90 text-white rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center gap-1">
                     Laporan Keuangan →
@@ -31,10 +55,14 @@
                 <div class="flex justify-between items-start">
                     <div>
                         <div class="text-[10px] text-mk-dim uppercase tracking-widest font-semibold mb-2">Pendapatan Bulan Ini</div>
-                        <div class="text-2xl font-bold text-secondary leading-none">
+                        <div class="money-value text-2xl font-bold text-secondary leading-none"
+                             data-money-mask="Rp •••••••" aria-hidden="{{ $isOwner ? 'true' : 'false' }}"
+                             :aria-hidden="(! showMoney).toString()">
                             Rp {{ number_format($revenueBulan, 0, ',', '.') }}
                         </div>
-                        <div class="mt-1.5 text-xs text-mk-dim font-medium">
+                        <div class="money-value mt-1.5 text-xs text-mk-dim font-medium"
+                             data-money-mask="Cash •••• · Transfer ••••" aria-hidden="{{ $isOwner ? 'true' : 'false' }}"
+                             :aria-hidden="(! showMoney).toString()">
                             Cash {{ number_format($revenueCash/1000000, 1, ',', '.') }}jt
                             · Transfer {{ number_format($revenueTransfer/1000000, 1, ',', '.') }}jt
                         </div>
@@ -48,7 +76,9 @@
                 <div class="flex justify-between items-start">
                     <div>
                         <div class="text-[10px] text-mk-dim uppercase tracking-widest font-semibold mb-2">Pengeluaran Bulan Ini</div>
-                        <div class="text-2xl font-bold text-error leading-none">
+                        <div class="money-value text-2xl font-bold text-error leading-none"
+                             data-money-mask="Rp •••••••" aria-hidden="{{ $isOwner ? 'true' : 'false' }}"
+                             :aria-hidden="(! showMoney).toString()">
                             Rp {{ number_format($pengeluaranBulan, 0, ',', '.') }}
                         </div>
                         <div class="mt-1.5 text-xs text-mk-dim font-medium">
@@ -64,7 +94,9 @@
                 <div class="flex justify-between items-start">
                     <div>
                         <div class="text-[10px] text-mk-dim uppercase tracking-widest font-semibold mb-2">Laba / Rugi</div>
-                        <div class="text-2xl font-bold leading-none {{ $labaBulan >= 0 ? 'text-secondary' : 'text-error' }}">
+                        <div class="money-value text-2xl font-bold leading-none {{ $labaBulan >= 0 ? 'text-secondary' : 'text-error' }}"
+                             data-money-mask="Rp •••••••" aria-hidden="{{ $isOwner ? 'true' : 'false' }}"
+                             :aria-hidden="(! showMoney).toString()">
                             {{ $labaBulan < 0 ? '-' : '' }}Rp {{ number_format(abs($labaBulan), 0, ',', '.') }}
                         </div>
                         <div class="mt-1.5 text-xs font-semibold {{ $labaBulan >= 0 ? 'text-secondary/90' : 'text-error/90' }}">
@@ -84,7 +116,9 @@
                 <div class="flex justify-between items-start">
                     <div>
                         <div class="text-[10px] text-mk-dim uppercase tracking-widest font-semibold mb-2">Saldo Petty Cash</div>
-                        <div class="text-2xl font-bold leading-none {{ $saldoPettyCash >= 0 ? 'text-mk-text' : 'text-error' }}">
+                        <div class="money-value text-2xl font-bold leading-none {{ $saldoPettyCash >= 0 ? 'text-mk-text' : 'text-error' }}"
+                             data-money-mask="Rp •••••••" aria-hidden="{{ $isOwner ? 'true' : 'false' }}"
+                             :aria-hidden="(! showMoney).toString()">
                             Rp {{ number_format(abs($saldoPettyCash), 0, ',', '.') }}
                         </div>
                         <div class="mt-1.5 text-xs text-mk-dim font-medium">
@@ -200,14 +234,17 @@
                     <div class="flex items-center justify-between">
                         <span class="text-sm {{ $lblCls }}">{{ $lbl }}</span>
                         <div class="text-right">
-                            <div class="text-sm {{ $amtCls }}">Rp {{ number_format($amt, 0, ',', '.') }}</div>
+                            <div class="money-value text-sm {{ $amtCls }}" data-money-mask="Rp •••••••" aria-hidden="{{ $isOwner ? 'true' : 'false' }}"
+                                 :aria-hidden="(! showMoney).toString()">Rp {{ number_format($amt, 0, ',', '.') }}</div>
                             <div class="text-[10px] text-mk-dim font-medium">{{ $cnt }} tagihan</div>
                         </div>
                     </div>
                     @endforeach
                     <div class="flex justify-between items-center border-t border-mk-borderLight pt-3.5 mt-2">
                         <span class="text-sm font-semibold text-mk-muted">Total Piutang</span>
-                        <span class="text-base font-bold {{ $totalPiutang > 0 ? 'text-error' : 'text-mk-muted' }}">
+                        <span class="money-value text-base font-bold {{ $totalPiutang > 0 ? 'text-error' : 'text-mk-muted' }}"
+                              data-money-mask="Rp •••••••" aria-hidden="{{ $isOwner ? 'true' : 'false' }}"
+                              :aria-hidden="(! showMoney).toString()">
                             Rp {{ number_format($totalPiutang, 0, ',', '.') }}
                         </span>
                     </div>
@@ -331,7 +368,9 @@
                                     <div class="text-mk-dim font-mono text-[10px] mt-0.5">{{ $inv->invoice_number }}</div>
                                 </td>
                                 @if(!$isAdmin)
-                                <td class="px-4 py-2.5 text-right font-mono font-semibold text-error">
+                                <td class="money-value px-4 py-2.5 text-right font-mono font-semibold text-error"
+                                    data-money-mask="Rp •••••••" aria-hidden="{{ $isOwner ? 'true' : 'false' }}"
+                                    :aria-hidden="(! showMoney).toString()">
                                     Rp {{ number_format($inv->total_amount - $inv->paid_amount, 0, ',', '.') }}
                                 </td>
                                 @endif
@@ -396,7 +435,9 @@
                             <td class="px-4 py-2.5 text-center text-mk-dim font-medium">
                                 {{ str_pad($slip->month, 2, '0', STR_PAD_LEFT) }}/{{ $slip->year }}
                             </td>
-                            <td class="px-4 py-2.5 text-right font-mono font-semibold text-secondary">
+                            <td class="money-value px-4 py-2.5 text-right font-mono font-semibold text-secondary"
+                                data-money-mask="Rp •••••••" aria-hidden="{{ $isOwner ? 'true' : 'false' }}"
+                                :aria-hidden="(! showMoney).toString()">
                                 Rp {{ number_format($slip->total_honor, 0, ',', '.') }}
                             </td>
                         </tr>
@@ -427,8 +468,16 @@
         // ---- Area Chart: P&L 6 Bulan (Owner only) ----
         @if($isOwner)
         const revenueData = @json($revenueChart);
+        let moneyVisible = false;
 
-        new ApexCharts(document.getElementById('chart-revenue'), {
+        const formatMoneyAxis = value => moneyVisible
+            ? 'Rp ' + (value / 1000000).toFixed(1) + 'jt'
+            : 'Rp •••';
+        const formatMoneyTooltip = value => moneyVisible
+            ? 'Rp ' + new Intl.NumberFormat('id-ID').format(value)
+            : 'Rp •••••••';
+
+        const revenueChart = new ApexCharts(document.getElementById('chart-revenue'), {
             chart: {
                 type: 'area', height: 200,
                 background: 'transparent', toolbar: { show: false },
@@ -448,7 +497,7 @@
             yaxis: {
                 labels: {
                     style: { colors: chartLabelColor, fontSize: '11px' },
-                    formatter: v => 'Rp ' + (v / 1000000).toFixed(1) + 'jt',
+                    formatter: formatMoneyAxis,
                 },
             },
             colors: ['#5DB890', '#C47A45', '#BA1A1A'],
@@ -462,9 +511,26 @@
             legend: { show: false },
             tooltip: {
                 theme: chartTooltipTheme,
-                y: { formatter: v => 'Rp ' + new Intl.NumberFormat('id-ID').format(v) },
+                y: { formatter: formatMoneyTooltip },
             },
-        }).render();
+        });
+        revenueChart.render();
+
+        window.addEventListener('dashboard-money-visibility', event => {
+            moneyVisible = event.detail.visible;
+            revenueChart.updateOptions({
+                yaxis: {
+                    labels: {
+                        style: { colors: chartLabelColor, fontSize: '11px' },
+                        formatter: formatMoneyAxis,
+                    },
+                },
+                tooltip: {
+                    theme: chartTooltipTheme,
+                    y: { formatter: formatMoneyTooltip },
+                },
+            }, false, false);
+        });
 
         // ---- Donut Chart: Distribusi Instrumen ----
         const instrumenData = @json($instrumenChart);
