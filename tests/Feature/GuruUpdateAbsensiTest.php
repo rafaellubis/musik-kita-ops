@@ -373,6 +373,11 @@ class GuruUpdateAbsensiTest extends TestCase
 
         $sesi->refresh();
         $this->assertSame('H_PENG', $sesi->honor_code);
+
+        $this->actingAs($this->guruUser)
+            ->get(route('guru.dashboard'))
+            ->assertOk()
+            ->assertSee('aria-label="Hadir"', false);
     }
 
     /**

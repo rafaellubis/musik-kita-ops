@@ -235,8 +235,9 @@
                         <span x-show="isDisabled" class="text-[9px] text-amber-700 leading-none mt-1 whitespace-nowrap bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-medium" x-text="timeLabel" style="display: none;"></span>
                     </form>
                 @endif
-            @elseif($isCompleted)
-                <div class="w-8 h-8 rounded-full bg-secondary/10 text-secondary flex items-center justify-center border border-secondary/20">
+            @elseif($isCompleted || $isSubstituteConfirmed)
+                <div role="img" aria-label="Hadir"
+                     class="w-8 h-8 rounded-full bg-secondary/10 text-secondary flex items-center justify-center border border-secondary/20">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                     </svg>
