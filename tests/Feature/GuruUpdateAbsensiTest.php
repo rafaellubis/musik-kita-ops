@@ -374,5 +374,25 @@ class GuruUpdateAbsensiTest extends TestCase
         $sesi->refresh();
         $this->assertSame('H_PENG', $sesi->honor_code);
     }
-}
 
+    /**
+     * URL form harus dibaca dari atribut HTML karena input name="action"
+     * dapat menimpa properti JavaScript form.action.
+     */
+    public function test_form_konfirmasi_pengganti_menggunakan_url_action_asli(): void
+    {
+        $guruAsli = Teacher::factory()->create();
+
+        $this->sesiHariIni->update([
+            'teacher_id'            => $guruAsli->id,
+            'substitute_teacher_id' => $this->teacher->id,
+            'status'                => 'DIGANTI',
+            'honor_code'            => null,
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->get(route('guru.dashboard'))
+            ->assertOk()
+            ->assertSee("fetch(\$el.getAttribute('action'),", false);
+    }
+}

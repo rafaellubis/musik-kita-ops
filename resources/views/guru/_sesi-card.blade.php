@@ -154,7 +154,7 @@
                           @submit.prevent="
                               // ponytail: handle submit via Fetch API secara non-blocking
                               $el.querySelectorAll('button').forEach(b => b.disabled = true);
-                              fetch($el.action, {
+                              fetch($el.getAttribute('action'), {
                                   method: 'POST',
                                   headers: {
                                       'Content-Type': 'application/json',
@@ -197,7 +197,7 @@
                           @submit.prevent="
                               // ponytail: konfirmasi kehadiran pengganti secara asynchronous
                               $el.querySelectorAll('button').forEach(b => b.disabled = true);
-                              fetch($el.action, {
+                              fetch($el.getAttribute('action'), {
                                   method: 'POST',
                                   headers: {
                                       'Content-Type': 'application/json',
