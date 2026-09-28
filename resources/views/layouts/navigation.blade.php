@@ -58,7 +58,7 @@
         @endhasanyrole
     <x-sidebar-item route="events.index" icon="🎤" label="Event"
         :active="request()->routeIs('events.*') || request()->routeIs('event-participants.*')"
-        :disabled="true"
+        :disabled="false"
         title="Sementara dinonaktifkan"/>
 
     {{-- Grup: LAPORAN --}}
