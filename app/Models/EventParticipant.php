@@ -5,52 +5,38 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-/**
- * Peserta event: murid yang ikut Mini Concert dan/atau Ujian (M08).
- *
- * participation_type:
- *   UJIAN_TAMPIL -> Ujian + Tampil di Concert = Rp 395.000 (kode UJI)
- *   TAMPIL_SAJA  -> Tampil di Concert saja    = Rp 295.000 (kode MC)
- *
- * exam_result + grade_before/after diisi setelah event COMPLETED.
- */
+/** Satu enrollment murid yang mengikuti satu event. */
 class EventParticipant extends Model
 {
     use HasFactory;
 
+    public const STATUS_ACTIVE = 'ACTIVE';
+    public const STATUS_CANCELLED = 'CANCELLED';
+
+    public const ATTENDANCE_PENDING = 'PENDING';
+    public const ATTENDANCE_HADIR = 'HADIR';
+    public const ATTENDANCE_TIDAK_HADIR = 'TIDAK_HADIR';
+
     protected $fillable = [
-        'event_id', 'student_id', 'enrollment_id',
-        'accompanying_teacher_id',
-        'participation_type', 'fee_amount',
-        'invoice_id', 'invoice_item_id',
-        'exam_result', 'grade_before', 'grade_after', 'exam_notes',
+        'event_id', 'student_id', 'enrollment_id', 'status',
+        'cancelled_at', 'cancelled_by', 'cancellation_reason',
+        'active_teacher_assignment_id', 'invoice_id', 'invoice_item_id',
+        'snapshot_package_id', 'snapshot_package_code', 'snapshot_instrument_name',
+        'snapshot_class_type', 'snapshot_grade', 'snapshot_duration_min',
+        'snapshot_package_price', 'snapshot_mc_fee', 'snapshot_honor_amount',
+        'attendance_status', 'event_notes', 'attendance_updated_at', 'attendance_updated_by',
     ];
 
     protected $casts = [
-        'fee_amount' => 'integer',
+        'cancelled_at' => 'datetime',
+        'attendance_updated_at' => 'datetime',
+        'snapshot_duration_min' => 'integer',
+        'snapshot_package_price' => 'integer',
+        'snapshot_mc_fee' => 'integer',
+        'snapshot_honor_amount' => 'integer',
     ];
-
-    public const TYPE_UJIAN_TAMPIL = 'UJIAN_TAMPIL';
-    public const TYPE_TAMPIL_SAJA  = 'TAMPIL_SAJA';
-
-    public const RESULT_LULUS       = 'LULUS';
-    public const RESULT_TIDAK_LULUS = 'TIDAK_LULUS';
-
-    public const FEE_UJIAN_TAMPIL = 395000;
-    public const FEE_TAMPIL_SAJA  = 295000;
-
-    public const INVOICE_CODE = [
-        'UJIAN_TAMPIL' => 'UJI',
-        'TAMPIL_SAJA'  => 'MC',
-    ];
-
-    public const TYPE_LABELS = [
-        'UJIAN_TAMPIL' => 'Ujian + Tampil',
-        'TAMPIL_SAJA'  => 'Tampil Saja',
-    ];
-
-    // ============= RELATIONSHIPS =============
 
     public function event(): BelongsTo
     {
@@ -67,6 +53,11 @@ class EventParticipant extends Model
         return $this->belongsTo(Enrollment::class);
     }
 
+    public function activeTeacherAssignment(): BelongsTo
+    {
+        return $this->belongsTo(EventTeacherAssignment::class, 'active_teacher_assignment_id');
+    }
+
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
@@ -77,22 +68,23 @@ class EventParticipant extends Model
         return $this->belongsTo(InvoiceItem::class);
     }
 
-    public function accompanyingTeacher(): BelongsTo
+    public function cancelledBy(): BelongsTo
     {
-        return $this->belongsTo(Teacher::class, 'accompanying_teacher_id');
+        return $this->belongsTo(User::class, 'cancelled_by');
     }
 
-    // ============= HELPERS =============
-
-    /** Apakah peserta ini sudah diinput hasil ujiannya. */
-    public function hasExamResult(): bool
+    public function attendanceUpdatedBy(): BelongsTo
     {
-        return $this->exam_result !== null;
+        return $this->belongsTo(User::class, 'attendance_updated_by');
     }
 
-    /** Label partisipasi yang user-friendly. */
-    public function getTypeLabelAttribute(): string
+    public function teacherReassignments(): HasMany
     {
-        return self::TYPE_LABELS[$this->participation_type] ?? $this->participation_type;
+        return $this->hasMany(EventTeacherReassignment::class);
+    }
+
+    public function honorEntries(): HasMany
+    {
+        return $this->hasMany(EventHonorEntry::class);
     }
 }

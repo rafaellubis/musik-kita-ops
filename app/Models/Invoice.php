@@ -26,6 +26,7 @@ class Invoice extends Model
         'invoice_number',
         'student_id',
         'enrollment_id',
+        'event_id',
         'year', 'month',
         'description',
         'total_amount', 'paid_amount',
@@ -155,6 +156,11 @@ class Invoice extends Model
     public function enrollment(): BelongsTo
     {
         return $this->belongsTo(Enrollment::class);
+    }
+
+    public function event(): BelongsTo
+    {
+        return $this->belongsTo(Event::class);
     }
 
     public function items(): HasMany
