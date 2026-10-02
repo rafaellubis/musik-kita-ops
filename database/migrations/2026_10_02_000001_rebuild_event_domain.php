@@ -196,13 +196,18 @@ return new class extends Migration
         }
 
         foreach ($invoiceIds as $invoiceId) {
-            $remainingTotal = (int) DB::table('invoice_items')->where('invoice_id', $invoiceId)->sum('amount');
+            $remainingItems = DB::table('invoice_items')->where('invoice_id', $invoiceId);
+            $hasRemainingItems = (clone $remainingItems)->exists();
+            $remainingTotal = (int) $remainingItems->sum('amount');
 
-            if ($remainingTotal > 0) {
+            if ($hasRemainingItems) {
+                $currentStatus = DB::table('invoices')->where('id', $invoiceId)->value('status');
                 DB::table('invoices')->where('id', $invoiceId)->update([
                     'total_amount' => $remainingTotal,
                     'paid_amount' => 0,
-                    'status' => Invoice::STATUS_UNPAID,
+                    'status' => $currentStatus === Invoice::STATUS_VOID
+                        ? Invoice::STATUS_VOID
+                        : Invoice::STATUS_UNPAID,
                 ]);
                 continue;
             }

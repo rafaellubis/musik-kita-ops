@@ -116,6 +116,76 @@ class EventDomainSchemaTest extends TestCase
         );
     }
 
+    public function test_legacy_cleanup_preserves_unrelated_items_when_remaining_total_is_zero(): void
+    {
+        $this->withLegacyEventDatabase(function (): void {
+            $this->createLegacyEventSchema();
+
+            DB::table('invoice_items')->insert([
+                ['id' => 2, 'invoice_id' => 1, 'parent_item_id' => null, 'amount' => 100000],
+                ['id' => 3, 'invoice_id' => 1, 'parent_item_id' => 2, 'amount' => -100000],
+            ]);
+
+            $migration = require database_path('migrations/2026_10_02_000001_rebuild_event_domain.php');
+            $migration->up();
+
+            $this->assertDatabaseHas('invoices', [
+                'id' => 1,
+                'total_amount' => 0,
+                'status' => Invoice::STATUS_UNPAID,
+            ]);
+            $this->assertSame([2, 3], DB::table('invoice_items')->orderBy('id')->pluck('id')->all());
+        });
+    }
+
+    public function test_legacy_cleanup_preserves_void_invoice_state_and_metadata(): void
+    {
+        $this->withLegacyEventDatabase(function (): void {
+            $this->createLegacyEventSchema();
+
+            DB::table('invoices')->insert([
+                'id' => 2,
+                'student_id' => 1,
+                'total_amount' => 415000,
+                'paid_amount' => 0,
+                'status' => Invoice::STATUS_VOID,
+                'voided_at' => '2026-06-20 10:00:00',
+                'voided_by' => 1,
+                'voided_reason' => 'Dibatalkan sebelum migrasi',
+            ]);
+            DB::table('invoice_items')->insert([
+                ['id' => 4, 'invoice_id' => 2, 'amount' => 295000],
+                ['id' => 5, 'invoice_id' => 2, 'amount' => 120000],
+            ]);
+            DB::table('event_participants')->insert([
+                'event_id' => 1,
+                'invoice_id' => 2,
+                'invoice_item_id' => 4,
+            ]);
+
+            $migration = require database_path('migrations/2026_10_02_000001_rebuild_event_domain.php');
+            $migration->up();
+
+            $this->assertDatabaseHas('invoices', [
+                'id' => 2,
+                'total_amount' => 120000,
+                'status' => Invoice::STATUS_VOID,
+                'voided_at' => '2026-06-20 10:00:00',
+                'voided_by' => 1,
+                'voided_reason' => 'Dibatalkan sebelum migrasi',
+            ]);
+        });
+    }
+
+    public function test_factories_create_ownership_consistent_graphs(): void
+    {
+        $participant = EventParticipant::factory()->create();
+        $honorEntry = EventHonorEntry::factory()->create();
+
+        $this->assertSame($participant->enrollment->student_id, $participant->student_id);
+        $this->assertSame($honorEntry->participant->event_id, $honorEntry->event_id);
+    }
+
     private function assertLegacyPreflightRejected(string $expectedMessage, callable $seedUnsafeData): void
     {
         $databasePath = tempnam(sys_get_temp_dir(), 'musik-kita-event-');
@@ -156,6 +226,13 @@ class EventDomainSchemaTest extends TestCase
 
     private function createLegacyEventSchema(): void
     {
+        foreach (['users', 'teachers', 'students', 'enrollments', 'packages'] as $tableName) {
+            Schema::create($tableName, function ($table) {
+                $table->id();
+            });
+            DB::table($tableName)->insert(['id' => 1]);
+        }
+
         Schema::create('events', function ($table) {
             $table->id();
             $table->date('event_date');
@@ -163,12 +240,21 @@ class EventDomainSchemaTest extends TestCase
         });
         Schema::create('invoices', function ($table) {
             $table->id();
+            $table->unsignedBigInteger('student_id')->nullable();
+            $table->integer('total_amount')->default(0);
+            $table->integer('paid_amount')->default(0);
+            $table->string('status')->default(Invoice::STATUS_UNPAID);
+            $table->dateTime('voided_at')->nullable();
+            $table->unsignedBigInteger('voided_by')->nullable();
+            $table->text('voided_reason')->nullable();
         });
         Schema::create('invoice_items', function ($table) {
             $table->id();
             $table->unsignedBigInteger('invoice_id');
             $table->unsignedBigInteger('parent_item_id')->nullable();
             $table->integer('amount')->default(0);
+
+            $table->foreign('invoice_id')->references('id')->on('invoices')->cascadeOnDelete();
         });
         Schema::create('event_participants', function ($table) {
             $table->id();
@@ -188,12 +274,37 @@ class EventDomainSchemaTest extends TestCase
         });
 
         DB::table('events')->insert(['id' => 1, 'event_date' => '2026-06-15']);
-        DB::table('invoices')->insert(['id' => 1]);
+        DB::table('invoices')->insert(['id' => 1, 'student_id' => 1, 'total_amount' => 295000]);
         DB::table('invoice_items')->insert(['id' => 1, 'invoice_id' => 1, 'amount' => 295000]);
         DB::table('event_participants')->insert([
             'event_id' => 1,
             'invoice_id' => 1,
             'invoice_item_id' => 1,
         ]);
+    }
+
+    private function withLegacyEventDatabase(callable $callback): void
+    {
+        $databasePath = tempnam(sys_get_temp_dir(), 'musik-kita-event-cleanup-');
+        $originalConnection = DB::getDefaultConnection();
+
+        config(['database.connections.legacy_event_cleanup_test' => [
+            'driver' => 'sqlite',
+            'database' => $databasePath,
+            'prefix' => '',
+            'foreign_key_constraints' => true,
+        ]]);
+
+        DB::purge('legacy_event_cleanup_test');
+        DB::setDefaultConnection('legacy_event_cleanup_test');
+
+        try {
+            $callback();
+        } finally {
+            DB::disconnect('legacy_event_cleanup_test');
+            DB::setDefaultConnection($originalConnection);
+            DB::purge('legacy_event_cleanup_test');
+            @unlink($databasePath);
+        }
     }
 }

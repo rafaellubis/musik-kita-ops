@@ -5,7 +5,6 @@ namespace Database\Factories;
 use App\Models\Enrollment;
 use App\Models\Event;
 use App\Models\EventParticipant;
-use App\Models\Student;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<EventParticipant> */
@@ -17,8 +16,8 @@ class EventParticipantFactory extends Factory
     {
         return [
             'event_id' => Event::factory(),
-            'student_id' => Student::factory(),
             'enrollment_id' => Enrollment::factory(),
+            'student_id' => fn (array $attributes) => Enrollment::findOrFail($attributes['enrollment_id'])->student_id,
             'status' => EventParticipant::STATUS_ACTIVE,
             'active_teacher_assignment_id' => null,
             'invoice_id' => null,

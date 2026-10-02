@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Event;
 use App\Models\EventHonorEntry;
 use App\Models\EventParticipant;
 use App\Models\Teacher;
@@ -16,8 +15,8 @@ class EventHonorEntryFactory extends Factory
     public function definition(): array
     {
         return [
-            'event_id' => Event::factory(),
             'event_participant_id' => EventParticipant::factory(),
+            'event_id' => fn (array $attributes) => EventParticipant::findOrFail($attributes['event_participant_id'])->event_id,
             'teacher_id' => Teacher::factory(),
             'snapshot_package_id' => null,
             'snapshot_package_code' => 'REG-PIANO-BASIC',
