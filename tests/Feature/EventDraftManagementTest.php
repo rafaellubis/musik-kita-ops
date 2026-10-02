@@ -13,6 +13,7 @@ use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -66,6 +67,9 @@ class EventDraftManagementTest extends TestCase
     public function test_auditor_and_guru_cannot_mutate_event(): void
     {
         $event = Event::factory()->create();
+        $enrollment = Enrollment::factory()->create();
+        $participant = EventParticipant::factory()->create(['event_id' => $event->id]);
+        $teacher = Teacher::factory()->create(['is_active' => true]);
 
         foreach (['Auditor', 'Guru'] as $role) {
             $user = $this->userWithRole($role);
@@ -76,9 +80,21 @@ class EventDraftManagementTest extends TestCase
                 ->assertForbidden();
             $this->actingAs($user)->delete(route('events.destroy', $event))
                 ->assertForbidden();
+            $this->actingAs($user)->post(route('events.participants.store', $event), [
+                'student_id' => $enrollment->student_id,
+                'enrollment_ids' => [$enrollment->id],
+            ])->assertForbidden();
+            $this->actingAs($user)->delete(route('event-participants.destroy', $participant), [
+                'cancellation_reason' => 'Tidak berwenang.',
+            ])->assertForbidden();
+            $this->actingAs($user)->patch(route('event-participants.update-teacher', $participant), [
+                'teacher_id' => $teacher->id,
+            ])->assertForbidden();
         }
 
         $this->assertDatabaseCount('events', 1);
+        $this->assertSame(EventParticipant::STATUS_ACTIVE, $participant->fresh()->status);
+        $this->assertNotSame($teacher->id, $participant->fresh()->activeTeacherAssignment?->teacher_id);
     }
 
     public function test_single_active_enrollment_is_selected_and_multiple_can_be_submitted(): void
@@ -106,6 +122,24 @@ class EventDraftManagementTest extends TestCase
             $event->participants()->pluck('enrollment_id')->all(),
         );
         $this->assertSame(0, $event->participants()->whereNotNull('invoice_id')->count());
+    }
+
+    public function test_explicit_null_enrollment_ids_uses_the_single_active_enrollment(): void
+    {
+        $admin = $this->userWithRole('Admin');
+        $event = Event::factory()->create();
+        $enrollment = Enrollment::factory()->create();
+
+        $this->actingAs($admin)->post(route('events.participants.store', $event), [
+            'student_id' => $enrollment->student_id,
+            'enrollment_ids' => null,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('event_participants', [
+            'event_id' => $event->id,
+            'enrollment_id' => $enrollment->id,
+            'status' => EventParticipant::STATUS_ACTIVE,
+        ]);
     }
 
     public function test_inactive_or_foreign_student_enrollment_is_rejected(): void
@@ -157,12 +191,82 @@ class EventDraftManagementTest extends TestCase
         $this->assertDatabaseCount('event_participants', 1);
         $this->assertSame($participant->id, EventParticipant::firstOrFail()->id);
         $this->assertSame(EventParticipant::STATUS_ACTIVE, $participant->fresh()->status);
-        $this->assertDatabaseHas('audit_logs', [
-            'user_id' => $admin->id,
-            'action' => AuditLog::ACTION_UPDATE,
-            'entity_type' => 'EventParticipant',
-            'entity_id' => $participant->id,
+        $reactivationAudit = AuditLog::query()
+            ->where('user_id', $admin->id)
+            ->where('action', AuditLog::ACTION_UPDATE)
+            ->where('entity_type', 'EventParticipant')
+            ->where('entity_id', $participant->id)
+            ->get()
+            ->first(fn (AuditLog $audit) => $audit->new_values['status'] === EventParticipant::STATUS_ACTIVE);
+        $this->assertNotNull($reactivationAudit);
+        $this->assertSame(['status' => EventParticipant::STATUS_CANCELLED], $reactivationAudit->old_values);
+        $this->assertSame([
+            'status' => EventParticipant::STATUS_ACTIVE,
+            'enrollment_id' => $enrollment->id,
+        ], $reactivationAudit->new_values);
+    }
+
+    public function test_event_mutation_and_audit_log_are_atomic(): void
+    {
+        $owner = $this->userWithRole('Owner');
+        AuditLog::creating(function (): void {
+            if (request()->header('X-Test-Failure') === 'audit') {
+                throw new \RuntimeException('Simulasi audit gagal.');
+            }
+        });
+        Event::deleting(function (): void {
+            if (request()->header('X-Test-Failure') === 'delete') {
+                throw new \RuntimeException('Simulasi delete gagal.');
+            }
+        });
+
+        $this->assertRuntimeFailure(fn () => $this->actingAs($owner)
+            ->withHeader('X-Test-Failure', 'audit')
+            ->post(route('events.store'), $this->eventPayload('Atomic Store')));
+        $this->assertDatabaseMissing('events', ['name' => 'Mini Concert Atomic Store']);
+
+        $event = Event::factory()->create(['name' => 'Nama Awal']);
+        $this->assertRuntimeFailure(fn () => $this->actingAs($owner)
+            ->withHeader('X-Test-Failure', 'audit')
+            ->patch(route('events.update', $event), $this->eventPayload('Atomic Update')));
+        $this->assertSame('Nama Awal', $event->fresh()->name);
+
+        $this->assertRuntimeFailure(fn () => $this->actingAs($owner)
+            ->withHeader('X-Test-Failure', 'delete')
+            ->delete(route('events.destroy', $event)));
+        $this->assertModelExists($event);
+        $this->assertDatabaseMissing('audit_logs', [
+            'action' => AuditLog::ACTION_DELETE,
+            'entity_type' => 'Event',
+            'entity_id' => $event->id,
         ]);
+    }
+
+    public function test_update_and_delete_recheck_the_locked_event_status(): void
+    {
+        $owner = $this->userWithRole('Owner');
+        Event::retrieved(function (Event $event): void {
+            if (request()->header('X-Stale-Event') === (string) $event->id && $event->isDraft()) {
+                DB::table('events')->where('id', $event->id)->update(['status' => Event::STATUS_PUBLISHED]);
+            }
+        });
+
+        $updateEvent = Event::factory()->create(['name' => 'Jangan Diubah']);
+        $this->actingAs($owner)
+            ->withHeader('X-Stale-Event', (string) $updateEvent->id)
+            ->patch(route('events.update', $updateEvent), $this->eventPayload('Stale Update'))
+            ->assertUnprocessable();
+        $updateEvent->refresh();
+        $this->assertSame('Jangan Diubah', $updateEvent->name);
+        $this->assertSame(Event::STATUS_PUBLISHED, $updateEvent->status);
+
+        $deleteEvent = Event::factory()->create();
+        $this->actingAs($owner)
+            ->withHeader('X-Stale-Event', (string) $deleteEvent->id)
+            ->delete(route('events.destroy', $deleteEvent))
+            ->assertUnprocessable();
+        $this->assertModelExists($deleteEvent);
+        $this->assertSame(Event::STATUS_PUBLISHED, $deleteEvent->fresh()->status);
     }
 
     public function test_active_teacher_can_override_enrollment_teacher_while_draft(): void
@@ -269,5 +373,19 @@ class EventDraftManagementTest extends TestCase
             'event_date' => '2026-12-20',
             'payment_due_date' => '2026-12-10',
         ];
+    }
+
+    private function assertRuntimeFailure(callable $request): void
+    {
+        $this->withoutExceptionHandling();
+
+        try {
+            $request();
+            $this->fail('Request seharusnya gagal.');
+        } catch (\RuntimeException $exception) {
+            $this->assertStringStartsWith('Simulasi ', $exception->getMessage());
+        } finally {
+            $this->withExceptionHandling();
+        }
     }
 }

@@ -22,7 +22,7 @@ class EventParticipantController extends Controller
         $participants = $this->participantService->addEnrollments(
             $event,
             $student,
-            $request->input('enrollment_ids', []),
+            $request->input('enrollment_ids') ?? [],
             $request->user(),
         );
 

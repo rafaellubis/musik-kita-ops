@@ -9,6 +9,7 @@ use App\Models\Event;
 use App\Models\Student;
 use App\Models\Teacher;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /** CRUD identitas event Mini Concert saat masih DRAFT. */
 class EventController extends Controller
@@ -30,19 +31,23 @@ class EventController extends Controller
     public function store(StoreEventRequest $request)
     {
         $data = $request->validated();
-        $event = Event::create([
-            ...$data,
-            'event_number' => $this->generateEventNumber(Carbon::parse($data['event_date'])->year),
-            'status' => Event::STATUS_DRAFT,
-            'created_by' => $request->user()->id,
-        ]);
+        $event = DB::transaction(function () use ($data, $request) {
+            $event = Event::create([
+                ...$data,
+                'event_number' => $this->generateEventNumber(Carbon::parse($data['event_date'])->year),
+                'status' => Event::STATUS_DRAFT,
+                'created_by' => $request->user()->id,
+            ]);
 
-        AuditLog::record(
-            action: AuditLog::ACTION_CREATE,
-            entity: $event,
-            entityLabel: $event->event_number,
-            newValues: $event->only(['name', 'type', 'event_date', 'payment_due_date', 'status']),
-        );
+            AuditLog::record(
+                action: AuditLog::ACTION_CREATE,
+                entity: $event,
+                entityLabel: $event->event_number,
+                newValues: $event->only(['name', 'type', 'event_date', 'payment_due_date', 'status']),
+            );
+
+            return $event;
+        });
 
         return redirect()->route('events.show', $event)
             ->with('success', "Event «{$event->name}» berhasil dibuat.");
@@ -76,18 +81,23 @@ class EventController extends Controller
 
     public function update(UpdateEventRequest $request, Event $event)
     {
-        abort_unless($event->isDraft(), 422, 'Hanya event DRAFT yang dapat diubah.');
+        $event = DB::transaction(function () use ($event, $request) {
+            $event = Event::query()->lockForUpdate()->findOrFail($event->id);
+            abort_unless($event->isDraft(), 422, 'Hanya event DRAFT yang dapat diubah.');
 
-        $oldValues = $event->only(['name', 'type', 'event_date', 'payment_due_date', 'notes']);
-        $event->update($request->validated());
+            $oldValues = $event->only(['name', 'type', 'event_date', 'payment_due_date', 'notes']);
+            $event->update($request->validated());
 
-        AuditLog::record(
-            action: AuditLog::ACTION_UPDATE,
-            entity: $event,
-            entityLabel: $event->event_number,
-            oldValues: $oldValues,
-            newValues: $event->only(array_keys($oldValues)),
-        );
+            AuditLog::record(
+                action: AuditLog::ACTION_UPDATE,
+                entity: $event,
+                entityLabel: $event->event_number,
+                oldValues: $oldValues,
+                newValues: $event->only(array_keys($oldValues)),
+            );
+
+            return $event;
+        });
 
         return redirect()->route('events.show', $event)
             ->with('success', 'Data event berhasil diperbarui.');
@@ -95,15 +105,18 @@ class EventController extends Controller
 
     public function destroy(Event $event)
     {
-        abort_unless($event->isDraft(), 422, 'Hanya event DRAFT yang dapat dihapus.');
+        DB::transaction(function () use ($event) {
+            $event = Event::query()->lockForUpdate()->findOrFail($event->id);
+            abort_unless($event->isDraft(), 422, 'Hanya event DRAFT yang dapat dihapus.');
 
-        AuditLog::record(
-            action: AuditLog::ACTION_DELETE,
-            entity: $event,
-            entityLabel: $event->event_number,
-            oldValues: $event->only(['name', 'type', 'event_date', 'payment_due_date', 'status']),
-        );
-        $event->delete();
+            AuditLog::record(
+                action: AuditLog::ACTION_DELETE,
+                entity: $event,
+                entityLabel: $event->event_number,
+                oldValues: $event->only(['name', 'type', 'event_date', 'payment_due_date', 'status']),
+            );
+            $event->delete();
+        });
 
         return redirect()->route('events.index')->with('success', 'Event DRAFT berhasil dihapus.');
     }
