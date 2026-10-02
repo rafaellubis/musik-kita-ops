@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
@@ -413,16 +414,6 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('employees', EmployeeController::class)->except(['index', 'show']);
 
-        // ===== M08: Event — write sensitif (Owner only) =====
-        // Buat/edit event, input hasil ujian, tandai selesai, kelola slip honor.
-        Route::resource('events', EventController::class)->except(['index', 'show', 'destroy']);
-        Route::post('events/{event}/complete',
-            [EventController::class, 'complete']
-        )->name('events.complete');
-        Route::patch('events/{event}/exam-results',
-            [EventController::class, 'saveExamResults']
-        )->name('events.exam-results');
-
         // ===== Pengaturan Scheduler (Owner only) =====
         Route::get('scheduler', [\App\Http\Controllers\SettingController::class, 'editScheduler'])->name('scheduler.edit');
         Route::patch('scheduler', [\App\Http\Controllers\SettingController::class, 'updateScheduler'])->name('scheduler.update');
@@ -430,18 +421,18 @@ Route::middleware('auth')->group(function () {
     });
 
     /* ======================================================================
-     | WRITE OPERASIONAL — Peserta event (Owner + Admin)
-     | Admin boleh tambah/hapus peserta event.
+     | WRITE OPERASIONAL — Event DRAFT (Owner + Admin)
      |====================================================================== */
     Route::middleware('role:Owner|Admin')->group(function () {
+        Route::resource('events', EventController::class)->except(['index', 'show']);
         Route::post('events/{event}/participants',
-            [EventController::class, 'addParticipant']
+            [EventParticipantController::class, 'store']
         )->name('events.participants.store');
         Route::delete('event-participants/{participant}',
-            [EventController::class, 'removeParticipant']
+            [EventParticipantController::class, 'destroy']
         )->name('event-participants.destroy');
         Route::patch('event-participants/{participant}/teacher',
-            [EventController::class, 'updateParticipantTeacher']
+            [EventParticipantController::class, 'updateTeacher']
         )->name('event-participants.update-teacher');
     });
 
