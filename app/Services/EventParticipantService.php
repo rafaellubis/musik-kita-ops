@@ -16,16 +16,20 @@ use Illuminate\Validation\ValidationException;
 
 class EventParticipantService
 {
-    /** Tambahkan satu atau beberapa enrollment aktif milik murid ke event DRAFT. */
+    public function __construct(private EventInvoiceService $invoiceService) {}
+
+    /** Snapshot dan invoice peserta disimpan dalam transaksi yang sama. */
     public function addEnrollments(
         Event $event,
         Student $student,
         array $enrollmentIds,
         User $actor,
+        ?string $reason = null,
     ): Collection {
-        return DB::transaction(function () use ($event, $student, $enrollmentIds, $actor) {
+        return DB::transaction(function () use ($event, $student, $enrollmentIds, $actor, $reason) {
             $event = Event::query()->lockForUpdate()->findOrFail($event->id);
-            abort_unless($event->isDraft(), 422, 'Peserta hanya dapat diubah saat event masih DRAFT.');
+            abort_unless($event->isDraft() || $event->isPublished(), 422, 'Peserta hanya dapat diubah saat event DRAFT atau PUBLISHED.');
+            abort_if($event->isPublished() && blank($reason), 422, 'Alasan penambahan peserta wajib diisi.');
 
             $ids = collect($enrollmentIds)->map(fn ($id) => (int) $id)->unique()->values();
             if ($ids->isEmpty()) {
@@ -61,6 +65,18 @@ class EventParticipantService
                 ]);
             }
 
+            $teachers = Teacher::whereIn('id', $enrollments->pluck('teacher_id'))
+                ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+            foreach ($enrollments as $enrollment) {
+                abort_unless($teachers->get($enrollment->teacher_id)?->is_active, 422, 'Guru pendamping harus masih aktif.');
+                $package = $enrollment->package;
+                abort_unless(filled($package->code) && filled($package->instrument->name)
+                    && in_array($package->class_type, ['REGULER', 'HOBBY', 'KIDS_CLASS', 'KIDS_CLASS_BUNDLE'], true)
+                    && ($package->class_type !== 'REGULER' || filled($package->grade))
+                    && $package->duration_min > 0 && $package->price_per_month > 0,
+                    422, 'Snapshot paket dan honor peserta belum valid.');
+            }
+
             $existing = EventParticipant::query()
                 ->where('event_id', $event->id)
                 ->whereIn('enrollment_id', $ids)
@@ -88,6 +104,9 @@ class EventParticipantService
                     'enrollment_id' => $enrollment->id,
                 ]);
                 $wasCancelled = $participant->exists;
+                $old = $wasCancelled
+                    ? ($event->isPublished() ? $participant->toArray() : ['status' => EventParticipant::STATUS_CANCELLED])
+                    : null;
 
                 $participant->fill([
                     'student_id' => $student->id,
@@ -108,15 +127,25 @@ class EventParticipantService
                     'snapshot_mc_fee' => 0,
                     'snapshot_honor_amount' => (int) round($package->price_per_month * 0.5 / 4),
                     'attendance_status' => EventParticipant::ATTENDANCE_PENDING,
+                    'event_notes' => null,
+                    'attendance_updated_at' => null,
+                    'attendance_updated_by' => null,
                 ]);
                 $participant->save();
+
+                if ($event->isPublished()) {
+                    $this->invoiceService->addPublishedParticipant($participant, $actor);
+                    $participant->refresh();
+                }
 
                 $this->audit(
                     $wasCancelled ? AuditLog::ACTION_UPDATE : AuditLog::ACTION_CREATE,
                     $participant,
                     $actor,
-                    $wasCancelled ? ['status' => EventParticipant::STATUS_CANCELLED] : null,
-                    ['status' => EventParticipant::STATUS_ACTIVE, 'enrollment_id' => $enrollment->id],
+                    $old,
+                    $event->isPublished()
+                        ? $participant->toArray() + ['reason' => $reason]
+                        : ['status' => EventParticipant::STATUS_ACTIVE, 'enrollment_id' => $enrollment->id],
                 );
                 $participants->push($participant);
             }
@@ -131,10 +160,10 @@ class EventParticipantService
         User $actor,
     ): EventParticipant {
         return DB::transaction(function () use ($participant, $teacher, $actor) {
-            $participant = EventParticipant::with('event')
-                ->lockForUpdate()
-                ->findOrFail($participant->id);
-            abort_unless($participant->event->isDraft(), 422, 'Guru hanya dapat diubah saat event masih DRAFT.');
+            $event = Event::query()->lockForUpdate()->findOrFail($participant->event_id);
+            $participant = $event->participants()->lockForUpdate()->findOrFail($participant->id);
+            abort_unless($event->isDraft(), 422, 'Guru hanya dapat diubah saat event masih DRAFT.');
+            $teacher = Teacher::query()->lockForUpdate()->findOrFail($teacher->id);
             abort_unless($teacher->is_active, 422, 'Guru pendamping harus masih aktif.');
 
             $oldTeacherId = $participant->activeTeacherAssignment?->teacher_id;
@@ -163,26 +192,32 @@ class EventParticipantService
         User $actor,
         string $reason,
     ): EventParticipant {
+        abort_if(blank($reason), 422, 'Alasan pembatalan peserta wajib diisi.');
         return DB::transaction(function () use ($participant, $actor, $reason) {
-            $participant = EventParticipant::with('event')
-                ->lockForUpdate()
-                ->findOrFail($participant->id);
-            abort_unless($participant->event->isDraft(), 422, 'Peserta hanya dapat dibatalkan saat event masih DRAFT.');
+            $event = Event::query()->lockForUpdate()->findOrFail($participant->event_id);
+            $participant = $event->participants()->lockForUpdate()->findOrFail($participant->id);
+            abort_unless($event->isDraft() || $event->isPublished(), 422, 'Peserta hanya dapat dibatalkan saat event DRAFT atau PUBLISHED.');
             abort_if($participant->status === EventParticipant::STATUS_CANCELLED, 422, 'Partisipasi sudah dibatalkan.');
+            $old = $participant->toArray();
 
-            $participant->update([
-                'status' => EventParticipant::STATUS_CANCELLED,
-                'cancelled_at' => now(),
-                'cancelled_by' => $actor->id,
-                'cancellation_reason' => $reason,
-            ]);
+            if ($event->isPublished()) {
+                $this->invoiceService->cancelPublishedParticipant($participant, $actor, $reason);
+                $participant->refresh();
+            } else {
+                $participant->update([
+                    'status' => EventParticipant::STATUS_CANCELLED,
+                    'cancelled_at' => now(),
+                    'cancelled_by' => $actor->id,
+                    'cancellation_reason' => $reason,
+                ]);
+            }
 
             $this->audit(
                 AuditLog::ACTION_UPDATE,
                 $participant,
                 $actor,
-                ['status' => EventParticipant::STATUS_ACTIVE],
-                ['status' => EventParticipant::STATUS_CANCELLED, 'reason' => $reason],
+                $old,
+                $participant->toArray() + ['reason' => $reason],
             );
 
             return $participant;

@@ -7,7 +7,6 @@ use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\Invoice;
 use App\Models\InvoiceComponent;
-use App\Models\InvoiceItem;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -99,7 +98,7 @@ class EventInvoiceService
                 && ($item->metadata['event_participant_id'] ?? null) === $participant->id,
                 422, 'Item tagihan peserta tidak konsisten.');
             $old = $invoice->toArray() + ['items' => $items->toArray()];
-            InvoiceItem::where('parent_item_id', $item->id)->delete();
+            $invoice->items()->where('parent_item_id', $item->id)->where('item_code', 'DISKON')->delete();
             $participant->update([
                 'status' => EventParticipant::STATUS_CANCELLED, 'cancelled_at' => now(),
                 'cancelled_by' => $actor->id, 'cancellation_reason' => $reason,
@@ -116,6 +115,42 @@ class EventInvoiceService
             $this->audit($invoice, $actor, $invoice->status === Invoice::STATUS_VOID ? AuditLog::ACTION_VOID : AuditLog::ACTION_UPDATE,
                 $old, $invoice->fresh('items')->toArray() + ['reason' => $reason, 'cancelled_participant_id' => $participant->id]);
         });
+    }
+
+    /** Event sudah dikunci oleh lifecycle; seluruh pembayaran diperiksa sebelum void pertama. */
+    public function cancelEventInvoices(Event $event, User $actor, string $reason): void
+    {
+        if (DB::transactionLevel() === 0) {
+            throw new \LogicException('Pembatalan invoice harus berada dalam transaksi lifecycle event.');
+        }
+        $invoices = $event->invoices()->orderBy('id')->lockForUpdate()->get();
+        foreach ($invoices as $invoice) {
+            abort_if($invoice->validPayments()->lockForUpdate()->get()->isNotEmpty(),
+                422, 'Owner harus void seluruh pembayaran event terlebih dahulu.');
+        }
+        foreach ($invoices->where('status', '!=', Invoice::STATUS_VOID) as $invoice) {
+            $old = $invoice->toArray();
+            $invoice->update([
+                'status' => Invoice::STATUS_VOID, 'voided_at' => now(),
+                'voided_by' => $actor->id, 'voided_reason' => $reason,
+            ]);
+            $this->audit($invoice, $actor, AuditLog::ACTION_VOID, $old, $invoice->toArray());
+        }
+    }
+
+    public function rescheduleInvoices(Event $event, User $actor): void
+    {
+        if (DB::transactionLevel() === 0) {
+            throw new \LogicException('Penjadwalan invoice harus berada dalam transaksi lifecycle event.');
+        }
+        $invoices = $event->invoices()->where('status', Invoice::STATUS_UNPAID)
+            ->orderBy('id')->lockForUpdate()->get();
+        foreach ($invoices as $invoice) {
+            $old = ['due_date' => $invoice->due_date?->toDateString()];
+            $invoice->update(['due_date' => $event->payment_due_date]);
+            $this->audit($invoice, $actor, AuditLog::ACTION_UPDATE, $old,
+                ['due_date' => $invoice->due_date->toDateString()]);
+        }
     }
 
     private function activeComponent(): InvoiceComponent
@@ -173,7 +208,7 @@ class EventInvoiceService
 
     private function assertUnpaid(Invoice $invoice): void
     {
-        $payments = $invoice->payments()->whereNull('voided_at')->lockForUpdate()->get();
+        $payments = $invoice->validPayments()->lockForUpdate()->get();
         abort_if($payments->isNotEmpty() || $invoice->paid_amount > 0 || $invoice->status !== Invoice::STATUS_UNPAID,
             422, 'Void seluruh pembayaran invoice terlebih dahulu sebelum mengubah peserta.');
     }

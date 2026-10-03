@@ -427,6 +427,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:Owner|Admin')->group(function () {
         Route::resource('events', EventController::class)->except(['index', 'show']);
         Route::post('events/{event}/publish', [EventLifecycleController::class, 'publish'])->name('events.publish');
+        Route::patch('events/{event}/reschedule', [EventLifecycleController::class, 'reschedule'])->name('events.reschedule');
+        Route::post('events/{event}/cancel', [EventLifecycleController::class, 'cancel'])->name('events.cancel');
         Route::post('events/{event}/participants',
             [EventParticipantController::class, 'store']
         )->name('events.participants.store');

@@ -24,6 +24,7 @@ class EventParticipantController extends Controller
             $student,
             $request->input('enrollment_ids') ?? [],
             $request->user(),
+            $request->validated('reason'),
         );
 
         return back()->with('success', "{$participants->count()} enrollment berhasil ditambahkan.");

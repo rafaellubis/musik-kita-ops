@@ -39,31 +39,33 @@ class PaymentService
      */
     public function recordPayment(Invoice $invoice, array $data): Payment
     {
-        if ($invoice->status === Invoice::STATUS_VOID) {
-            throw new InvalidArgumentException('Tidak bisa bayar invoice yang sudah VOID.');
-        }
-
-        if ($data['amount'] <= 0) {
-            throw new InvalidArgumentException('Jumlah pembayaran harus lebih dari 0.');
-        }
-
-        // Semua invoice harus dibayar penuh dalam satu pembayaran.
-        // Untuk KIDS_CLASS_BUNDLE cicilan, "partial" diwujudkan lewat 3 invoice terpisah —
-        // bukan dengan membayar 1 invoice berkali-kali dengan nominal kurang.
-        if ($data['amount'] < $invoice->balance) {
-            throw new InvalidArgumentException(
-                'Pembayaran harus dilunasi penuh. ' .
-                'Saldo yang harus dibayar: Rp ' . number_format($invoice->balance, 0, ',', '.') . '.'
-            );
-        }
-
-        if (!array_key_exists($data['method'], Payment::METHODS)) {
-            throw new InvalidArgumentException(
-                'Metode pembayaran tidak valid. Pilih: ' . implode(', ', array_keys(Payment::METHODS))
-            );
-        }
-
         return DB::transaction(function () use ($invoice, $data) {
+            // Baca ulang setelah lock agar pembatalan/perubahan invoice tidak terlewati oleh instance lama.
+            $invoice = Invoice::query()->lockForUpdate()->findOrFail($invoice->id);
+            if ($invoice->status === Invoice::STATUS_VOID) {
+                throw new InvalidArgumentException('Tidak bisa bayar invoice yang sudah VOID.');
+            }
+
+            if ($data['amount'] <= 0) {
+                throw new InvalidArgumentException('Jumlah pembayaran harus lebih dari 0.');
+            }
+
+            // Semua invoice harus dibayar penuh dalam satu pembayaran.
+            // Untuk KIDS_CLASS_BUNDLE cicilan, "partial" diwujudkan lewat 3 invoice terpisah —
+            // bukan dengan membayar 1 invoice berkali-kali dengan nominal kurang.
+            if ($data['amount'] < $invoice->balance) {
+                throw new InvalidArgumentException(
+                    'Pembayaran harus dilunasi penuh. ' .
+                    'Saldo yang harus dibayar: Rp ' . number_format($invoice->balance, 0, ',', '.') . '.'
+                );
+            }
+
+            if (!array_key_exists($data['method'], Payment::METHODS)) {
+                throw new InvalidArgumentException(
+                    'Metode pembayaran tidak valid. Pilih: ' . implode(', ', array_keys(Payment::METHODS))
+                );
+            }
+
             $now = now();
             $year = $now->year;
             $month = $now->month;

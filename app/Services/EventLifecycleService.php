@@ -11,10 +11,69 @@ use App\Models\HonorSlip;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class EventLifecycleService
 {
     public function __construct(private EventInvoiceService $invoiceService) {}
+
+    public function reschedule(Event $event, array $data, User $actor): Event
+    {
+        return DB::transaction(function () use ($event, $data, $actor) {
+            $event = Event::query()->lockForUpdate()->findOrFail($event->id);
+            abort_unless($event->isPublished(), 422, 'Hanya event PUBLISHED yang dapat dijadwalkan ulang.');
+            $data = Validator::make($data, [
+                'name' => ['required', 'string', 'max:100'],
+                'event_date' => ['required', 'date'],
+                'payment_due_date' => ['required', 'date', 'before_or_equal:event_date'],
+                'notes' => ['nullable', 'string', 'max:1000'],
+            ])->validate();
+            $participants = $event->participants()->orderBy('id')->lockForUpdate()->get();
+            $assignments = $event->teacherAssignments()->orderBy('id')->lockForUpdate()->get();
+            abort_if($assignments->contains(fn ($assignment) => $assignment->confirmed_at
+                || $assignment->attendance_status !== EventTeacherAssignment::ATTENDANCE_PENDING)
+                || $participants->contains(fn ($participant) => $participant->attendance_updated_at
+                    || $participant->attendance_status !== EventParticipant::ATTENDANCE_PENDING),
+                422, 'Jadwal tidak dapat diubah setelah konfirmasi guru atau absensi murid dimulai.');
+            $old = [
+                'name' => $event->name, 'event_date' => $event->event_date->toDateString(),
+                'payment_due_date' => $event->payment_due_date->toDateString(), 'notes' => $event->notes,
+            ];
+            $event->update($data);
+            $this->invoiceService->rescheduleInvoices($event, $actor);
+            $this->auditChange($event, $actor, $old, $data);
+
+            return $event;
+        });
+    }
+
+    public function cancel(Event $event, User $actor, string $reason): Event
+    {
+        abort_if(blank($reason), 422, 'Alasan pembatalan event wajib diisi.');
+        return DB::transaction(function () use ($event, $actor, $reason) {
+            $event = Event::query()->lockForUpdate()->findOrFail($event->id);
+            abort_unless($event->isPublished(), 422, 'Hanya event PUBLISHED yang dapat dibatalkan.');
+            $this->invoiceService->cancelEventInvoices($event, $actor, $reason);
+            $event->update([
+                'status' => Event::STATUS_CANCELLED, 'cancelled_at' => now(),
+                'cancelled_by' => $actor->id, 'cancellation_reason' => $reason,
+            ]);
+            $this->auditChange($event, $actor, ['status' => Event::STATUS_PUBLISHED], [
+                'status' => Event::STATUS_CANCELLED, 'cancelled_by' => $actor->id, 'reason' => $reason,
+            ]);
+
+            return $event;
+        });
+    }
+
+    private function auditChange(Event $event, User $actor, array $old, array $new): void
+    {
+        AuditLog::create([
+            'user_id' => $actor->id, 'user_name' => $actor->name, 'action' => AuditLog::ACTION_UPDATE,
+            'entity_type' => 'Event', 'entity_id' => $event->id, 'entity_label' => $event->name,
+            'old_values' => $old, 'new_values' => $new, 'ip_address' => request()->ip(),
+        ]);
+    }
 
     public function publish(Event $event, User $actor): Event
     {
