@@ -325,6 +325,48 @@ class EventPublishedMutationTest extends TestCase
         $this->assertSame($auditCount, AuditLog::count());
     }
 
+    public function test_reactivating_cancelled_participant_rolls_back_replacement_invoice_if_final_audit_fails(): void
+    {
+        $participant = $this->addDraft();
+        $this->publish();
+        $oldInvoice = $participant->fresh()->invoice;
+        $this->cancelParticipant($participant)->assertRedirect();
+        $cancelled = $participant->fresh();
+        $auditCount = AuditLog::count();
+
+        AuditLog::creating(function (AuditLog $audit): void {
+            if ($audit->entity_type === 'EventParticipant' && $audit->old_values['status'] === EventParticipant::STATUS_CANCELLED) {
+                throw new \RuntimeException('Simulasi audit reaktivasi gagal.');
+            }
+        });
+
+        try {
+            app(EventParticipantService::class)->addEnrollments(
+                $this->event,
+                $cancelled->student,
+                [$cancelled->enrollment_id],
+                $this->actor,
+                'Aktif kembali',
+            );
+            $this->fail('Reaktivasi seharusnya gagal.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('Simulasi audit reaktivasi gagal.', $exception->getMessage());
+        }
+
+        $participant->refresh();
+        $this->assertSame(EventParticipant::STATUS_CANCELLED, $participant->status);
+        $this->assertSame($cancelled->cancelled_at->toISOString(), $participant->cancelled_at->toISOString());
+        $this->assertSame($cancelled->cancelled_by, $participant->cancelled_by);
+        $this->assertSame($cancelled->cancellation_reason, $participant->cancellation_reason);
+        $this->assertSame($oldInvoice->id, $participant->invoice_id);
+        $this->assertNull($participant->invoice_item_id);
+        $this->assertSame(Invoice::STATUS_VOID, $oldInvoice->fresh()->status);
+        $this->assertSame(0, $this->event->invoices()->notVoid()->count());
+        $this->assertDatabaseCount('invoices', 1);
+        $this->assertDatabaseCount('invoice_items', 0);
+        $this->assertSame($auditCount, AuditLog::count());
+    }
+
     public static function atomicMutations(): array
     {
         return [['add'], ['participant_cancel'], ['reschedule'], ['event_cancel']];

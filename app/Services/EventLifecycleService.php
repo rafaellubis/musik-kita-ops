@@ -90,9 +90,9 @@ class EventLifecycleService
             abort_if($active->isEmpty(), 422, 'Tambahkan minimal satu peserta aktif sebelum publikasi.');
             $assignments = EventTeacherAssignment::whereIn('id', $active->pluck('active_teacher_assignment_id'))
                 ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
-            $teachers = Teacher::whereIn('id', $assignments->pluck('teacher_id'))
-                ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
             $enrollments = Enrollment::whereIn('id', $active->pluck('enrollment_id'))
+                ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+            $teachers = Teacher::whereIn('id', $assignments->pluck('teacher_id'))
                 ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
 
             foreach ($active as $participant) {
