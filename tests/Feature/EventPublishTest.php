@@ -193,6 +193,10 @@ class EventPublishTest extends TestCase
             'wrong_metadata' => $participant->invoiceItem->update(['metadata' => []]),
             'wrong_total' => $participant->invoice->update(['total_amount' => 1]),
             'wrong_due_date' => $participant->invoice->update(['due_date' => '2026-12-21']),
+            'wrong_component' => $participant->invoiceItem->update(['invoice_component_id' => InvoiceComponent::create([
+                'code' => 'REG', 'name' => 'Registrasi', 'default_price' => 250000, 'is_active' => true,
+            ])->id]),
+            'grouped_invoice_has_enrollment' => $participant->invoice->update(['enrollment_id' => $participant->enrollment_id]),
             'duplicate_invoice' => Invoice::factory()->create(['event_id' => $this->event->id, 'student_id' => $participant->student_id]),
         };
         $this->postJson($this->url())->assertUnprocessable();
@@ -200,7 +204,10 @@ class EventPublishTest extends TestCase
 
     public static function invalidPublishedStates(): array
     {
-        return [['missing_link'], ['wrong_amount'], ['wrong_metadata'], ['wrong_total'], ['wrong_due_date'], ['duplicate_invoice']];
+        return [
+            ['missing_link'], ['wrong_amount'], ['wrong_metadata'], ['wrong_total'], ['wrong_due_date'],
+            ['wrong_component'], ['grouped_invoice_has_enrollment'], ['duplicate_invoice'],
+        ];
     }
 
     public function test_retry_accepts_metadata_key_order_normalized_by_mysql_json(): void

@@ -187,15 +187,16 @@ class EventInvoiceService
             $studentInvoices = $invoices->where('student_id', $studentId);
             abort_unless($studentInvoices->count() === 1, 422, 'Murid harus memiliki tepat satu invoice aktif per event.');
             $invoice = $studentInvoices->first();
-            $items = $invoice->items()->lockForUpdate()->get();
-            abort_unless($invoice->total_amount === (int) $items->sum('amount')
+            $items = $invoice->items()->with('component:id,code')->lockForUpdate()->get();
+            abort_unless($invoice->enrollment_id === null
+                && $invoice->total_amount === (int) $items->sum('amount')
                 && $items->where('item_code', 'MC')->count() === $group->count(), 422, 'Total atau jumlah item invoice event tidak konsisten.');
             abort_if($invoice->status === Invoice::STATUS_UNPAID
                 && ! $invoice->due_date?->equalTo($event->payment_due_date), 422, 'Batas pembayaran invoice tidak sesuai dengan event.');
             foreach ($group as $participant) {
                 $item = $items->firstWhere('id', $participant->invoice_item_id);
                 abort_unless($participant->invoice_id === $invoice->id && $item && $item->item_code === 'MC'
-                    && $item->invoice_component_id && $participant->snapshot_mc_fee > 0
+                    && $item->component?->code === 'MC' && $participant->snapshot_mc_fee > 0
                     && $item->amount === $participant->snapshot_mc_fee
                     // MySQL dapat mengurutkan ulang key kolom JSON ketika dibaca.
                     && $item->metadata == $this->metadata($participant), 422, 'Tautan atau snapshot tagihan peserta tidak konsisten.');
