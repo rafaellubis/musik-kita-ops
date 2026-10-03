@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventLifecycleController;
 use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ExpenseCategoryController;
@@ -425,6 +426,7 @@ Route::middleware('auth')->group(function () {
      |====================================================================== */
     Route::middleware('role:Owner|Admin')->group(function () {
         Route::resource('events', EventController::class)->except(['index', 'show']);
+        Route::post('events/{event}/publish', [EventLifecycleController::class, 'publish'])->name('events.publish');
         Route::post('events/{event}/participants',
             [EventParticipantController::class, 'store']
         )->name('events.participants.store');
