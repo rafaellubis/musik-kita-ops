@@ -39,6 +39,8 @@
             <x-sidebar-item route="guru.sesi-pending.index" icon="📋" label="Pending"
                 :active="request()->routeIs('guru.sesi-pending*')"
                 :badge="$guruPendingCount ?: null" />
+            <x-sidebar-item route="guru.events.index" icon="🎤" label="Event"
+                :active="request()->routeIs('guru.events.*')" />
             <x-sidebar-item route="guru.laporan.index" icon="📝" label="Report"
                 :active="request()->routeIs('guru.laporan*')" />
             <x-sidebar-item route="guru.honor" icon="💰" label="Honor"
@@ -133,10 +135,10 @@
 </div>
 
 {{-- ===== BOTTOM NAVIGATION (Mobile) ===== --}}
-<nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-primary border-t border-outline-variant/20 flex items-stretch h-16 text-on-primary">
+<nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-primary border-t border-outline-variant/20 flex items-stretch h-16 text-on-primary overflow-x-auto" aria-label="Navigasi utama guru">
 
     <a href="{{ route('guru.dashboard') }}"
-       class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors">
+       class="flex-1 min-w-[4rem] flex flex-col items-center justify-center gap-0.5 transition-colors">
         <span class="px-3.5 py-0.5 rounded-full transition-all {{ request()->routeIs('guru.dashboard') ? 'bg-secondary/20 text-[#b1f0ce]' : 'text-white/50 hover:text-white/85' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -149,7 +151,7 @@
     </a>
 
     <a href="{{ route('guru.jadwal') }}"
-       class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors">
+       class="flex-1 min-w-[4rem] flex flex-col items-center justify-center gap-0.5 transition-colors">
         <span class="px-3.5 py-0.5 rounded-full transition-all {{ request()->routeIs('guru.jadwal') ? 'bg-secondary/20 text-[#b1f0ce]' : 'text-white/50 hover:text-white/85' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -162,7 +164,7 @@
     </a>
 
     <a href="{{ route('guru.sesi-pending.index') }}"
-       class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors relative">
+       class="flex-1 min-w-[4rem] flex flex-col items-center justify-center gap-0.5 transition-colors relative">
         <span class="px-3.5 py-0.5 rounded-full transition-all relative {{ request()->routeIs('guru.sesi-pending*') ? 'bg-secondary/20 text-[#b1f0ce]' : 'text-white/50 hover:text-white/85' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -180,8 +182,21 @@
         </span>
     </a>
 
+    <a href="{{ route('guru.events.index') }}"
+       class="flex-1 min-w-[4rem] flex flex-col items-center justify-center gap-0.5 transition-colors">
+        <span class="px-3.5 py-0.5 rounded-full transition-all {{ request()->routeIs('guru.events.*') ? 'bg-secondary/20 text-[#b1f0ce]' : 'text-white/50 hover:text-white/85' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 19V6l12-2v13M9 10l12-2M6 21a3 3 0 100-6 3 3 0 000 6zm12-2a3 3 0 100-6 3 3 0 000 6z"/>
+            </svg>
+        </span>
+        <span class="text-[10px] font-semibold {{ request()->routeIs('guru.events.*') ? 'text-[#b1f0ce]' : 'text-white/40' }}">
+            Event
+        </span>
+    </a>
+
     <a href="{{ route('guru.laporan.index') }}"
-       class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors">
+       class="flex-1 min-w-[4rem] flex flex-col items-center justify-center gap-0.5 transition-colors">
         <span class="px-3.5 py-0.5 rounded-full transition-all {{ request()->routeIs('guru.laporan*') ? 'bg-secondary/20 text-[#b1f0ce]' : 'text-white/50 hover:text-white/85' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -194,7 +209,7 @@
     </a>
 
     <a href="{{ route('guru.honor') }}"
-       class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors">
+       class="flex-1 min-w-[4rem] flex flex-col items-center justify-center gap-0.5 transition-colors">
         <span class="px-3.5 py-0.5 rounded-full transition-all {{ request()->routeIs('guru.honor*') ? 'bg-secondary/20 text-[#b1f0ce]' : 'text-white/50 hover:text-white/85' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

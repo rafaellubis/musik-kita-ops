@@ -33,6 +33,7 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\ManualSessionController;
 use App\Http\Controllers\GuruController;
+use App\Http\Controllers\GuruEventController;
 use App\Http\Controllers\KalenderController;
 use App\Http\Controllers\ProgressReportController;
 use App\Http\Controllers\ReportTemplateController;
@@ -643,6 +644,10 @@ Route::middleware(['auth', 'verified', 'role:Guru'])
         Route::get('/jadwal/dates',                  [GuruController::class, 'jadwalDates'])->name('jadwal.dates');
         Route::get('/honor',                         [GuruController::class, 'honor'])->name('honor');
         Route::get('/honor/{honorSlip}',             [GuruController::class, 'honorShow'])->name('honor.show');
+        Route::get('/events',                        [GuruEventController::class, 'index'])->name('events.index');
+        Route::get('/events/{event}',                [GuruEventController::class, 'show'])->name('events.show');
+        Route::patch('/event-participants/{participant}/attendance', [GuruEventController::class, 'updateAttendance'])
+            ->name('events.attendance.update');
         Route::patch('/sesi/{classSession}/absensi', [GuruController::class, 'updateAbsensi'])->name('absensi.update');
         // Konfirmasi kehadiran sebagai guru pengganti (DIGANTI two-phase)
         Route::post('/sesi/{classSession}/confirm-substitute', [GuruController::class, 'confirmSubstitute'])
