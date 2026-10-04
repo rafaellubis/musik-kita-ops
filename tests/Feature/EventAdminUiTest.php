@@ -87,6 +87,24 @@ class EventAdminUiTest extends TestCase
             ->assertDontSee('action="'.route('event-participants.attendance', $participant).'"', false);
     }
 
+    public function test_missing_teacher_absence_reason_reopens_the_form_and_retains_input(): void
+    {
+        [$event, $assignment] = $this->publishedParticipant();
+
+        $this->from(route('events.show', $event))->patch(route('event-teacher-assignments.attendance', $assignment), [
+            'attendance_status' => 'TIDAK_HADIR',
+            'reason' => '',
+            'event_ui_tab' => 'teacher-attendance',
+            'assignment_id' => $assignment->id,
+        ])->assertRedirect(route('events.show', $event))->assertSessionHasErrors('reason');
+
+        $this->get(route('events.show', $event))->assertOk()
+            ->assertSee('x-data="{ tab: \'teacher-attendance\' }"', false)
+            ->assertSee('data-validation-error="reason"', false)
+            ->assertSee('<option value="TIDAK_HADIR" selected>', false)
+            ->assertSee('name="assignment_id" value="'.$assignment->id.'"', false);
+    }
+
     public function test_recorded_attendance_requires_reset_before_replacement(): void
     {
         [$event, $assignment, $participant] = $this->publishedParticipant();
@@ -96,6 +114,38 @@ class EventAdminUiTest extends TestCase
             ->assertSee(route('event-participants.attendance.reset', $participant), false)
             ->assertDontSee('action="'.route('event-participants.reassign', $participant).'"', false)
             ->assertSee('Reset absensi sebelum mengganti guru.');
+    }
+
+    public function test_recorded_attendance_can_be_reset_after_teacher_is_corrected_absent(): void
+    {
+        [$event, $assignment, $participant] = $this->publishedParticipant();
+        $assignment->update([
+            'attendance_status' => 'TIDAK_HADIR',
+            'absence_reason' => 'Koreksi konfirmasi',
+        ]);
+        $participant->update(['attendance_status' => 'HADIR', 'event_notes' => 'Sudah dicatat']);
+
+        $this->get(route('events.show', $event))->assertOk()
+            ->assertSee('action="'.route('event-participants.attendance.reset', $participant).'"', false)
+            ->assertDontSee('action="'.route('event-participants.attendance', $participant).'"', false)
+            ->assertDontSee('action="'.route('event-participants.reassign', $participant).'"', false)
+            ->assertSee('Reset absensi sebelum mengganti guru.');
+    }
+
+    public function test_historical_teacher_confirmation_keeps_reschedule_locked_after_reassignment(): void
+    {
+        [$event, $historicalAssignment, $participant] = $this->publishedParticipant();
+        $historicalAssignment->update([
+            'attendance_status' => 'HADIR',
+            'confirmed_at' => now(),
+            'confirmed_by' => auth()->id(),
+        ]);
+        $currentAssignment = EventTeacherAssignment::factory()->create(['event_id' => $event->id]);
+        $participant->update(['active_teacher_assignment_id' => $currentAssignment->id]);
+
+        $this->get(route('events.show', $event))->assertOk()
+            ->assertDontSee('action="'.route('events.reschedule', $event).'"', false)
+            ->assertSee('Jadwal terkunci karena konfirmasi guru atau absensi murid sudah dimulai.');
     }
 
     public function test_future_event_explains_date_lock_and_allows_reschedule_before_attendance(): void

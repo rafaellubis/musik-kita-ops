@@ -7,6 +7,9 @@
             'COMPLETED' => ['Selesai', 'bg-mk-accentDim text-mk-text border-mk-border', 'bg-mk-accent'],
             'CANCELLED' => ['Dibatalkan', 'bg-red-50 text-red-900 border-red-200', 'bg-red-600'],
         ][$event->status] ?? [$event->status, 'bg-mk-surface text-mk-text border-mk-border', 'bg-mk-muted'];
+        $initialTab = in_array(old('event_ui_tab'), ['summary', 'participants', 'teacher-attendance', 'finance'], true)
+            ? old('event_ui_tab')
+            : 'summary';
     @endphp
 
     <x-slot name="header">
@@ -29,7 +32,7 @@
         </div>
     </x-slot>
 
-    <div class="px-4 py-6 lg:px-8" x-data="{ tab: 'summary' }">
+    <div class="px-4 py-6 lg:px-8" x-data="{ tab: '{{ $initialTab }}' }">
         <div class="overflow-x-auto border-b border-mk-border">
             <div class="flex min-w-max gap-1" role="tablist" aria-label="Detail event">
                 @foreach([
@@ -39,7 +42,7 @@
                     'finance' => 'Keuangan',
                 ] as $tab => $label)
                     <button type="button" id="event-tab-{{ $tab }}" role="tab"
-                            aria-selected="{{ $loop->first ? 'true' : 'false' }}"
+                            aria-selected="{{ $initialTab === $tab ? 'true' : 'false' }}"
                             :aria-selected="(tab === '{{ $tab }}').toString()"
                             aria-controls="event-panel-{{ $tab }}"
                             @click="tab = '{{ $tab }}'"

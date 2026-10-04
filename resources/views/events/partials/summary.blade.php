@@ -1,9 +1,10 @@
 @php
     $activeParticipants = $event->participants->where('status', 'ACTIVE');
     $assignments = $activeParticipants->pluck('activeTeacherAssignment')->filter()->unique('id')->values();
-    $attendanceStarted = $assignments->contains(fn ($assignment) => $assignment->confirmed_at
-        || $assignment->attendance_status !== 'PENDING')
-        || $activeParticipants->contains(fn ($participant) => $participant->attendance_updated_at
+    $attendanceStarted = $event->teacherAssignments()
+        ->where(fn ($query) => $query->whereNotNull('confirmed_at')->orWhere('attendance_status', '!=', 'PENDING'))
+        ->exists()
+        || $event->participants->contains(fn ($participant) => $participant->attendance_updated_at
             || $participant->attendance_status !== 'PENDING');
     $completionIssues = collect()
         ->when($activeParticipants->isEmpty(), fn ($issues) => $issues->push('Tambahkan minimal satu peserta aktif.'))

@@ -30,6 +30,9 @@
             $recordedCount = $participants->whereNotIn('attendance_status', ['PENDING'])->count();
             $status = $teacherStatuses[$assignment->attendance_status] ?? [$assignment->attendance_status, 'bg-mk-surface text-mk-text border-mk-border', 'bg-mk-muted'];
             $instruments = $participants->pluck('snapshot_instrument_name')->filter()->unique()->join(', ');
+            $recoveringAssignment = (string) old('assignment_id') === (string) $assignment->id;
+            $selectedAttendance = $recoveringAssignment ? old('attendance_status') : $assignment->attendance_status;
+            $reason = $recoveringAssignment ? old('reason') : $assignment->absence_reason;
         @endphp
 
         <section class="overflow-hidden rounded-lg border border-mk-borderLight bg-mk-card">
@@ -63,17 +66,25 @@
                       class="grid gap-3 border-b border-mk-borderLight px-4 py-4 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto] sm:items-end">
                     @csrf
                     @method('PATCH')
+                    <input type="hidden" name="event_ui_tab" value="teacher-attendance">
+                    <input type="hidden" name="assignment_id" value="{{ $assignment->id }}">
                     <div>
                         <label for="teacher-attendance-{{ $assignment->id }}" class="block text-sm font-semibold text-mk-text">Kehadiran guru</label>
                         <select id="teacher-attendance-{{ $assignment->id }}" name="attendance_status" required class="mt-1 w-full rounded-md text-sm">
-                            <option value="HADIR" @selected($assignment->attendance_status === 'HADIR')>Hadir</option>
-                            <option value="TIDAK_HADIR" @selected($assignment->attendance_status === 'TIDAK_HADIR')>Tidak hadir</option>
+                            <option value="HADIR" @selected($selectedAttendance === 'HADIR')>Hadir</option>
+                            <option value="TIDAK_HADIR" @selected($selectedAttendance === 'TIDAK_HADIR')>Tidak hadir</option>
                         </select>
                     </div>
                     <div>
                         <label for="teacher-reason-{{ $assignment->id }}" class="block text-sm font-semibold text-mk-text">Alasan jika tidak hadir</label>
                         <input id="teacher-reason-{{ $assignment->id }}" type="text" name="reason" maxlength="1000"
-                               value="{{ $assignment->absence_reason }}" class="mt-1 w-full rounded-md text-sm">
+                               value="{{ $reason }}" class="mt-1 w-full rounded-md text-sm"
+                               @if($recoveringAssignment && $errors->has('reason')) aria-invalid="true" aria-describedby="teacher-reason-error-{{ $assignment->id }}" @endif>
+                        @if($recoveringAssignment)
+                            @error('reason')
+                                <p id="teacher-reason-error-{{ $assignment->id }}" data-validation-error="reason" class="mt-1 text-sm font-semibold text-red-800">{{ $message }}</p>
+                            @enderror
+                        @endif
                     </div>
                     <button type="submit" class="btn-mk-primary rounded-lg px-4 py-2 text-sm font-bold">Simpan Konfirmasi</button>
                 </form>
@@ -102,35 +113,33 @@
                         @endif
 
                         @if($canOperateParticipant)
-                            @if($assignment->attendance_status === 'HADIR')
-                                @if($participant->attendance_status === 'PENDING')
-                                    <form method="POST" action="{{ route('event-participants.attendance', $participant) }}" class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_auto] sm:items-end">
-                                        @csrf
-                                        @method('PATCH')
-                                        <div>
-                                            <label for="participant-attendance-{{ $participant->id }}" class="block text-sm font-semibold text-mk-text">Kehadiran murid</label>
-                                            <select id="participant-attendance-{{ $participant->id }}" name="attendance_status" required class="mt-1 w-full rounded-md text-sm">
-                                                <option value="HADIR">Hadir</option>
-                                                <option value="TIDAK_HADIR">Tidak hadir</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label for="participant-notes-{{ $participant->id }}" class="block text-sm font-semibold text-mk-text">Catatan</label>
-                                            <input id="participant-notes-{{ $participant->id }}" type="text" name="event_notes" maxlength="1000" class="mt-1 w-full rounded-md text-sm">
-                                        </div>
-                                        <button type="submit" class="btn-mk-primary rounded-lg px-4 py-2 text-sm font-bold">Simpan Absensi</button>
-                                    </form>
-                                @else
-                                    <form method="POST" action="{{ route('event-participants.attendance.reset', $participant) }}" class="mt-4 flex flex-wrap items-end gap-3">
-                                        @csrf
-                                        <div class="min-w-[16rem] flex-1">
-                                            <label for="reset-reason-{{ $participant->id }}" class="block text-sm font-semibold text-mk-text">Alasan reset absensi</label>
-                                            <input id="reset-reason-{{ $participant->id }}" type="text" name="reason" required maxlength="1000" class="mt-1 w-full rounded-md text-sm">
-                                        </div>
-                                        <button type="submit" class="rounded-lg border border-mk-border px-4 py-2 text-sm font-semibold text-mk-muted hover:bg-mk-surface hover:text-mk-text">Reset Absensi</button>
-                                    </form>
-                                    <p class="mt-2 text-sm text-mk-muted">Reset absensi sebelum mengganti guru.</p>
-                                @endif
+                            @if($participant->attendance_status !== 'PENDING')
+                                <form method="POST" action="{{ route('event-participants.attendance.reset', $participant) }}" class="mt-4 flex flex-wrap items-end gap-3">
+                                    @csrf
+                                    <div class="min-w-[16rem] flex-1">
+                                        <label for="reset-reason-{{ $participant->id }}" class="block text-sm font-semibold text-mk-text">Alasan reset absensi</label>
+                                        <input id="reset-reason-{{ $participant->id }}" type="text" name="reason" required maxlength="1000" class="mt-1 w-full rounded-md text-sm">
+                                    </div>
+                                    <button type="submit" class="rounded-lg border border-mk-border px-4 py-2 text-sm font-semibold text-mk-muted hover:bg-mk-surface hover:text-mk-text">Reset Absensi</button>
+                                </form>
+                                <p class="mt-2 text-sm text-mk-muted">Reset absensi sebelum mengganti guru.</p>
+                            @elseif($assignment->attendance_status === 'HADIR')
+                                <form method="POST" action="{{ route('event-participants.attendance', $participant) }}" class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_auto] sm:items-end">
+                                    @csrf
+                                    @method('PATCH')
+                                    <div>
+                                        <label for="participant-attendance-{{ $participant->id }}" class="block text-sm font-semibold text-mk-text">Kehadiran murid</label>
+                                        <select id="participant-attendance-{{ $participant->id }}" name="attendance_status" required class="mt-1 w-full rounded-md text-sm">
+                                            <option value="HADIR">Hadir</option>
+                                            <option value="TIDAK_HADIR">Tidak hadir</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="participant-notes-{{ $participant->id }}" class="block text-sm font-semibold text-mk-text">Catatan</label>
+                                        <input id="participant-notes-{{ $participant->id }}" type="text" name="event_notes" maxlength="1000" class="mt-1 w-full rounded-md text-sm">
+                                    </div>
+                                    <button type="submit" class="btn-mk-primary rounded-lg px-4 py-2 text-sm font-bold">Simpan Absensi</button>
+                                </form>
                             @else
                                 <p class="mt-3 rounded-lg border border-mk-warningBorder bg-mk-warningBg p-3 text-sm font-semibold text-mk-warning">Guru pendamping harus Hadir sebelum absensi murid diisi.</p>
                             @endif
