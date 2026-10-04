@@ -32,46 +32,22 @@
                 @csrf
                 @method('PATCH')
 
-                {{-- Honor Event (isi 0 jika bulan ini tidak ada event) --}}
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-mk-muted">
-                        Honor Event (Rp)
-                        <span class="text-mk-dim font-normal text-xs ml-1">— isi 0 jika tidak ada event bulan ini</span>
-                    </label>
-                    <input type="number"
-                           name="event_honor"
-                           value="{{ old('event_honor', $honor->event_honor) }}"
-                           min="0" max="99999999" required
-                           class="mt-1 block w-full border-mk-border rounded @error('event_honor') border-red-500 @enderror">
-                    @error('event_honor')
-                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                    @enderror
+                <div class="mb-5 text-sm text-mk-text">
+                    <h3 class="font-semibold">Honor Event (Otomatis)</h3>
+                    <p class="mt-1 font-bold">Rp {{ number_format($honor->event_honor, 0, ',', '.') }}</p>
+                    <p class="mt-1">{{ $honor->event_honor_note ?: 'Belum ada honor event yang diposting.' }}</p>
+                    <p class="mt-1 text-mk-muted">Dihitung dari peserta saat event diselesaikan. Koreksi melalui event terkait.</p>
+                    @include('honors.partials.event-entries')
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-mk-muted">
-                        Keterangan Event
-                        <span class="text-red-500">*</span>
-                        <span class="text-mk-dim font-normal text-xs ml-1">— wajib diisi jika ada honor event</span>
-                    </label>
-                    <input type="text"
-                           name="event_honor_note"
-                           value="{{ old('event_honor_note', $honor->event_honor_note) }}"
-                           maxlength="255"
-                           placeholder="Contoh: Mini Concert Mei 2026, Ujian Grade Semester 1"
-                           class="mt-1 block w-full border-mk-border rounded @error('event_honor_note') border-red-500 @enderror">
-                    @error('event_honor_note')
-                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-mk-muted">
+                    <label for="transport_honor" class="block text-sm font-medium text-mk-muted">
                         Honor Transport (Rp)
                         <span class="text-mk-dim font-normal text-xs ml-1">— input manual, isi 0 jika tidak ada</span>
                     </label>
                     <input type="number"
                            name="transport_honor"
+                           id="transport_honor"
                            value="{{ old('transport_honor', $honor->transport_honor) }}"
                            min="0" max="99999999" required
                            class="mt-1 block w-full border-mk-border rounded @error('transport_honor') border-red-500 @enderror">
@@ -81,7 +57,7 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-mk-muted">
+                    <label for="other_honor" class="block text-sm font-medium text-mk-muted">
                         Honor Lain-lain (Rp)
                         <span class="text-mk-dim font-normal text-xs ml-1">— input manual, isi 0 jika tidak ada</span>
                     </label>
@@ -97,13 +73,14 @@
                 </div>
 
                 <div class="mb-5" id="note_wrapper">
-                    <label class="block text-sm font-medium text-mk-muted">
+                    <label for="other_honor_note" class="block text-sm font-medium text-mk-muted">
                         Keterangan Lain-lain
                         <span class="text-red-500">*</span>
                         <span class="text-mk-dim font-normal text-xs ml-1">— wajib diisi jika ada honor lain-lain</span>
                     </label>
                     <input type="text"
                            name="other_honor_note"
+                           id="other_honor_note"
                            value="{{ old('other_honor_note', $honor->other_honor_note) }}"
                            maxlength="255"
                            placeholder="Contoh: bonus akhir tahun, biaya event khusus"
@@ -142,7 +119,7 @@
         const baseHonor = {{ $honor->base_honor }};
 
         document.addEventListener('input', function () {
-            const event     = parseInt(document.querySelector('[name=event_honor]')?.value) || 0;
+            const event     = {{ $honor->event_honor }};
             const transport = parseInt(document.querySelector('[name=transport_honor]')?.value) || 0;
             const other     = parseInt(document.querySelector('[name=other_honor]')?.value) || 0;
             const total     = baseHonor + event + transport + other;

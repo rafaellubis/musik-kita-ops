@@ -5,7 +5,7 @@
 </div>
 
 {{-- ===== RINGKASAN SLIP ===== --}}
-<<div class="mx-4 mb-4 bg-mk-card rounded-xl border border-mk-borderLight shadow-sm px-5 py-5">
+<div class="mx-4 mb-4 bg-mk-card rounded-xl border border-mk-borderLight shadow-sm px-5 py-5">
     <div class="text-xs font-semibold tracking-widest text-mk-muted uppercase mb-1">Slip Honor</div>
     <div class="text-xl font-bold text-mk-text">
         {{ \Carbon\Carbon::createFromDate($honorSlip->year, $honorSlip->month, 1)->locale('id')->isoFormat('MMMM Y') }}
@@ -19,7 +19,7 @@
         </div>
         @if($honorSlip->event_honor > 0)
             <div class="flex justify-between text-sm">
-                <span class="text-mk-muted">Honor Event</span>
+                <span class="text-mk-muted">Honor Event (Otomatis)</span>
                 <span class="font-medium text-mk-text">Rp {{ number_format($honorSlip->event_honor, 0, ',', '.') }}</span>
             </div>
         @endif
@@ -40,6 +40,11 @@
             <span>Rp {{ number_format($honorSlip->total_honor, 0, ',', '.') }}</span>
         </div>
     </div>
+
+    @if($honorSlip->event_honor_note)
+        <p class="mt-3 text-sm text-mk-muted">{{ $honorSlip->event_honor_note }}</p>
+    @endif
+    @include('honors.partials.event-entries', ['honor' => $honorSlip])
 
     <div class="mt-4">
         @if($honorSlip->status === 'PAID')

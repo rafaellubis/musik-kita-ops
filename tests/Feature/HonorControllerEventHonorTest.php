@@ -2,125 +2,104 @@
 
 namespace Tests\Feature;
 
+use App\Models\EventHonorEntry;
 use App\Models\HonorSlip;
-use App\Models\Teacher;
 use App\Models\User;
+use App\Services\EventLifecycleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Spatie\Permission\Models\Role;
+use Tests\Concerns\CreatesEventHonorScenario;
 use Tests\TestCase;
 
 class HonorControllerEventHonorTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CreatesEventHonorScenario;
+
+    private User $owner;
+    private HonorSlip $slip;
 
     protected function setUp(): void
     {
         parent::setUp();
-        Role::firstOrCreate(['name' => 'Owner',   'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'Admin',   'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'Auditor', 'guard_name' => 'web']);
+        $this->travelTo(now()->setDate(2026, 6, 20));
+        foreach (['Owner', 'Admin', 'Auditor', 'Guru'] as $role) {
+            Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
+        }
+        $this->owner = User::factory()->create()->assignRole('Owner');
+        $this->actingAs($this->owner);
+        [$event] = $this->readyEvent($this->owner);
+        app(EventLifecycleService::class)->complete($event, $this->owner);
+        $this->slip = HonorSlip::sole();
+        $this->slip->update(['status' => 'CALCULATED']);
     }
 
-    private function ownerUser(): User
+    public function test_owner_can_edit_manual_components_without_event_fields(): void
     {
-        $user = User::factory()->create();
-        $user->assignRole('Owner');
-        return $user;
+        $this->patch(route('honors.update', $this->slip), [
+            'transport_honor' => 10000, 'other_honor' => 5000, 'other_honor_note' => 'Bonus',
+        ])->assertRedirect(route('honors.show', $this->slip))->assertSessionHas('success');
+        $this->assertSame(42500, $this->slip->fresh()->event_honor);
+        $this->assertSame('Konser KITA Juni', $this->slip->fresh()->event_honor_note);
+        $this->assertSame(57500, $this->slip->fresh()->total_honor);
     }
 
-    private function buatSlip(): HonorSlip
+    #[DataProvider('eventTampering')]
+    public function test_manual_event_honor_tampering_is_rejected(array $tampered): void
     {
-        $teacher = Teacher::create([
-            'code'      => 'THM',
-            'name'      => 'Thomas',
-            'is_active' => true,
-        ]);
-
-        return HonorSlip::create([
-            'slip_number'     => 'SLIP/2026/05/0001',
-            'teacher_id'      => $teacher->id,
-            'month'           => 5,
-            'year'            => 2026,
-            'base_honor'      => 3_200_000,
-            'event_honor'     => 0,
-            'transport_honor' => 0,
-            'other_honor'     => 0,
-            'total_honor'     => 3_200_000,
-            'status'          => HonorSlip::STATUS_CALCULATED,
-            'created_by'      => null,
-        ]);
+        $this->patchJson(route('honors.update', $this->slip), $tampered + [
+            'transport_honor' => 10000, 'other_honor' => 0,
+        ])->assertUnprocessable()->assertJsonValidationErrors(array_keys($tampered));
+        $this->assertSame(42500, $this->slip->fresh()->event_honor);
+        $this->assertSame(0, $this->slip->fresh()->transport_honor);
     }
 
-    public function test_owner_dapat_simpan_event_honor_ke_slip(): void
+    public static function eventTampering(): array
     {
-        $owner = $this->ownerUser();
-        $slip  = $this->buatSlip();
-
-        $response = $this->actingAs($owner)->patch(route('honors.update', $slip), [
-            'event_honor'      => 250_000,
-            'event_honor_note' => 'Mini Concert Mei 2026',
-            'transport_honor'  => 100_000,
-            'other_honor'      => 0,
-            'other_honor_note' => null,
-        ]);
-
-        $response->assertRedirect(route('honors.show', $slip));
-        $response->assertSessionHas('success');
-
-        $slip->refresh();
-        $this->assertEquals(250_000,   $slip->event_honor);
-        $this->assertEquals('Mini Concert Mei 2026', $slip->event_honor_note);
-        $this->assertEquals(3_550_000, $slip->total_honor); // 3.2jt + 250k + 100k
+        return [[['event_honor' => 250000]], [['event_honor' => 0]], [['event_honor_note' => 'Manual']], [['event_honor_note' => '']]];
     }
 
-    public function test_event_honor_lebih_dari_nol_tanpa_keterangan_ditolak(): void
+    public function test_other_honor_still_requires_a_note(): void
     {
-        $owner = $this->ownerUser();
-        $slip  = $this->buatSlip();
-
-        $response = $this->actingAs($owner)->patch(route('honors.update', $slip), [
-            'event_honor'      => 250_000,
-            'event_honor_note' => '',   // ← kosong, harus ditolak
-            'transport_honor'  => 0,
-            'other_honor'      => 0,
-            'other_honor_note' => null,
-        ]);
-
-        $response->assertSessionHasErrors('event_honor_note');
+        $this->patch(route('honors.update', $this->slip), [
+            'transport_honor' => 0, 'other_honor' => 5000, 'other_honor_note' => '',
+        ])->assertSessionHasErrors('other_honor_note');
+        $this->assertSame(0, $this->slip->fresh()->other_honor);
     }
 
-    public function test_event_honor_nol_tanpa_keterangan_diterima(): void
+    public function test_paid_slip_and_non_owner_remain_locked(): void
     {
-        $owner = $this->ownerUser();
-        $slip  = $this->buatSlip();
-
-        $response = $this->actingAs($owner)->patch(route('honors.update', $slip), [
-            'event_honor'      => 0,
-            'event_honor_note' => '',   // ← boleh kosong jika event_honor = 0
-            'transport_honor'  => 0,
-            'other_honor'      => 0,
-            'other_honor_note' => null,
-        ]);
-
-        $response->assertRedirect(route('honors.show', $slip));
-        $response->assertSessionHas('success');
+        $this->slip->update(['status' => 'PAID']);
+        $this->patch(route('honors.update', $this->slip), ['transport_honor' => 10000, 'other_honor' => 0])
+            ->assertRedirect(route('honors.show', $this->slip))->assertSessionHas('error');
+        foreach (['Admin', 'Auditor', 'Guru'] as $role) {
+            $this->actingAs(User::factory()->create()->assignRole($role))
+                ->patchJson(route('honors.update', $this->slip), ['transport_honor' => 10000, 'other_honor' => 0])->assertForbidden();
+        }
+        $this->assertSame(0, $this->slip->fresh()->transport_honor);
     }
 
-    public function test_slip_paid_tidak_bisa_diupdate(): void
+    public function test_owner_edit_show_print_and_guru_show_display_automatic_participant_breakdown(): void
     {
-        $owner = $this->ownerUser();
-        $slip  = $this->buatSlip();
-        $slip->update(['status' => HonorSlip::STATUS_PAID]);
+        $entry = EventHonorEntry::sole();
+        foreach (['honors.edit', 'honors.show', 'honors.print'] as $route) {
+            $this->get(route($route, $this->slip))->assertOk()->assertSee('Honor Event (Otomatis)')
+                ->assertSee('Konser KITA Juni')->assertSee($entry->participant->student->full_name)
+                ->assertSee($entry->snapshot_package_code)->assertSee('42.500')
+                ->assertDontSee('name="event_honor"', false)->assertDontSee('name="event_honor_note"', false);
+        }
+        $guru = User::factory()->create()->assignRole('Guru');
+        $this->slip->teacher->update(['user_id' => $guru->id]);
+        $this->actingAs($guru)->get(route('guru.honor.show', $this->slip))->assertOk()
+            ->assertSee('Honor Event (Otomatis)')->assertSee('Konser KITA Juni')
+            ->assertSee($entry->participant->student->full_name)->assertSee($entry->snapshot_package_code)->assertSee('42.500');
+    }
 
-        $response = $this->actingAs($owner)->patch(route('honors.update', $slip), [
-            'event_honor'      => 250_000,
-            'event_honor_note' => 'Mini Concert',
-            'transport_honor'  => 0,
-            'other_honor'      => 0,
-            'other_honor_note' => null,
-        ]);
-
-        $response->assertRedirect(route('honors.show', $slip));
-        $response->assertSessionHas('error');
+    public function test_reversed_entries_do_not_appear_as_payable_details(): void
+    {
+        $event = EventHonorEntry::sole()->event;
+        app(EventLifecycleService::class)->reopen($event, $this->owner, 'Koreksi');
+        $this->get(route('honors.show', $this->slip))->assertOk()->assertDontSee('Konser KITA Juni');
+        $this->get(route('honors.print', $this->slip))->assertOk()->assertDontSee('Konser KITA Juni');
     }
 }

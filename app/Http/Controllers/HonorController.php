@@ -7,6 +7,7 @@ use App\Models\Teacher;
 use App\Services\HonorCalculationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Manajemen slip honor guru (M06).
@@ -114,7 +115,7 @@ class HonorController extends Controller
     }
 
     /**
-     * Simpan komponen manual (transport + event_honor + other_honor + catatan).
+     * Simpan komponen manual (transport + other_honor + catatan).
      * Recalc total_honor otomatis setelah semua komponen tersimpan.
      */
     public function update(Request $request, HonorSlip $honor)
@@ -126,25 +127,18 @@ class HonorController extends Controller
 
         $data = $request->validate([
             'transport_honor'  => 'required|integer|min:0|max:99999999',
-            'event_honor'      => 'required|integer|min:0|max:99999999',
-            'event_honor_note' => 'nullable|string|max:255',
+            'event_honor'      => 'missing',
+            'event_honor_note' => 'missing',
             'other_honor'      => 'required|integer|min:0|max:99999999',
             'other_honor_note' => 'nullable|string|max:255',
         ], [
             'transport_honor.required' => 'Honor transport wajib diisi (isi 0 jika tidak ada).',
             'transport_honor.min'      => 'Honor transport tidak boleh negatif.',
-            'event_honor.required'     => 'Honor event wajib diisi (isi 0 jika tidak ada event).',
-            'event_honor.min'          => 'Honor event tidak boleh negatif.',
+            'event_honor.missing'      => 'Honor event dihitung otomatis dari penyelesaian event.',
+            'event_honor_note.missing' => 'Keterangan event dihitung otomatis dari penyelesaian event.',
             'other_honor.required'     => 'Honor lain-lain wajib diisi (isi 0 jika tidak ada).',
             'other_honor.min'          => 'Honor lain-lain tidak boleh negatif.',
         ]);
-
-        // Keterangan wajib jika event_honor > 0
-        if ((int) $data['event_honor'] > 0 && empty(trim($data['event_honor_note'] ?? ''))) {
-            return back()
-                ->withErrors(['event_honor_note' => 'Keterangan event wajib diisi jika ada honor event.'])
-                ->withInput();
-        }
 
         // Keterangan wajib jika other_honor > 0
         if ((int) $data['other_honor'] > 0 && empty(trim($data['other_honor_note'] ?? ''))) {
@@ -153,16 +147,18 @@ class HonorController extends Controller
                 ->withInput();
         }
 
-        $honor->transport_honor  = $data['transport_honor'];
-        $honor->event_honor      = $data['event_honor'];
-        $honor->event_honor_note = $data['event_honor_note'] ?? null;
-        $honor->other_honor      = $data['other_honor'];
-        $honor->other_honor_note = $data['other_honor_note'] ?? null;
-        $honor->recalcTotal();
-        $honor->save();
+        return DB::transaction(function () use ($honor, $data) {
+            // Posting event atau mark-paid dapat terjadi setelah form dibuka.
+            $honor = HonorSlip::query()->lockForUpdate()->findOrFail($honor->id);
+            if ($honor->isLocked()) {
+                return redirect()->route('honors.show', $honor)->with('error', 'Slip sudah berstatus PAID dan tidak bisa diubah.');
+            }
+            $honor->fill($data);
+            $honor->recalcTotal();
+            $honor->save();
 
-        return redirect()->route('honors.show', $honor)
-            ->with('success', 'Komponen honor berhasil disimpan.');
+            return redirect()->route('honors.show', $honor)->with('success', 'Komponen honor berhasil disimpan.');
+        });
     }
 
     /**
@@ -207,7 +203,11 @@ class HonorController extends Controller
                 ->with('error', 'Slip masih DRAFT — hitung dulu sebelum ditandai dibayar.');
         }
 
-        $this->service->markPaid($honor, auth()->id());
+        try {
+            $this->service->markPaid($honor, auth()->id());
+        } catch (\DomainException $exception) {
+            return redirect()->route('honors.show', $honor)->with('error', $exception->getMessage());
+        }
 
         return redirect()->route('honors.show', $honor)
             ->with('success', 'Slip honor ' . $honor->slip_number . ' ditandai DIBAYAR.');

@@ -2,249 +2,214 @@
 
 namespace Tests\Feature;
 
+use App\Models\ClassSession;
 use App\Models\Event;
-use App\Models\EventParticipant;
+use App\Models\EventHonorEntry;
 use App\Models\Holiday;
 use App\Models\HonorSlip;
 use App\Models\PayrollConfig;
-use App\Models\Student;
+use App\Models\SessionTeacherNote;
 use App\Models\Teacher;
+use App\Models\User;
 use App\Services\EventHonorService;
-use Carbon\Carbon;
+use App\Services\EventLifecycleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
+use Tests\Concerns\CreatesEventHonorScenario;
 use Tests\TestCase;
 
 class EventHonorServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CreatesEventHonorScenario;
 
-    private EventHonorService $service;
-    private int $createdBy;
+    private User $actor;
 
     protected function setUp(): void
     {
         parent::setUp();
-        // Buat user nyata agar FK created_by tidak violation saat service insert slip
-        $user = \App\Models\User::factory()->create();
-        $this->createdBy = $user->id;
-        $this->service = app(EventHonorService::class);
+        $this->travelTo(now()->setDate(2026, 6, 20));
+        foreach (['Owner', 'Auditor'] as $role) {
+            Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
+        }
+        $this->actor = User::factory()->create()->assignRole('Owner');
     }
 
-    private function makeEvent(string $date = '2026-06-15'): Event
+    public function test_post_updates_existing_slip_preserving_base_and_manual_components(): void
     {
-        return Event::factory()->create([
-            'event_date' => $date,
-            'status'     => Event::STATUS_COMPLETED,
-            'name'       => 'Konser KITA Juni 2026',
-        ]);
-    }
-
-    private function makeTeacher(): Teacher
-    {
-        return Teacher::factory()->create(['is_active' => true]);
-    }
-
-    private function addParticipantWithTeacher(Event $event, Teacher $accompanyingTeacher): EventParticipant
-    {
-        $student = Student::factory()->create();
-        return EventParticipant::factory()->create([
-            'event_id'                => $event->id,
-            'student_id'              => $student->id,
-            'accompanying_teacher_id' => $accompanyingTeacher->id,
-        ]);
-    }
-
-    public function test_inject_honor_into_existing_slip(): void
-    {
-        $event   = $this->makeEvent('2026-06-15');
-        $teacher = $this->makeTeacher();
-        $this->addParticipantWithTeacher($event, $teacher);
-
+        [$event, $participants] = $this->readyEvent($this->actor);
         $slip = HonorSlip::factory()->create([
-            'teacher_id'   => $teacher->id,
-            'month'        => 6,
-            'year'         => 2026,
-            'base_honor'   => 100000,
-            'event_honor'  => 0,
-            'total_honor'  => 100000,  // eksplisit: total = base saja, sebelum event honor ditambah
-            'status'       => HonorSlip::STATUS_CALCULATED,
+            'teacher_id' => $participants->first()->activeTeacherAssignment->teacher_id,
+            'year' => 2026, 'month' => 6, 'status' => 'CALCULATED',
+            'base_honor' => 100000, 'transport_honor' => 10000, 'other_honor' => 5000, 'other_honor_note' => 'Bonus',
         ]);
-
-        $result = $this->service->processEventCompletion($event, $this->createdBy);
-
-        $slip->refresh();
-        $this->assertEquals(1, $result['slips_updated']);
-        $this->assertEquals(0, $result['slips_skipped']);
-        $this->assertEquals(250000, $slip->event_honor);
-        $this->assertEquals(350000, $slip->total_honor);
+        app(EventLifecycleService::class)->complete($event, $this->actor);
+        $this->assertSame(42500, $slip->fresh()->event_honor);
+        $this->assertSame(157500, $slip->fresh()->total_honor);
+        $this->assertSame('Bonus', $slip->fresh()->other_honor_note);
+        $this->assertSame('CALCULATED', $slip->fresh()->status);
+        $this->assertSame($slip->id, EventHonorEntry::sole()->honor_slip_id);
     }
 
-    public function test_create_new_slip_when_none_exists(): void
+    public function test_post_creates_a_draft_slip_using_existing_monthly_number_format(): void
     {
-        $event   = $this->makeEvent('2026-06-15');
-        $teacher = $this->makeTeacher();
-        $this->addParticipantWithTeacher($event, $teacher);
-
-        $result = $this->service->processEventCompletion($event, $this->createdBy);
-
-        $this->assertEquals(1, $result['slips_updated']);
-
-        $slip = HonorSlip::where('teacher_id', $teacher->id)
-            ->where('month', 6)->where('year', 2026)
-            ->first();
-
-        $this->assertNotNull($slip);
-        $this->assertEquals(250000, $slip->event_honor);
-        $this->assertStringStartsWith('SLIP/2026/06/', $slip->slip_number);
-        $this->assertEquals(HonorSlip::STATUS_DRAFT, $slip->status);
+        [$event] = $this->readyEvent($this->actor);
+        app(EventLifecycleService::class)->complete($event, $this->actor);
+        $slip = HonorSlip::sole();
+        $this->assertSame('SLIP/2026/06/0001', $slip->slip_number);
+        $this->assertSame('DRAFT', $slip->status);
+        $this->assertSame(42500, $slip->total_honor);
     }
 
-    public function test_skip_locked_slip(): void
+    public function test_paid_slip_rejects_entire_completion_instead_of_skipping_honor(): void
     {
-        $event   = $this->makeEvent('2026-06-15');
-        $teacher = $this->makeTeacher();
-        $this->addParticipantWithTeacher($event, $teacher);
-
-        HonorSlip::factory()->create([
-            'teacher_id'  => $teacher->id,
-            'month'       => 6,
-            'year'        => 2026,
-            'event_honor' => 0,
-            'status'      => HonorSlip::STATUS_PAID,
+        [$event, $participants] = $this->readyEvent($this->actor);
+        $slip = HonorSlip::factory()->create([
+            'teacher_id' => $participants->first()->activeTeacherAssignment->teacher_id,
+            'year' => 2026, 'month' => 6, 'status' => 'PAID',
         ]);
-
-        $result = $this->service->processEventCompletion($event, $this->createdBy);
-
-        $this->assertEquals(0, $result['slips_updated']);
-        $this->assertEquals(1, $result['slips_skipped']);
+        $this->actingAs($this->actor)->postJson(route('events.complete', $event))->assertUnprocessable();
+        $this->assertSame('PUBLISHED', $event->fresh()->status);
+        $this->assertSame(0, $slip->fresh()->event_honor);
+        $this->assertDatabaseCount('event_honor_entries', 0);
     }
 
-    public function test_warning_when_no_internal_holiday(): void
+    public function test_holiday_presence_does_not_change_snapshot_honor_or_sessions(): void
     {
-        $event   = $this->makeEvent('2026-06-15');
-        $teacher = $this->makeTeacher();
-        $this->addParticipantWithTeacher($event, $teacher);
-
-        $result = $this->service->processEventCompletion($event, $this->createdBy);
-
-        $this->assertTrue($result['holiday_warning']);
+        [$event] = $this->readyEvent($this->actor);
+        $holiday = Holiday::factory()->create(['date' => '2026-06-15', 'type' => 'Internal', 'is_honor_paid' => false]);
+        $before = $holiday->fresh()->getAttributes();
+        app(EventLifecycleService::class)->complete($event, $this->actor);
+        $this->assertSame(42500, HonorSlip::sole()->event_honor);
+        $this->assertSame($before, $holiday->fresh()->getAttributes());
+        $this->assertDatabaseCount('class_sessions', 0);
     }
 
-    public function test_no_warning_when_internal_holiday_exists(): void
+    public function test_completion_does_not_mutate_regular_sessions_or_teacher_notes(): void
     {
-        $event   = $this->makeEvent('2026-06-15');
-        $teacher = $this->makeTeacher();
-        $this->addParticipantWithTeacher($event, $teacher);
-
-        Holiday::factory()->create([
-            'date'          => '2026-06-15',
-            'type'          => 'Internal',
-            'is_honor_paid' => false,
+        [$event, $participants] = $this->readyEvent($this->actor);
+        $teacher = $participants->first()->activeTeacherAssignment->teacher;
+        $session = ClassSession::factory()->create([
+            'teacher_id' => $teacher->id,
+            'session_date' => '2026-06-15',
+            'notes' => 'Catatan sesi tetap',
         ]);
+        $note = SessionTeacherNote::create([
+            'class_session_id' => $session->id,
+            'teacher_id' => $teacher->id,
+            'material_learned' => 'Materi tetap',
+            'notes' => 'Catatan guru tetap',
+        ]);
+        $sessionBefore = $session->fresh()->getAttributes();
+        $noteBefore = $note->fresh()->getAttributes();
 
-        $result = $this->service->processEventCompletion($event, $this->createdBy);
+        app(EventLifecycleService::class)->complete($event, $this->actor);
 
-        $this->assertFalse($result['holiday_warning']);
+        $this->assertSame($sessionBefore, $session->fresh()->getAttributes());
+        $this->assertSame($noteBefore, $note->fresh()->getAttributes());
     }
 
-    public function test_multiple_teachers_get_separate_honor(): void
+    public function test_each_teacher_receives_their_own_participant_entries(): void
     {
-        $event    = $this->makeEvent('2026-06-15');
-        $teacher1 = $this->makeTeacher();
-        $teacher2 = $this->makeTeacher();
-        $this->addParticipantWithTeacher($event, $teacher1);
-        $this->addParticipantWithTeacher($event, $teacher2);
+        [$first] = $this->readyEvent($this->actor);
+        [$second] = $this->readyEvent($this->actor);
+        app(EventLifecycleService::class)->complete($first, $this->actor);
+        app(EventLifecycleService::class)->complete($second, $this->actor);
+        $this->assertDatabaseCount('teacher_honor_slips', 2);
+        $this->assertSame([42500, 42500], HonorSlip::orderBy('id')->pluck('event_honor')->all());
+        $this->assertSame(['SLIP/2026/06/0001', 'SLIP/2026/06/0002'], HonorSlip::orderBy('id')->pluck('slip_number')->all());
+    }
 
-        $result = $this->service->processEventCompletion($event, $this->createdBy);
+    public function test_teacher_with_multiple_participants_is_paid_per_participation(): void
+    {
+        [$event] = $this->readyEvent($this->actor, 3);
+        app(EventLifecycleService::class)->complete($event, $this->actor);
+        $this->assertDatabaseCount('event_honor_entries', 3);
+        $this->assertSame(127500, HonorSlip::sole()->event_honor);
+    }
 
-        $this->assertEquals(2, $result['slips_updated']);
+    public function test_old_pendamping_config_cannot_override_participant_snapshot(): void
+    {
+        [$event] = $this->readyEvent($this->actor);
+        PayrollConfig::factory()->create([
+            'scenario_code' => 'H_PENDAMPING', 'formula_type' => 'FIXED', 'value_or_formula' => '300000', 'is_active' => true,
+        ]);
+        app(EventLifecycleService::class)->complete($event, $this->actor);
+        $this->assertSame(42500, HonorSlip::sole()->event_honor);
+    }
 
-        foreach ([$teacher1, $teacher2] as $teacher) {
-            $slip = HonorSlip::where('teacher_id', $teacher->id)
-                ->where('month', 6)->where('year', 2026)->first();
-            $this->assertNotNull($slip);
-            $this->assertEquals(250000, $slip->event_honor);
+    public function test_recalculation_uses_only_posted_entries_for_exact_teacher_month_and_year(): void
+    {
+        $slip = HonorSlip::factory()->create(['year' => 2026, 'month' => 6]);
+        foreach ([['2026-06-15', 'POSTED', $slip->teacher_id], ['2026-06-15', 'REVERSED', $slip->teacher_id],
+            ['2026-07-15', 'POSTED', $slip->teacher_id], ['2025-06-15', 'POSTED', $slip->teacher_id],
+            ['2026-06-15', 'POSTED', Teacher::factory()->create()->id]] as [$date, $status, $teacherId]) {
+            $event = Event::factory()->completed()->create(['event_date' => $date]);
+            EventHonorEntry::factory()->create([
+                'event_id' => $event->id, 'teacher_id' => $teacherId, 'status' => $status, 'honor_slip_id' => $slip->id,
+            ]);
+        }
+        app(EventHonorService::class)->recalculateSlip($slip);
+        $this->assertSame(42500, $slip->fresh()->event_honor);
+        $this->assertSame(42500, $slip->fresh()->total_honor);
+    }
+
+    public function test_event_note_is_derived_from_entries_and_fits_existing_column(): void
+    {
+        $teacher = Teacher::factory()->create();
+        for ($i = 1; $i <= 3; $i++) {
+            [$event] = $this->readyEvent($this->actor, 1, $teacher, str_repeat((string) $i, 100));
+            app(EventLifecycleService::class)->complete($event, $this->actor);
+        }
+        $slip = HonorSlip::sole();
+        $this->assertSame(127500, $slip->event_honor);
+        $this->assertSame(255, mb_strlen($slip->event_honor_note));
+        $this->assertStringStartsWith(str_repeat('1', 100).' | '.str_repeat('2', 100), $slip->event_honor_note);
+    }
+
+    public function test_direct_honor_post_enforces_actor(): void
+    {
+        [$event] = $this->readyEvent($this->actor);
+        $service = app(EventHonorService::class);
+        $auditor = User::factory()->create()->assignRole('Auditor');
+        try {
+            $service->post($event, $auditor);
+            $this->fail('Auditor tidak berhak posting honor.');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $exception) {
+            $this->assertSame(403, $exception->getStatusCode());
         }
     }
 
-    public function test_teacher_accompanying_multiple_students_gets_honor_once(): void
+    public function test_direct_honor_reverse_enforces_actor(): void
     {
-        $event   = $this->makeEvent('2026-06-15');
-        $teacher = $this->makeTeacher();
-
-        $this->addParticipantWithTeacher($event, $teacher);
-        $this->addParticipantWithTeacher($event, $teacher);
-        $this->addParticipantWithTeacher($event, $teacher);
-
-        $result = $this->service->processEventCompletion($event, $this->createdBy);
-
-        $this->assertEquals(1, $result['slips_updated']);
-
-        $slip = HonorSlip::where('teacher_id', $teacher->id)
-            ->where('month', 6)->where('year', 2026)->first();
-        $this->assertEquals(250000, $slip->event_honor);
+        [$event] = $this->readyEvent($this->actor);
+        app(EventLifecycleService::class)->complete($event, $this->actor);
+        $service = app(EventHonorService::class);
+        $auditor = User::factory()->create()->assignRole('Auditor');
+        try {
+            $service->reverse($event, $auditor, 'Koreksi');
+            $this->fail('Auditor tidak berhak membalik honor.');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $exception) {
+            $this->assertSame(403, $exception->getStatusCode());
+        }
     }
 
-    public function test_honor_amount_read_from_payroll_config(): void
+    public function test_direct_honor_reverse_requires_reason(): void
     {
-        $event   = $this->makeEvent('2026-06-15');
-        $teacher = $this->makeTeacher();
-        $this->addParticipantWithTeacher($event, $teacher);
-
-        PayrollConfig::factory()->create([
-            'scenario_code'    => 'H_PENDAMPING',
-            'formula_type'     => 'FIXED',
-            'value_or_formula' => '300000',
-            'is_active'        => true,
-        ]);
-
-        $result = $this->service->processEventCompletion($event, $this->createdBy);
-
-        $slip = HonorSlip::where('teacher_id', $teacher->id)
-            ->where('month', 6)->where('year', 2026)->first();
-        $this->assertEquals(300000, $slip->event_honor);
+        [$event] = $this->readyEvent($this->actor);
+        app(EventLifecycleService::class)->complete($event, $this->actor);
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        app(EventHonorService::class)->reverse($event, $this->actor, '  ');
     }
 
-    public function test_note_appended_when_existing_event_honor_note(): void
+    public function test_recalculation_cannot_modify_a_paid_slip(): void
     {
-        $event   = $this->makeEvent('2026-06-15');
-        $teacher = $this->makeTeacher();
-        $this->addParticipantWithTeacher($event, $teacher);
-
-        HonorSlip::factory()->create([
-            'teacher_id'       => $teacher->id,
-            'month'            => 6,
-            'year'             => 2026,
-            'event_honor'      => 200000,
-            'event_honor_note' => 'Pendamping Ujian Mei',
-            'status'           => HonorSlip::STATUS_CALCULATED,
-        ]);
-
-        $this->service->processEventCompletion($event, $this->createdBy);
-
-        $slip = HonorSlip::where('teacher_id', $teacher->id)
-            ->where('month', 6)->where('year', 2026)->first();
-
-        $this->assertStringContainsString('Pendamping Ujian Mei', $slip->event_honor_note);
-        $this->assertStringContainsString('Konser KITA Juni 2026', $slip->event_honor_note);
-        $this->assertStringContainsString(' | ', $slip->event_honor_note);
-        $this->assertEquals(450000, $slip->event_honor);
-    }
-
-    public function test_no_accompanying_teachers_returns_zero_updated(): void
-    {
-        $event   = $this->makeEvent('2026-06-15');
-        $student = Student::factory()->create();
-
-        EventParticipant::factory()->create([
-            'event_id'                => $event->id,
-            'student_id'              => $student->id,
-            'accompanying_teacher_id' => null,
-        ]);
-
-        $result = $this->service->processEventCompletion($event, $this->createdBy);
-
-        $this->assertEquals(0, $result['slips_updated']);
-        $this->assertEquals(0, $result['slips_skipped']);
+        $slip = HonorSlip::factory()->create(['status' => 'PAID', 'event_honor' => 42500, 'total_honor' => 42500]);
+        try {
+            app(EventHonorService::class)->recalculateSlip($slip);
+            $this->fail('Slip PAID tidak boleh berubah.');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $exception) {
+            $this->assertSame(422, $exception->getStatusCode());
+        }
+        $this->assertSame(42500, $slip->fresh()->event_honor);
     }
 }

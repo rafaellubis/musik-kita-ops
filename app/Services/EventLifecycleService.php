@@ -17,6 +17,42 @@ class EventLifecycleService
 {
     public function __construct(private EventInvoiceService $invoiceService) {}
 
+    public function complete(Event $event, User $actor): Event
+    {
+        abort_unless($actor->hasAnyRole(['Owner', 'Admin']), 403);
+
+        return DB::transaction(function () use ($event, $actor) {
+            $event = Event::query()->lockForUpdate()->findOrFail($event->id);
+            app(EventHonorService::class)->post($event, $actor);
+            if ($event->isCompleted()) {
+                return $event;
+            }
+            $event->update(['status' => Event::STATUS_COMPLETED, 'completed_at' => now(), 'completed_by' => $actor->id]);
+            $this->auditChange($event, $actor, ['status' => Event::STATUS_PUBLISHED], [
+                'status' => Event::STATUS_COMPLETED, 'completed_by' => $actor->id,
+            ]);
+
+            return $event;
+        }, 3);
+    }
+
+    public function reopen(Event $event, User $actor, string $reason): Event
+    {
+        abort_unless($actor->hasRole('Owner'), 403);
+        Validator::make(['reason' => $reason], ['reason' => ['required', 'string', 'max:1000']])->validate();
+
+        return DB::transaction(function () use ($event, $actor, $reason) {
+            $event = Event::query()->lockForUpdate()->findOrFail($event->id);
+            app(EventHonorService::class)->reverse($event, $actor, $reason);
+            $event->update(['status' => Event::STATUS_PUBLISHED, 'completed_at' => null, 'completed_by' => null]);
+            $this->auditChange($event, $actor, ['status' => Event::STATUS_COMPLETED], [
+                'status' => Event::STATUS_PUBLISHED, 'reason' => $reason, 'reopened_by' => $actor->id,
+            ]);
+
+            return $event;
+        }, 3);
+    }
+
     public function reschedule(Event $event, array $data, User $actor): Event
     {
         return DB::transaction(function () use ($event, $data, $actor) {

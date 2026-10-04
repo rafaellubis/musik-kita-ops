@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ClassSession;
+use App\Models\Event;
 use App\Models\HonorSlip;
 use App\Models\Teacher;
 use Carbon\Carbon;
@@ -53,16 +54,6 @@ class HonorCalculationService
         int $month,
         int $createdBy
     ): string {
-        // Jika sudah PAID, jangan diubah
-        $existingSlip = HonorSlip::where('teacher_id', $teacher->id)
-            ->where('year', $year)
-            ->where('month', $month)
-            ->first();
-
-        if ($existingSlip && $existingSlip->status === HonorSlip::STATUS_PAID) {
-            return 'skipped';
-        }
-
         // H-2 = jadwal auto-generate slip via cron (tgl 28), BUKAN filter data sesi.
         // Semua sesi dalam bulan ini yang sudah diinput absensinya tetap dihitung.
 
@@ -81,14 +72,19 @@ class HonorCalculationService
         $baseHonor = $sessions->sum('honor_amount');
 
         return DB::transaction(function () use (
-            $existingSlip, $teacher, $year, $month, $baseHonor, $createdBy
+            $teacher, $year, $month, $baseHonor, $createdBy
         ) {
+            // Urutan kunci sama dengan posting event; baca ulang status setelah kunci diperoleh.
+            $existingSlip = HonorSlip::forMonth($year, $month)->orderBy('id')->lockForUpdate()->get()
+                ->firstWhere('teacher_id', $teacher->id);
+            if ($existingSlip?->isLocked()) {
+                return 'skipped';
+            }
             if ($existingSlip) {
                 // Pertahankan komponen manual (transport + other) yang sudah diisi Owner
                 $existingSlip->base_honor = $baseHonor;
                 $existingSlip->status     = HonorSlip::STATUS_CALCULATED;
-                $existingSlip->recalcTotal();
-                $existingSlip->save();
+                app(EventHonorService::class)->recalculateSlip($existingSlip);
 
                 return 'updated';
             }
@@ -106,11 +102,10 @@ class HonorCalculationService
                 'status'          => HonorSlip::STATUS_CALCULATED,
                 'created_by'      => $createdBy,
             ]);
-            $slip->recalcTotal();
-            $slip->save();
+            app(EventHonorService::class)->recalculateSlip($slip);
 
             return 'created';
-        });
+        }, 3);
     }
 
     /**
@@ -194,17 +189,23 @@ class HonorCalculationService
      */
     public function markPaid(HonorSlip $slip, int $userId): HonorSlip
     {
-        if ($slip->status === HonorSlip::STATUS_PAID) {
+        return DB::transaction(function () use ($slip, $userId) {
+            // Event dikunci sebelum slip, sama seperti complete/reopen/publish.
+            $events = Event::whereYear('event_date', $slip->year)->whereMonth('event_date', $slip->month)
+                ->orderBy('id')->lockForUpdate()->get();
+            $slip = HonorSlip::query()->lockForUpdate()->findOrFail($slip->id);
+            if ($slip->isLocked()) {
+                return $slip;
+            }
+            if ($events->contains('status', Event::STATUS_PUBLISHED)) {
+                throw new \DomainException('Selesaikan atau batalkan seluruh event PUBLISHED pada bulan slip sebelum membayar honor.');
+            }
+            $slip->update([
+                'status' => HonorSlip::STATUS_PAID, 'paid_at' => now(), 'paid_by' => $userId,
+            ]);
+
             return $slip;
-        }
-
-        $slip->update([
-            'status'  => HonorSlip::STATUS_PAID,
-            'paid_at' => now(),
-            'paid_by' => $userId,
-        ]);
-
-        return $slip->fresh();
+        }, 3);
     }
 
     /**

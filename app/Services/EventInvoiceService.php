@@ -214,7 +214,7 @@ class EventInvoiceService
     }
 
     /** Retry hanya diterima bila seluruh tautan, snapshot item, dan total masih konsisten. */
-    private function assertConsistent(Event $event, Collection $participants, Collection $invoices): void
+    public function assertConsistent(Event $event, Collection $participants, Collection $invoices): void
     {
         $groups = $participants->groupBy('student_id');
         abort_unless($invoices->count() === $groups->count(), 422, 'Jumlah invoice event tidak konsisten.');

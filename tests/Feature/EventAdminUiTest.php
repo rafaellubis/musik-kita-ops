@@ -74,7 +74,7 @@ class EventAdminUiTest extends TestCase
             ->assertSee(route('event-participants.attendance', $participant), false)
             ->assertSee(route('event-participants.reassign', $participant), false)
             ->assertSee('name="reason"', false)->assertSee('Selesaikan absensi seluruh peserta aktif.')
-            ->assertSee('Aksi penyelesaian belum tersedia pada tahap ini.')
+            ->assertDontSee('action="'.route('events.complete', $event).'"', false)
             ->assertDontSee(route('events.edit', $event), false);
     }
 

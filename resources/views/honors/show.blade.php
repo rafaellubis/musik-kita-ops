@@ -116,12 +116,12 @@
                     </div>
                     @if($honor->hasEventHonor())
                     <div class="bg-mk-surface rounded p-3">
-                        <div class="text-xs text-mk-dim">Honor Event (Manual)</div>
+                        <div class="text-xs text-mk-muted">Honor Event (Otomatis)</div>
                         <div class="text-lg font-bold mt-1">
                             Rp {{ number_format($honor->event_honor, 0, ',', '.') }}
                         </div>
                         @if($honor->event_honor_note)
-                            <div class="text-xs text-mk-dim mt-1 italic">
+                            <div class="text-xs text-mk-muted mt-1 italic">
                                 {{ $honor->event_honor_note }}
                             </div>
                         @endif
@@ -151,6 +151,8 @@
                         </div>
                     </div>
                 </div>
+
+                @include('honors.partials.event-entries')
 
                 @if($honor->teacher->bank_name || $honor->teacher->bank_account)
                     <div class="mt-3 text-sm text-mk-muted">

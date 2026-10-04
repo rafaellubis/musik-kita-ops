@@ -382,6 +382,7 @@ Route::middleware('auth')->group(function () {
             ->except(['index', 'show']);
 
         // ===== M06: Honor Guru — aksi sensitif (Owner only) =====
+        Route::post('events/{event}/reopen', [EventLifecycleController::class, 'reopen'])->name('events.reopen');
         // Kalkulasi, edit komponen manual, dan tandai dibayar.
         // READ (index, show, print) di group read-only di bawah.
         // [SECURITY] Throttle: operasi kalkulasi berat (max 5x/menit)
@@ -429,6 +430,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:Owner|Admin')->group(function () {
         Route::resource('events', EventController::class)->except(['index', 'show']);
         Route::post('events/{event}/publish', [EventLifecycleController::class, 'publish'])->name('events.publish');
+        Route::post('events/{event}/complete', [EventLifecycleController::class, 'complete'])->name('events.complete');
         Route::patch('events/{event}/reschedule', [EventLifecycleController::class, 'reschedule'])->name('events.reschedule');
         Route::post('events/{event}/cancel', [EventLifecycleController::class, 'cancel'])->name('events.cancel');
         Route::patch('event-teacher-assignments/{assignment}/attendance', [EventAttendanceController::class, 'confirmTeacher'])->name('event-teacher-assignments.attendance');

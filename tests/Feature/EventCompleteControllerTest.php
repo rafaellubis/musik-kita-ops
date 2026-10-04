@@ -2,74 +2,61 @@
 
 namespace Tests\Feature;
 
-use App\Models\Event;
-use App\Models\EventParticipant;
 use App\Models\HonorSlip;
-use App\Models\Student;
-use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
+use Tests\Concerns\CreatesEventHonorScenario;
 use Tests\TestCase;
 
 class EventCompleteControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CreatesEventHonorScenario;
 
     protected function setUp(): void
     {
         parent::setUp();
-        // Seed roles yang dibutuhkan Spatie Permission
-        Role::firstOrCreate(['name' => 'Owner',   'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'Admin',   'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'Auditor', 'guard_name' => 'web']);
+        $this->travelTo(now()->setDate(2026, 6, 20));
+        foreach (['Owner', 'Admin', 'Auditor', 'Guru'] as $role) {
+            Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
+        }
     }
 
-    private function ownerUser(): User
+    public function test_owner_and_admin_complete_published_events_with_flash_and_safe_retry(): void
     {
-        return User::factory()->create()->assignRole('Owner');
+        foreach (['Owner', 'Admin'] as $role) {
+            $actor = User::factory()->create()->assignRole($role);
+            [$event] = $this->readyEvent($actor);
+            $this->actingAs($actor)->post(route('events.complete', $event))
+                ->assertRedirect(route('events.show', $event))->assertSessionHas('success');
+            $this->post(route('events.complete', $event))->assertRedirect()->assertSessionHas('success');
+            $this->assertSame('COMPLETED', $event->fresh()->status);
+            $this->assertSame(42500, $event->honorEntries()->sole()->honorSlip->event_honor);
+        }
+        $this->assertDatabaseCount('event_honor_entries', 2);
     }
 
-    public function test_complete_event_injects_honor_and_shows_flash(): void
+    public function test_auditor_and_guru_cannot_complete_events(): void
     {
-        $owner   = $this->ownerUser();
-        $teacher = Teacher::factory()->create();
-        $student = Student::factory()->create();
-
-        $event = Event::factory()->create([
-            'status'     => Event::STATUS_DRAFT,
-            'event_date' => '2026-06-15',
-            'name'       => 'Konser KITA Juni 2026',
-        ]);
-
-        EventParticipant::factory()->create([
-            'event_id'                => $event->id,
-            'student_id'              => $student->id,
-            'accompanying_teacher_id' => $teacher->id,
-        ]);
-
-        $response = $this->actingAs($owner)
-            ->post(route('events.complete', $event));
-
-        $response->assertRedirect(route('events.show', $event));
-
-        $this->assertEquals(Event::STATUS_COMPLETED, $event->fresh()->status);
-
-        $slip = HonorSlip::where('teacher_id', $teacher->id)
-            ->where('month', 6)->where('year', 2026)->first();
-        $this->assertNotNull($slip);
-        $this->assertEquals(250000, $slip->event_honor);
+        [$event] = $this->readyEvent(User::factory()->create()->assignRole('Owner'));
+        foreach (['Auditor', 'Guru'] as $role) {
+            $this->actingAs(User::factory()->create()->assignRole($role))
+                ->postJson(route('events.complete', $event))->assertForbidden();
+        }
+        $this->assertSame('PUBLISHED', $event->fresh()->status);
+        $this->assertDatabaseCount('event_honor_entries', 0);
     }
 
-    public function test_complete_already_completed_event_returns_error(): void
+    public function test_event_summary_wires_complete_and_owner_reopen_controls(): void
     {
-        $owner = $this->ownerUser();
-        $event = Event::factory()->create(['status' => Event::STATUS_COMPLETED]);
-
-        $response = $this->actingAs($owner)
-            ->post(route('events.complete', $event));
-
-        $response->assertRedirect();
-        $response->assertSessionHas('error');
+        $actor = User::factory()->create()->assignRole('Owner');
+        [$event] = $this->readyEvent($actor);
+        $this->actingAs($actor)->get(route('events.show', $event))->assertOk()
+            ->assertSee('action="'.route('events.complete', $event).'"', false);
+        $this->post(route('events.complete', $event))->assertRedirect();
+        $this->get(route('events.show', $event))->assertOk()
+            ->assertSee('action="'.route('events.reopen', $event).'"', false)->assertSee('name="reason"', false);
+        $this->actingAs(User::factory()->create()->assignRole('Admin'))->get(route('events.show', $event))->assertOk()
+            ->assertDontSee('action="'.route('events.reopen', $event).'"', false);
     }
 }

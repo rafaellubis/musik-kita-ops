@@ -286,6 +286,8 @@
         @endif
     @endif
 
+    @include('honors.partials.event-entries')
+
     {{-- Komponen honor --}}
     <h2>Komponen Honor</h2>
     <table>
@@ -301,8 +303,8 @@
             </tr>
             @if($honor->event_honor > 0)
                 <tr>
-                    <td>Honor Event</td>
-                    <td style="color:#888;">{{ $honor->event_honor_note ?: 'Input manual' }}</td>
+                    <td>Honor Event (Otomatis)</td>
+                    <td>{{ $honor->event_honor_note }}</td>
                     <td class="text-right font-mono">
                         {{ number_format($honor->event_honor, 0, ',', '.') }}
                     </td>

@@ -9,6 +9,8 @@
     $completionIssues = collect()
         ->when($activeParticipants->isEmpty(), fn ($issues) => $issues->push('Tambahkan minimal satu peserta aktif.'))
         ->when($assignments->contains('attendance_status', 'PENDING'), fn ($issues) => $issues->push('Konfirmasi kehadiran seluruh guru pendamping.'))
+        ->when($activeParticipants->contains(fn ($participant) => ! $participant->activeTeacherAssignment
+            || $participant->activeTeacherAssignment->attendance_status === 'TIDAK_HADIR'), fn ($issues) => $issues->push('Setiap peserta harus didampingi guru yang Hadir.'))
         ->when($activeParticipants->contains('attendance_status', 'PENDING'), fn ($issues) => $issues->push('Selesaikan absensi seluruh peserta aktif.'));
     $completionRouteAvailable = \Illuminate\Support\Facades\Route::has('events.complete');
 @endphp
@@ -143,6 +145,19 @@
     @elseif(in_array($event->status, ['COMPLETED', 'CANCELLED'], true))
         <div class="rounded-lg border border-mk-borderLight bg-mk-surface p-4 text-sm text-mk-text">
             Event {{ $event->isCompleted() ? 'telah selesai' : 'telah dibatalkan' }}. Data operasional hanya dapat dilihat.
+            @if($event->isCompleted() && auth()->user()->hasRole('Owner'))
+                <details class="mt-4">
+                    <summary class="cursor-pointer font-semibold">Buka Kembali Event</summary>
+                    <p class="mt-2 max-w-2xl">Honor event akan dibalik sampai event diselesaikan kembali. Seluruh slip terkait harus belum dibayar.</p>
+                    <form method="POST" action="{{ route('events.reopen', $event) }}" class="mt-3 max-w-xl">
+                        @csrf
+                        <label for="event-reopen-reason" class="block font-semibold">Alasan membuka kembali</label>
+                        <textarea id="event-reopen-reason" name="reason" required maxlength="1000" rows="3" class="mt-1 w-full rounded-md">{{ old('reason') }}</textarea>
+                        @error('reason')<p class="mt-1 text-red-800">{{ $message }}</p>@enderror
+                        <button type="submit" class="btn-mk-primary mt-3 rounded-lg px-4 py-2 text-sm font-bold">Buka Kembali Event</button>
+                    </form>
+                </details>
+            @endif
         </div>
     @endif
 </div>
