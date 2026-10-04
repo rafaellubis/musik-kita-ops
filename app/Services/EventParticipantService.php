@@ -47,6 +47,7 @@ class EventParticipantService
 
             $enrollments = Enrollment::with(['package.instrument', 'teacher'])
                 ->whereIn('id', $ids)
+                ->orderBy('id')
                 ->lockForUpdate()
                 ->get();
 
