@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EventAttendanceController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventLifecycleController;
 use App\Http\Controllers\EventParticipantController;
@@ -429,6 +430,10 @@ Route::middleware('auth')->group(function () {
         Route::post('events/{event}/publish', [EventLifecycleController::class, 'publish'])->name('events.publish');
         Route::patch('events/{event}/reschedule', [EventLifecycleController::class, 'reschedule'])->name('events.reschedule');
         Route::post('events/{event}/cancel', [EventLifecycleController::class, 'cancel'])->name('events.cancel');
+        Route::patch('event-teacher-assignments/{assignment}/attendance', [EventAttendanceController::class, 'confirmTeacher'])->name('event-teacher-assignments.attendance');
+        Route::patch('event-participants/{participant}/attendance', [EventAttendanceController::class, 'recordParticipant'])->name('event-participants.attendance');
+        Route::post('event-participants/{participant}/attendance/reset', [EventAttendanceController::class, 'resetParticipant'])->name('event-participants.attendance.reset');
+        Route::patch('event-participants/{participant}/reassign', [EventAttendanceController::class, 'reassignParticipant'])->name('event-participants.reassign');
         Route::post('events/{event}/participants',
             [EventParticipantController::class, 'store']
         )->name('events.participants.store');
