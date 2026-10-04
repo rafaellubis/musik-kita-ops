@@ -1,74 +1,84 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-                <h2 class="font-semibold text-xl text-mk-text">Event Studio</h2>
-                <div class="text-xs text-mk-muted mt-0.5">Mini Concert & Ujian Grade</div>
+                <h1 class="text-xl font-semibold text-mk-text">Event Studio</h1>
+                <p class="mt-1 text-sm text-mk-muted">Kelola Mini Concert dari persiapan sampai selesai.</p>
             </div>
-            @if(auth()->user()->hasRole('Owner'))
-            <a href="{{ route('events.create') }}"
-               class="px-4 py-2 rounded-lg text-sm font-bold transition-colors btn-mk-primary"
-               >
-                + Buat Event
-            </a>
-            @endif
+            @hasanyrole('Owner|Admin')
+                <a href="{{ route('events.create') }}"
+                   class="btn-mk-primary rounded-lg px-4 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-mk-accent focus:ring-offset-2">
+                    Buat Event
+                </a>
+            @endhasanyrole
         </div>
     </x-slot>
 
-    <div class="py-6 px-4 lg:px-8">
+    @php
+        $statuses = [
+            'DRAFT' => ['Draft', 'bg-amber-50 text-amber-900 border-amber-200', 'bg-amber-500'],
+            'PUBLISHED' => ['Dipublikasikan', 'bg-emerald-50 text-emerald-900 border-emerald-200', 'bg-emerald-600'],
+            'COMPLETED' => ['Selesai', 'bg-mk-accentDim text-mk-text border-mk-border', 'bg-mk-accent'],
+            'CANCELLED' => ['Dibatalkan', 'bg-red-50 text-red-900 border-red-200', 'bg-red-600'],
+        ];
+    @endphp
 
-        <div class="bg-mk-card shadow-sm sm:rounded-lg overflow-hidden">
-            <table class="w-full text-sm">
-                <thead class="bg-mk-surface">
-                    <tr class="border-b text-xs text-mk-dim uppercase text-left">
-                        <th class="px-4 py-3">Nomor</th>
-                        <th class="px-4 py-3">Nama Event</th>
-                        <th class="px-4 py-3">Tipe</th>
-                        <th class="px-4 py-3">Tanggal</th>
-                        <th class="px-4 py-3 text-center">Peserta</th>
-                        <th class="px-4 py-3 text-center">Status</th>
-                        <th class="px-4 py-3 text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($events as $event)
-                        <tr class="border-b hover:bg-mk-surface">
-                            <td class="px-4 py-3 font-mono text-xs text-mk-dim">{{ $event->event_number }}</td>
-                            <td class="px-4 py-3 font-medium">
-                                <a href="{{ route('events.show', $event) }}" class="text-blue-600 hover:underline">
-                                    {{ $event->name }}
-                                </a>
-                            </td>
-                            <td class="px-4 py-3 text-mk-muted text-xs">{{ $event->type_label }}</td>
-                            <td class="px-4 py-3 text-mk-muted">{{ $event->event_date->format('d M Y') }}</td>
-                            <td class="px-4 py-3 text-center text-mk-muted">{{ $event->participants_count }}</td>
-                            <td class="px-4 py-3 text-center">
-                                @if($event->status === 'DRAFT')
-                                    <span class="px-2 py-0.5 rounded text-xs bg-yellow-100 text-yellow-700">Draft</span>
-                                @else
-                                    <span class="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">Selesai</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-3 text-right whitespace-nowrap">
-                                <a href="{{ route('events.show', $event) }}" class="text-xs text-blue-600 hover:underline">Detail</a>
-                                @if(auth()->user()->hasRole('Owner') && $event->isDraft())
-                                    ·
-                                    <a href="{{ route('events.edit', $event) }}" class="text-xs text-mk-muted hover:underline">Edit</a>
-                                @endif
-                            </td>
+    <div class="px-4 py-6 lg:px-8">
+        <div class="overflow-hidden rounded-lg border border-mk-borderLight bg-mk-card">
+            <div class="overflow-x-auto">
+                <table class="min-w-[760px] w-full text-sm">
+                    <thead class="bg-mk-surface text-left text-xs font-semibold text-mk-muted">
+                        <tr class="border-b border-mk-borderLight">
+                            <th class="px-4 py-3">Event</th>
+                            <th class="px-4 py-3">Tipe</th>
+                            <th class="px-4 py-3">Tanggal</th>
+                            <th class="px-4 py-3 text-center">Peserta</th>
+                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3 text-right"><span class="sr-only">Aksi</span></th>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-mk-dim">
-                                Belum ada event. Klik "+ Buat Event" untuk mulai.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="divide-y divide-mk-borderLight">
+                        @forelse($events as $event)
+                            @php($status = $statuses[$event->status] ?? [$event->status, 'bg-mk-surface text-mk-text border-mk-border', 'bg-mk-muted'])
+                            <tr class="transition-colors hover:bg-mk-surface">
+                                <td class="px-4 py-3">
+                                    <a href="{{ route('events.show', $event) }}"
+                                       class="font-semibold text-mk-text underline-offset-4 hover:text-mk-muted hover:underline focus:outline-none focus:ring-2 focus:ring-mk-accent">
+                                        {{ $event->name }}
+                                    </a>
+                                    <div class="mt-0.5 font-mono text-xs text-mk-muted">{{ $event->event_number }}</div>
+                                </td>
+                                <td class="px-4 py-3 text-mk-text">{{ $event->type_label }}</td>
+                                <td class="px-4 py-3 text-mk-text">{{ $event->event_date->translatedFormat('d M Y') }}</td>
+                                <td class="px-4 py-3 text-center tabular-nums text-mk-text">{{ $event->participants_count }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold {{ $status[1] }}">
+                                        <span class="h-1.5 w-1.5 rounded-full {{ $status[2] }}" aria-hidden="true"></span>
+                                        {{ $status[0] }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <a href="{{ route('events.show', $event) }}"
+                                       class="font-semibold text-mk-muted underline-offset-4 hover:text-mk-text hover:underline focus:outline-none focus:ring-2 focus:ring-mk-accent">
+                                        Buka
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-4 py-12 text-center">
+                                    <p class="font-semibold text-mk-text">Belum ada event.</p>
+                                    <p class="mt-1 text-sm text-mk-muted">Event yang dibuat akan tampil di sini.</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="mt-4">{{ $events->links() }}</div>
-
+        @if($events->hasPages())
+            <div class="mt-4">{{ $events->links() }}</div>
+        @endif
     </div>
 </x-app-layout>

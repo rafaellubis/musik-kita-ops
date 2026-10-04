@@ -1,0 +1,148 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Enrollment;
+use App\Models\Event;
+use App\Models\EventParticipant;
+use App\Models\EventTeacherAssignment;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
+
+class EventAdminUiTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->travelTo(now()->setDate(2026, 12, 20)->startOfDay());
+        foreach (['Owner', 'Admin', 'Auditor'] as $role) {
+            Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
+        }
+        $this->actingAs(User::factory()->create()->assignRole('Admin'));
+    }
+
+    public function test_draft_forms_disable_grade_exam_and_include_payment_deadline(): void
+    {
+        $event = Event::factory()->create();
+        foreach ([route('events.create'), route('events.edit', $event)] as $url) {
+            $this->get($url)->assertOk()
+                ->assertSee('value="UJIAN_GRADE" disabled', false)
+                ->assertSee('name="payment_due_date"', false)
+                ->assertSee('Ujian Grade — belum tersedia')
+                ->assertDontSee('MINI_CONCERT_UJIAN');
+        }
+    }
+
+    public function test_index_distinguishes_all_statuses_and_admin_can_create(): void
+    {
+        foreach (['DRAFT', 'PUBLISHED', 'COMPLETED', 'CANCELLED'] as $status) {
+            Event::factory()->create(['status' => $status]);
+        }
+        $this->get(route('events.index'))->assertOk()->assertSee('Buat Event')
+            ->assertSee('Dipublikasikan')->assertSee('Dibatalkan')->assertSee('Selesai')->assertSee('Draft');
+    }
+
+    public function test_detail_groups_enrollments_by_student_and_has_four_accessible_tabs(): void
+    {
+        $event = Event::factory()->create();
+        $first = EventParticipant::factory()->create(['event_id' => $event->id]);
+        EventParticipant::factory()->create(['event_id' => $event->id, 'student_id' => $first->student_id,
+            'enrollment_id' => Enrollment::factory()->create(['student_id' => $first->student_id])->id,
+            'snapshot_package_code' => 'HOBBY-GITAR-45', 'snapshot_instrument_name' => 'Gitar']);
+        $response = $this->get(route('events.show', $event))->assertOk();
+        $this->assertSame(4, substr_count($response->getContent(), 'role="tab"'));
+        $this->assertSame(1, substr_count($response->getContent(), 'data-student-group="'.$first->student_id.'"'));
+        $response->assertSeeInOrder(['Ringkasan', 'Peserta', 'Kehadiran Guru', 'Keuangan'])
+            ->assertSee('role="tablist"', false)->assertSee('aria-selected="true"', false)
+            ->assertSee('aria-controls="event-panel-summary"', false)
+            ->assertSee('role="tabpanel"', false)
+            ->assertSee('REG-PIANO-BASIC')->assertSee('HOBBY-GITAR-45')
+            ->assertSee('name="enrollment_ids[]"', false)->assertSee('Publikasikan Event');
+    }
+
+    public function test_published_teacher_card_shows_confirmation_progress_and_replacement_controls(): void
+    {
+        [$event, $assignment, $participant] = $this->publishedParticipant();
+        $assignment->update(['attendance_status' => 'HADIR', 'confirmed_at' => now(), 'confirmed_by' => auth()->id()]);
+        $this->get(route('events.show', $event))->assertOk()
+            ->assertSee($assignment->teacher->name)->assertSee('0 dari 1 absensi murid')
+            ->assertSee('Dikonfirmasi oleh')->assertSee(auth()->user()->name)
+            ->assertSee(route('event-participants.attendance', $participant), false)
+            ->assertSee(route('event-participants.reassign', $participant), false)
+            ->assertSee('name="reason"', false)->assertSee('Selesaikan absensi seluruh peserta aktif.')
+            ->assertSee('Aksi penyelesaian belum tersedia pada tahap ini.')
+            ->assertDontSee(route('events.edit', $event), false);
+    }
+
+    public function test_absent_teacher_reason_is_visible_and_student_attendance_is_locked(): void
+    {
+        [$event, $assignment, $participant] = $this->publishedParticipant();
+        $assignment->update(['attendance_status' => 'TIDAK_HADIR', 'absence_reason' => 'Sedang sakit']);
+        $this->get(route('events.show', $event))->assertOk()->assertSee('Sedang sakit')
+            ->assertSee('Guru pendamping harus Hadir sebelum absensi murid diisi.')
+            ->assertDontSee('action="'.route('event-participants.attendance', $participant).'"', false);
+    }
+
+    public function test_recorded_attendance_requires_reset_before_replacement(): void
+    {
+        [$event, $assignment, $participant] = $this->publishedParticipant();
+        $assignment->update(['attendance_status' => 'HADIR']);
+        $participant->update(['attendance_status' => 'HADIR', 'event_notes' => 'Lancar']);
+        $this->get(route('events.show', $event))->assertOk()->assertSee('Lancar')
+            ->assertSee(route('event-participants.attendance.reset', $participant), false)
+            ->assertDontSee('action="'.route('event-participants.reassign', $participant).'"', false)
+            ->assertSee('Reset absensi sebelum mengganti guru.');
+    }
+
+    public function test_future_event_explains_date_lock_and_allows_reschedule_before_attendance(): void
+    {
+        [$event, $assignment] = $this->publishedParticipant();
+        $event->update(['event_date' => '2026-12-21']);
+        $this->get(route('events.show', $event))->assertOk()
+            ->assertSee('Absensi dibuka mulai tanggal event.')
+            ->assertSee(route('events.reschedule', $event), false)
+            ->assertDontSee('action="'.route('event-teacher-assignments.attendance', $assignment).'"', false);
+    }
+
+    public function test_auditor_sees_operational_information_without_event_mutation_forms(): void
+    {
+        [$event, $assignment, $participant] = $this->publishedParticipant();
+        $this->actingAs(User::factory()->create()->assignRole('Auditor'));
+        foreach (['DRAFT', 'PUBLISHED', 'COMPLETED', 'CANCELLED'] as $status) {
+            $event->update(['status' => $status]);
+            $response = $this->get(route('events.show', $event))->assertOk()
+                ->assertSee('Kehadiran Guru')->assertSee($participant->student->full_name)
+                ->assertSee($assignment->teacher->name)->assertDontSee('Publikasikan Event')
+                ->assertDontSee('Tambah Peserta')->assertDontSee('Tandai Selesai');
+            preg_match_all('/<form[^>]*action="([^"]+)"/', $response->getContent(), $forms);
+            $this->assertSame([route('logout')], $forms[1]);
+        }
+        $this->get(route('events.index'))->assertOk()->assertDontSee('Buat Event');
+    }
+
+    public function test_closed_events_hide_mutations_and_finance_accepts_default_summary(): void
+    {
+        [$event] = $this->publishedParticipant();
+        foreach (['COMPLETED', 'CANCELLED'] as $status) {
+            $event->update(['status' => $status]);
+            $this->get(route('events.show', $event))->assertOk()->assertSee('Pendapatan diterima')
+                ->assertSee('Rp 0')->assertDontSee('Tambah Peserta')->assertDontSee('Simpan Konfirmasi')
+                ->assertDontSee('Batalkan Event');
+        }
+    }
+
+    private function publishedParticipant(): array
+    {
+        $event = Event::factory()->published()->create(['event_date' => '2026-12-20']);
+        $assignment = EventTeacherAssignment::factory()->create(['event_id' => $event->id]);
+        $participant = EventParticipant::factory()->create([
+            'event_id' => $event->id, 'active_teacher_assignment_id' => $assignment->id,
+        ]);
+
+        return [$event, $assignment, $participant];
+    }
+}

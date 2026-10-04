@@ -57,9 +57,7 @@
         :active="request()->routeIs('petty-cash.*')" />
         @endhasanyrole
     <x-sidebar-item route="events.index" icon="🎤" label="Event"
-        :active="request()->routeIs('events.*') || request()->routeIs('event-participants.*')"
-        :disabled="false"
-        title="Sementara dinonaktifkan"/>
+        :active="request()->routeIs('events.*') || request()->routeIs('event-participants.*') || request()->routeIs('event-teacher-assignments.*')" />
 
     {{-- Grup: LAPORAN --}}
     <div class="px-4 pt-4 pb-1.5 text-[10px] font-bold tracking-widest text-[#b1f0ce]/40 uppercase font-sans">Laporan</div>
