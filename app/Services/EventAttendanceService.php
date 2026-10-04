@@ -35,7 +35,10 @@ class EventAttendanceService
             $previous = $assignments->firstWhere('id', $participant->active_teacher_assignment_id);
             abort_unless($previous, 422, 'Peserta harus memiliki assignment aktif pada event ini.');
             abort_if($previous->teacher_id === $replacement->id, 422, 'Pilih guru pengganti yang berbeda.');
-            $replacement = Teacher::query()->lockForUpdate()->findOrFail($replacement->id);
+            $teachers = Teacher::whereIn('id', [$previous->teacher_id, $replacement->id])
+                ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+            $replacement = $teachers->get($replacement->id);
+            abort_unless($replacement, 404);
             abort_unless($replacement->is_active, 422, 'Guru pengganti harus masih aktif.');
 
             $slips = HonorSlip::whereIn('teacher_id', [$previous->teacher_id, $replacement->id])

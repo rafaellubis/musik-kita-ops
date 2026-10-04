@@ -24,7 +24,7 @@ class EventHonorService
     public function post(Event $event, User $actor): Collection
     {
         abort_unless($actor->hasAnyRole(['Owner', 'Admin']), 403);
-        [$event, $participants, $assignments, $entries, $slips] = $this->lockRows($event);
+        [$event, $participants, $assignments, $entries, $slips, $lockedEntries] = $this->lockRows($event);
         abort_unless($event->isPublished() || $event->isCompleted(), 422, 'Honor hanya dapat diposting saat penyelesaian event.');
         abort_unless($event->type === Event::TYPE_MINI_CONCERT, 422, 'Penyelesaian hanya tersedia untuk Mini Concert.');
         $active = $participants->where('status', EventParticipant::STATUS_ACTIVE);
@@ -92,11 +92,15 @@ class EventHonorService
                 'teacher_id' => $teacherId, 'honor_slip_id' => $slip->id,
                 'status' => EventHonorEntry::STATUS_POSTED, 'posted_at' => now(), 'posted_by' => $actor->id,
             ])->save();
+            if (! $old) {
+                $entry->setRelation('event', $event);
+                $lockedEntries->push($entry);
+            }
             $this->audit($entry, $actor, $old);
             $posted->push($entry);
         }
         foreach ($affected as $slip) {
-            $this->recalculateSlip($slip);
+            $this->recalculateSlip($slip, $lockedEntries);
         }
 
         return $posted;
@@ -106,7 +110,7 @@ class EventHonorService
     {
         abort_unless($actor->hasRole('Owner'), 403);
         Validator::make(['reason' => $reason], ['reason' => ['required', 'string', 'max:1000']])->validate();
-        [$event, , , $entries, $slips] = $this->lockRows($event);
+        [$event, , , $entries, $slips, $lockedEntries] = $this->lockRows($event);
         abort_unless($event->isCompleted(), 422, 'Hanya event COMPLETED yang dapat dibuka kembali.');
         $affected = $slips->whereIn('id', $entries->pluck('honor_slip_id'));
         abort_if($affected->contains('status', HonorSlip::STATUS_PAID), 422, 'Event tidak dapat dibuka kembali karena slip honor sudah dibayar.');
@@ -119,18 +123,22 @@ class EventHonorService
             $this->audit($entry, $actor, $old);
         }
         foreach ($affected as $slip) {
-            $this->recalculateSlip($slip);
+            $this->recalculateSlip($slip, $lockedEntries);
         }
     }
 
     /** Hanya mengubah komponen event; honor sesi dan komponen manual tetap dipertahankan. */
-    public function recalculateSlip(HonorSlip $slip): HonorSlip
+    public function recalculateSlip(HonorSlip $slip, ?Collection $lockedEntries = null): HonorSlip
     {
         abort_if($slip->isLocked(), 422, 'Slip honor sudah dibayar dan tidak dapat dihitung ulang.');
-        $entries = EventHonorEntry::where('teacher_id', $slip->teacher_id)
-            ->where('status', EventHonorEntry::STATUS_POSTED)
+        $entries = ($lockedEntries ?? EventHonorEntry::where('teacher_id', $slip->teacher_id)
             ->whereHas('event', fn ($query) => $query->whereYear('event_date', $slip->year)->whereMonth('event_date', $slip->month))
-            ->with('event:id,name')->orderBy('event_id')->orderBy('id')->get();
+            ->with('event:id,name,event_date')->orderBy('id')->lockForUpdate()->get())
+            ->where('teacher_id', $slip->teacher_id)
+            ->where('status', EventHonorEntry::STATUS_POSTED)
+            ->filter(fn ($entry) => $entry->event->event_date->year === $slip->year
+                && $entry->event->event_date->month === $slip->month)
+            ->sortBy([['event_id', 'asc'], ['id', 'asc']]);
         $slip->event_honor = $entries->sum('amount');
         $slip->event_honor_note = $entries->isEmpty() ? null : Str::limit($entries->pluck('event.name')->unique()->implode(' | '), 255, '');
         $slip->recalcTotal();
@@ -148,35 +156,40 @@ class EventHonorService
         $participants = $event->participants()->orderBy('id')->lockForUpdate()->get();
         $assignments = $event->teacherAssignments()->orderBy('id')->lockForUpdate()->get()->keyBy('id');
 
-        // Event sudah dikunci, sehingga referensi entry stabil saat guru dikumpulkan sebelum entry/slip dikunci.
+        // Event sudah dikunci, sehingga referensi entry stabil saat guru dikumpulkan sebelum entry dikunci.
         $entryRefs = EventHonorEntry::where(fn ($query) => $query->where('event_id', $event->id)
             ->orWhereIn('event_participant_id', $participants->pluck('id')))->get(['teacher_id', 'honor_slip_id']);
-        $monthSlipRefs = HonorSlip::forMonth($event->event_date->year, $event->event_date->month)
-            ->get(['id', 'teacher_id']);
-        $entrySlipTeacherIds = HonorSlip::whereIn('id', $entryRefs->pluck('honor_slip_id')->filter())
-            ->pluck('teacher_id');
         $teacherIds = $assignments
             ->whereIn('id', $participants->where('status', EventParticipant::STATUS_ACTIVE)
                 ->pluck('active_teacher_assignment_id'))
             ->pluck('teacher_id')
             ->merge($entryRefs->pluck('teacher_id'))
-            ->merge($monthSlipRefs->pluck('teacher_id'))
-            ->merge($entrySlipTeacherIds)
             ->filter()->unique()->sort()->values();
         Teacher::whereIn('id', $teacherIds)->orderBy('id')->lockForUpdate()->get();
 
-        $entries = EventHonorEntry::where(fn ($query) => $query->where('event_id', $event->id)
-            ->orWhereIn('event_participant_id', $participants->pluck('id')))->orderBy('id')->lockForUpdate()->get();
-        // Semua guru referensi sudah dikunci; rentang bulan melindungi nomor slip dari event lain.
+        // Locking read melihat commit terbaru setelah menunggu Teacher, tidak memakai snapshot ordinary read di atas.
+        $lockedEntries = EventHonorEntry::where(function ($query) use ($event, $participants, $teacherIds) {
+            $query->where('event_id', $event->id)
+                ->orWhereIn('event_participant_id', $participants->pluck('id'))
+                ->orWhere(function ($query) use ($event, $teacherIds) {
+                    $query->whereIn('teacher_id', $teacherIds)
+                        ->whereHas('event', fn ($eventQuery) => $eventQuery
+                            ->whereYear('event_date', $event->event_date->year)
+                            ->whereMonth('event_date', $event->event_date->month));
+                });
+        })->with('event:id,name,event_date')->orderBy('id')->lockForUpdate()->get();
+        $entries = $lockedEntries->filter(fn ($entry) => $entry->event_id === $event->id
+            || $participants->contains('id', $entry->event_participant_id))->values();
+        // Entry semua guru/bulan sudah current dan terkunci sebelum slip dihitung ulang.
         $slips = HonorSlip::forMonth($event->event_date->year, $event->event_date->month)
-            ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+            ->whereIn('teacher_id', $teacherIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
         abort_if($entries->contains(fn ($entry) => $entry->event_id !== $event->id
             || ! $participants->contains('id', $entry->event_participant_id)
             || ($entry->honor_slip_id && (! $slips->has($entry->honor_slip_id)
                 || $slips->get($entry->honor_slip_id)->teacher_id !== $entry->teacher_id))),
             422, 'Tautan entry honor atau periode slip tidak konsisten.');
 
-        return [$event, $participants, $assignments, $entries, $slips];
+        return [$event, $participants, $assignments, $entries, $slips, $lockedEntries];
     }
 
     private function audit(EventHonorEntry $entry, User $actor, ?array $old): void

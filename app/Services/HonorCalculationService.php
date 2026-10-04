@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ClassSession;
 use App\Models\Event;
+use App\Models\EventHonorEntry;
 use App\Models\HonorSlip;
 use App\Models\Teacher;
 use Carbon\Carbon;
@@ -76,6 +77,9 @@ class HonorCalculationService
         ) {
             // Guru selalu dikunci sebelum slip agar selaras dengan publish/reassign/completion event.
             $teacher = Teacher::query()->lockForUpdate()->findOrFail($teacher->id);
+            $eventEntries = EventHonorEntry::where('teacher_id', $teacher->id)
+                ->whereHas('event', fn ($query) => $query->whereYear('event_date', $year)->whereMonth('event_date', $month))
+                ->with('event:id,name,event_date')->orderBy('id')->lockForUpdate()->get();
             $existingSlip = HonorSlip::forMonth($year, $month)->orderBy('id')->lockForUpdate()->get()
                 ->firstWhere('teacher_id', $teacher->id);
             if ($existingSlip?->isLocked()) {
@@ -85,7 +89,7 @@ class HonorCalculationService
                 // Pertahankan komponen manual (transport + other) yang sudah diisi Owner
                 $existingSlip->base_honor = $baseHonor;
                 $existingSlip->status     = HonorSlip::STATUS_CALCULATED;
-                app(EventHonorService::class)->recalculateSlip($existingSlip);
+                app(EventHonorService::class)->recalculateSlip($existingSlip, $eventEntries);
 
                 return 'updated';
             }
@@ -103,7 +107,7 @@ class HonorCalculationService
                 'status'          => HonorSlip::STATUS_CALCULATED,
                 'created_by'      => $createdBy,
             ]);
-            app(EventHonorService::class)->recalculateSlip($slip);
+            app(EventHonorService::class)->recalculateSlip($slip, $eventEntries);
 
             return 'created';
         }, 3);
