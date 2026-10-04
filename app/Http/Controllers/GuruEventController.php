@@ -9,6 +9,7 @@ use App\Models\Teacher;
 use App\Services\EventAttendanceService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class GuruEventController extends Controller
 {
@@ -77,12 +78,22 @@ class GuruEventController extends Controller
             'event_notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $this->attendanceService->recordParticipant(
-            $participant,
-            $data['attendance_status'],
-            $data['event_notes'] ?? null,
-            $request->user(),
-        );
+        try {
+            $this->attendanceService->recordParticipant(
+                $participant,
+                $data['attendance_status'],
+                $data['event_notes'] ?? null,
+                $request->user(),
+            );
+        } catch (HttpException $exception) {
+            if ($exception->getStatusCode() !== 422) {
+                throw $exception;
+            }
+
+            return redirect()->route('guru.events.show', $participant->event_id)
+                ->withInput()
+                ->with('error', $exception->getMessage());
+        }
 
         return redirect()->route('guru.events.show', $participant->event_id)
             ->with('success', 'Kehadiran murid berhasil diperbarui.');

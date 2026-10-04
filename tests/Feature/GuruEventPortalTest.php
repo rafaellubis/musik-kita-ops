@@ -132,6 +132,45 @@ class GuruEventPortalTest extends TestCase
         $this->assertDatabaseCount('sessions', 0);
     }
 
+    public function test_stale_html_form_redirects_with_domain_message_and_preserved_input(): void
+    {
+        [$event, $assignment] = $this->assignedEvent('Konser Berubah', Event::STATUS_PUBLISHED, today(), true);
+        $participant = $this->participant($event, $assignment, 'Murid Stale');
+
+        $this->actingAs($this->guruUser)
+            ->get(route('guru.events.show', $event))
+            ->assertOk()
+            ->assertSee(route('guru.events.attendance.update', $participant), false);
+
+        // Admin mengubah konfirmasi guru setelah form dibuka oleh guru.
+        $assignment->update([
+            'attendance_status' => EventTeacherAssignment::ATTENDANCE_TIDAK_HADIR,
+            'confirmed_at' => now(),
+        ]);
+
+        $this->from(route('guru.events.show', $event))
+            ->patch(route('guru.events.attendance.update', $participant), [
+                'participant_id' => $participant->id,
+                'attendance_status' => EventParticipant::ATTENDANCE_HADIR,
+                'event_notes' => 'Catatan dari form yang sudah stale.',
+            ])
+            ->assertRedirect(route('guru.events.show', $event))
+            ->assertSessionHas('error', 'Kehadiran murid hanya dapat diisi setelah guru pendamping HADIR.')
+            ->assertSessionHasInput('attendance_status', EventParticipant::ATTENDANCE_HADIR)
+            ->assertSessionHasInput('event_notes', 'Catatan dari form yang sudah stale.');
+
+        $this->actingAs($this->guruUser)
+            ->get(route('guru.events.show', $event))
+            ->assertOk()
+            ->assertSee('Kehadiran murid hanya dapat diisi setelah guru pendamping HADIR.');
+
+        $this->assertDatabaseHas('event_participants', [
+            'id' => $participant->id,
+            'attendance_status' => EventParticipant::ATTENDANCE_PENDING,
+            'event_notes' => null,
+        ]);
+    }
+
     public function test_guru_cannot_view_or_mutate_another_teachers_participant_by_id(): void
     {
         [$event, $ownAssignment] = $this->assignedEvent('Konser Bersama', Event::STATUS_PUBLISHED, today(), true);
@@ -184,7 +223,8 @@ class GuruEventPortalTest extends TestCase
             ->patch(route('guru.events.attendance.update', $participant), [
                 'attendance_status' => EventParticipant::ATTENDANCE_TIDAK_HADIR,
             ])
-            ->assertUnprocessable();
+            ->assertRedirect(route('guru.events.show', $event))
+            ->assertSessionHas('error', 'Absensi hanya dapat diubah saat event PUBLISHED.');
 
         $this->assertDatabaseHas('event_participants', [
             'id' => $participant->id,
@@ -214,6 +254,19 @@ class GuruEventPortalTest extends TestCase
             ->assertSee('Catatan khusus event.')
             ->assertSee('Guru Portal')
             ->assertSee(route('guru.events.attendance.update', $participant), false);
+    }
+
+    public function test_inactive_mobile_event_label_uses_contrasting_white_text(): void
+    {
+        $html = $this->actingAs($this->guruUser)
+            ->get(route('guru.dashboard'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/<span class="text-\[10px\] font-semibold text-white\/50">\s*Event\s*<\/span>/',
+            $html,
+        );
     }
 
     /** @return array{Event, EventTeacherAssignment} */

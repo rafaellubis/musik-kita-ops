@@ -190,7 +190,7 @@
                       d="M9 19V6l12-2v13M9 10l12-2M6 21a3 3 0 100-6 3 3 0 000 6zm12-2a3 3 0 100-6 3 3 0 000 6z"/>
             </svg>
         </span>
-        <span class="text-[10px] font-semibold {{ request()->routeIs('guru.events.*') ? 'text-[#b1f0ce]' : 'text-white/40' }}">
+        <span class="text-[10px] font-semibold {{ request()->routeIs('guru.events.*') ? 'text-[#b1f0ce]' : 'text-white/50' }}">
             Event
         </span>
     </a>
