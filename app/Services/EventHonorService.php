@@ -9,6 +9,7 @@ use App\Models\EventParticipant;
 use App\Models\EventTeacherAssignment;
 use App\Models\HonorSlip;
 use App\Models\Invoice;
+use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -146,9 +147,27 @@ class EventHonorService
         $event = Event::query()->lockForUpdate()->findOrFail($event->id);
         $participants = $event->participants()->orderBy('id')->lockForUpdate()->get();
         $assignments = $event->teacherAssignments()->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+
+        // Event sudah dikunci, sehingga referensi entry stabil saat guru dikumpulkan sebelum entry/slip dikunci.
+        $entryRefs = EventHonorEntry::where(fn ($query) => $query->where('event_id', $event->id)
+            ->orWhereIn('event_participant_id', $participants->pluck('id')))->get(['teacher_id', 'honor_slip_id']);
+        $monthSlipRefs = HonorSlip::forMonth($event->event_date->year, $event->event_date->month)
+            ->get(['id', 'teacher_id']);
+        $entrySlipTeacherIds = HonorSlip::whereIn('id', $entryRefs->pluck('honor_slip_id')->filter())
+            ->pluck('teacher_id');
+        $teacherIds = $assignments
+            ->whereIn('id', $participants->where('status', EventParticipant::STATUS_ACTIVE)
+                ->pluck('active_teacher_assignment_id'))
+            ->pluck('teacher_id')
+            ->merge($entryRefs->pluck('teacher_id'))
+            ->merge($monthSlipRefs->pluck('teacher_id'))
+            ->merge($entrySlipTeacherIds)
+            ->filter()->unique()->sort()->values();
+        Teacher::whereIn('id', $teacherIds)->orderBy('id')->lockForUpdate()->get();
+
         $entries = EventHonorEntry::where(fn ($query) => $query->where('event_id', $event->id)
             ->orWhereIn('event_participant_id', $participants->pluck('id')))->orderBy('id')->lockForUpdate()->get();
-        // Kunci rentang bulan juga melindungi pembuatan slip/nomor baru dari event lain pada bulan yang sama.
+        // Semua guru referensi sudah dikunci; rentang bulan melindungi nomor slip dari event lain.
         $slips = HonorSlip::forMonth($event->event_date->year, $event->event_date->month)
             ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
         abort_if($entries->contains(fn ($entry) => $entry->event_id !== $event->id

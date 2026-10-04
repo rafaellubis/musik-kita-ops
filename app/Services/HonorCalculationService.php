@@ -74,7 +74,8 @@ class HonorCalculationService
         return DB::transaction(function () use (
             $teacher, $year, $month, $baseHonor, $createdBy
         ) {
-            // Urutan kunci sama dengan posting event; baca ulang status setelah kunci diperoleh.
+            // Guru selalu dikunci sebelum slip agar selaras dengan publish/reassign/completion event.
+            $teacher = Teacher::query()->lockForUpdate()->findOrFail($teacher->id);
             $existingSlip = HonorSlip::forMonth($year, $month)->orderBy('id')->lockForUpdate()->get()
                 ->firstWhere('teacher_id', $teacher->id);
             if ($existingSlip?->isLocked()) {
