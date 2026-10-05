@@ -95,18 +95,21 @@ class StudentSeeder extends Seeder
 
         foreach ($students as $data) {
             $studentData = $data['student'];
-            $student = Student::updateOrCreate(
+            $student = Student::firstOrCreate(
                 ['student_code' => $studentData['student_code']],
                 $studentData,
             );
 
             if ($data['enrollment'] === null) {
-                $student->update(['primary_enrollment_id' => null]);
                 continue;
             }
 
             [$package, $teacher, $effectiveDate, $status] = $data['enrollment'];
-            $enrollment = Enrollment::updateOrCreate(
+            if (! $package || ! $teacher) {
+                continue;
+            }
+
+            $enrollment = Enrollment::firstOrCreate(
                 ['student_id' => $student->id, 'package_id' => $package->id],
                 [
                     'teacher_id' => $teacher->id,
@@ -117,8 +120,25 @@ class StudentSeeder extends Seeder
                 ],
             );
 
-            $student->enrollments()->where('id', '!=', $enrollment->id)->update(['is_primary' => false]);
-            $student->update(['primary_enrollment_id' => $enrollment->id]);
+            $primaryEnrollment = $student->primaryEnrollment;
+            if ($primaryEnrollment?->student_id === $student->id) {
+                if (! $primaryEnrollment->is_primary) {
+                    $primaryEnrollment->update(['is_primary' => true]);
+                }
+
+                continue;
+            }
+
+            $primaryEnrollment = $student->enrollments()->where('is_primary', true)->first();
+            if (! $primaryEnrollment) {
+                if (! $enrollment->is_primary) {
+                    $enrollment->update(['is_primary' => true]);
+                }
+
+                $primaryEnrollment = $enrollment;
+            }
+
+            $student->update(['primary_enrollment_id' => $primaryEnrollment->id]);
         }
     }
 }
