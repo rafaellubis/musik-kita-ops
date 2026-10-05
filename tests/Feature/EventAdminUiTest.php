@@ -6,6 +6,7 @@ use App\Models\Enrollment;
 use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\EventTeacherAssignment;
+use App\Models\Invoice;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -46,6 +47,75 @@ class EventAdminUiTest extends TestCase
             ->assertSee('Dipublikasikan')->assertSee('Dibatalkan')->assertSee('Selesai')->assertSee('Draft');
     }
 
+    public function test_index_filters_events_and_renders_operational_summaries(): void
+    {
+        $event = Event::factory()->published()->create([
+            'name' => 'Konser Operasional 2026',
+            'type' => Event::TYPE_MINI_CONCERT,
+            'event_date' => '2026-12-20',
+        ]);
+        $ready = EventTeacherAssignment::factory()->hadir()->create(['event_id' => $event->id]);
+        $pending = EventTeacherAssignment::factory()->create(['event_id' => $event->id]);
+        $first = EventParticipant::factory()->create([
+            'event_id' => $event->id,
+            'active_teacher_assignment_id' => $ready->id,
+            'attendance_status' => EventParticipant::ATTENDANCE_HADIR,
+        ]);
+        EventParticipant::factory()->create([
+            'event_id' => $event->id,
+            'student_id' => $first->student_id,
+            'enrollment_id' => Enrollment::factory()->create(['student_id' => $first->student_id])->id,
+            'active_teacher_assignment_id' => $ready->id,
+            'attendance_status' => EventParticipant::ATTENDANCE_PENDING,
+        ]);
+        $third = EventParticipant::factory()->create([
+            'event_id' => $event->id,
+            'active_teacher_assignment_id' => $pending->id,
+            'attendance_status' => EventParticipant::ATTENDANCE_PENDING,
+        ]);
+        EventParticipant::factory()->cancelled()->create(['event_id' => $event->id]);
+
+        Invoice::factory()->create([
+            'event_id' => $event->id,
+            'student_id' => $first->student_id,
+            'status' => Invoice::STATUS_PAID,
+        ]);
+        Invoice::factory()->create([
+            'event_id' => $event->id,
+            'student_id' => $third->student_id,
+            'status' => Invoice::STATUS_PARTIAL,
+        ]);
+        Invoice::factory()->create([
+            'event_id' => $event->id,
+            'status' => Invoice::STATUS_VOID,
+        ]);
+
+        Event::factory()->published()->create(['name' => 'Konser Tahun Lain', 'event_date' => '2025-12-20']);
+        Event::factory()->create(['name' => 'Konser Draft Tersaring', 'event_date' => '2026-12-20']);
+        Event::factory()->published()->create([
+            'name' => 'Ujian Tersaring',
+            'type' => Event::TYPE_UJIAN_GRADE,
+            'event_date' => '2026-12-20',
+        ]);
+
+        $this->get(route('events.index', [
+            'year' => 2026,
+            'status' => Event::STATUS_PUBLISHED,
+            'type' => Event::TYPE_MINI_CONCERT,
+        ]))->assertOk()
+            ->assertSee('name="year"', false)
+            ->assertSee('name="status"', false)
+            ->assertSee('name="type"', false)
+            ->assertSee('Konser Operasional 2026')
+            ->assertSee('3 enrollment · 2 murid')
+            ->assertSee('1/2 guru siap')
+            ->assertSee('1/3 absensi')
+            ->assertSee('1/2 invoice lunas')
+            ->assertDontSee('Konser Tahun Lain')
+            ->assertDontSee('Konser Draft Tersaring')
+            ->assertDontSee('Ujian Tersaring');
+    }
+
     public function test_detail_groups_enrollments_by_student_and_has_four_accessible_tabs(): void
     {
         $event = Event::factory()->create();
@@ -59,7 +129,10 @@ class EventAdminUiTest extends TestCase
         $response->assertSeeInOrder(['Ringkasan', 'Peserta', 'Kehadiran Guru', 'Keuangan'])
             ->assertSee('role="tablist"', false)->assertSee('aria-selected="true"', false)
             ->assertSee('aria-controls="event-panel-summary"', false)
+            ->assertSee(':tabindex="tab === \'summary\' ? 0 : -1"', false)
+            ->assertSee('@keydown.home.prevent', false)
             ->assertSee('role="tabpanel"', false)
+            ->assertSee('role="tabpanel" aria-labelledby="event-tab-summary" tabindex="0"', false)
             ->assertSee('REG-PIANO-BASIC')->assertSee('HOBBY-GITAR-45')
             ->assertSee('name="enrollment_ids[]"', false)->assertSee('Publikasikan Event');
     }
@@ -76,6 +149,11 @@ class EventAdminUiTest extends TestCase
             ->assertSee('name="reason"', false)->assertSee('Selesaikan absensi seluruh peserta aktif.')
             ->assertDontSee('action="'.route('events.complete', $event).'"', false)
             ->assertDontSee(route('events.edit', $event), false);
+
+        $viewEvent = $this->get(route('events.show', $event))->viewData('event');
+        $this->assertTrue(
+            $viewEvent->participants->first()->activeTeacherAssignment->relationLoaded('confirmedBy'),
+        );
     }
 
     public function test_absent_teacher_reason_is_visible_and_student_attendance_is_locked(): void

@@ -23,6 +23,9 @@ class DiscountController extends Controller
      */
     public function store(InvoiceItem $invoiceItem, StoreDiscountRequest $request): RedirectResponse
     {
+        abort_if($invoiceItem->invoice->event_id !== null, 422,
+            'Invoice event hanya dapat diubah melalui lifecycle event.');
+
         try {
             $this->discountService->applyDiscount(
                 item: $invoiceItem,
@@ -48,6 +51,9 @@ class DiscountController extends Controller
      */
     public function destroy(InvoiceItem $invoiceItem): RedirectResponse
     {
+        abort_if($invoiceItem->invoice->event_id !== null, 422,
+            'Invoice event hanya dapat diubah melalui lifecycle event.');
+
         $discountItem = $invoiceItem->discountItem()->first();
 
         if (!$discountItem) {

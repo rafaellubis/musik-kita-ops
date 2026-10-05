@@ -44,10 +44,14 @@
                     <button type="button" id="event-tab-{{ $tab }}" role="tab"
                             aria-selected="{{ $initialTab === $tab ? 'true' : 'false' }}"
                             :aria-selected="(tab === '{{ $tab }}').toString()"
+                            :tabindex="tab === '{{ $tab }}' ? 0 : -1"
+                            data-tab="{{ $tab }}"
                             aria-controls="event-panel-{{ $tab }}"
                             @click="tab = '{{ $tab }}'"
-                            @keydown.right.prevent="const tabs = [...$el.parentElement.querySelectorAll('[role=tab]')]; tabs[(tabs.indexOf($el) + 1) % tabs.length].focus()"
-                            @keydown.left.prevent="const tabs = [...$el.parentElement.querySelectorAll('[role=tab]')]; tabs[(tabs.indexOf($el) - 1 + tabs.length) % tabs.length].focus()"
+                            @keydown.right.prevent="const tabs = [...$el.parentElement.querySelectorAll('[role=tab]')]; const next = tabs[(tabs.indexOf($el) + 1) % tabs.length]; tab = next.dataset.tab; next.focus()"
+                            @keydown.left.prevent="const tabs = [...$el.parentElement.querySelectorAll('[role=tab]')]; const next = tabs[(tabs.indexOf($el) - 1 + tabs.length) % tabs.length]; tab = next.dataset.tab; next.focus()"
+                            @keydown.home.prevent="const next = $el.parentElement.querySelector('[role=tab]'); tab = next.dataset.tab; next.focus()"
+                            @keydown.end.prevent="const tabs = [...$el.parentElement.querySelectorAll('[role=tab]')]; const next = tabs[tabs.length - 1]; tab = next.dataset.tab; next.focus()"
                             class="rounded-t-lg border-b-2 px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-inset focus:ring-mk-accent"
                             :class="tab === '{{ $tab }}' ? 'border-mk-accent text-mk-text bg-mk-card' : 'border-transparent text-mk-muted hover:bg-mk-surface hover:text-mk-text'">
                         {{ $label }}
@@ -56,19 +60,19 @@
             </div>
         </div>
 
-        <section id="event-panel-summary" role="tabpanel" aria-labelledby="event-tab-summary"
+        <section id="event-panel-summary" role="tabpanel" aria-labelledby="event-tab-summary" tabindex="0"
                  x-show="tab === 'summary'" class="pt-5">
             @include('events.partials.summary')
         </section>
-        <section id="event-panel-participants" role="tabpanel" aria-labelledby="event-tab-participants"
+        <section id="event-panel-participants" role="tabpanel" aria-labelledby="event-tab-participants" tabindex="0"
                  x-show="tab === 'participants'" x-cloak class="pt-5">
             @include('events.partials.participants')
         </section>
-        <section id="event-panel-teacher-attendance" role="tabpanel" aria-labelledby="event-tab-teacher-attendance"
+        <section id="event-panel-teacher-attendance" role="tabpanel" aria-labelledby="event-tab-teacher-attendance" tabindex="0"
                  x-show="tab === 'teacher-attendance'" x-cloak class="pt-5">
             @include('events.partials.teacher-attendance')
         </section>
-        <section id="event-panel-finance" role="tabpanel" aria-labelledby="event-tab-finance"
+        <section id="event-panel-finance" role="tabpanel" aria-labelledby="event-tab-finance" tabindex="0"
                  x-show="tab === 'finance'" x-cloak class="pt-5">
             @include('events.partials.finance')
         </section>

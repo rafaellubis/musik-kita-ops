@@ -197,6 +197,10 @@ class EventPublishTest extends TestCase
                 'code' => 'REG', 'name' => 'Registrasi', 'default_price' => 250000, 'is_active' => true,
             ])->id]),
             'grouped_invoice_has_enrollment' => $participant->invoice->update(['enrollment_id' => $participant->enrollment_id]),
+            'extra_manual_item' => tap($participant->invoice->items()->create([
+                'item_code' => 'REG', 'description' => 'Item manual asing', 'amount' => 25000,
+                'added_by' => $this->actor->id,
+            ]), fn () => $participant->invoice->increment('total_amount', 25000)),
             'duplicate_invoice' => Invoice::factory()->create(['event_id' => $this->event->id, 'student_id' => $participant->student_id]),
         };
         $this->postJson($this->url())->assertUnprocessable();
@@ -206,7 +210,7 @@ class EventPublishTest extends TestCase
     {
         return [
             ['missing_link'], ['wrong_amount'], ['wrong_metadata'], ['wrong_total'], ['wrong_due_date'],
-            ['wrong_component'], ['grouped_invoice_has_enrollment'], ['duplicate_invoice'],
+            ['wrong_component'], ['grouped_invoice_has_enrollment'], ['extra_manual_item'], ['duplicate_invoice'],
         ];
     }
 

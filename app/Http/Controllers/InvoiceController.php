@@ -117,6 +117,9 @@ class InvoiceController extends Controller
      */
     public function void(VoidInvoiceRequest $request, Invoice $invoice): RedirectResponse
     {
+        abort_if($invoice->event_id !== null, 422,
+            'Invoice event hanya dapat di-void melalui lifecycle event.');
+
         $oldValues = $invoice->only([
             'invoice_number', 'status', 'total_amount', 'student_id', 'enrollment_id',
         ]);

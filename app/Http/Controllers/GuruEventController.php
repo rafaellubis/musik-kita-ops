@@ -28,7 +28,15 @@ class GuruEventController extends Controller
 
         $published = $events->where('status', Event::STATUS_PUBLISHED);
         $upcomingEvents = $published->filter(fn (Event $event) => $event->event_date->isFuture());
-        $actionEvents = $published->filter(fn (Event $event) => $event->event_date->lte(today()));
+        $actionEvents = $published->filter(function (Event $event) {
+            $assignment = $event->teacherAssignments->first();
+
+            return $event->event_date->lte(today())
+                && $assignment?->attendance_status === EventTeacherAssignment::ATTENDANCE_HADIR
+                && $assignment->participants->contains(
+                    'attendance_status', EventParticipant::ATTENDANCE_PENDING,
+                );
+        });
         $completedEvents = $events->where('status', Event::STATUS_COMPLETED)->sortByDesc('event_date');
 
         return view('guru.events.index', compact(

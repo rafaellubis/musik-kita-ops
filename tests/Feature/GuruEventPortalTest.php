@@ -72,6 +72,38 @@ class GuruEventPortalTest extends TestCase
             ->assertDontSee('Konser Guru Lain');
     }
 
+    public function test_perlu_absensi_only_lists_cards_the_teacher_can_act_on_and_uses_invariant_copy(): void
+    {
+        [$actionable, $actionableAssignment] = $this->assignedEvent(
+            'Konser Masih Perlu Diisi', Event::STATUS_PUBLISHED, today()->subDay(), true,
+        );
+        $this->participant($actionable, $actionableAssignment, 'Murid Pending Satu');
+        $this->participant($actionable, $actionableAssignment, 'Murid Pending Dua');
+
+        [$complete, $completeAssignment] = $this->assignedEvent(
+            'Konser Sudah Lengkap', Event::STATUS_PUBLISHED, today()->subDay(), true,
+        );
+        $this->participant(
+            $complete, $completeAssignment, 'Murid Sudah Diisi', EventParticipant::ATTENDANCE_HADIR,
+        );
+
+        [$waitingAdmin, $waitingAssignment] = $this->assignedEvent(
+            'Konser Menunggu Admin', Event::STATUS_PUBLISHED, today()->subDay(), false,
+        );
+        $this->participant($waitingAdmin, $waitingAssignment, 'Murid Belum Terbuka');
+
+        $this->actingAs($this->guruUser)
+            ->get(route('guru.events.index'))
+            ->assertOk()
+            ->assertSee('Perlu Absensi')
+            ->assertSee('1 event')
+            ->assertSee('Konser Masih Perlu Diisi')
+            ->assertSee('2 kartu belum lengkap')
+            ->assertDontSee('kartus')
+            ->assertDontSee('Konser Sudah Lengkap')
+            ->assertDontSee('Konser Menunggu Admin');
+    }
+
     public function test_cards_are_visible_but_locked_before_teacher_is_confirmed_hadir(): void
     {
         [$event, $assignment] = $this->assignedEvent('Konser Hari Ini', Event::STATUS_PUBLISHED, today());

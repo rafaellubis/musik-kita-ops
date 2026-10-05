@@ -31,6 +31,9 @@ class InvoiceItemController extends Controller
      */
     public function store(Request $request, Invoice $invoice)
     {
+        abort_if($invoice->event_id !== null, 422,
+            'Invoice event hanya dapat diubah melalui lifecycle event.');
+
         // Invoice terkunci kalau sudah PAID atau VOID
         if (in_array($invoice->status, ['PAID', 'VOID'], true)) {
             return back()->with('error',
@@ -78,6 +81,9 @@ class InvoiceItemController extends Controller
     {
         $invoice = $invoiceItem->invoice;
 
+        abort_if($invoice->event_id !== null, 422,
+            'Invoice event hanya dapat diubah melalui lifecycle event.');
+
         // Invoice terkunci
         if (in_array($invoice->status, ['PAID', 'VOID'], true)) {
             return back()->with('error',
@@ -106,6 +112,9 @@ class InvoiceItemController extends Controller
      */
     public function removeFine(RemoveFineRequest $request, InvoiceItem $invoiceItem)
     {
+        abort_if($invoiceItem->invoice->event_id !== null, 422,
+            'Invoice event hanya dapat diubah melalui lifecycle event.');
+
         try {
             $this->invoiceService->waiveFine(
                 $invoiceItem,

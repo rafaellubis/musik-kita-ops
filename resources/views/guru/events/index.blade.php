@@ -10,7 +10,7 @@
         @php
             $sections = [
                 ['title' => 'Event Mendatang', 'description' => 'Event terbit yang belum dimulai.', 'events' => $upcomingEvents, 'empty' => 'Belum ada event mendatang.'],
-                ['title' => 'Perlu Absensi', 'description' => 'Event hari ini atau sebelumnya. Buka detail untuk melihat status setiap murid.', 'events' => $actionEvents, 'empty' => 'Tidak ada event yang perlu ditinjau.'],
+                ['title' => 'Perlu Absensi', 'description' => 'Event yang sudah dimulai dan masih memiliki kartu absensi yang dapat Anda isi.', 'events' => $actionEvents, 'empty' => 'Tidak ada absensi event yang perlu diisi.'],
                 ['title' => 'Riwayat Selesai', 'description' => 'Event selesai tersedia sebagai arsip baca-saja.', 'events' => $completedEvents, 'empty' => 'Belum ada riwayat event selesai.'],
             ];
         @endphp
@@ -61,7 +61,7 @@
                                             {{ $participants->count() }} murid
                                         </span>
                                         <span class="rounded-md bg-surface-container px-2 py-1 font-semibold text-on-surface-variant">
-                                            {{ $incomplete }} {{ Str::plural('kartu', $incomplete) }} belum lengkap
+                                            {{ $incomplete }} kartu belum lengkap
                                         </span>
                                     </div>
                                     <p class="mt-3 text-xs font-medium text-on-surface-variant">{{ $assignmentLabel }}</p>

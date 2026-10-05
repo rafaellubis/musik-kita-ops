@@ -223,9 +223,13 @@ class EventInvoiceService
             abort_unless($studentInvoices->count() === 1, 422, 'Murid harus memiliki tepat satu invoice aktif per event.');
             $invoice = $studentInvoices->first();
             $items = $invoice->items()->with('component:id,code')->lockForUpdate()->get();
+            $participantItemIds = $group->pluck('invoice_item_id');
+            $hasForeignItems = $items->contains(fn ($item) => $item->item_code !== 'MC'
+                && ! ($item->item_code === 'DISKON' && $participantItemIds->contains($item->parent_item_id)));
             abort_unless($invoice->enrollment_id === null
                 && $invoice->total_amount === (int) $items->sum('amount')
-                && $items->where('item_code', 'MC')->count() === $group->count(), 422, 'Total atau jumlah item invoice event tidak konsisten.');
+                && $items->where('item_code', 'MC')->count() === $group->count()
+                && ! $hasForeignItems, 422, 'Total atau jumlah item invoice event tidak konsisten.');
             abort_if($invoice->status === Invoice::STATUS_UNPAID
                 && ! $invoice->due_date?->equalTo($event->payment_due_date), 422, 'Batas pembayaran invoice tidak sesuai dengan event.');
             foreach ($group as $participant) {

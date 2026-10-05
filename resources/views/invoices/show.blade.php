@@ -26,11 +26,13 @@
         $isAdmin      = auth()->user()?->hasRole('Admin');
         $canPay       = $invoice->status !== 'PAID' && $invoice->status !== 'VOID';
         // Item manual bisa ditambah/dihapus selama invoice belum PAID/VOID
-        $canEditItems = in_array($invoice->status, ['UNPAID', 'PARTIAL']);
+        $canEditItems = $invoice->event_id === null
+            && in_array($invoice->status, ['UNPAID', 'PARTIAL']);
         // Diskon: boleh selama UNPAID atau PARTIAL (sama dengan canEditItems)
         $canDiscount = $canEditItems;
         // Void invoice: Owner atau Admin, belum VOID, tidak ada pembayaran aktif
         $canVoidInvoice = ($isOwner || $isAdmin)
+            && $invoice->event_id === null
             && $invoice->status !== 'VOID'
             && $invoice->payments->whereNull('voided_at')->isEmpty();
         // Semua invoice harus dibayar penuh — field amount selalu di-lock = saldo.
