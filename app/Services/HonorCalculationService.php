@@ -222,6 +222,7 @@ class HonorCalculationService
 
         $latest = HonorSlip::where('slip_number', 'like', "SLIP/{$year}/{$monthStr}/%")
             ->orderBy('slip_number', 'desc')
+            ->lockForUpdate()
             ->value('slip_number');
 
         $nextSeq = 1;

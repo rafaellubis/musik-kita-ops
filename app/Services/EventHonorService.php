@@ -180,9 +180,10 @@ class EventHonorService
         })->with('event:id,name,event_date')->orderBy('id')->lockForUpdate()->get();
         $entries = $lockedEntries->filter(fn ($entry) => $entry->event_id === $event->id
             || $participants->contains('id', $entry->event_participant_id))->values();
-        // Entry semua guru/bulan sudah current dan terkunci sebelum slip dihitung ulang.
-        $slips = HonorSlip::forMonth($event->event_date->year, $event->event_date->month)
-            ->whereIn('teacher_id', $teacherIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+        // Kunci seluruh slip bulan agar nomor slip baru tetap berurutan lintas guru/event.
+        $monthSlips = HonorSlip::forMonth($event->event_date->year, $event->event_date->month)
+            ->orderBy('id')->lockForUpdate()->get();
+        $slips = $monthSlips->whereIn('teacher_id', $teacherIds)->keyBy('id');
         abort_if($entries->contains(fn ($entry) => $entry->event_id !== $event->id
             || ! $participants->contains('id', $entry->event_participant_id)
             || ($entry->honor_slip_id && (! $slips->has($entry->honor_slip_id)
