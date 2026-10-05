@@ -51,35 +51,37 @@ class ReportController extends Controller
      */
     private function buildFinanceData(int $year, int $month): array
     {
-        // ===== REVENUE — breakdown per jenis item =====
-        $revenueByType = DB::table('payments')
-            ->join('invoices', 'payments.invoice_id', '=', 'invoices.id')
-            ->join('invoice_items', 'invoices.id', '=', 'invoice_items.invoice_id')
-            ->whereNull('payments.voided_at')
-            ->whereYear('payments.payment_date', $year)
-            ->whereMonth('payments.payment_date', $month)
-            ->select(
-                'invoice_items.item_code',
-                DB::raw('COUNT(DISTINCT invoices.id) as invoice_count'),
-                DB::raw('SUM(invoice_items.amount) as total')
-            )
-            ->groupBy('invoice_items.item_code')
-            ->orderBy('total', 'desc')
-            ->get();
-
-        // Total bayar bulan ini (semua metode, tidak void)
-        $totalRevenue = Payment::whereNull('voided_at')
+        // Satu sumber basis kas: setiap payment valid masuk tepat sekali pada payment_date.
+        $validPayments = Payment::whereNull('voided_at')
             ->whereYear('payment_date', $year)
             ->whereMonth('payment_date', $month)
-            ->sum('amount');
+            ->with(['invoice:id,event_id', 'invoice.items:id,invoice_id,item_code'])
+            ->get(['id', 'invoice_id', 'amount', 'method', 'payment_date']);
+
+        $revenueByType = $validPayments
+            ->groupBy(function (Payment $payment): string {
+                $codes = $payment->invoice->items
+                    ->where('item_code', '!=', 'DISKON')
+                    ->pluck('item_code')
+                    ->unique()
+                    ->values();
+
+                return $codes->count() === 1 ? $codes->first() : 'GABUNGAN';
+            })
+            ->map(fn ($payments, $itemCode) => (object) [
+                'item_code' => $itemCode,
+                'invoice_count' => $payments->pluck('invoice_id')->unique()->count(),
+                'total' => (int) $payments->sum('amount'),
+            ])
+            ->sortByDesc('total')
+            ->values();
+
+        $totalRevenue = (int) $validPayments->sum('amount');
 
         // Breakdown per metode bayar (CASH, TRANSFER, QRIS, DEBIT)
-        $revenueByMethod = Payment::whereNull('voided_at')
-            ->whereYear('payment_date', $year)
-            ->whereMonth('payment_date', $month)
-            ->selectRaw('method, SUM(amount) as total')
+        $revenueByMethod = $validPayments
             ->groupBy('method')
-            ->pluck('total', 'method');
+            ->map(fn ($payments) => (int) $payments->sum('amount'));
 
         // ===== HONOR GURU =====
         $honorSlips = HonorSlip::where('year', $year)

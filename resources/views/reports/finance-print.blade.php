@@ -326,6 +326,7 @@
             'DENDA'   => 'Denda Keterlambatan',
             'KIDS_FP' => 'Final Project Kids Class',
             'DISKON'  => 'Diskon',
+            'GABUNGAN' => 'Tagihan Gabungan',
         ];
     @endphp
 

@@ -483,6 +483,7 @@ class InvoiceService
         $invoices = Invoice::forMonth($year, $month)
             ->unpaid()
             ->whereNull('fine_waived_at')
+            ->whereHas('items', fn ($query) => $query->where('item_code', 'SPP'))
             ->with('items')
             ->get();
 

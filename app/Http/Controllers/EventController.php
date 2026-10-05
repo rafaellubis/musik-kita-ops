@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\Event;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Services\EventFinanceService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -53,13 +54,15 @@ class EventController extends Controller
             ->with('success', "Event «{$event->name}» berhasil dibuat.");
     }
 
-    public function show(Event $event)
+    public function show(Event $event, EventFinanceService $financeService)
     {
         $event->load([
             'participants.student',
             'participants.enrollment.package.instrument',
             'participants.activeTeacherAssignment.teacher',
+            'invoices' => fn ($query) => $query->with('student:id,full_name,student_code')->orderBy('invoice_number'),
         ]);
+        $financeSummary = $financeService->summary($event);
         $availableStudents = Student::query()
             ->whereHas('enrollments', fn ($query) => $query->active())
             ->orderBy('full_name')
@@ -69,7 +72,7 @@ class EventController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        return view('events.show', compact('event', 'availableStudents', 'activeTeachers'));
+        return view('events.show', compact('event', 'availableStudents', 'activeTeachers', 'financeSummary'));
     }
 
     public function edit(Event $event)

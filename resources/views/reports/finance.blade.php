@@ -132,7 +132,7 @@
                     <div class="text-xs text-mk-dim mb-2">Rincian per Item Tagihan:</div>
                     @foreach($revenueByType as $rt)
                     <div class="flex justify-between text-xs text-mk-muted py-0.5">
-                        <span>{{ $rt->item_code }}
+                        <span>{{ ['MC' => 'Mini Concert', 'GABUNGAN' => 'Tagihan Gabungan'][$rt->item_code] ?? $rt->item_code }}
                             <span class="text-mk-dim">({{ $rt->invoice_count }} invoice)</span>
                         </span>
                         <span class="font-mono">Rp {{ number_format($rt->total, 0, ',', '.') }}</span>

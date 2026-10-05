@@ -4,6 +4,10 @@ namespace Tests\Unit;
 
 use App\Models\InvoiceComponent;
 use App\Models\Setting;
+use App\Models\Event;
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
+use App\Models\Student;
 use App\Services\InvoiceService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -73,5 +77,68 @@ class InvoiceFineFromComponentTest extends TestCase
         $this->assertNotNull($fine);
         $this->assertSame(12000, $fine->amount);
         $this->assertStringContainsString('Rp 6.000', $fine->description);
+    }
+
+    public function test_event_invoice_does_not_receive_late_fine(): void
+    {
+        Setting::set('spp_due_day', '10');
+        $student = Student::factory()->create(['status' => 'Aktif']);
+        $event = Event::factory()->create();
+
+        $eventInvoice = Invoice::factory()->create([
+            'student_id' => $student->id,
+            'event_id' => $event->id,
+            'year' => 2026,
+            'month' => 6,
+            'status' => Invoice::STATUS_UNPAID,
+            'due_date' => '2026-06-10',
+            'total_amount' => 295000,
+            'paid_amount' => 0,
+        ]);
+        InvoiceItem::create([
+            'invoice_id' => $eventInvoice->id,
+            'item_code' => 'MC',
+            'amount' => 295000,
+            'description' => 'Mini Concert',
+        ]);
+
+        $registrationInvoice = Invoice::factory()->create([
+            'student_id' => $student->id,
+            'year' => 2026,
+            'month' => 6,
+            'status' => Invoice::STATUS_UNPAID,
+            'due_date' => '2026-06-10',
+            'total_amount' => 250000,
+            'paid_amount' => 0,
+        ]);
+        InvoiceItem::create([
+            'invoice_id' => $registrationInvoice->id,
+            'item_code' => 'REG',
+            'amount' => 250000,
+            'description' => 'Registrasi',
+        ]);
+
+        $sppInvoice = Invoice::factory()->create([
+            'student_id' => $student->id,
+            'year' => 2026,
+            'month' => 6,
+            'status' => Invoice::STATUS_UNPAID,
+            'due_date' => '2026-06-10',
+            'total_amount' => 340000,
+            'paid_amount' => 0,
+        ]);
+        InvoiceItem::create([
+            'invoice_id' => $sppInvoice->id,
+            'item_code' => 'SPP',
+            'amount' => 340000,
+            'description' => 'SPP Juni 2026',
+        ]);
+
+        $report = $this->service->applyLateFinesForMonth(2026, 6, Carbon::create(2026, 6, 12));
+
+        $this->assertSame(['updated' => 1, 'processed' => 1], $report);
+        $this->assertFalse($eventInvoice->items()->where('item_code', 'DENDA')->exists());
+        $this->assertFalse($registrationInvoice->items()->where('item_code', 'DENDA')->exists());
+        $this->assertTrue($sppInvoice->items()->where('item_code', 'DENDA')->exists());
     }
 }
