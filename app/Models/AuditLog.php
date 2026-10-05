@@ -39,7 +39,7 @@ class AuditLog extends Model
         'LOGOUT'    => 'Logout',
         'PRINT'     => 'Cetak',
         'VOID'      => 'Void',
-        'LIFECYCLE' => 'Status Murid',
+        'LIFECYCLE' => 'Perubahan Status',
     ];
 
     // ============= STATIC HELPER =============

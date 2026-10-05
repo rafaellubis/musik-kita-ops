@@ -27,7 +27,7 @@
                     <label for="type" class="block text-sm font-semibold text-mk-text">Tipe event <span class="text-red-700">*</span></label>
                     <select id="type" name="type" required class="mt-1.5 block w-full rounded-md @error('type') !border-red-600 @enderror">
                         <option value="MINI_CONCERT" @selected(old('type', $event->type) === 'MINI_CONCERT')>Mini Concert</option>
-                        <option value="UJIAN_GRADE" disabled>Ujian Grade — belum tersedia</option>
+                        <option value="UJIAN_GRADE" disabled>Ujian Kenaikan Grade — segera hadir</option>
                     </select>
                     <p class="mt-1.5 text-sm text-mk-muted">Fase ini hanya mendukung Mini Concert.</p>
                     @error('type')<p class="mt-1 text-sm font-medium text-red-700">{{ $message }}</p>@enderror

@@ -32,7 +32,7 @@ class EventAdminUiTest extends TestCase
             $this->get($url)->assertOk()
                 ->assertSee('value="UJIAN_GRADE" disabled', false)
                 ->assertSee('name="payment_due_date"', false)
-                ->assertSee('Ujian Grade — belum tersedia')
+                ->assertSee('Ujian Kenaikan Grade — segera hadir')
                 ->assertDontSee('MINI_CONCERT_UJIAN');
         }
     }

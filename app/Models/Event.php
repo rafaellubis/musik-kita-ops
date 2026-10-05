@@ -22,7 +22,7 @@ class Event extends Model
 
     public const TYPE_LABELS = [
         self::TYPE_MINI_CONCERT => 'Mini Concert',
-        self::TYPE_UJIAN_GRADE => 'Ujian Grade',
+        self::TYPE_UJIAN_GRADE => 'Ujian Kenaikan Grade',
     ];
 
     protected $fillable = [

@@ -19,7 +19,7 @@ use InvalidArgumentException;
  *
  * Tanggung jawab:
  *   - Generate nomor invoice INV/YYYY/MM/NNNN (BR-5.16, reset per bulan)
- *   - Buat invoice satu-kali (REG, CUTI, UJI, MC, KIDS_FP)
+ *   - Buat invoice satu-kali berdasarkan katalog komponen tagihan
  *   - Buat invoice SPP bulanan untuk semua murid Aktif (BR-5.1)
  *   - Recalculate status berdasarkan paid_amount (UNPAID/PARTIAL/PAID)
  *   - Apply denda harian Rp 5.000/hari mulai tanggal 11 (BR-5.3)
@@ -29,8 +29,6 @@ class InvoiceService
     public const FEE_REG       = 250000;
     public const FEE_CUTI      = 100000;
     public const FEE_KIDS_FP   = 140000;
-    public const FEE_UJI       = 395000;
-    public const FEE_MC        = 295000;
     public const FINE_PER_DAY  = 5000; // fallback jika komponen DENDA tidak ada
 
     /**
@@ -77,7 +75,7 @@ class InvoiceService
 
     /**
      * Bikin invoice satu-kali (one-off) dengan items list.
-     * Cocok untuk: REG, CUTI, UJI, MC, KIDS_FP, atau gabungan REG+SPP.
+     * Cocok untuk komponen satu-kali atau gabungan beberapa komponen.
      *
      * @param  array<int,array{code:string,description:string,amount:int,metadata?:array}>  $items
      * @param  string|null  $classType          Snapshot class_type paket murid (opsional).
