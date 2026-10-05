@@ -226,14 +226,20 @@ class MiniConcertEndToEndTest extends TestCase
         ])->assertRedirect();
 
         $participant->refresh()->load('activeTeacherAssignment');
+        $originalAssignmentId = $participant->activeTeacherAssignment->id;
+        $absentTeacherReason = 'Guru awal berhalangan.';
         app(EventAttendanceService::class)->confirmTeacher(
             $participant->activeTeacherAssignment, 'HADIR', $admin, null,
         );
         app(EventAttendanceService::class)->recordParticipant($participant, 'HADIR', 'Catatan awal.', $admin);
         app(EventAttendanceService::class)->resetParticipant($participant, $admin, 'Koreksi absensi.');
+        app(EventAttendanceService::class)->confirmTeacher(
+            $participant->activeTeacherAssignment, 'TIDAK_HADIR', $admin, $absentTeacherReason,
+        );
         $participant = app(EventAttendanceService::class)->reassignParticipant(
             $participant, $replacement, $admin, 'Pergantian pendamping.',
         );
+        $replacementAssignmentId = $participant->activeTeacherAssignment->id;
         app(EventAttendanceService::class)->confirmTeacher(
             $participant->activeTeacherAssignment, 'HADIR', $admin, null,
         );
@@ -268,14 +274,34 @@ class MiniConcertEndToEndTest extends TestCase
         $this->assertAudit($participantAudits->first(fn (AuditLog $audit) =>
             ($audit->old_values['attendance_status'] ?? null) === 'HADIR'
             && ($audit->new_values['attendance_status'] ?? null) === 'PENDING'), $admin);
-        $this->assertAudit($participantAudits->first(fn (AuditLog $audit) =>
-            ($audit->old_values['active_teacher_assignment_id'] ?? null)
-                !== ($audit->new_values['active_teacher_assignment_id'] ?? null)), $admin);
+        $reassignmentAudit = $participantAudits->first(fn (AuditLog $audit) =>
+            ($audit->old_values['active_teacher_assignment_id'] ?? null) === $originalAssignmentId
+            && ($audit->new_values['active_teacher_assignment_id'] ?? null) === $replacementAssignmentId);
+        $this->assertSame(AuditLog::ACTION_UPDATE, $reassignmentAudit?->action);
+        $this->assertAudit($reassignmentAudit, $admin);
+        $this->assertSame('Pergantian pendamping.', $reassignmentAudit->new_values['reason']);
 
-        foreach (AuditLog::where('entity_type', 'EventTeacherAssignment')->get() as $audit) {
-            $this->assertAudit($audit, $admin);
-        }
-        $this->assertCount(2, AuditLog::where('entity_type', 'EventTeacherAssignment')->get());
+        $teacherAudits = AuditLog::where('entity_type', 'EventTeacherAssignment')
+            ->where('entity_id', $originalAssignmentId)->get();
+        $initialTeacherAudit = $teacherAudits->first(fn (AuditLog $audit) =>
+            ($audit->old_values['attendance_status'] ?? null) === 'PENDING'
+            && ($audit->new_values['attendance_status'] ?? null) === 'HADIR');
+        $this->assertSame(AuditLog::ACTION_UPDATE, $initialTeacherAudit?->action);
+        $this->assertAudit($initialTeacherAudit, $admin);
+
+        $absentTeacherAudit = $teacherAudits->first(fn (AuditLog $audit) =>
+            ($audit->old_values['attendance_status'] ?? null) === 'HADIR'
+            && ($audit->new_values['attendance_status'] ?? null) === 'TIDAK_HADIR');
+        $this->assertSame(AuditLog::ACTION_UPDATE, $absentTeacherAudit?->action);
+        $this->assertAudit($absentTeacherAudit, $admin);
+        $this->assertSame($absentTeacherReason, $absentTeacherAudit->new_values['absence_reason']);
+
+        $replacementTeacherAudit = AuditLog::where('entity_type', 'EventTeacherAssignment')
+            ->where('entity_id', $replacementAssignmentId)->sole();
+        $this->assertSame(AuditLog::ACTION_UPDATE, $replacementTeacherAudit->action);
+        $this->assertAudit($replacementTeacherAudit, $admin);
+        $this->assertSame('PENDING', $replacementTeacherAudit->old_values['attendance_status']);
+        $this->assertSame('HADIR', $replacementTeacherAudit->new_values['attendance_status']);
 
         $honorAudits = AuditLog::where('entity_type', 'EventHonorEntry')->get();
         $this->assertAudit($honorAudits->firstWhere('action', AuditLog::ACTION_CREATE), $admin, false, true);
@@ -292,15 +318,32 @@ class MiniConcertEndToEndTest extends TestCase
         $cancelParticipant = app(EventParticipantService::class)
             ->addEnrollments($cancelEvent, $cancelEnrollment->student, [$cancelEnrollment->id], $admin)->sole();
         app(EventLifecycleService::class)->publish($cancelEvent, $admin);
+        $cancelParticipant->refresh();
+        $cancelInvoice = $cancelEvent->invoices()->sole();
+        $participantCancellationReason = 'Peserta membatalkan keikutsertaan.';
         app(EventParticipantService::class)->cancelParticipant(
-            $cancelParticipant, $admin, 'Peserta membatalkan keikutsertaan.',
+            $cancelParticipant, $admin, $participantCancellationReason,
         );
-        app(EventLifecycleService::class)->cancel($cancelEvent, $admin, 'Event tidak dapat dilaksanakan.');
+        $eventCancellationReason = 'Event tidak dapat dilaksanakan.';
+        app(EventLifecycleService::class)->cancel($cancelEvent, $admin, $eventCancellationReason);
 
-        $this->assertAudit(AuditLog::where('entity_type', 'EventParticipant')
-            ->where('entity_id', $cancelParticipant->id)->where('action', AuditLog::ACTION_UPDATE)->latest('id')->first(), $admin);
-        $this->assertAudit(AuditLog::where('entity_type', 'Invoice')
-            ->where('action', AuditLog::ACTION_VOID)->latest('id')->first(), $admin);
+        $participantCancellationAudit = AuditLog::where('entity_type', 'EventParticipant')
+            ->where('entity_id', $cancelParticipant->id)->where('action', AuditLog::ACTION_UPDATE)->sole();
+        $this->assertSame(AuditLog::ACTION_UPDATE, $participantCancellationAudit->action);
+        $this->assertAudit($participantCancellationAudit, $admin);
+        $this->assertSame('ACTIVE', $participantCancellationAudit->old_values['status']);
+        $this->assertSame('CANCELLED', $participantCancellationAudit->new_values['status']);
+        $this->assertSame($participantCancellationReason, $participantCancellationAudit->new_values['cancellation_reason']);
+        $this->assertSame($participantCancellationReason, $participantCancellationAudit->new_values['reason']);
+
+        $voidAudit = AuditLog::where('entity_type', 'Invoice')
+            ->where('entity_id', $cancelInvoice->id)->where('action', AuditLog::ACTION_VOID)->sole();
+        $this->assertSame(AuditLog::ACTION_VOID, $voidAudit->action);
+        $this->assertAudit($voidAudit, $admin);
+        $this->assertSame('UNPAID', $voidAudit->old_values['status']);
+        $this->assertSame('VOID', $voidAudit->new_values['status']);
+        $this->assertSame($participantCancellationReason, $voidAudit->new_values['voided_reason']);
+        $this->assertSame($participantCancellationReason, $voidAudit->new_values['reason']);
         $this->assertAudit(AuditLog::where('entity_type', 'Event')->where('entity_id', $cancelEvent->id)
             ->get()->first(fn (AuditLog $audit) => ($audit->new_values['status'] ?? null) === Event::STATUS_CANCELLED), $admin);
 
