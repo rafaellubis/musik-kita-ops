@@ -2,9 +2,7 @@
     $isCompleted  = in_array($sesi->status, ['HADIR', 'HADIR_TERLAMBAT'], true);
     $isDiganti    = $sesi->status === 'DIGANTI';
     $isLibur      = $sesi->status === 'LIBUR';
-    $isCancelled  = $sesi->status === 'CANCELLED';
     $isScheduled  = $sesi->status === 'SCHEDULED';
-    $isMuted      = $isCompleted || $isCancelled;
 
     $packageLabel = $sesi->enrollment?->package?->code ?? '';
     $instrumentName = $sesi->enrollment?->package?->instrument?->name ?? '';
@@ -50,7 +48,6 @@
             shadow-[rgba(44,105,78,0.04)_0px_2px_8px]
             hover:shadow-[rgba(44,105,78,0.08)_0px_4px_12px]
             transition-all duration-300
-            {{ $isMuted ? 'opacity-70' : '' }}
             fade-in-up"
      @if(isset($sIdx)) style="animation-delay: {{ ($sIdx + 2) * 80 }}ms" @endif
 >
