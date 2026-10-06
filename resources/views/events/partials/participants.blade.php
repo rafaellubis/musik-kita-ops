@@ -25,42 +25,53 @@
              }"
              @searchable-select-changed.window="murid = $event.detail.value; dipilih = []">
             <h3 class="mb-3 text-sm font-semibold text-mk-text">Tambah Peserta</h3>
+            {{-- Susunan vertikal: (1) murid + alasan, (2) pilihan kelas, (3) tombol Tambah.
+                 Grid `gap-4` dipakai supaya jarak antar baris tetap konsisten walau baris kelas disembunyikan. --}}
             <form method="POST" action="{{ route('events.participants.store', $event) }}" aria-label="Tambah peserta event"
-                  class="flex flex-wrap items-end gap-1">
+                  class="grid gap-4">
                 @csrf
                 <input type="hidden" name="event_ui_tab" value="participants">
 
-                <div class="w-full max-w-full sm:w-[36rem]">
+                {{-- Baris 1: field Murid dan Alasan penambahan sejajar. Label 20px + kontrol 38px di kedua
+                     kolom, jadi sisi atas label maupun sisi bawah kotak input selalu sama. --}}
+                <div class="grid gap-4 xl:grid-cols-[minmax(0,32rem)_minmax(0,20rem)]">
                     <x-searchable-select name="student_id" label="Murid" placeholder="Cari murid..." required
                         :options="$availableStudents->map(fn ($murid) => ['value' => $murid->id, 'label' => $murid->full_name.' ('.$murid->student_code.')'])->all()" />
+
+                    @if($event->isPublished())
+                        {{-- Alasan penambahan baru relevan untuk murid yang sudah dipilih, jadi ikut muncul saat itu.
+                             `:required` mengikuti visibilitas supaya tidak ada kontrol wajib yang tersembunyi. --}}
+                        <div x-show="murid" x-cloak>
+                            <label for="participant-reason" class="mb-1 block text-xs text-mk-dim">Alasan penambahan <span class="text-red-700" aria-hidden="true">*</span></label>
+                            {{-- `block` wajib: textarea inline-block menambah tinggi baris descender dan membuat kotaknya naik ~7px. --}}
+                            <textarea id="participant-reason" name="reason" :required="Boolean(murid)" maxlength="1000" rows="1"
+                                      class="block w-full resize-y rounded text-sm">{{ old('reason') }}</textarea>
+                        </div>
+                    @endif
                 </div>
 
-                <div class="min-w-[240px]">
-                    <div class="mb-1 text-xs text-mk-dim">Instrument</div>
+                {{-- Baris 2: pilihan kelas hanya relevan setelah murid dipilih, jadi baru dimunculkan saat itu. --}}
+                <div x-show="murid" x-cloak role="group" aria-labelledby="participant-kelas-label"
+                     class="rounded-lg border border-mk-border p-3">
+                    <p id="participant-kelas-label" class="mb-2 text-xs font-semibold text-mk-muted">Kelas yang diikuti</p>
                     <div class="flex flex-wrap items-center gap-2">
                         <template x-for="item in (enrollment[murid] ?? [])" :key="item.id">
-                            <label class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-mk-border bg-white px-3 py-1.5 text-xs transition-colors hover:border-mk-accent">
+                            <label class="inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-colors"
+                                   :class="dipilih.includes(item.id) ? 'border-mk-accent bg-mk-accentDim' : 'border-mk-border bg-white hover:border-mk-accent'">
                                 <input type="checkbox" name="enrollment_ids[]" :value="item.id" x-model.number="dipilih"
                                        class="rounded text-mk-accent focus:ring-mk-accent">
                                 <span class="font-semibold text-mk-text" x-text="item.paket"></span>
                                 <span class="text-mk-muted" x-text="item.guru"></span>
                             </label>
                         </template>
-                        <p x-show="! murid" class="text-xs text-mk-dim">Pilih murid dulu.</p>
-                        <p x-show="murid && (enrollment[murid] ?? []).length === 0" x-cloak class="text-xs text-mk-dim">Tidak ada enrollment aktif.</p>
+                        <p x-show="(enrollment[murid] ?? []).length === 0" class="text-xs text-mk-dim">Murid ini belum punya enrollment aktif.</p>
                     </div>
                 </div>
 
-                @if($event->isPublished())
-                    <div class="w-full sm:w-72">
-                        <label for="participant-reason" class="mb-1 block text-xs text-mk-dim">Alasan penambahan <span class="text-red-700">*</span></label>
-                        <textarea id="participant-reason" name="reason" required maxlength="1000" rows="1"
-                                  class="w-full resize-y rounded text-sm">{{ old('reason') }}</textarea>
-                    </div>
-                @endif
-
-                <button type="submit" :disabled="dipilih.length === 0"
-                        class="btn-mk-primary rounded-lg px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50">Tambah</button>
+                <div>
+                    <button type="submit" :disabled="dipilih.length === 0"
+                            class="btn-mk-primary rounded-lg px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50">Tambah</button>
+                </div>
             </form>
         </div>
     @endif
