@@ -8,6 +8,7 @@ use App\Models\EventTeacherAssignment;
 use App\Models\Teacher;
 use App\Services\EventAttendanceService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -84,6 +85,10 @@ class GuruEventController extends Controller
         $data = $request->validate([
             'attendance_status' => ['required', 'in:HADIR,TIDAK_HADIR'],
             'event_notes' => ['nullable', 'string', 'max:1000'],
+        ], [
+            'attendance_status.required' => 'Pilih kehadiran murid terlebih dahulu.',
+            'attendance_status.in' => 'Status kehadiran murid tidak valid.',
+            'event_notes.max' => 'Catatan event maksimal 1000 karakter.',
         ]);
 
         try {
@@ -98,13 +103,55 @@ class GuruEventController extends Controller
                 throw $exception;
             }
 
+            // Jalur AJAX mengembalikan pesan yang sama sebagai JSON supaya kartu bisa
+            // menampilkannya inline tanpa kehilangan catatan yang sudah diketik.
+            if ($request->wantsJson()) {
+                return response()->json(['message' => $exception->getMessage()], 422);
+            }
+
             return redirect()->route('guru.events.show', $participant->event_id)
                 ->withInput()
                 ->with('error', $exception->getMessage());
         }
 
+        if ($request->wantsJson()) {
+            return $this->attendanceJsonResponse($participant, $teacher);
+        }
+
         return redirect()->route('guru.events.show', $participant->event_id)
             ->with('success', 'Kehadiran murid berhasil diperbarui.');
+    }
+
+    /**
+     * Payload JSON untuk simpan absensi tanpa reload halaman.
+     * Kartu di-render ulang dari partial yang sama dengan halaman event,
+     * jadi tidak ada markup kartu yang diduplikasi di sisi klien.
+     */
+    private function attendanceJsonResponse(EventParticipant $participant, Teacher $teacher): JsonResponse
+    {
+        $participant->refresh();
+        $participant->load(['student', 'enrollment.package.instrument', 'attendanceUpdatedBy']);
+
+        $event = $participant->event;
+        $assignment = $event->teacherAssignments()
+            ->where('teacher_id', $teacher->id)
+            ->firstOrFail();
+
+        $participants = $assignment->participants()
+            ->where('status', EventParticipant::STATUS_ACTIVE)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'incomplete' => $participants
+                ->where('attendance_status', EventParticipant::ATTENDANCE_PENDING)
+                ->count(),
+            'card_html' => view('guru.events.participant-card', [
+                'participant' => $participant,
+                'event' => $event,
+                'assignment' => $assignment,
+            ])->render(),
+        ]);
     }
 
     private function teacher(Request $request): Teacher

@@ -36,7 +36,10 @@
                 </div>
                 <div>
                     <dt class="text-xs font-semibold text-on-surface-variant">Kartu murid</dt>
-                    <dd class="mt-0.5 font-bold text-primary">{{ $participants->count() }} total · {{ $incompleteCount }} belum lengkap</dd>
+                    <dd class="mt-0.5 font-bold text-primary">
+                        {{ $participants->count() }} total ·
+                        <span id="event-incomplete-count">{{ $incompleteCount }}</span> belum lengkap
+                    </dd>
                 </div>
             </dl>
         </header>
@@ -48,13 +51,25 @@
             </div>
 
             <div class="space-y-3">
-                @foreach($participants as $participant)
-                    @include('guru.events.participant-card', [
-                        'participant' => $participant,
-                        'event' => $event,
-                        'assignment' => $assignment,
-                    ])
-                @endforeach
+                @forelse($participants as $idx => $participant)
+                    {{-- Wrapper dengan id: target swap HTML kartu setelah simpan via AJAX. --}}
+                    <div id="participant-card-{{ $participant->id }}">
+                        @include('guru.events.participant-card', [
+                            'participant' => $participant,
+                            'event' => $event,
+                            'assignment' => $assignment,
+                            'idx' => $idx,
+                        ])
+                    </div>
+                @empty
+                    <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 px-4 py-12 text-center shadow-[rgba(44,105,78,0.04)_0px_2px_8px] fade-in-up">
+                        <div class="w-12 h-12 bg-surface-container-low rounded-full flex items-center justify-center mx-auto text-xl mb-3 border border-outline-variant/20" aria-hidden="true">
+                            🎼
+                        </div>
+                        <div class="text-primary font-semibold text-sm">Belum ada murid terdaftar</div>
+                        <div class="text-outline text-xs mt-1">Admin belum menambahkan murid pada event ini.</div>
+                    </div>
+                @endforelse
             </div>
         </section>
     </div>

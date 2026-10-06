@@ -301,6 +301,116 @@ class GuruEventPortalTest extends TestCase
         );
     }
 
+    public function test_pending_card_exposes_two_one_tap_buttons_wired_to_the_card_form(): void
+    {
+        [$event, $assignment] = $this->assignedEvent('Konser Ketuk', Event::STATUS_PUBLISHED, today(), true);
+        $participant = $this->participant($event, $assignment, 'Murid Ketuk');
+
+        $this->actingAs($this->guruUser)
+            ->get(route('guru.events.show', $event))
+            ->assertOk()
+            // Tombol cepat berada di luar <form> dan diikat lewat atribut form= (HTML native).
+            ->assertSee('form="participant-form-'.$participant->id.'"', false)
+            ->assertSee('value="'.EventParticipant::ATTENDANCE_HADIR.'"', false)
+            ->assertSee('value="'.EventParticipant::ATTENDANCE_TIDAK_HADIR.'"', false)
+            // Kartu PENDING tidak punya pemilih status, jadi tidak ada kehadiran yang terisi sendiri.
+            ->assertDontSee('type="radio"', false);
+    }
+
+    public function test_ajax_attendance_update_returns_rendered_card_and_incomplete_count(): void
+    {
+        [$event, $assignment] = $this->assignedEvent('Konser Ajax', Event::STATUS_PUBLISHED, today(), true);
+        $first = $this->participant($event, $assignment, 'Murid Ajax Satu');
+        $this->participant($event, $assignment, 'Murid Ajax Dua');
+
+        $response = $this->actingAs($this->guruUser)
+            ->patchJson(route('guru.events.attendance.update', $first), [
+                'attendance_status' => EventParticipant::ATTENDANCE_HADIR,
+                'event_notes' => 'Tampil mantap.',
+            ]);
+
+        $response->assertOk()->assertJson(['success' => true, 'incomplete' => 1]);
+
+        $cardHtml = (string) $response->json('card_html');
+        $this->assertStringContainsString('Murid Ajax Satu', $cardHtml);
+        $this->assertStringContainsString('Tampil mantap.', $cardHtml);
+        // Kartu terisi berhenti menawarkan tombol cepat, diganti jalur koreksi.
+        $this->assertStringNotContainsString('title="Tandai murid hadir"', $cardHtml);
+        $this->assertStringContainsString('Ubah kehadiran', $cardHtml);
+
+        $this->assertDatabaseHas('event_participants', [
+            'id' => $first->id,
+            'attendance_status' => EventParticipant::ATTENDANCE_HADIR,
+            'event_notes' => 'Tampil mantap.',
+            'attendance_updated_by' => $this->guruUser->id,
+        ]);
+    }
+
+    public function test_ajax_update_after_assignment_revoked_returns_json_422(): void
+    {
+        [$event, $assignment] = $this->assignedEvent('Konser Cabut', Event::STATUS_PUBLISHED, today(), true);
+        $participant = $this->participant($event, $assignment, 'Murid Cabut');
+
+        $assignment->update([
+            'attendance_status' => EventTeacherAssignment::ATTENDANCE_TIDAK_HADIR,
+            'confirmed_at' => now(),
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->patchJson(route('guru.events.attendance.update', $participant), [
+                'attendance_status' => EventParticipant::ATTENDANCE_HADIR,
+            ])
+            ->assertStatus(422)
+            ->assertJson(['message' => 'Kehadiran murid hanya dapat diisi setelah guru pendamping HADIR.']);
+
+        $this->assertDatabaseHas('event_participants', [
+            'id' => $participant->id,
+            'attendance_status' => EventParticipant::ATTENDANCE_PENDING,
+        ]);
+    }
+
+    public function test_ajax_update_without_status_returns_indonesian_validation_message(): void
+    {
+        [$event, $assignment] = $this->assignedEvent('Konser Validasi', Event::STATUS_PUBLISHED, today(), true);
+        $participant = $this->participant($event, $assignment, 'Murid Validasi');
+
+        $this->actingAs($this->guruUser)
+            ->patchJson(route('guru.events.attendance.update', $participant), [
+                'event_notes' => 'Catatan tanpa status.',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('attendance_status')
+            ->assertJsonPath('errors.attendance_status.0', 'Pilih kehadiran murid terlebih dahulu.');
+
+        $this->assertDatabaseHas('event_participants', [
+            'id' => $participant->id,
+            'attendance_status' => EventParticipant::ATTENDANCE_PENDING,
+        ]);
+    }
+
+    public function test_card_alpine_expression_is_not_truncated_by_quotes(): void
+    {
+        [$event, $assignment] = $this->assignedEvent('Konser Alpine', Event::STATUS_PUBLISHED, today(), true);
+        $this->participant($event, $assignment, 'Murid Alpine');
+
+        $html = $this->actingAs($this->guruUser)
+            ->get(route('guru.events.show', $event))
+            ->assertOk()
+            ->getContent();
+
+        // Tanda kutip ganda di dalam ekspresi x-data memotong atribut HTML diam-diam:
+        // markup tetap "valid" tapi seluruh handler Alpine mati tanpa error di sisi server.
+        preg_match('/x-data="([^"]*)"/', $html, $matches);
+        $expression = trim($matches[1] ?? '');
+
+        $this->assertStringStartsWith('{', $expression);
+        $this->assertStringEndsWith(
+            '}',
+            $expression,
+            'Atribut x-data kartu terpotong — periksa tanda kutip ganda di dalam ekspresinya.',
+        );
+    }
+
     /** @return array{Event, EventTeacherAssignment} */
     private function assignedEvent(string $name, string $status, $date, bool $teacherHadir = false): array
     {
