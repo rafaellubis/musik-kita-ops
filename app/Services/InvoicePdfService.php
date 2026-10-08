@@ -24,6 +24,7 @@ class InvoicePdfService
             'student',
             'enrollment.package.instrument',
             'items' => fn ($q) => $q->whereNull('parent_item_id')->with('discountItem'),
+            'validPayments',
         ]);
 
         $logoPath = $this->pdfAssets->optimizedLogoPath();

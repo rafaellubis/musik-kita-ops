@@ -343,7 +343,7 @@
                     <span class="date-label">Jatuh Tempo</span>&ensp;{{ $invoice->due_date->format('d M Y') }}
                 </div>
                 <div class="date-row">
-                    <span class="date-label">Periode</span>&ensp;{{ \Carbon\Carbon::create($invoice->year, $invoice->month, 1)->format('F Y') }}
+                    <span class="date-label">Tanggal Pembayaran</span>&ensp;{{ $invoice->validPayments->first()?->payment_date?->format('d M Y') ?? '—' }}
                 </div>
                 @if($invoice->description)
                     <div class="date-row" style="margin-top: 4px; font-size: 10px; color: #7A3818; font-style: italic;">

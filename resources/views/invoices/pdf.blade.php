@@ -328,7 +328,7 @@
                         <span class="date-label">Jatuh Tempo</span>&nbsp;{{ $invoice->due_date->format('d M Y') }}
                     </div>
                     <div class="date-row">
-                        <span class="date-label">Periode</span>&nbsp;{{ \Carbon\Carbon::create($invoice->year, $invoice->month, 1)->locale('id')->translatedFormat('F Y') }}
+                        <span class="date-label">Tanggal Pembayaran</span>&nbsp;{{ $invoice->validPayments->first()?->payment_date?->format('d M Y') ?? '—' }}
                     </div>
                     @if($invoice->description)
                         <div class="description-note">{{ $invoice->description }}</div>
