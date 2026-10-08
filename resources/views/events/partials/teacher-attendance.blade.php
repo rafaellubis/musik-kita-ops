@@ -58,6 +58,11 @@
         eventId: {{ $event->id }},
         initial: @js($drawerAwal),
         ids: @js($assignments->pluck('id')->map(fn ($id) => (int) $id)->values()->all()),
+        // Judul panel pindah ke header slide-over, jadi nama + instrumen guru dikirim sebagai peta.
+        names: @js($assignments->mapWithKeys(fn ($assignment) => [(int) $assignment->id => [
+            'nama' => $assignment->teacher->name,
+            'instrumen' => $ringkasan[$assignment->id]['instrumen'] ?: 'Instrumen belum tercatat',
+        ]])),
      })">
     <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
@@ -182,25 +187,34 @@
         </div>
     @endif
 
-    {{-- Slide-over detail: satu panel per guru, berisi murid yang didampingi + kontrol absensinya. --}}
-    <dialog x-ref="drawer" @close="onClose()" @click="closeOnBackdrop($event)"
-            aria-label="Detail guru pendamping"
-            class="m-0 ml-auto h-full max-h-none w-full max-w-[30rem] border-0 bg-mk-card p-0 text-mk-text shadow-lg backdrop:bg-black/40">
-        <div class="flex h-full flex-col">
-            <div class="flex items-center justify-between gap-3 border-b border-mk-borderLight px-4 py-3">
-                <p class="text-xs font-semibold text-mk-muted">Detail guru pendamping</p>
-                <button type="button" x-on:click="close()"
-                        class="cursor-pointer rounded-lg border border-mk-border px-3 py-1.5 text-sm font-semibold text-mk-muted hover:bg-mk-surface hover:text-mk-text focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent">Tutup</button>
+    {{-- Slide-over detail: satu panel per guru, berisi murid yang didampingi + kontrol absensinya.
+         Pola animasi sengaja disamakan dengan panel detail di halaman Kalender (x-show + x-transition). --}}
+    <div x-show="panelOpen" x-cloak @click.self="close()" @keydown.escape.window="closeFromEscape()"
+         class="fixed inset-0 z-50 flex justify-end bg-black/40">
+        <div x-show="panelOpen" role="dialog" aria-modal="true" aria-label="Detail guru pendamping"
+             x-transition:enter="transform transition ease-in-out duration-300"
+             x-transition:enter-start="translate-x-full"
+             x-transition:enter-end="translate-x-0"
+             x-transition:leave="transform transition ease-in-out duration-300"
+             x-transition:leave-start="translate-x-0"
+             x-transition:leave-end="translate-x-full"
+             class="flex h-full w-full max-w-[30rem] flex-col border-l border-mk-border/30 bg-mk-card text-mk-text shadow-2xl">
+            <div class="flex items-start justify-between gap-3 bg-mk-sidebar p-6 text-white">
+                <div class="min-w-0">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-mk-accent">Detail guru pendamping</span>
+                    <h3 class="mt-1 truncate text-lg font-bold text-white" x-text="namaGuru"></h3>
+                    <p class="mt-0.5 text-xs text-white/80" x-text="instrumenGuru"></p>
+                </div>
+                <button type="button" x-on:click="close()" aria-label="Tutup"
+                        class="-mr-1 cursor-pointer p-1 text-2xl font-bold leading-none text-mk-accent transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent">&times;</button>
             </div>
 
             <div class="flex-1 overflow-y-auto">
                 @foreach($assignments as $assignment)
                     @php $info = $ringkasan[$assignment->id]; @endphp
                     <section x-show="detail === {{ $assignment->id }}" data-teacher-detail="{{ $assignment->id }}" class="space-y-4 p-4">
-                        <div>
-                            <h2 class="text-lg font-semibold text-mk-text">Murid didampingi {{ $assignment->teacher->name }}</h2>
-                            <p class="mt-1 text-sm text-mk-muted">{{ $info['instrumen'] ?: 'Instrumen belum tercatat' }} · {{ $info['jumlah'] }} murid · {{ $info['tercatat'] }} dari {{ $info['jumlah'] }} absensi murid</p>
-                        </div>
+                        {{-- Nama + instrumen guru sudah tampil di header panel, di sini cukup progresnya. --}}
+                        <p class="text-sm text-mk-muted">{{ $info['jumlah'] }} murid didampingi · {{ $info['tercatat'] }} dari {{ $info['jumlah'] }} absensi murid</p>
 
                         @if($canManageAttendance && $assignment->attendance_status !== EventTeacherAssignment::ATTENDANCE_HADIR)
                             <p class="rounded-lg border border-mk-warningBorder bg-mk-warningBg p-3 text-sm font-semibold text-mk-warning">Guru pendamping harus Hadir sebelum absensi murid diisi.</p>
@@ -210,111 +224,145 @@
                             @foreach($info['peserta'] as $participant)
                                 @php
                                     $participantMeta = $participantStatuses[$participant->attendance_status] ?? [$participant->attendance_status, 'bg-mk-surface text-mk-text border-mk-border', 'bg-mk-muted'];
-                                    // Absensi murid hanya bisa dicatat setelah guru pendamping dikonfirmasi hadir.
+                                    // Tombol Hadir/Tidak hadir + field catatan hanya tampil selama absensi murid
+                                    // masih kosong (dan guru pendamping sudah Hadir). Begitu statusnya tersimpan,
+                                    // baris murid cukup menampilkan status + tombol Reset absensi.
                                     $canOperateParticipant = $canManageAttendance
-                                        && $assignment->attendance_status === EventTeacherAssignment::ATTENDANCE_HADIR;
+                                        && $assignment->attendance_status === EventTeacherAssignment::ATTENDANCE_HADIR
+                                        && $participant->attendance_status === EventParticipant::ATTENDANCE_PENDING;
                                     // Ganti guru & reset absensi tetap memakai gate mutasi lama (tidak bergantung status guru).
                                     $canManageParticipant = $canManageAttendance;
-                                    $tombolAktif = 'rounded-lg px-3 py-2 text-sm font-bold';
-                                    $tombolNonaktif = 'rounded-lg border border-mk-border px-3 py-2 text-sm font-semibold text-mk-muted transition-colors hover:bg-mk-surface hover:text-mk-text';
+                                    // Satu definisi tombol sekunder untuk panel ini: target sentuh minimal 44px
+                                    // (min-h-11) supaya nyaman dipakai lewat layar sentuh studio.
+                                    $tombolSekunder = 'min-h-11 cursor-pointer rounded-lg border border-mk-border px-3 py-2 text-sm font-semibold text-mk-muted transition-colors hover:bg-mk-surface hover:text-mk-text';
                                 @endphp
-                                <article class="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start sm:justify-between">
-                                    <div class="min-w-0">
+                                {{-- Grid 2 kolom: baris 1 = nama + badge status, baris 2 = tombol absensi +
+                                     tombol Catatan. Field catatan mengisi satu baris penuh di bawahnya. --}}
+                                <article class="grid grid-cols-1 gap-3 px-4 py-4 sm:grid-cols-[1fr_auto] sm:items-start"
+                                         x-data="{ catatan: false }">
+                                    {{-- Kalau baris 2 kolom kiri kosong (absensi sudah tersimpan / tidak bisa
+                                         diubah), identitas membentang dua baris. Tanpa itu tingginya blok nama
+                                         mendorong badge dan tombol Reset berjauhan (jarak jadi 56px, bukan 12px). --}}
+                                    <div class="min-w-0 {{ $canOperateParticipant ? '' : 'sm:row-span-2' }}">
                                         <h4 class="font-semibold text-mk-text">{{ $participant->student->full_name }}</h4>
-                                        <p class="mt-0.5 text-sm text-mk-muted">
-                                            {{ $participant->snapshot_instrument_name }} · {{ $participant->snapshot_package_code }}@if($participant->snapshot_grade) · {{ $participant->snapshot_grade }}@endif
-                                        </p>
+                                        {{-- Baris kedua: "Nickname · Instrumen". array_filter supaya pemisah "·" tidak muncul kalau nickname kosong. --}}
+                                        <p class="mt-0.5 text-sm text-mk-muted">{{ implode(' · ', array_filter([$participant->student->nickname, $participant->snapshot_instrument_name])) }}</p>
                                         @if($participant->event_notes)
                                             <p class="mt-2 text-sm text-mk-text"><span class="font-semibold">Catatan:</span> {{ $participant->event_notes }}</p>
                                         @endif
                                     </div>
 
-                                    <div class="flex flex-col items-start gap-2 sm:items-end">
-                                        <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold {{ $participantMeta[1] }}">
-                                            <span class="h-1.5 w-1.5 rounded-full {{ $participantMeta[2] }}" aria-hidden="true"></span>
-                                            {{ $participantMeta[0] }}
-                                        </span>
+                                    {{-- Kolom kanan baris 1: status absensi murid. --}}
+                                    <span class="inline-flex items-center gap-1.5 justify-self-start rounded-full border px-2.5 py-1 text-xs font-semibold sm:justify-self-end {{ $participantMeta[1] }}">
+                                        <span class="h-1.5 w-1.5 rounded-full {{ $participantMeta[2] }}" aria-hidden="true"></span>
+                                        {{ $participantMeta[0] }}
+                                    </span>
 
-                                        @if($recoveringParticipantId === $participant->id)
+                                    @if($recoveringParticipantId === $participant->id)
+                                        <div class="space-y-1 sm:col-span-2">
                                             @foreach($errors->all() as $pesan)
                                                 <p class="rounded-lg border border-error/30 bg-error-container p-2 text-sm font-medium text-on-error-container">{{ $pesan }}</p>
                                             @endforeach
-                                        @endif
+                                        </div>
+                                    @endif
 
-                                        @if($canOperateParticipant)
-                                            {{-- Sekali klik: status terkirim lewat tombol submit. Catatan ikut dikirim
-                                                 supaya klik ulang tidak menghapus catatan yang sudah ada. --}}
-                                            <form method="POST" action="{{ route('event-participants.attendance', $participant) }}" class="flex flex-wrap items-center gap-2">
+                                    @if($canOperateParticipant)
+                                        {{-- Kolom kiri baris 2: sekali klik status terkirim. Field catatan ada di
+                                             dropdown baris bawah, tapi tetap milik form ini (lihat atribut form=)
+                                             supaya status + catatan terkirim bersamaan. --}}
+                                        <form id="absen-murid-{{ $participant->id }}" method="POST"
+                                              action="{{ route('event-participants.attendance', $participant) }}" class="flex flex-wrap gap-2">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="event_ui_tab" value="teacher-attendance">
+                                            <input type="hidden" name="participant_id" value="{{ $participant->id }}">
+                                            <button type="submit" name="attendance_status" value="HADIR"
+                                                    aria-label="Tandai {{ $participant->student->full_name }} hadir"
+                                                    class="{{ $tombolSekunder }}">Hadir</button>
+                                            <button type="submit" name="attendance_status" value="TIDAK_HADIR"
+                                                    aria-label="Tandai {{ $participant->student->full_name }} tidak hadir"
+                                                    class="{{ $tombolSekunder }}">Tidak hadir</button>
+                                        </form>
+
+                                        {{-- Kolom kanan baris 2: dropdown catatan, sejajar dengan tombol absensi. --}}
+                                        <button type="button" x-on:click="catatan = ! catatan" :aria-expanded="catatan.toString()"
+                                                aria-controls="catatan-{{ $participant->id }}"
+                                                class="inline-flex cursor-pointer items-center gap-1.5 justify-self-start {{ $tombolSekunder }} focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent sm:justify-self-end">
+                                            {{ $participant->event_notes ? 'Ubah catatan' : 'Catatan (opsional)' }}
+                                            {{-- Panah penanda dropdown, diputar saat panelnya terbuka. --}}
+                                            <svg class="h-3.5 w-3.5 transition-transform" :class="catatan ? 'rotate-180' : ''"
+                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            </svg>
+                                        </button>
+
+                                        {{-- Field catatan: satu baris penuh di bawah, jadi lebarnya selebar panel. --}}
+                                        <div id="catatan-{{ $participant->id }}" x-show="catatan" style="display:none" class="sm:col-span-2">
+                                            <label for="participant-notes-{{ $participant->id }}" class="block text-sm font-semibold text-mk-text">Catatan</label>
+                                            <input id="participant-notes-{{ $participant->id }}" type="text" name="event_notes" maxlength="1000"
+                                                   value="{{ $participant->event_notes }}"
+                                                   form="absen-murid-{{ $participant->id }}"
+                                                   placeholder="Misal: bawa partitur, perlu latihan tambahan"
+                                                   class="mt-1 w-full rounded-md text-sm">
+                                        </div>
+                                    @endif
+
+                                    @if($canManageParticipant && $participant->attendance_status !== EventParticipant::ATTENDANCE_PENDING)
+                                        <div class="justify-self-start text-right sm:col-start-2 sm:justify-self-end" x-data="{ bukaReset: false }">
+                                            <button type="button" x-on:click="bukaReset = ! bukaReset"
+                                                    :aria-expanded="bukaReset.toString()" aria-controls="reset-panel-{{ $participant->id }}"
+                                                    class="{{ $tombolSekunder }} focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent">Reset absensi</button>
+                                            <form id="reset-panel-{{ $participant->id }}" x-show="bukaReset" style="display:none"
+                                                  method="POST" action="{{ route('event-participants.attendance.reset', $participant) }}"
+                                                  class="mt-2 flex flex-wrap items-end justify-end gap-2">
+                                                @csrf
+                                                <input type="hidden" name="event_ui_tab" value="teacher-attendance">
+                                                <div class="min-w-[14rem] flex-1 text-left">
+                                                    <label for="reset-reason-{{ $participant->id }}" class="block text-sm font-semibold text-mk-text">Alasan reset absensi</label>
+                                                    <input id="reset-reason-{{ $participant->id }}" type="text" name="reason" required maxlength="1000" class="mt-1 w-full rounded-md text-sm">
+                                                </div>
+                                                <button type="submit" class="{{ $tombolSekunder }} focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent">Reset Absensi</button>
+                                            </form>
+                                            <p class="mt-2 text-sm text-mk-muted">Reset absensi sebelum mengganti guru.</p>
+                                        </div>
+                                    @endif
+
+                                    {{-- Ganti guru pendamping hanya relevan kalau guru yang mendampingi sekarang
+                                         TIDAK hadir. Absensi murid juga harus masih kosong (aturan server). --}}
+                                    @if($canManageParticipant
+                                        && $participant->attendance_status === EventParticipant::ATTENDANCE_PENDING
+                                        && $assignment->attendance_status === EventTeacherAssignment::ATTENDANCE_TIDAK_HADIR)
+                                        <button type="button" onclick="document.getElementById('reassign-{{ $participant->id }}').showModal()"
+                                                class="justify-self-start sm:col-start-2 sm:justify-self-end {{ $tombolSekunder }} focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent">
+                                            Ganti guru pendamping
+                                        </button>
+                                        <dialog id="reassign-{{ $participant->id }}" aria-labelledby="reassign-title-{{ $participant->id }}"
+                                                class="w-[min(32rem,calc(100%-2rem))] rounded-lg border-0 bg-white p-0 text-mk-text shadow-lg backdrop:bg-black/40">
+                                            <form method="POST" action="{{ route('event-participants.reassign', $participant) }}" class="p-5">
                                                 @csrf
                                                 @method('PATCH')
-                                                <input type="hidden" name="event_ui_tab" value="teacher-attendance">
-                                                <input type="hidden" name="participant_id" value="{{ $participant->id }}">
-                                                <input id="participant-notes-{{ $participant->id }}" type="text" name="event_notes" maxlength="1000"
-                                                       value="{{ $participant->event_notes }}" placeholder="Catatan (opsional)"
-                                                       aria-label="Catatan {{ $participant->student->full_name }}"
-                                                       class="w-48 rounded-md text-sm">
-                                                <button type="submit" name="attendance_status" value="HADIR"
-                                                        aria-label="Tandai {{ $participant->student->full_name }} hadir"
-                                                        class="{{ $participant->attendance_status === EventParticipant::ATTENDANCE_HADIR ? $tombolAktif.' btn-mk-primary' : $tombolNonaktif }}">Hadir</button>
-                                                <button type="submit" name="attendance_status" value="TIDAK_HADIR"
-                                                        aria-label="Tandai {{ $participant->student->full_name }} tidak hadir"
-                                                        class="{{ $participant->attendance_status === EventParticipant::ATTENDANCE_TIDAK_HADIR ? $tombolAktif.' bg-red-800 text-white' : $tombolNonaktif }}">Tidak hadir</button>
+                                                <h5 id="reassign-title-{{ $participant->id }}" class="text-lg font-semibold">Ganti guru {{ $participant->student->full_name }}</h5>
+                                                <p class="mt-1 text-sm text-mk-muted">Perubahan hanya berlaku untuk enrollment {{ $participant->snapshot_package_code }}.</p>
+                                                <div class="mt-4">
+                                                    <label for="replacement-teacher-{{ $participant->id }}" class="block text-sm font-semibold text-mk-text">Guru pengganti</label>
+                                                    <select id="replacement-teacher-{{ $participant->id }}" name="teacher_id" required class="mt-1 w-full rounded-md">
+                                                        <option value="">Pilih guru aktif</option>
+                                                        @foreach($activeTeachers->where('id', '!=', $assignment->teacher_id) as $teacher)
+                                                            <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="mt-4">
+                                                    <label for="replacement-reason-{{ $participant->id }}" class="block text-sm font-semibold text-mk-text">Alasan penggantian</label>
+                                                    <textarea id="replacement-reason-{{ $participant->id }}" name="reason" required maxlength="1000" rows="3" class="mt-1 w-full rounded-md"></textarea>
+                                                </div>
+                                                <div class="mt-5 flex justify-end gap-2">
+                                                    <button type="button" onclick="this.closest('dialog').close()" class="rounded-lg px-4 py-2 text-sm font-semibold text-mk-muted hover:bg-mk-surface">Batal</button>
+                                                    <button type="submit" class="btn-mk-primary rounded-lg px-4 py-2 text-sm font-bold">Simpan Pengganti</button>
+                                                </div>
                                             </form>
-                                        @endif
-
-                                        @if($canManageParticipant && $participant->attendance_status !== EventParticipant::ATTENDANCE_PENDING)
-                                            <div class="text-right" x-data="{ bukaReset: false }">
-                                                <button type="button" x-on:click="bukaReset = ! bukaReset"
-                                                        :aria-expanded="bukaReset.toString()" aria-controls="reset-panel-{{ $participant->id }}"
-                                                        class="text-sm font-semibold text-mk-muted underline-offset-4 hover:text-mk-text hover:underline">Reset absensi</button>
-                                                <form id="reset-panel-{{ $participant->id }}" x-show="bukaReset" style="display:none"
-                                                      method="POST" action="{{ route('event-participants.attendance.reset', $participant) }}"
-                                                      class="mt-2 flex flex-wrap items-end justify-end gap-2">
-                                                    @csrf
-                                                    <input type="hidden" name="event_ui_tab" value="teacher-attendance">
-                                                    <div class="min-w-[14rem] flex-1 text-left">
-                                                        <label for="reset-reason-{{ $participant->id }}" class="block text-sm font-semibold text-mk-text">Alasan reset absensi</label>
-                                                        <input id="reset-reason-{{ $participant->id }}" type="text" name="reason" required maxlength="1000" class="mt-1 w-full rounded-md text-sm">
-                                                    </div>
-                                                    <button type="submit" class="rounded-lg border border-mk-border px-4 py-2 text-sm font-semibold text-mk-muted hover:bg-mk-surface hover:text-mk-text">Reset Absensi</button>
-                                                </form>
-                                                <p class="mt-2 text-sm text-mk-muted">Reset absensi sebelum mengganti guru.</p>
-                                            </div>
-                                        @endif
-
-                                        @if($canManageParticipant && $participant->attendance_status === EventParticipant::ATTENDANCE_PENDING)
-                                            <button type="button" onclick="document.getElementById('reassign-{{ $participant->id }}').showModal()"
-                                                    class="mt-3 text-sm font-semibold text-mk-muted underline-offset-4 hover:text-mk-text hover:underline">
-                                                Ganti guru pendamping
-                                            </button>
-                                            <dialog id="reassign-{{ $participant->id }}" aria-labelledby="reassign-title-{{ $participant->id }}"
-                                                    class="w-[min(32rem,calc(100%-2rem))] rounded-lg border-0 bg-white p-0 text-mk-text shadow-lg backdrop:bg-black/40">
-                                                <form method="POST" action="{{ route('event-participants.reassign', $participant) }}" class="p-5">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <h5 id="reassign-title-{{ $participant->id }}" class="text-lg font-semibold">Ganti guru {{ $participant->student->full_name }}</h5>
-                                                    <p class="mt-1 text-sm text-mk-muted">Perubahan hanya berlaku untuk enrollment {{ $participant->snapshot_package_code }}.</p>
-                                                    <div class="mt-4">
-                                                        <label for="replacement-teacher-{{ $participant->id }}" class="block text-sm font-semibold text-mk-text">Guru pengganti</label>
-                                                        <select id="replacement-teacher-{{ $participant->id }}" name="teacher_id" required class="mt-1 w-full rounded-md">
-                                                            <option value="">Pilih guru aktif</option>
-                                                            @foreach($activeTeachers->where('id', '!=', $assignment->teacher_id) as $teacher)
-                                                                <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="mt-4">
-                                                        <label for="replacement-reason-{{ $participant->id }}" class="block text-sm font-semibold text-mk-text">Alasan penggantian</label>
-                                                        <textarea id="replacement-reason-{{ $participant->id }}" name="reason" required maxlength="1000" rows="3" class="mt-1 w-full rounded-md"></textarea>
-                                                    </div>
-                                                    <div class="mt-5 flex justify-end gap-2">
-                                                        <button type="button" onclick="this.closest('dialog').close()" class="rounded-lg px-4 py-2 text-sm font-semibold text-mk-muted hover:bg-mk-surface">Batal</button>
-                                                        <button type="submit" class="btn-mk-primary rounded-lg px-4 py-2 text-sm font-bold">Simpan Pengganti</button>
-                                                    </div>
-                                                </form>
-                                            </dialog>
-                                        @endif
-                                    </div>
+                                        </dialog>
+                                    @endif
                                 </article>
                             @endforeach
                         </div>
@@ -322,5 +370,5 @@
                 @endforeach
             </div>
         </div>
-    </dialog>
+    </div>
 </div>
