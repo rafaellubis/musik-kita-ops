@@ -76,7 +76,7 @@
                         <div class="text-sm text-mk-dim mt-0.5">
                             @if($student->nickname)"{{ $student->nickname }}" · @endif
                             {{ $student->gender == 'L' ? 'Laki-laki' : 'Perempuan' }}
-                            @if($student->age) · {{ $student->age }} tahun @endif
+                            @if($student->age_label) · {{ $student->age_label }} @endif
                         </div>
                         <div class="mt-2.5">
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold"
@@ -662,7 +662,7 @@
                         <div class="space-y-3">
                             @foreach([
                                 ['Jenis Kelamin', $student->gender == 'L' ? 'Laki-laki' : 'Perempuan'],
-                                ['Tanggal Lahir',  ($student->birth_date?->format('d M Y') ?? '—') . ($student->age ? ' (' . $student->age . ' thn)' : '')],
+                                ['Tanggal Lahir',  ($student->birth_date?->format('d M Y') ?? '—') . ($student->age_label ? ' (' . $student->age_label . ')' : '')],
                                 ['No. HP',  $student->phone ?? '—'],
                                 ['Email',   $student->email ?? '—'],
                                 ['Alamat',  $student->address ?? '—'],

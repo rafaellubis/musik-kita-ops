@@ -132,6 +132,29 @@ class Student extends Model
     }
 
     /**
+     * Umur lengkap: "7 Tahun 5 Bulan", "5 Bulan", "7 Tahun".
+     * Return null kalau birth_date tidak diisi.
+     */
+    public function getAgeLabelAttribute(): ?string
+    {
+        if (!$this->birth_date) {
+            return null;
+        }
+
+        $months = (int) $this->birth_date->diffInMonths(now());
+        $years = intdiv($months, 12);
+        $rem = $months % 12;
+
+        if ($years && $rem) {
+            return "{$years} Tahun {$rem} Bulan";
+        }
+        if ($years) {
+            return "{$years} Tahun";
+        }
+        return "{$rem} Bulan";
+    }
+
+    /**
      * Backward-compat: views yang pakai $student->package masih bisa jalan.
      * Sekarang dibaca dari primaryEnrollment, bukan kolom langsung di students.
      */
