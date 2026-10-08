@@ -157,6 +157,16 @@
                     </form>
                 </details>
             @endif
+
+            {{-- Event dibatalkan sudah tidak dipakai lagi, jadi boleh dihapus (invoice VOID tetap tersimpan). --}}
+            @if($event->isCancelled() && $canMutate)
+                <form method="POST" action="{{ route('events.destroy', $event) }}" class="mt-4"
+                      onsubmit="return confirm('Hapus event ini? Tindakan ini tidak dapat dibatalkan.')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="font-semibold text-red-800 underline-offset-4 hover:underline">Hapus event Dibatalkan</button>
+                </form>
+            @endif
         </div>
     @endif
 </div>

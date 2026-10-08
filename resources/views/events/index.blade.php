@@ -60,10 +60,14 @@
         </form>
 
         <div class="overflow-hidden rounded-lg border border-mk-borderLight bg-mk-card">
-            <div class="overflow-x-auto">
-                <table class="min-w-[1120px] w-full text-sm">
+            <div class="overflow-x-auto px-2">
+                {{-- .mk-event-table = border-collapse: separate, syarat mutlak agar
+                     garis membulat pada tiap baris mau dirender browser. --}}
+                <table id="tabel-event" class="mk-event-table min-w-[1120px] w-full text-sm">
                     <thead class="bg-mk-surface text-left text-xs font-semibold text-mk-muted">
-                        <tr class="border-b border-mk-borderLight">
+                        {{-- Garis pemisah dipasang di <th>, karena border pada <tr>
+                             tidak dirender saat tabel memakai border-collapse: separate. --}}
+                        <tr class="[&>th]:border-b [&>th]:border-mk-borderLight">
                             <th class="px-4 py-3">Event</th>
                             <th class="px-4 py-3">Tipe</th>
                             <th class="px-4 py-3">Tanggal</th>
@@ -75,11 +79,15 @@
                             <th class="px-4 py-3 text-right"><span class="sr-only">Aksi</span></th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-mk-borderLight">
+                    <tbody>
                         @forelse($events as $event)
                             @php($status = $statuses[$event->status] ?? [$event->status, 'bg-mk-surface text-mk-text border-mk-border', 'bg-mk-muted'])
-                            <tr class="transition-colors hover:bg-mk-surface">
+                            {{-- Seluruh baris bisa diklik untuk membuka detail event (lihat script di bawah).
+                                 Tampilan field-nya (garis glow mahoni membulat + hover mint) diatur
+                                 oleh class .mk-row-clickable di resources/css/app.css. --}}
+                            <tr class="mk-row-clickable" data-href="{{ route('events.show', $event) }}">
                                 <td class="px-4 py-3">
+                                    {{-- Link nama tetap link asli (bisa dibuka di tab baru / Ctrl+klik). --}}
                                     <a href="{{ route('events.show', $event) }}"
                                        class="font-semibold text-mk-text underline-offset-4 hover:text-mk-muted hover:underline focus:outline-none focus:ring-2 focus:ring-mk-accent">
                                         {{ $event->name }}
@@ -111,10 +119,22 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-right">
-                                    <a href="{{ route('events.show', $event) }}"
-                                       class="font-semibold text-mk-muted underline-offset-4 hover:text-mk-text hover:underline focus:outline-none focus:ring-2 focus:ring-mk-accent">
-                                        Buka
-                                    </a>
+                                    <div class="flex items-center justify-end gap-3">
+                                        {{-- Hapus hanya untuk event DRAFT atau DIBATALKAN (event yang sudah jalan menyimpan riwayat). --}}
+                                        @hasanyrole('Owner|Admin')
+                                            @if($event->isDraft() || $event->isCancelled())
+                                                <form method="POST" action="{{ route('events.destroy', $event) }}"
+                                                      onsubmit="return confirm('Hapus event ini? Tindakan ini tidak dapat dibatalkan.')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                            class="cursor-pointer rounded-lg bg-red-800 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-red-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent">
+                                                        Hapus
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        @endhasanyrole
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -134,4 +154,41 @@
             <div class="mt-4">{{ $events->links() }}</div>
         @endif
     </div>
+
+    @push('scripts')
+        <script>
+            // Klik di mana saja pada baris event = buka detail event.
+            //
+            // Kenapa dipasang sekali di <table>, bukan onclick di tiap <tr>?
+            // Supaya logika "klik vs drag" hanya ditulis satu kali untuk semua baris.
+            (function () {
+                const tabel = document.getElementById('tabel-event');
+                if (!tabel) return;
+
+                let titikTekan = null;
+
+                // 1. Catat posisi kursor saat tombol mouse ditekan.
+                tabel.addEventListener('mousedown', function (event) {
+                    titikTekan = { x: event.clientX, y: event.clientY };
+                });
+
+                // 2. Saat mouse dilepas (click), tentukan apakah ini benar-benar klik.
+                tabel.addEventListener('click', function (event) {
+                    const baris = event.target.closest('tr[data-href]');
+                    if (!baris) return;
+
+                    // Klik pada tombol/link/form di dalam baris: pakai perilaku aslinya
+                    // (mis. tombol Hapus atau link nama), jangan buka detailnya.
+                    if (event.target.closest('a, button, form, input, select, label')) return;
+
+                    // Belum ada mousedown (misal .click() dari script) atau kursor bergeser
+                    // lebih dari 6px = user sedang men-drag/blok teks -> jangan pindah halaman.
+                    if (!titikTekan) return;
+                    if (Math.abs(event.clientX - titikTekan.x) > 6 || Math.abs(event.clientY - titikTekan.y) > 6) return;
+
+                    window.location = baris.dataset.href;
+                });
+            })();
+        </script>
+    @endpush
 </x-app-layout>

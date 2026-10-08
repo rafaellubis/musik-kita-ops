@@ -160,7 +160,26 @@ class EventController extends Controller
     {
         DB::transaction(function () use ($event) {
             $event = Event::query()->lockForUpdate()->findOrFail($event->id);
-            abort_unless($event->isDraft(), 422, 'Hanya event DRAFT yang dapat dihapus.');
+            abort_unless($event->isDraft() || $event->isCancelled(), 422,
+                'Hanya event DRAFT atau DIBATALKAN yang dapat dihapus.');
+
+            // Baris honor event sudah menempel ke slip honor guru (event selesai yang dibuka ulang
+            // lalu dibatalkan) — menghapus event akan memutus riwayat honor tersebut.
+            abort_if($event->honorEntries()->exists(), 422,
+                'Event ini memiliki riwayat honor guru dan tidak dapat dihapus.');
+
+            // Invoice event yang dibatalkan sudah berstatus VOID tetapi tetap disimpan sebagai
+            // riwayat keuangan. FK invoices.event_id bersifat RESTRICT, jadi invoice dilepas dulu
+            // dari event yang akan dihapus (event_id = NULL).
+            $event->invoices()->update(['event_id' => null]);
+
+            // Anak event dihapus berurutan, tidak bersandar pada urutan cascade InnoDB:
+            // event_participants.active_teacher_assignment_id = RESTRICT terhadap assignment,
+            // sehingga hapus assignment sebelum peserta berisiko error 1451 (terbukti pada uji
+            // skema tereduksi; urutan cascade internal InnoDB tidak dijamin antar perubahan skema).
+            // Peserta dulu (reassignment ikut ter-cascade), baru assignment guru, baru event.
+            $event->participants()->delete();
+            $event->teacherAssignments()->delete();
 
             AuditLog::record(
                 action: AuditLog::ACTION_DELETE,
@@ -171,7 +190,7 @@ class EventController extends Controller
             $event->delete();
         });
 
-        return redirect()->route('events.index')->with('success', 'Event DRAFT berhasil dihapus.');
+        return redirect()->route('events.index')->with('success', 'Event berhasil dihapus.');
     }
 
     private function generateEventNumber(int $year): string

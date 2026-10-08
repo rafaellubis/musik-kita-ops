@@ -5,9 +5,11 @@ namespace Tests\Feature;
 use App\Models\AuditLog;
 use App\Models\Enrollment;
 use App\Models\Event;
+use App\Models\EventHonorEntry;
 use App\Models\EventParticipant;
 use App\Models\EventTeacherAssignment;
 use App\Models\Instrument;
+use App\Models\Invoice;
 use App\Models\Package;
 use App\Models\Student;
 use App\Models\Teacher;
@@ -297,7 +299,7 @@ class EventDraftManagementTest extends TestCase
         ])->assertUnprocessable();
     }
 
-    public function test_only_draft_event_can_be_deleted(): void
+    public function test_only_draft_and_cancelled_events_can_be_deleted(): void
     {
         $owner = $this->userWithRole('Owner');
         $draft = Event::factory()->create();
@@ -310,6 +312,49 @@ class EventDraftManagementTest extends TestCase
         $this->actingAs($owner)->delete(route('events.destroy', $published))
             ->assertUnprocessable();
         $this->assertModelExists($published);
+
+        // Event dibatalkan boleh dihapus; invoice VOID-nya tetap tersimpan sebagai riwayat.
+        $cancelled = Event::factory()->create(['status' => Event::STATUS_CANCELLED]);
+        $invoice = Invoice::factory()->create([
+            'event_id' => $cancelled->id,
+            'status' => Invoice::STATUS_VOID,
+        ]);
+
+        // Peserta + assignment guru: hapus event harus bersih walau peserta menunjuk assignment
+        // (FK RESTRICT — di MySQL urutan hapus ini wajib eksplisit agar tidak error 1451).
+        $enrollment = Enrollment::factory()->create();
+        $assignment = EventTeacherAssignment::factory()->create([
+            'event_id' => $cancelled->id,
+            'teacher_id' => Teacher::factory(),
+        ]);
+        $participant = EventParticipant::factory()->create([
+            'event_id' => $cancelled->id,
+            'enrollment_id' => $enrollment->id,
+            'student_id' => $enrollment->student_id,
+            'active_teacher_assignment_id' => $assignment->id,
+        ]);
+
+        $this->actingAs($owner)->delete(route('events.destroy', $cancelled))
+            ->assertRedirect(route('events.index'));
+
+        $this->assertModelMissing($cancelled);
+        $this->assertModelMissing($participant);
+        $this->assertModelMissing($assignment);
+        $this->assertModelExists($invoice);
+        $this->assertNull($invoice->fresh()->event_id);
+    }
+
+    public function test_cancelled_event_with_honor_history_cannot_be_deleted(): void
+    {
+        $owner = $this->userWithRole('Owner');
+        $event = Event::factory()->create(['status' => Event::STATUS_CANCELLED]);
+        $entry = EventHonorEntry::factory()->reversed()->create(['event_id' => $event->id]);
+
+        $this->actingAs($owner)->delete(route('events.destroy', $event))
+            ->assertUnprocessable();
+
+        $this->assertModelExists($event);
+        $this->assertModelExists($entry);
     }
 
     public function test_package_and_honor_are_snapshotted_when_participant_is_added(): void
