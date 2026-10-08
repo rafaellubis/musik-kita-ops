@@ -149,8 +149,8 @@
             <div class="px-4 py-3 bg-mk-surface border-b flex justify-between">
                 <h3 class="font-semibold text-sm text-mk-muted">Honor Guru</h3>
                 <span class="text-sm font-semibold">
-                    Dibayar: Rp {{ number_format($honorPaid, 0, ',', '.') }}
-                    @if($honorPaid < $totalHonor)
+                    Dibayar: Rp {{ number_format($honorPaidForPeriod, 0, ',', '.') }}
+                    @if($honorPaidForPeriod < $totalHonor)
                         <span class="text-xs text-orange-600 ml-2">
                             (total: Rp {{ number_format($totalHonor, 0, ',', '.') }})
                         </span>

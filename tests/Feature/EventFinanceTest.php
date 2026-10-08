@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Event;
 use App\Models\EventHonorEntry;
 use App\Models\EventParticipant;
+use App\Models\HonorSlip;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;
@@ -124,6 +125,35 @@ class EventFinanceTest extends TestCase
             ->assertOk()
             ->assertSee('Mini Concert')
             ->assertSee('Rp 325.000');
+    }
+
+    public function test_paid_event_honor_uses_paid_at_month_for_profit_and_loss(): void
+    {
+        HonorSlip::factory()->create([
+            'year' => 2026,
+            'month' => 6,
+            'base_honor' => 0,
+            'event_honor' => 42500,
+            'total_honor' => 42500,
+            'status' => HonorSlip::STATUS_PAID,
+            'paid_at' => '2026-07-02 10:00:00',
+            'paid_by' => $this->owner->id,
+        ]);
+
+        $june = $this->actingAs($this->owner)
+            ->get(route('reports.finance', ['year' => 2026, 'month' => 6]))
+            ->assertOk();
+        $this->assertSame(42500, (int) $june->viewData('totalHonor'));
+        $this->assertSame(0, (int) $june->viewData('honorPaid'));
+        $this->assertSame(42500, (int) $june->viewData('honorPaidForPeriod'));
+        $this->assertSame(0, (int) $june->viewData('labaBersih'));
+
+        $july = $this->get(route('reports.finance', ['year' => 2026, 'month' => 7]))
+            ->assertOk();
+        $this->assertSame(0, (int) $july->viewData('totalHonor'));
+        $this->assertSame(42500, (int) $july->viewData('honorPaid'));
+        $this->assertSame(0, (int) $july->viewData('honorPaidForPeriod'));
+        $this->assertSame(-42500, (int) $july->viewData('labaBersih'));
     }
 
     public function test_summary_returns_billed_collected_outstanding_honor_and_cash_margin(): void

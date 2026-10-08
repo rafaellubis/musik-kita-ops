@@ -367,7 +367,7 @@
         <span class="label">Honor Guru (dibayar bulan ini)</span>
         <span class="amount color-beban">(Rp {{ number_format($honorPaid, 0, ',', '.') }})</span>
     </div>
-    @if($honorPaid < $totalHonor)
+    @if($honorPaidForPeriod < $totalHonor)
     <div class="pl-row indent" style="padding-top:0; border-bottom:none;">
         <span class="label text-dim" style="padding-left:32px;">
             Total akrual: Rp {{ number_format($totalHonor, 0, ',', '.') }} — selisih belum dibayar
@@ -480,11 +480,11 @@
                     <td class="text-right font-mono">Rp {{ number_format($totalHonor, 0, ',', '.') }}</td>
                     <td></td>
                 </tr>
-                @if($honorPaid < $totalHonor)
+                @if($honorPaidForPeriod < $totalHonor)
                 <tr>
                     <td colspan="7" style="color:#b45309; font-size:9.5px; padding-top:6px; border-bottom:none;">
-                        ⚠ Sudah dibayar (PAID): Rp {{ number_format($honorPaid, 0, ',', '.') }} —
-                        belum dibayar: Rp {{ number_format($totalHonor - $honorPaid, 0, ',', '.') }}
+                        ⚠ Sudah dibayar (PAID): Rp {{ number_format($honorPaidForPeriod, 0, ',', '.') }} —
+                        belum dibayar: Rp {{ number_format($totalHonor - $honorPaidForPeriod, 0, ',', '.') }}
                     </td>
                 </tr>
                 @endif
