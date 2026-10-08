@@ -7,6 +7,28 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Cuti per enrollment
+
+- Pada detail murid, pilih **Ajukan / Perpanjang Cuti Kelas**, lalu pilih kelas.
+  Murid tetap Aktif jika kelas lainnya masih berjalan. Periode dan tombol
+  kembali aktif tersedia di tab **Kelas**.
+- Biaya Rp100.000 per kelas per pengajuan/perpanjangan. Pengajuan awal maksimal
+  31 hari inklusif; perpanjangan sekali hingga total 62 hari.
+- Tanggal akhir masih termasuk cuti; kelas aktif kembali mulai hari berikutnya.
+  Pengajuan untuk tanggal mendatang tidak menghentikan kelas hari ini.
+- SPP bulan parsial tetap penuh. Bulan yang seluruh harinya tercakup cuti kelas
+  tidak ditagih otomatis. Invoice yang sudah terbit tidak diubah.
+- Sesi kelas lain tidak dibatalkan. Sesi otomatis, manual, dan reschedule
+  tidak boleh dibuat pada tanggal cuti kelas yang dipilih.
+- Riwayat `enrollment_leaves` tetap disimpan setelah kembali aktif.
+
+**Penerapan:** jalankan `php artisan migrate` setelah backup database.
+Migrasi `2026_10_08_000001_create_enrollment_leaves_table.php` menyalin periode
+cuti murid lama ke kelas terkait tanpa menghapus kolom atau invoice lama.
+Pastikan Task Scheduler menjalankan `php artisan schedule:run` setiap menit.
+Job cuti berjalan pukul 00:00 dan pada waktu yang diatur di halaman Scheduler.
+Pengujian wajib memakai SQLite `:memory:` sesuai `phpunit.xml`, bukan database studio.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

@@ -120,6 +120,14 @@ class StudentSeeder extends Seeder
                 ],
             );
 
+            // Data contoh cuti memakai periode per kelas, tanpa menerbitkan invoice.
+            if ($enrollment->status === Enrollment::STATUS_ON_LEAVE && $student->cuti_until) {
+                $enrollment->leaves()->firstOrCreate(
+                    ['cuti_from' => $student->cuti_from, 'cuti_until' => $student->cuti_until],
+                    ['reason' => 'Cuti dari data contoh'],
+                );
+            }
+
             $primaryEnrollment = $student->primaryEnrollment;
             if ($primaryEnrollment?->student_id === $student->id) {
                 if (! $primaryEnrollment->is_primary) {

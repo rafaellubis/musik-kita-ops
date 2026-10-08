@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Enrollment murid ke paket dengan guru tertentu (M03).
@@ -58,6 +59,30 @@ class Enrollment extends Model
     public function classSessions(): HasMany
     {
         return $this->hasMany(ClassSession::class);
+    }
+
+    public function leaves(): HasMany
+    {
+        return $this->hasMany(EnrollmentLeave::class);
+    }
+
+    public function currentLeave(): HasOne
+    {
+        return $this->hasOne(EnrollmentLeave::class)
+            ->ofMany(['id' => 'max'], fn ($query) => $query->whereNull('completed_at'))
+            ->whereNull('completed_at');
+    }
+
+    /** Riwayat cuti tetap berlaku saat membuat sesi untuk tanggal lampau. */
+    public function isOnLeaveOn(string $date): bool
+    {
+        if ($this->relationLoaded('leaves')) {
+            return $this->leaves->contains(fn (EnrollmentLeave $leave) =>
+                $leave->cuti_from->toDateString() <= $date && $leave->cuti_until->toDateString() >= $date
+            );
+        }
+
+        return $this->leaves()->whereDate('cuti_from', '<=', $date)->whereDate('cuti_until', '>=', $date)->exists();
     }
 
     public function progressReports(): HasMany

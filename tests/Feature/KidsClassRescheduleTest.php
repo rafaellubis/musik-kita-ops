@@ -103,6 +103,50 @@ class KidsClassRescheduleTest extends TestCase
         ]);
     }
 
+    public function test_replacement_and_split_reject_enrollment_leave_dates(): void
+    {
+        $original = $this->makeKidsSession();
+        $original->enrollment->leaves()->create([
+            'cuti_from' => '2026-06-10',
+            'cuti_until' => '2026-06-11',
+            'reason' => 'Perjalanan keluarga',
+            'completed_at' => '2026-06-12 00:00:00',
+        ]);
+        $actions = [
+            fn () => $this->service->createReplacement($original, '2026-06-10', '11:00', null),
+            fn () => $this->service->createSplitPart($original, '2026-06-11', '11:00', null, 1),
+        ];
+        foreach ($actions as $action) {
+            try {
+                $action();
+                $this->fail('Sesi pengganti atau split pada tanggal cuti seharusnya ditolak.');
+            } catch (InvalidArgumentException $e) {
+                $this->assertStringContainsString('tanggal cuti kelas ini', $e->getMessage());
+            }
+        }
+        $this->assertDatabaseCount('class_sessions', 1);
+    }
+
+    public function test_replacement_checks_override_enrollment_leave_not_original(): void
+    {
+        $original = $this->makeKidsSession();
+        $other = $this->makeKidsSession();
+        $overrideEnrollment = $other->enrollment;
+        $overrideEnrollment->leaves()->create([
+            'cuti_from' => '2026-06-10',
+            'cuti_until' => '2026-06-11',
+            'reason' => 'Perjalanan keluarga',
+        ]);
+
+        try {
+            $this->service->createReplacement($original, '2026-06-10', '11:00', null, $overrideEnrollment);
+            $this->fail('Enrollment pengganti yang cuti seharusnya ditolak.');
+        } catch (InvalidArgumentException $e) {
+            $this->assertSame('Sesi pengganti tidak dapat dibuat pada tanggal cuti kelas ini.', $e->getMessage());
+        }
+        $this->assertDatabaseCount('class_sessions', 2);
+    }
+
     public function test_kids_reschedule_lolos_jika_slot_sudah_ada_sesi_kids_lain(): void
     {
         $this->seedKidsSessionAt('2026-06-10', '11:00:00', '11:45:00');

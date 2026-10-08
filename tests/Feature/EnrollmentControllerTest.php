@@ -361,4 +361,48 @@ class EnrollmentControllerTest extends TestCase
         // Pastikan enrollment pengganti benar-benar ditandai sebagai utama
         $this->assertTrue((bool) $e2->is_primary);
     }
+    public function test_can_stop_leave_class_without_losing_period_history(): void
+    {
+        $active = Enrollment::factory()->for($this->student)->create(['is_primary' => true]);
+        $paused = Enrollment::factory()->for($this->student)->create(['status' => 'ON_LEAVE']);
+        $this->student->update(['primary_enrollment_id' => $active->id]);
+        $leave = $paused->leaves()->create([
+            'cuti_from' => today()->toDateString(),
+            'cuti_until' => today()->addDays(10)->toDateString(),
+            'reason' => 'Liburan',
+        ]);
+        Schedule::factory()->create(['enrollment_id' => $paused->id]);
+
+        $this->actingAs($this->admin)
+            ->delete(route('students.enrollments.destroy', [$this->student, $paused]))
+            ->assertRedirect();
+
+        $this->assertSame('INACTIVE', $paused->fresh()->status);
+        $this->assertSame('ACTIVE', $active->fresh()->status);
+        $this->assertSame('Aktif', $this->student->fresh()->status);
+        $this->assertNotNull($leave->fresh()->completed_at);
+        $this->assertFalse($paused->schedules()->where('is_active', true)->exists());
+    }
+
+    public function test_stopping_active_primary_keeps_other_leave_class_and_student_cuti(): void
+    {
+        $active = Enrollment::factory()->for($this->student)->create(['is_primary' => true]);
+        $paused = Enrollment::factory()->for($this->student)->create(['status' => 'ON_LEAVE']);
+        $this->student->update(['primary_enrollment_id' => $active->id]);
+        $paused->leaves()->create([
+            'cuti_from' => today()->toDateString(),
+            'cuti_until' => today()->addDays(10)->toDateString(),
+            'reason' => 'Liburan',
+        ]);
+
+        $this->actingAs($this->admin)->delete(
+            route('students.enrollments.destroy', [$this->student, $active]),
+            ['new_primary_enrollment_id' => $paused->id],
+        )->assertRedirect();
+
+        $this->assertSame('INACTIVE', $active->fresh()->status);
+        $this->assertSame('ON_LEAVE', $paused->fresh()->status);
+        $this->assertSame('Cuti', $this->student->fresh()->status);
+        $this->assertSame($paused->id, $this->student->fresh()->primary_enrollment_id);
+    }
 }

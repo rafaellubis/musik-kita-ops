@@ -224,10 +224,10 @@ class InvoiceService
     }
 
     /**
-     * Generate SPP bulanan untuk semua enrollment ACTIVE murid Aktif.
+     * Generate SPP bulanan per kelas ACTIVE/ON_LEAVE murid Aktif/Cuti.
      *
-     * Multi-kelas: 1 murid dengan 2 enrollment ACTIVE → 2 invoice SPP terpisah,
-     * masing-masing terikat ke enrollment_id spesifik.
+     * Cuti sepanjang bulan tidak ditagih; cuti sebagian bulan tetap harga penuh.
+     * Invoice yang sudah diterbitkan tidak diubah.
      *
      * Idempotent: cek berdasarkan (student_id, enrollment_id, year, month) + item SPP.
      * Jalankan berkali-kali dalam bulan yang sama tetap aman.
@@ -238,16 +238,18 @@ class InvoiceService
     {
         $issuedAt = Carbon::create($year, $month, 1)->startOfMonth();
         $dueDate  = $issuedAt->copy()->day($this->dueDay())->endOfDay();
+        $monthEnd = $issuedAt->copy()->endOfMonth()->startOfDay();
 
         $report = ['created' => 0, 'skipped' => 0];
 
-        // Ambil semua murid Aktif yang punya minimal 1 enrollment ACTIVE.
-        // status = ACTIVE adalah sumber kebenaran tunggal — whereNull('end_date') tidak diperlukan
-        // dan justru berbahaya: enrollment ACTIVE yang kebetulan punya end_date (bug data) akan
-        // lolos tanpa peringatan, murid tidak dapat invoice SPP tanpa ada error apapun.
-        $students = Student::where('status', 'Aktif')
-            ->whereHas('enrollments', fn ($q) => $q->where('status', 'ACTIVE'))
-            ->with(['enrollments' => fn ($q) => $q->where('status', 'ACTIVE')->with('package.instrument')])
+        $statuses = [Enrollment::STATUS_ACTIVE, Enrollment::STATUS_ON_LEAVE];
+        $students = Student::whereIn('status', ['Aktif', 'Cuti'])
+            ->whereHas('enrollments', fn ($q) => $q->whereIn('status', $statuses))
+            ->with(['enrollments' => fn ($q) => $q->whereIn('status', $statuses)->with([
+                'package.instrument',
+                'leaves' => fn ($q) => $q->where('cuti_from', '<=', $monthEnd->toDateString())
+                    ->where('cuti_until', '>=', $issuedAt->toDateString())->orderBy('cuti_from'),
+            ])])
             ->get();
 
         foreach ($students as $student) {
@@ -257,6 +259,21 @@ class InvoiceService
 
                 // Enrollment yang baru mulai bulan depan belum boleh ditagih bulan ini.
                 if ($enrollment->effective_date?->gt($issuedAt->copy()->endOfMonth())) {
+                    $report['skipped']++;
+                    continue;
+                }
+
+                // Gabungkan periode berurutan, termasuk cuti yang sudah selesai.
+                $uncoveredFrom = $issuedAt->copy();
+                foreach ($enrollment->leaves as $leave) {
+                    if ($leave->cuti_from->gt($uncoveredFrom)) {
+                        break;
+                    }
+                    if ($leave->cuti_until->gte($uncoveredFrom)) {
+                        $uncoveredFrom = $leave->cuti_until->copy()->addDay();
+                    }
+                }
+                if ($uncoveredFrom->gt($monthEnd)) {
                     $report['skipped']++;
                     continue;
                 }

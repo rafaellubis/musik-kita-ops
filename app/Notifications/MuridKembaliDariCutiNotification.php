@@ -14,6 +14,7 @@ class MuridKembaliDariCutiNotification extends Notification
     public function __construct(
         private Student $student,
         private bool    $auto = true,
+        private ?int $enrollmentId = null,
     ) {}
 
     public function via(mixed $notifiable): array
@@ -27,6 +28,7 @@ class MuridKembaliDariCutiNotification extends Notification
             'student_id'   => $this->student->id,
             'student_name' => $this->student->full_name,
             'student_code' => $this->student->student_code,
+            'enrollment_id' => $this->enrollmentId,
             'auto'         => $this->auto,
             'student_url'  => route('students.show', $this->student),
         ];

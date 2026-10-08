@@ -1,5 +1,5 @@
 {{-- Tab Kelas — Manajemen kelas berjalan dan riwayat kelas murid --}}
-{{-- Variabel yang dibutuhkan: $student, $activeEnrollments, $historyEnrollments --}}
+{{-- Variabel yang dibutuhkan: $student, $runningEnrollments, $historyEnrollments --}}
 
 <div class="space-y-4">
 
@@ -43,7 +43,7 @@
             <div class="text-[10px] uppercase tracking-widest font-semibold text-secondary">
                 Kelas Berjalan
                 <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-secondary/15 text-secondary">
-                    {{ $activeEnrollments->count() }}
+                    {{ $runningEnrollments->count() }}
                 </span>
             </div>
             @if(auth()->user()->hasAnyRole(['Owner', 'Admin']) && $student->status === 'Aktif')
@@ -56,13 +56,16 @@
         </div>
 
         {{-- Daftar kelas aktif --}}
-        @forelse($activeEnrollments as $enrollment)
+        @forelse($runningEnrollments as $enrollment)
             @php
                 // Ambil jadwal pertama yang aktif untuk tampilan ringkasan
                 $jadwal = $enrollment->schedules->first();
                 $hariMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+                $leave = $enrollment->currentLeave;
+                $leavePending = $leave && $leave->cuti_from->toDateString() > today()->toDateString();
+                $leaveEnded = $leave && $leave->cuti_until->toDateString() < today()->toDateString();
             @endphp
-            <div class="px-5 py-4 flex items-start gap-4 border-b border-mk-borderLight last:border-0">
+            <div class="px-5 py-4 flex flex-wrap items-start gap-4 border-b border-mk-borderLight last:border-0">
 
                 {{-- Ikon instrumen --}}
                 <div class="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0 mt-0.5 bg-secondary/10">
@@ -106,20 +109,43 @@
                             &nbsp;·&nbsp;
                             {{ $enrollment->package->formatted_price ?? '—' }}/bln
                         </div>
+                        @if($leave)
+                            <div class="pt-2 text-mk-muted">
+                                <span class="font-semibold">{{ $leavePending ? 'Cuti terjadwal' : ($leaveEnded ? 'Periode cuti selesai' : 'Sedang cuti') }}:</span>
+                                {{ $leave->cuti_from->format('d M Y') }}–{{ $leave->cuti_until->format('d M Y') }} (inklusif)
+                            </div>
+                            <div class="text-mk-muted">Aktif kembali mulai {{ $leave->cuti_until->copy()->addDay()->format('d M Y') }}. {{ $leaveEnded ? 'Periode ini sudah selesai.' : ($leave->extension_count > 0 ? 'Perpanjangan sudah digunakan.' : 'Dapat diperpanjang satu kali.') }}</div>
+                        @endif
                     </div>
                 </div>
 
                 {{-- Status badge --}}
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 mt-1"
-                      style="background:rgba(52,211,153,0.12);color:#34D399">
-                    Berjalan
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 mt-1 {{ $leave && !$leavePending ? 'bg-mk-warningBg text-mk-muted' : 'bg-secondary-container/30 text-secondary' }}">
+                    {{ $leave ? ($leavePending ? 'Aktif · cuti terjadwal' : ($leaveEnded ? 'Menunggu aktif kembali' : 'Cuti')) : 'Berjalan' }}
                 </span>
 
                 {{-- Aksi (hanya Owner/Admin) --}}
                 @if(auth()->user()->hasAnyRole(['Owner', 'Admin']))
-                    <div class="flex items-center gap-2 flex-shrink-0 mt-0.5">
+                    <div class="flex flex-wrap items-center gap-2 mt-0.5">
+                        @if($leave && in_array($student->status, ['Aktif', 'Cuti']))
+                            @if($leaveEnded)
+                            <form method="POST" action="{{ route('students.return-from-cuti', $student->id) }}"
+                                  onsubmit="return confirm('Akhiri cuti kelas ini dan aktifkan kembali?')">
+                                @csrf
+                                <input type="hidden" name="enrollment_id" value="{{ $enrollment->id }}">
+                                <button type="submit" class="min-h-11 px-3 py-2 rounded-lg text-xs font-semibold bg-secondary-container/30 text-secondary border border-secondary/20 hover:bg-secondary-container/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary">
+                                    Aktifkan Kembali Kelas
+                                </button>
+                            </form>
+                            @else
+                            <button type="button" disabled title="Dapat diaktifkan mulai {{ $leave->cuti_until->copy()->addDay()->format('d M Y') }}"
+                                    class="min-h-11 px-3 py-2 rounded-lg text-xs font-semibold bg-mk-surface text-mk-muted border border-mk-borderLight cursor-not-allowed">
+                                Aktifkan mulai {{ $leave->cuti_until->copy()->addDay()->format('d M Y') }}
+                            </button>
+                            @endif
+                        @endif
                         {{-- Tombol "Jadikan Utama" hanya muncul jika bukan kelas utama --}}
-                        @if(!$enrollment->is_primary)
+                        @if(!$enrollment->is_primary && $enrollment->status === 'ACTIVE')
                             <form method="POST"
                                   action="{{ route('students.enrollments.set-primary', [$student, $enrollment]) }}">
                                 @csrf @method('PATCH')
@@ -144,7 +170,7 @@
             </div>
 
             {{-- Panel slot sesi + tambah manual (Owner/Admin) --}}
-            @if(auth()->user()->hasAnyRole(['Owner', 'Admin']) && $student->status === 'Aktif')
+            @if(auth()->user()->hasAnyRole(['Owner', 'Admin']) && $student->status === 'Aktif' && $enrollment->status === 'ACTIVE')
                 @php $slotInfo = $enrollmentSlotSummaries[$enrollment->id] ?? null; @endphp
                 @if($slotInfo)
                 <div class="px-5 py-3 bg-mk-surface border-t border-mk-borderLight" x-data="{ showManualModal: false }">

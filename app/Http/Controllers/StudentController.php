@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ReturnEnrollmentLeaveRequest;
+use App\Http\Requests\StartEnrollmentLeaveRequest;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use App\Models\AuditLog;
@@ -96,8 +98,17 @@ class StudentController extends Controller
             'enrollments.package',
             'enrollments.package.instrument',
             'enrollments.teacher',
-            'enrollments.schedules.room',
+            'enrollments.schedules' => fn ($query) => $query->where('is_active', true)->with('room'),
+            'enrollments.currentLeave',
         ])->findOrFail($id);
+
+        $runningEnrollments = $student->enrollments
+            ->whereIn('status', [Enrollment::STATUS_ACTIVE, Enrollment::STATUS_ON_LEAVE])
+            ->sortByDesc('is_primary')->values();
+        $leaveEnrollments = $runningEnrollments->filter(function ($enrollment) {
+            $leave = $enrollment->currentLeave;
+            return ! $leave || ($leave->extension_count === 0 && $leave->cuti_until->toDateString() >= today()->toDateString());
+        })->values();
 
         // Data untuk dropdown di panel aksi lifecycle + form schedule
         $packages = Package::where('is_active', true)
@@ -240,6 +251,7 @@ class StudentController extends Controller
             'upcomingSessions',
             'recentInvoices', 'outstandingBalance', 'unpaidCount',
             'activeEnrollments', 'historyEnrollments',
+            'runningEnrollments', 'leaveEnrollments',
             'allPackages', 'allTeachers', 'allRooms',
             'kidsInstallments',
             'tampilKidsFpButton', 'kidsFpFee',
@@ -447,34 +459,15 @@ class StudentController extends Controller
         );
     }
 
-    public function startCuti(Request $request, string $id)
+    public function startCuti(StartEnrollmentLeaveRequest $request, string $id)
     {
-        $student     = Student::findOrFail($id);
-        $isExtension = $student->status === 'Cuti';
-
-        // Perpanjang: hanya butuh cuti_until baru (cuti_from tetap dari pengajuan awal).
-        // Baru: butuh cuti_from dan cuti_until.
-        $rules    = ['reason' => 'required|string|max:500'];
-        $messages = ['reason.required' => 'Alasan cuti wajib diisi.'];
-
-        if ($isExtension) {
-            $rules['cuti_until']             = 'required|date|after:today';
-            $messages['cuti_until.required'] = 'Tanggal akhir cuti baru wajib diisi.';
-            $messages['cuti_until.after']    = 'Tanggal akhir cuti harus setelah hari ini.';
-        } else {
-            $rules['cuti_from']              = 'required|date|after_or_equal:today';
-            $rules['cuti_until']             = 'required|date|after:cuti_from';
-            $messages['cuti_from.required']  = 'Tanggal mulai cuti wajib diisi.';
-            $messages['cuti_until.required'] = 'Tanggal akhir cuti wajib diisi.';
-            $messages['cuti_until.after']    = 'Tanggal akhir cuti harus setelah tanggal mulai.';
-        }
-
-        $data = $request->validate($rules, $messages);
+        $student = Student::findOrFail($id);
+        $data = $request->validated();
 
         return $this->runLifecycle(
             fn () => $this->lifecycle->ajukanCuti($student, $data),
             $student,
-            'Pengajuan cuti tercatat. Tagihan biaya cuti Rp 100.000 telah diterbitkan.'
+            'Pengajuan atau perpanjangan cuti kelas tercatat. Biaya cuti Rp 100.000 per pengajuan.'
         );
     }
 
@@ -508,17 +501,15 @@ class StudentController extends Controller
         );
     }
 
-    public function returnFromCuti(Request $request, string $id)
+    public function returnFromCuti(ReturnEnrollmentLeaveRequest $request, string $id)
     {
         $student = Student::findOrFail($id);
-        $data = $request->validate([
-            'notes' => 'nullable|string|max:500',
-        ]);
+        $data = $request->validated();
 
         return $this->runLifecycle(
             fn () => $this->lifecycle->aktifkanDariCuti($student, $data),
             $student,
-            'Cuti diakhiri. Murid kembali Aktif.'
+            'Cuti kelas diakhiri. Kelas kembali aktif.'
         );
     }
 

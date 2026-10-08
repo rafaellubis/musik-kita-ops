@@ -50,6 +50,11 @@ class RescheduleService
             $durationMin = $original->enrollment->package->duration_min;
         }
 
+        $enrollment = $overrideEnrollment ?? $original->enrollment;
+        if ($enrollment->isOnLeaveOn($date)) {
+            throw new InvalidArgumentException('Sesi pengganti tidak dapat dibuat pada tanggal cuti kelas ini.');
+        }
+
         $endTime = Carbon::createFromFormat('H:i', $startTime)
             ->addMinutes($durationMin)
             ->format('H:i:s');
@@ -129,6 +134,10 @@ class RescheduleService
         int $part
     ): ClassSession {
         $original->loadMissing(['enrollment.package', 'teacher']);
+
+        if ($original->enrollment->isOnLeaveOn($date)) {
+            throw new InvalidArgumentException('Sesi split tidak dapat dibuat pada tanggal cuti kelas ini.');
+        }
 
         // Durasi split = setengah durasi paket (30 menit → 15 menit)
         $durationMin   = (int) ceil($original->enrollment->package->duration_min / 2);

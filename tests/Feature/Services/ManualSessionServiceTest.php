@@ -46,6 +46,28 @@ class ManualSessionServiceTest extends TestCase
         $this->room = Room::factory()->create(['is_active' => true]);
     }
 
+    public function test_manual_session_rejects_inclusive_leave_dates_even_after_return(): void
+    {
+        $this->enrollment->leaves()->create([
+            'cuti_from' => '2026-02-07',
+            'cuti_until' => '2026-02-08',
+            'reason' => 'Perjalanan keluarga',
+            'completed_at' => '2026-02-09 00:00:00',
+        ]);
+
+        foreach (['2026-02-07', '2026-02-08'] as $date) {
+            try {
+                $this->service->create($this->enrollment, $date, '14:00', null, 2026, 2, 1);
+                $this->fail('Sesi manual pada tanggal cuti seharusnya ditolak.');
+            } catch (InvalidArgumentException $e) {
+                $this->assertSame('Sesi tidak dapat dibuat pada tanggal cuti kelas ini.', $e->getMessage());
+            }
+        }
+        $this->assertDatabaseCount('class_sessions', 0);
+        $session = $this->service->create($this->enrollment, '2026-02-09', '14:00', null, 2026, 2, 1);
+        $this->assertSame('2026-02-09', $session->session_date);
+    }
+
     public function test_create_manual_session_with_attribution(): void
     {
         $session = $this->service->create(

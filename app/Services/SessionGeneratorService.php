@@ -76,14 +76,12 @@ class SessionGeneratorService
             // Include 'Internal' agar Konser KITA terdeteksi
             $holidayMap = $this->loadHolidayDates($start, $end);
 
-            // Ambil schedule aktif dengan enrollment ACTIVE dan murid berstatus Aktif.
-            // Double-filter karena enrollment bisa tertinggal ACTIVE saat murid sudah mundur.
-            // Eager-load enrollment.package untuk perhitungan honor
+            // Status hari ini tidak menentukan sesi bulan target; tanggal cuti per kelas yang menentukan.
             $schedules = Schedule::query()
                 ->active()
-                ->whereHas('enrollment', fn ($q) => $q->active())
-                ->whereHas('enrollment.student', fn ($q) => $q->where('status', 'Aktif'))
-                ->with(['enrollment', 'enrollment.package', 'enrollment.student', 'enrollment.teacher'])
+                ->whereHas('enrollment', fn ($q) => $q->whereIn('status', [Enrollment::STATUS_ACTIVE, Enrollment::STATUS_ON_LEAVE]))
+                ->whereHas('enrollment.student', fn ($q) => $q->whereIn('status', ['Aktif', 'Cuti']))
+                ->with(['enrollment', 'enrollment.package', 'enrollment.student', 'enrollment.teacher', 'enrollment.leaves'])
                 ->get();
 
             foreach ($schedules as $schedule) {
@@ -141,6 +139,11 @@ class SessionGeneratorService
             // agar run kedua tetap menghitung slot yang sama (sequence sudah tersimpan di run pertama)
             $slotCounter++;
             $dateStr = $date->toDateString();
+
+            // Jangan menggeser nomor slot atau membuat sesi LIBUR dalam periode cuti.
+            if ($enrollment->isOnLeaveOn($dateStr)) {
+                continue;
+            }
 
             // Idempotency: skip jika sesi sudah ada (sequence sudah ter-set saat pertama kali dibuat)
             if (ClassSession::where('schedule_id', $schedule->id)
@@ -235,6 +238,11 @@ class SessionGeneratorService
             $repDate = $repItem['date'];
             $repStr  = $repDate->toDateString();
 
+            // Tanggal pengganti dapat berada di bulan lain dan tetap mengikuti riwayat cuti kelas.
+            if ($enrollment->isOnLeaveOn($repStr)) {
+                continue;
+            }
+
             // Guard 1: idempotency
             if (ClassSession::where('schedule_id', $schedule->id)
                 ->whereDate('session_date', $repStr)->exists()) {
@@ -298,7 +306,7 @@ class SessionGeneratorService
         if ($scheduledCount > 0 && $scheduledCount < 3) {
             Log::warning(
                 "[SessionGenerator] Peringatan: murid #{$enrollment->student_id} " .
-                "hanya {$scheduledCount} sesi di bulan ini — cek hari libur"
+                "hanya {$scheduledCount} sesi di bulan ini — cek periode cuti dan hari libur"
             );
         }
     }

@@ -324,7 +324,7 @@
                     <div class="flex justify-between items-start gap-4">
                         <div>
                             <h4 class="text-sm font-semibold text-mk-text">Cuti → Aktif Otomatis</h4>
-                            <p class="text-[11px] text-mk-muted mt-0.5">Murid dengan cuti_until lewat otomatis kembali Aktif + notifikasi Admin/Owner.</p>
+                            <p class="text-[11px] text-mk-muted mt-0.5">Cuti per kelas disinkronkan pukul 00:00 dan jam di bawah. Kelas aktif kembali sehari setelah tanggal akhir + notifikasi Admin/Owner.</p>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <span class="sr-only">Aktifkan cuti ke aktif otomatis</span>
@@ -337,7 +337,7 @@
                         </label>
                     </div>
                     <div class="max-w-xs" :class="!cutiReturnEnabled && 'opacity-50'" x-show="cutiReturnEnabled" x-cloak>
-                        <label class="block text-[11px] font-semibold text-mk-muted mb-1">Jam Eksekusi Harian</label>
+                        <label class="block text-[11px] font-semibold text-mk-muted mb-1">Jam Eksekusi Tambahan Harian</label>
                         <input type="time" name="scheduler_cuti_return_time"
                                value="{{ old('scheduler_cuti_return_time', $settings['scheduler_cuti_return_time']) }}"
                                class="w-full rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('scheduler_cuti_return_time') border-red-500 @enderror">

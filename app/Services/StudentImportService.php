@@ -565,16 +565,16 @@ class StudentImportService
 
     /**
      * Buat Enrollment, Schedule, dan StudentStatusHistory untuk murid yang diimport.
-     * Hanya dijalankan untuk murid berstatus Aktif.
+     * Mendukung murid Aktif dan Cuti; periode dari Excel melekat pada kelas.
      *
-     * StatusHistory selalu dibuat untuk murid Aktif (skip trial = migrasi).
+     * StatusHistory selalu dibuat untuk murid operasional (skip trial = migrasi).
      * Enrollment + Schedule hanya dibuat jika package_id, assigned_teacher_id,
      * preferred_day, dan preferred_time tersedia.
      */
     private function createEnrollmentAndSchedule(Student $student, array $data): void
     {
-        // Hanya untuk murid Aktif
-        if ($student->status !== 'Aktif') {
+        // Cuti dari Excel tetap memerlukan enrollment agar dapat kembali aktif.
+        if (!in_array($student->status, ['Aktif', 'Cuti'], true)) {
             return;
         }
 
@@ -582,7 +582,7 @@ class StudentImportService
         StudentStatusHistory::create([
             'student_id'    => $student->id,
             'from_status'   => null,
-            'to_status'     => 'Aktif',
+            'to_status'     => $student->status,
             'reason'        => 'migrasi',
             'skipped_trial' => true,
             'metadata'      => ['skipped_trial' => true],
@@ -590,8 +590,8 @@ class StudentImportService
             'changed_by'    => auth()->id(),
         ]);
 
-        // Jangan buat enrollment ganda jika murid sudah punya enrollment ACTIVE
-        if (Enrollment::where('student_id', $student->id)->where('status', 'ACTIVE')->exists()) {
+        // Jangan gandakan kelas yang masih berjalan atau sedang cuti.
+        if (Enrollment::where('student_id', $student->id)->whereIn('status', ['ACTIVE', 'ON_LEAVE'])->exists()) {
             return;
         }
 
@@ -719,7 +719,7 @@ class StudentImportService
 
         // Murid Cuti dari Excel: isi cuti_from jika hanya cuti_until yang ada
         if (($data['status'] ?? '') === 'Cuti' && empty($data['cuti_from']) && !empty($data['cuti_until'])) {
-            $data['cuti_from'] = today()->toDateString();
+            $data['cuti_from'] = Carbon::parse($data['cuti_until'])->min(today())->toDateString();
         }
 
         if ($existingId) {
@@ -731,6 +731,23 @@ class StudentImportService
         }
 
         $this->createEnrollmentAndSchedule($student, array_merge($data, $schedulePayload));
+
+        // Format Excel lama menyatakan cuti seluruh murid, bukan memilih kelas.
+        // Tidak menerbitkan biaya baru untuk cuti historis yang diimpor.
+        if ($student->status === 'Cuti' && !empty($data['cuti_until'])) {
+            $ended = Carbon::parse($data['cuti_until'])->lt(today());
+            foreach ($student->enrollments()->whereIn('status', ['ACTIVE', 'ON_LEAVE'])->get() as $enrollment) {
+                $enrollment->leaves()->updateOrCreate(
+                    ['cuti_from' => $data['cuti_from'], 'cuti_until' => $data['cuti_until']],
+                    [
+                        'reason' => 'Cuti dari impor Excel',
+                        'completed_at' => $ended ? now() : null,
+                    ],
+                );
+                $enrollment->update(['status' => $ended ? 'ACTIVE' : 'ON_LEAVE']);
+            }
+            app(StudentLifecycleService::class)->synchronizeLeaveStatus($student);
+        }
 
         return $student;
     }

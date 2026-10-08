@@ -88,6 +88,11 @@ if (SchedulerSettings::reminderEnabled()) {
 
 // ===== M02: Cuti → Aktif otomatis =====
 if (SchedulerSettings::cutiReturnEnabled()) {
+    // Awal hari: tanggal mulai/akhir cuti berlaku tepat pada hari kalender.
+    Schedule::command('students:return-from-leave')
+        ->dailyAt('00:00')
+        ->name('m02-sync-enrollment-leave')
+        ->withoutOverlapping();
     Schedule::command('students:return-from-leave')
         ->dailyAt(SchedulerSettings::cutiReturnTime())
         ->name('m02-return-students-from-leave')

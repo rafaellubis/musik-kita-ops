@@ -9,6 +9,7 @@ use App\Models\Schedule;
 use App\Models\Student;
 use App\Services\EnrollmentSessionCleanupService;
 use App\Services\ScheduleConflictDetector;
+use App\Services\StudentLifecycleService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -217,12 +218,12 @@ class EnrollmentController extends Controller
     {
         // Pastikan enrollment milik murid ini
         abort_if($enrollment->student_id !== $student->id, 403);
-        // Hanya enrollment ACTIVE yang bisa dihentikan
-        abort_if($enrollment->status !== 'ACTIVE', 422, 'Kelas sudah tidak aktif.');
+        // Kelas berjalan dapat dihentikan meskipun sedang cuti.
+        abort_if(!in_array($enrollment->status, ['ACTIVE', 'ON_LEAVE'], true), 422, 'Kelas sudah tidak aktif.');
 
         $isPrimary    = (bool) $enrollment->is_primary;
         $otherActives = $student->enrollments()
-            ->active()
+            ->whereIn('status', ['ACTIVE', 'ON_LEAVE'])
             ->where('id', '!=', $enrollment->id)
             ->get();
 
@@ -252,7 +253,7 @@ class EnrollmentController extends Controller
             // Konfirmasi sudah diberikan — validasi enrollment pengganti
             $newPrimary = Enrollment::findOrFail($newPrimaryId);
             abort_if($newPrimary->student_id !== $student->id, 403);
-            abort_if($newPrimary->status !== 'ACTIVE', 422, 'Kelas pengganti harus berstatus aktif.');
+            abort_if(!in_array($newPrimary->status, ['ACTIVE', 'ON_LEAVE'], true), 422, 'Kelas pengganti harus masih berjalan.');
 
             // Lanjutkan proses swap + hentikan dalam satu transaksi
             DB::transaction(function () use ($student, $enrollment, $newPrimary) {
@@ -296,5 +297,9 @@ class EnrollmentController extends Controller
 
         // Hapus sesi future orphan agar generator tidak bentrok dengan enrollment baru
         $this->sessionCleanup->purgeFutureSessions($enrollment->fresh());
+
+        // Tutup pengajuan yang masih terbuka, tetapi pertahankan tanggal historis.
+        $enrollment->leaves()->whereNull('completed_at')->update(['completed_at' => now()]);
+        app(StudentLifecycleService::class)->synchronizeLeaveStatus($enrollment->student);
     }
 }

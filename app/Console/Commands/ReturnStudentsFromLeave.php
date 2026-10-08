@@ -3,39 +3,46 @@
 namespace App\Console\Commands;
 
 use App\Models\AuditLog;
-use App\Models\Student;
+use App\Models\EnrollmentLeave;
 use App\Models\User;
 use App\Notifications\MuridKembaliDariCutiNotification;
 use App\Services\StudentLifecycleService;
 use Illuminate\Console\Command;
 
 /**
- * Kembalikan murid Cuti ke Aktif otomatis saat cuti_until sudah lewat.
- * Dijadwalkan harian (default 23:59) via routes/console.php.
+ * Sinkronkan awal cuti dan kembalikan kelas setelah hari terakhir cuti.
+ * Periode disimpan per enrollment; kelas lain tetap berjalan.
  */
 class ReturnStudentsFromLeave extends Command
 {
     protected $signature   = 'students:return-from-leave';
-    protected $description = 'Kembalikan murid Cuti ke Aktif otomatis setelah cuti_until berakhir';
+    protected $description = 'Sinkronkan cuti per kelas dan aktifkan kelas yang cutinya selesai';
 
     public function handle(StudentLifecycleService $lifecycle): int
     {
-        $students = Student::query()
-            ->where('status', 'Cuti')
-            ->whereDate('cuti_until', '<=', today())
+        $leaves = EnrollmentLeave::query()
+            ->whereNull('completed_at')
+            ->whereHas('enrollment.student', fn ($query) => $query->whereIn('status', ['Aktif', 'Cuti']))
+            ->with('enrollment.student')
             ->get();
 
-        if ($students->isEmpty()) {
-            $this->info('Tidak ada murid Cuti yang perlu dikembalikan ke Aktif.');
-            return self::SUCCESS;
+        foreach ($leaves->pluck('enrollment.student')->unique('id') as $student) {
+            $lifecycle->synchronizeLeaveStatus($student);
+        }
+
+        $expired = $leaves->filter(fn ($leave) => $leave->cuti_until->lt(today()));
+        if ($expired->isEmpty()) {
+            $this->info('Tidak ada kelas dengan cuti yang sudah selesai.');
         }
 
         $penerima = User::role(['Admin', 'Owner'])->get();
         $diproses = 0;
 
-        foreach ($students as $student) {
+        foreach ($expired as $leave) {
+            $enrollment = $leave->enrollment;
+            $student = $enrollment->student;
             try {
-                $lifecycle->aktifkanDariCuti($student, ['auto' => true]);
+                $lifecycle->aktifkanDariCuti($student, ['enrollment_id' => $enrollment->id, 'auto' => true]);
             } catch (\InvalidArgumentException $e) {
                 $this->warn("  → Lewati {$student->student_code}: {$e->getMessage()}");
                 continue;
@@ -45,20 +52,20 @@ class ReturnStudentsFromLeave extends Command
                 'user_id'      => null,
                 'user_name'    => 'System (Scheduler)',
                 'action'       => AuditLog::ACTION_LIFECYCLE,
-                'entity_type'  => 'Student',
-                'entity_id'    => $student->id,
-                'entity_label' => $student->full_name . ' (' . $student->student_code . ')',
-                'old_values'   => ['status' => 'Cuti'],
-                'new_values'   => ['status' => 'Aktif', 'auto' => true],
-                'notes'        => 'Cuti berakhir otomatis (scheduler)',
+                'entity_type'  => 'Enrollment',
+                'entity_id'    => $enrollment->id,
+                'entity_label' => $student->full_name . ' — kelas #' . $enrollment->id,
+                'old_values'   => ['status' => 'ON_LEAVE'],
+                'new_values'   => ['status' => 'ACTIVE', 'auto' => true, 'leave_id' => $leave->id],
+                'notes'        => 'Cuti kelas berakhir otomatis (scheduler)',
             ]);
 
             foreach ($penerima as $user) {
-                $user->notify(new MuridKembaliDariCutiNotification($student->fresh(), true));
+                $user->notify(new MuridKembaliDariCutiNotification($student->fresh(), true, $enrollment->id));
             }
 
             $diproses++;
-            $this->line("  → {$student->full_name} ({$student->student_code}) kembali Aktif");
+            $this->line("  → {$student->full_name}: kelas #{$enrollment->id} kembali aktif");
         }
 
         if ($diproses > 0) {
@@ -73,11 +80,11 @@ class ReturnStudentsFromLeave extends Command
                     'processed' => $diproses,
                     'date'      => today()->toDateString(),
                 ],
-                'notes'        => "Cron students:return-from-leave — {$diproses} murid dikembalikan ke Aktif",
+                'notes'        => "Cron students:return-from-leave — {$diproses} kelas dikembalikan ke aktif",
             ]);
         }
 
-        $this->info("Selesai: {$diproses} murid dikembalikan ke Aktif.");
+        $this->info("Selesai: {$diproses} kelas dikembalikan ke aktif.");
 
         return self::SUCCESS;
     }

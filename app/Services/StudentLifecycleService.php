@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AuditLog;
 use App\Models\ClassSession;
 use App\Models\Enrollment;
 use App\Models\Invoice;
@@ -10,6 +11,7 @@ use App\Models\StudentStatusHistory;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use InvalidArgumentException;
 
 /**
@@ -29,11 +31,6 @@ use InvalidArgumentException;
  *   Selesai            -> Aktif (re-enroll, TANPA registrasi ulang)
  *   Mengundurkan Diri  -> Aktif (re-aktivasi, BAYAR registrasi Rp 250rb)
  *
- * Catatan tagihan:
- *   Modul tagihan (M05) belum ada. Untuk sekarang setiap transisi yang
- *   memunculkan tagihan (Aktif/Cuti/re-aktif) cuma menulis flag
- *   `pending_invoices` di metadata. Saat M05 tersedia, generator tagihan
- *   tinggal baca flag itu dan bikin invoice yang sesuai.
  */
 class StudentLifecycleService
 {
@@ -422,109 +419,137 @@ class StudentLifecycleService
     }
 
     /**
-     * Aktif -> Cuti. Berbayar Rp 100rb/pengajuan, maks 1 bulan + perpanjang 1x (BR-9).
-     * Method ini juga handle perpanjang cuti (Cuti -> Cuti).
-     *
-     * Guard: Blok pengajuan cuti jika ada invoice SPP UNPAID/PARTIAL.
-     * Perpanjang: hanya butuh cuti_until baru — cuti_from TIDAK diubah.
-     * Validasi maks 62 hari total dihitung dari cuti_from awal.
-     *
-     * @param array{
-     *     cuti_from?: string,   // wajib untuk pengajuan baru; diabaikan saat perpanjang
-     *     cuti_until: string,
-     *     reason: string,
-     * } $data
+     * Cuti berlaku per kelas, maksimal 31 hari inklusif dan satu kali perpanjangan
+     * hingga total 62 hari. Pengajuan/perpanjangan ditagih Rp 100.000 per kelas.
      */
     public function ajukanCuti(Student $student, array $data): Student
     {
-        if (!in_array($student->status, ['Aktif', 'Cuti'], true)) {
-            throw new InvalidArgumentException(
-                'Cuti hanya bisa dari Aktif atau perpanjangan dari Cuti. Status sekarang: ' . $student->status
-            );
+        $validator = Validator::make($data, [
+            'enrollment_id' => 'required|integer',
+            'cuti_until' => 'required|date_format:Y-m-d',
+            'reason' => 'required|string|max:500',
+        ]);
+        if ($validator->fails()) {
+            throw new InvalidArgumentException('Data pengajuan cuti tidak valid: ' . $validator->errors()->first());
         }
 
-        $isExtension = $student->status === 'Cuti';
+        return DB::transaction(function () use ($student, $data) {
+            $student = Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+            $enrollment = $this->leaveEnrollment($student, $data);
+            $leave = $enrollment->currentLeave;
+            $isExtension = $leave !== null;
+            $newUntil = Carbon::parse($data['cuti_until'])->startOfDay();
+            $fromStatus = $student->status;
+            $oldValues = [
+                'status' => $enrollment->status,
+                'cuti_from' => $leave?->cuti_from?->toDateString(),
+                'cuti_until' => $leave?->cuti_until?->toDateString(),
+            ];
 
-        // Validasi perpanjang cuti
-        if ($isExtension) {
-            // Perpanjang harus memperpanjang, bukan mempersingkat — cuti_until baru
-            // HARUS melebihi cuti_until saat ini.
-            $currentUntil = \Carbon\Carbon::parse($student->cuti_until);
-            $newUntil     = \Carbon\Carbon::parse($data['cuti_until']);
-            if (!$newUntil->gt($currentUntil)) {
-                throw new InvalidArgumentException(
-                    'Perpanjang cuti harus melebihi tanggal cuti saat ini (' .
-                    $currentUntil->format('d M Y') . ').'
-                );
+            if ($isExtension) {
+                if ($leave->cuti_until->lt(today())) {
+                    throw new InvalidArgumentException('Periode cuti sudah berakhir. Akhiri cuti sebelum mengajukan periode baru.');
+                }
+                if ($leave->extension_count >= 1) {
+                    throw new InvalidArgumentException('Cuti hanya boleh diperpanjang satu kali.');
+                }
+                if (!$newUntil->gt($leave->cuti_until)) {
+                    throw new InvalidArgumentException('Perpanjang cuti harus melebihi tanggal cuti saat ini.');
+                }
+                $start = $leave->cuti_from;
+                if ($start->diffInDays($newUntil) + 1 > 62) {
+                    throw new InvalidArgumentException('Total cuti melebihi batas maksimal 2 bulan (62 hari inklusif).');
+                }
+                $cancelFrom = $leave->cuti_until->copy()->addDay()->toDateString();
+                $leave->update([
+                    'cuti_until' => $newUntil->toDateString(),
+                    'extension_count' => $leave->extension_count + 1,
+                    'reason' => $data['reason'],
+                ]);
+            } else {
+                if ($enrollment->status !== Enrollment::STATUS_ACTIVE) {
+                    throw new InvalidArgumentException('Pengajuan baru hanya untuk kelas ACTIVE.');
+                }
+                $validator = Validator::make($data, ['cuti_from' => 'required|date_format:Y-m-d']);
+                if ($validator->fails()) {
+                    throw new InvalidArgumentException('Tanggal mulai cuti wajib diisi dengan format YYYY-MM-DD.');
+                }
+                $start = Carbon::parse($data['cuti_from'])->startOfDay();
+                if ($start->lt(today()) || $newUntil->lt($start)) {
+                    throw new InvalidArgumentException('Tanggal mulai cuti tidak boleh lampau dan tanggal akhir tidak boleh sebelum awal.');
+                }
+                if ($start->diffInDays($newUntil) + 1 > 31) {
+                    throw new InvalidArgumentException('Pengajuan cuti maksimal 1 bulan (31 hari inklusif).');
+                }
+                $cancelFrom = $start->toDateString();
+                $leave = $enrollment->leaves()->create([
+                    'cuti_from' => $start->toDateString(),
+                    'cuti_until' => $newUntil->toDateString(),
+                    'reason' => $data['reason'],
+                ]);
             }
 
-            // Validasi maks 2 bulan total (dihitung dari cuti_from awal)
-            $originalFrom = \Carbon\Carbon::parse($student->cuti_from);
-            if ($originalFrom->diffInDays($newUntil) > 62) {
-                throw new InvalidArgumentException(
-                    'Total cuti melebihi batas maksimal 2 bulan.'
-                );
-            }
-        }
-
-        return DB::transaction(function () use ($student, $data, $isExtension) {
-            $from = $student->status;
-
-            // Simpan cuti_until lama sebelum diupdate — dipakai untuk range cancel pada perpanjang
-            $oldCutiUntil = $student->cuti_until;
-
-            // Update student: cuti_from hanya diset pada pengajuan baru, bukan perpanjang
-            $updateData = ['status' => 'Cuti', 'cuti_until' => $data['cuti_until']];
-            if (!$isExtension) {
-                $updateData['cuti_from'] = $data['cuti_from'];
-            }
-            $student->update($updateData);
-            $student->refresh();
-
-            // Cancel sesi SCHEDULED dalam range cuti.
-            // Perpanjang: cancel hanya range tambahan (oldCutiUntil → newCutiUntil).
-            // Baru: cancel seluruh range (cuti_from → cuti_until).
-            $cancelFrom = $isExtension ? $oldCutiUntil : $data['cuti_from'];
-            ClassSession::whereIn('enrollment_id', $student->enrollments()->pluck('id'))
+            // Hanya sesi kelas terpilih yang belum diabsen, termasuk sesi pengganti.
+            ClassSession::where('enrollment_id', $enrollment->id)
                 ->where('status', ClassSession::STATUS_SCHEDULED)
-                ->whereBetween('session_date', [$cancelFrom, $data['cuti_until']])
+                ->whereBetween('session_date', [$cancelFrom, $newUntil->toDateString()])
                 ->update([
                     'status' => ClassSession::STATUS_CANCELLED,
-                    'notes'  => 'Sesi dibatalkan otomatis — murid cuti ' .
-                                $student->cuti_from . ' s/d ' . $data['cuti_until'],
+                    'honor_code' => null,
+                    'honor_amount' => 0,
+                    'notes' => 'Sesi dibatalkan otomatis — kelas cuti ' . $start->toDateString() . ' s/d ' . $newUntil->toDateString(),
                 ]);
 
-            // Terbitkan invoice biaya cuti Rp 100.000 (BR-9)
+            $this->synchronizeLeaveStatus($student);
             $invoice = $this->invoiceService->createOneOff(
                 student: $student,
                 items: [[
-                    'code'        => 'CUTI',
-                    'description' => 'Biaya cuti ' .
-                        \Carbon\Carbon::parse($student->cuti_from)->format('d M') . ' - ' .
-                        \Carbon\Carbon::parse($data['cuti_until'])->format('d M Y') .
+                    'code' => 'CUTI',
+                    'description' => 'Biaya cuti ' . $start->format('d M') . ' - ' . $newUntil->format('d M Y') .
                         ($isExtension ? ' (perpanjangan)' : ''),
-                    'amount'      => InvoiceService::FEE_CUTI,
-                    'metadata'    => [
-                        'cuti_from'    => $student->cuti_from,
-                        'cuti_until'   => $data['cuti_until'],
+                    'amount' => InvoiceService::FEE_CUTI,
+                    'metadata' => [
+                        'enrollment_id' => $enrollment->id,
+                        'leave_id' => $leave->id,
+                        'cuti_from' => $start->toDateString(),
+                        'cuti_until' => $newUntil->toDateString(),
                         'is_extension' => $isExtension,
                     ],
                 ]],
-                description: $isExtension ? 'Perpanjangan Cuti' : 'Pengajuan Cuti',
+                description: $isExtension ? 'Perpanjangan Cuti Kelas' : 'Pengajuan Cuti Kelas',
+                classType: $enrollment->package?->class_type,
+                enrollmentId: $enrollment->id,
             );
 
             $this->recordHistory(
-                student:  $student,
-                from:     $from,
-                to:       'Cuti',
-                reason:   $data['reason'],
+                student: $student,
+                from: $fromStatus,
+                to: $student->status,
+                reason: $data['reason'],
                 metadata: [
-                    'cuti_from'      => $student->cuti_from,
-                    'cuti_until'     => $data['cuti_until'],
-                    'is_extension'   => $isExtension,
-                    'invoice_id'     => $invoice->id,
+                    'enrollment_id' => $enrollment->id,
+                    'leave_id' => $leave->id,
+                    'cuti_from' => $start->toDateString(),
+                    'cuti_until' => $newUntil->toDateString(),
+                    'is_extension' => $isExtension,
+                    'invoice_id' => $invoice->id,
                     'invoice_number' => $invoice->invoice_number,
                 ],
+            );
+            AuditLog::record(
+                action: AuditLog::ACTION_LIFECYCLE,
+                entity: $enrollment,
+                entityLabel: 'Cuti kelas ' . $student->full_name,
+                oldValues: $oldValues,
+                newValues: [
+                    'status' => $enrollment->fresh()->status,
+                    'leave_id' => $leave->id,
+                    'cuti_from' => $start->toDateString(),
+                    'cuti_until' => $newUntil->toDateString(),
+                    'extension_count' => $isExtension ? 1 : 0,
+                    'invoice_id' => $invoice->id,
+                ],
+                notes: $data['reason'],
             );
 
             return $student->fresh();
@@ -699,61 +724,115 @@ class StudentLifecycleService
         });
     }
 
-    /**
-     * Cuti -> Aktif. Murid kembali setelah periode cuti.
-     * TIDAK ada tagihan tambahan — biaya cuti sudah ditagih saat pengajuan.
-     * Paket & guru tetap (tidak perlu input ulang).
-     *
-     * Hard block: tidak bisa diakhiri sebelum cuti_until tiba (BR: cuti tidak bisa dipotong).
-     * Diizinkan pada hari cuti_until itu sendiri (today >= cuti_until).
-     *
-     * Idealnya method ini dipanggil cron otomatis saat cuti_until berakhir,
-     * tapi untuk Fase 1 admin bisa trigger manual lewat tombol "Akhiri Cuti".
-     */
-    public function aktifkanDariCuti(Student $student, array $data = []): Student
+    /** Kembali hanya setelah tanggal akhir inklusif; periode tetap tersimpan. */
+    public function aktifkanDariCuti(Student $student, array $data): Student
     {
-        if ($student->status !== 'Cuti') {
-            throw new InvalidArgumentException(
-                'Akhiri cuti hanya bisa dari status Cuti. Status sekarang: ' . $student->status
-            );
-        }
-
-        // Hard block: cuti belum selesai — bandingkan tanggal saja (abaikan jam).
-        // cuti_until di-cast sebagai 'date' di model, jadi sudah Carbon instance.
-        if ($student->cuti_until && now()->toDateString() < $student->cuti_until->format('Y-m-d')) {
-            throw new InvalidArgumentException(
-                'Cuti belum selesai. Cuti berlaku hingga ' .
-                $student->cuti_until->format('d M Y') . '.'
-            );
-        }
-
         return DB::transaction(function () use ($student, $data) {
+            $student = Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+            $enrollment = $this->leaveEnrollment($student, $data);
+            $leave = $enrollment->currentLeave;
+            if (!$leave) {
+                throw new InvalidArgumentException('Kelas tidak memiliki periode cuti yang belum diakhiri.');
+            }
+            if ($leave->cuti_until->gte(today())) {
+                throw new InvalidArgumentException('Cuti belum selesai. Cuti berlaku hingga ' . $leave->cuti_until->format('d M Y') . '.');
+            }
+
             $from = $student->status;
             $isAuto = (bool) ($data['auto'] ?? false);
-
-            $student->update([
-                'status'     => 'Aktif',
-                'cuti_from'  => null,
-                'cuti_until' => null,
-            ]);
-
-            // Kembalikan enrollment ON_LEAVE ke ACTIVE (BR-CUTI.5)
-            $student->enrollments()
-                ->where('status', Enrollment::STATUS_ON_LEAVE)
-                ->update(['status' => Enrollment::STATUS_ACTIVE]);
-
+            $leave->update(['completed_at' => now()]);
+            $this->synchronizeLeaveStatus($student);
             $this->recordHistory(
-                student:  $student,
-                from:     $from,
-                to:       'Aktif',
-                reason:   $data['notes'] ?? ($isAuto
-                    ? 'Cuti berakhir otomatis (scheduler)'
-                    : 'Cuti berakhir, murid kembali aktif'),
-                metadata: ['auto' => $isAuto],
+                student: $student,
+                from: $from,
+                to: $student->status,
+                reason: $data['notes'] ?? ($isAuto ? 'Cuti kelas berakhir otomatis (scheduler)' : 'Cuti kelas berakhir'),
+                metadata: [
+                    'enrollment_id' => $enrollment->id,
+                    'leave_id' => $leave->id,
+                    'auto' => $isAuto,
+                ],
             );
+            if (!$isAuto) {
+                AuditLog::record(
+                    action: AuditLog::ACTION_LIFECYCLE,
+                    entity: $enrollment,
+                    entityLabel: 'Kembali dari cuti kelas ' . $student->full_name,
+                    oldValues: ['status' => $enrollment->status, 'leave_id' => $leave->id],
+                    newValues: ['status' => $enrollment->fresh()->status, 'completed_at' => $leave->completed_at->toDateTimeString()],
+                    notes: $data['notes'] ?? 'Cuti kelas berakhir',
+                );
+            }
 
             return $student->fresh();
         });
+    }
+
+    /** Status kelas mengikuti tanggal cuti; murid tetap Aktif bila satu kelas aktif. */
+    public function synchronizeLeaveStatus(Student $student): void
+    {
+        DB::transaction(function () use ($student) {
+            Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+            $student->refresh();
+            if (!in_array($student->status, ['Aktif', 'Cuti'], true)) {
+                return;
+            }
+            $enrollments = $student->enrollments()
+                ->whereIn('status', [Enrollment::STATUS_ACTIVE, Enrollment::STATUS_ON_LEAVE])
+                ->with('currentLeave')->lockForUpdate()->get();
+            foreach ($enrollments as $enrollment) {
+                $leave = $enrollment->currentLeave;
+                $status = $leave && $leave->cuti_from->lte(today()) && $leave->cuti_until->gte(today())
+                    ? Enrollment::STATUS_ON_LEAVE : Enrollment::STATUS_ACTIVE;
+                if ($enrollment->status !== $status) {
+                    AuditLog::record(
+                        action: AuditLog::ACTION_LIFECYCLE,
+                        entity: $enrollment,
+                        entityLabel: 'Status cuti kelas ' . $student->full_name,
+                        oldValues: ['status' => $enrollment->status],
+                        newValues: ['status' => $status, 'leave_id' => $leave?->id],
+                        notes: 'Sinkronisasi tanggal cuti kelas',
+                    );
+                    $enrollment->update(['status' => $status]);
+                }
+            }
+
+            $status = $enrollments->contains('status', Enrollment::STATUS_ACTIVE) ? 'Aktif'
+                : ($enrollments->contains('status', Enrollment::STATUS_ON_LEAVE) ? 'Cuti' : $student->status);
+            $projection = $enrollments->pluck('currentLeave')->filter()->sortBy('cuti_from')->first();
+            if ($student->status !== $status) {
+                AuditLog::record(
+                    action: AuditLog::ACTION_LIFECYCLE,
+                    entity: $student,
+                    entityLabel: $student->full_name,
+                    oldValues: ['status' => $student->status],
+                    newValues: ['status' => $status],
+                    notes: 'Sinkronisasi status dari kelas aktif dan periode cuti',
+                );
+            }
+            // Kolom lama hanya proyeksi untuk impor lama, bukan sumber periode cuti.
+            $student->update([
+                'status' => $status,
+                'cuti_from' => $projection?->cuti_from,
+                'cuti_until' => $projection?->cuti_until,
+            ]);
+        });
+    }
+
+    private function leaveEnrollment(Student $student, array $data): Enrollment
+    {
+        if (!in_array($student->status, ['Aktif', 'Cuti'], true)) {
+            throw new InvalidArgumentException('Cuti kelas hanya berlaku untuk murid Aktif atau Cuti.');
+        }
+        if (empty($data['enrollment_id']) || filter_var($data['enrollment_id'], FILTER_VALIDATE_INT) === false) {
+            throw new InvalidArgumentException('enrollment_id wajib diisi.');
+        }
+        $enrollment = $student->enrollments()->whereKey($data['enrollment_id'])->lockForUpdate()->first();
+        if (!$enrollment || !in_array($enrollment->status, [Enrollment::STATUS_ACTIVE, Enrollment::STATUS_ON_LEAVE], true)) {
+            throw new InvalidArgumentException('Kelas harus milik murid ini dan berstatus ACTIVE atau ON_LEAVE.');
+        }
+
+        return $enrollment;
     }
 
     // =================================================================
@@ -778,7 +857,7 @@ class StudentLifecycleService
     }
 
     /**
-     * Tutup semua enrollment ACTIVE milik murid: set status target + end_date=today.
+     * Tutup semua enrollment ACTIVE/ON_LEAVE milik murid: status target + end_date=today.
      * Dipanggil sebelum bikin enrollment baru (ganti paket) atau saat
      * murid Mundur/Selesai.
      *
@@ -792,7 +871,7 @@ class StudentLifecycleService
         $today = now()->toDateString();
 
         $activeEnrollments = $student->enrollments()
-            ->where('status', 'ACTIVE')
+            ->whereIn('status', [Enrollment::STATUS_ACTIVE, Enrollment::STATUS_ON_LEAVE])
             ->get();
 
         foreach ($activeEnrollments as $enrollment) {

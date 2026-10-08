@@ -74,6 +74,10 @@ class ManualSessionService
             throw new InvalidArgumentException('Murid harus berstatus Aktif.');
         }
 
+        if ($enrollment->isOnLeaveOn($sessionDate)) {
+            throw new InvalidArgumentException('Sesi tidak dapat dibuat pada tanggal cuti kelas ini.');
+        }
+
         $sessionSequence ??= $this->suggestNextSequence($enrollment, $attributionYear, $attributionMonth);
 
         if ($sessionSequence === null) {

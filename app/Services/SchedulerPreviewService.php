@@ -125,8 +125,8 @@ class SchedulerPreviewService
             key: 'cuti_return',
             name: 'Cuti → Aktif Otomatis',
             enabled: $enabled,
-            frequencyLabel: "Harian jam {$time}",
-            nextRun: $enabled ? $this->nextDailyAt($time, $now) : null,
+            frequencyLabel: "Harian jam 00:00 dan {$time}",
+            nextRun: $enabled ? $this->nextDailyAt($time, $now)->min($this->nextDailyAt('00:00', $now)) : null,
         );
     }
 

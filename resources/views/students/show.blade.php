@@ -42,8 +42,6 @@
         ];
         $cfg      = $statusCfg[$student->status] ?? $statusCfg['Calon'];
         $hariMap  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-        // Cuti selesai jika tidak ada cuti_until, atau tanggal hari ini >= cuti_until
-        $cutiSelesai = !$student->cuti_until || now()->toDateString() >= $student->cuti_until->format('Y-m-d');
         $isKidsClass = $student->package
             && in_array($student->package->class_type, ['KIDS_CLASS', 'KIDS_CLASS_BUNDLE']);
         $activeEnrollment = $student->enrollments->firstWhere('status', 'ACTIVE');
@@ -86,12 +84,6 @@
                                 <span class="w-1.5 h-1.5 rounded-full" style="background:{{ $cfg['dot'] }}"></span>
                                 {{ $student->status }}
                             </span>
-                            {{-- Sub-teks periode cuti, hanya tampil jika status Cuti dan cuti_until terisi --}}
-                            @if($student->status === 'Cuti' && $student->cuti_until)
-                            <div class="text-xs mt-1" style="color:#FBBF24">
-                                Cuti s/d: {{ $student->cuti_until->format('d M Y') }}
-                            </div>
-                            @endif
                         </div>
                     </div>
                 </div>
@@ -107,7 +99,7 @@
         {{-- ===== LIFECYCLE PANEL ===== --}}
         <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm p-5 fade-in-up"
              style="animation-delay:80ms"
-             x-data="{ openForm: null }">
+             x-data="{ openForm: {{ Js::from(old('cuti_until') ? 'cuti' : null) }} }">
 
             <div class="text-xs text-mk-dim uppercase tracking-widest font-semibold mb-3">Aksi Lifecycle</div>
 
@@ -136,11 +128,15 @@
                 </button>
                 @endif
 
-                @if($student->status === 'Aktif')
+                @if(in_array($student->status, ['Aktif', 'Cuti']) && $leaveEnrollments->isNotEmpty())
                 <button type="button" @click="openForm = openForm === 'cuti' ? null : 'cuti'"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100">
-                    ☕ Ajukan Cuti
+                        aria-controls="form-cuti-kelas" :aria-expanded="openForm === 'cuti'"
+                        class="min-h-11 px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-mk-warningBg text-mk-muted border border-mk-warningBorder hover:bg-mk-surfaceHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary">
+                    Ajukan / Perpanjang Cuti Kelas
                 </button>
+                @endif
+
+                @if($student->status === 'Aktif')
                 @if($isKidsClass)
                 <button type="button" @click="openForm = openForm === 'complete' ? null : 'complete'"
                         class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100">
@@ -149,29 +145,6 @@
                 @endif
                 @endif
 
-                @if($student->status === 'Cuti')
-                {{-- Tombol akhiri cuti: aktif jika periode cuti sudah selesai, disabled jika belum --}}
-                @if($cutiSelesai)
-                <form method="POST" action="{{ route('students.return-from-cuti', $student->id) }}"
-                      onsubmit="return confirm('Akhiri cuti dan kembalikan ke Aktif?')" class="inline">
-                    @csrf
-                    <button type="submit"
-                            class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100">
-                        ✅ Akhiri Cuti → Aktif
-                    </button>
-                </form>
-                @else
-                <button disabled
-                        title="Cuti berlaku hingga {{ $student->cuti_until->format('d M Y') }}"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold cursor-not-allowed bg-emerald-50/50 text-emerald-700/40 border border-emerald-200/50">
-                    ✅ Akhiri Cuti → Aktif
-                </button>
-                @endif
-                <button type="button" @click="openForm = openForm === 'cuti' ? null : 'cuti'"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100">
-                    ↩ Perpanjang Cuti
-                </button>
-                @endif
 
                 @if(in_array($student->status, ['Selesai', 'Mengundurkan Diri']))
                 <button type="button" @click="openForm = openForm === 'reactivate' ? null : 'reactivate'"
@@ -493,40 +466,59 @@
                 </form>
             </div>
 
-            {{-- Cuti --}}
-            <div x-show="openForm === 'cuti'" x-cloak
-                 class="mt-4 rounded-2xl p-4 bg-amber-50 border border-amber-200">
+            {{-- Cuti per kelas; perpanjangan mempertahankan tanggal mulai awal. --}}
+            @if(in_array($student->status, ['Aktif', 'Cuti']) && $leaveEnrollments->isNotEmpty())
+            @php
+                $leaveOptions = $leaveEnrollments->mapWithKeys(fn ($enrollment) => [
+                    $enrollment->id => [
+                        'extension' => (bool) $enrollment->currentLeave,
+                        'from' => $enrollment->currentLeave?->cuti_from->format('d M Y'),
+                        'until' => $enrollment->currentLeave?->cuti_until->format('d M Y'),
+                    ],
+                ]);
+            @endphp
+            <div id="form-cuti-kelas" x-show="openForm === 'cuti'" x-cloak
+                 x-data="{ enrollmentId: {{ Js::from((string) old('enrollment_id', '')) }}, options: {{ Js::from($leaveOptions) }}, get leave() { return this.options[this.enrollmentId] || null } }"
+                 class="mt-4 rounded-2xl p-4 bg-mk-surface border border-mk-borderLight">
                 <form method="POST" action="{{ route('students.start-cuti', $student->id) }}">
                     @csrf
-                    <div class="text-sm font-semibold mb-1" style="color:#FBBF24">
-                        {{ $student->status === 'Cuti' ? 'Perpanjang Cuti' : 'Ajukan Cuti' }}
-                    </div>
-                    <div class="text-xs text-mk-dim mb-3">Biaya Rp 100.000/pengajuan. Maks 1 bulan + perpanjang 1x.</div>
+                    <h3 class="text-sm font-semibold text-mk-text mb-1" x-text="leave?.extension ? 'Perpanjang Cuti Kelas' : 'Ajukan Cuti Kelas'">Ajukan Cuti Kelas</h3>
+                    <p id="cuti-kelas-help" class="text-xs text-mk-muted mb-3">Biaya Rp 100.000 per pengajuan untuk kelas terpilih. Maksimal 31 hari, dapat diperpanjang sekali hingga total 62 hari. SPP bulan parsial tetap penuh; tagihan yang sudah terbit tidak berubah.</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {{-- cuti_from hanya tampil saat ajukan baru (status Aktif); perpanjang tidak perlu --}}
-                        @if($student->status !== 'Cuti')
-                        <div>
-                            <label class="block text-xs text-mk-dim mb-1">Mulai Cuti <span class="text-red-400">*</span></label>
-                            <input type="date" name="cuti_from" required min="{{ now()->toDateString() }}"
-                                   class="block w-full rounded-lg text-sm px-3 py-2">
+                        <div class="md:col-span-2">
+                            <label for="cuti-enrollment" class="block text-xs text-mk-muted mb-1">Kelas <span class="text-red-500">*</span></label>
+                            <select id="cuti-enrollment" name="enrollment_id" x-model="enrollmentId" required aria-describedby="cuti-kelas-help"
+                                    class="block w-full min-h-11 rounded-lg border border-mk-borderLight bg-mk-card text-mk-text text-sm px-3 py-2">
+                                <option value="">— Pilih kelas —</option>
+                                @foreach($leaveEnrollments as $enrollment)
+                                <option value="{{ $enrollment->id }}">{{ $enrollment->package?->instrument?->name ?? '—' }} · {{ $enrollment->package?->code ?? '—' }} — {{ $enrollment->currentLeave ? 'Perpanjang cuti' : 'Ajukan cuti' }}</option>
+                                @endforeach
+                            </select>
                         </div>
-                        @endif
+                        <p x-show="leave?.extension" class="md:col-span-2 text-sm text-mk-muted">Periode awal: <span x-text="leave?.from"></span>–<span x-text="leave?.until"></span>. Tanggal mulai tetap; masukkan tanggal akhir baru.</p>
+                        <div x-show="!leave?.extension">
+                            <label for="cuti-from" class="block text-xs text-mk-muted mb-1">Mulai Cuti <span class="text-red-500">*</span></label>
+                            <input id="cuti-from" type="date" name="cuti_from" :required="!leave?.extension" :disabled="!!leave?.extension" min="{{ today()->toDateString() }}" value="{{ old('cuti_from') }}"
+                                   class="block w-full min-h-11 rounded-lg border border-mk-borderLight bg-mk-card text-mk-text text-sm px-3 py-2">
+                        </div>
                         <div>
-                            <label class="block text-xs text-mk-dim mb-1">Sampai <span class="text-red-400">*</span></label>
-                            <input type="date" name="cuti_until" required class="block w-full rounded-lg text-sm px-3 py-2">
+                            <label for="cuti-until" class="block text-xs text-mk-muted mb-1">Sampai (tanggal akhir inklusif) <span class="text-red-500">*</span></label>
+                            <input id="cuti-until" type="date" name="cuti_until" required value="{{ old('cuti_until') }}"
+                                   class="block w-full min-h-11 rounded-lg border border-mk-borderLight bg-mk-card text-mk-text text-sm px-3 py-2">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-xs text-mk-dim mb-1">Alasan <span class="text-red-400">*</span></label>
-                            <textarea name="reason" required rows="2" maxlength="500"
-                                      class="block w-full rounded-lg text-sm px-3 py-2"
-                                      placeholder="Mis: UAS sekolah, perjalanan keluarga, dll."></textarea>
+                            <label for="cuti-reason" class="block text-xs text-mk-muted mb-1">Alasan <span class="text-red-500">*</span></label>
+                            <textarea id="cuti-reason" name="reason" required rows="2" maxlength="500"
+                                      class="block w-full min-h-11 rounded-lg border border-mk-borderLight bg-mk-card text-mk-text text-sm px-3 py-2"
+                                      placeholder="Misalnya: UAS sekolah atau perjalanan keluarga.">{{ old('reason') }}</textarea>
                         </div>
                     </div>
-                    <button type="submit" class="mt-3 px-4 py-2 rounded-lg text-sm font-semibold bg-amber-600 hover:bg-amber-700 text-white transition-colors">
-                        Simpan Pengajuan Cuti
+                    <button type="submit" class="mt-3 min-h-11 px-4 py-2 rounded-lg text-sm font-semibold bg-secondary hover:bg-secondary/90 text-on-secondary transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary">
+                        Simpan Cuti Kelas
                     </button>
                 </form>
             </div>
+            @endif
 
             {{-- Selesai Kids --}}
             <div x-show="openForm === 'complete'" x-cloak
