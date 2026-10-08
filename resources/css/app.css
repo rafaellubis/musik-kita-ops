@@ -194,7 +194,8 @@
     border-spacing: 0 6px;
 }
 
-.mk-row-clickable {
+.mk-row-clickable,
+.mk-invoice-row {
     --mk-row-glow: rgba(74,31,10,0.32);        /* garis mahoni */
     --mk-row-glow-soft: rgba(74,31,10,0.10);   /* pendar mahoni tipis ke dalam */
     /* Sisi atas + bawah tiap sel, plus pendar tipis di kedua sisi itu. */
@@ -221,6 +222,22 @@
 /* Hover: latar mint lebih terang (dari mk-surfaceHover 0.10 ke 0.18). */
 .mk-row-clickable:hover > td {
     background-color: rgba(93,184,144,0.18);
+}
+
+/* Baris invoice memakai field visual yang sama tanpa membutuhkan markup tabel. */
+.mk-invoice-row {
+    box-shadow:
+        inset 1px 0 0 var(--mk-row-glow),
+        inset -1px 0 0 var(--mk-row-glow),
+        var(--mk-row-line);
+    transition: background-color 150ms ease;
+}
+.mk-invoice-row:hover {
+    background-color: rgba(93,184,144,0.18);
+}
+.mk-invoice-row:focus-visible {
+    outline: 2px solid #5DB890;
+    outline-offset: 2px;
 }
 
 /* ================================================================

@@ -51,29 +51,33 @@
             </div>
         </div>
 
-        @forelse($event->invoices as $invoice)
-            @php
-                $statusClass = match ($invoice->status) {
-                    'PAID' => 'border-emerald-300 bg-emerald-50 text-emerald-900',
-                    'PARTIAL' => 'border-blue-300 bg-blue-50 text-blue-900',
-                    'VOID' => 'border-red-300 bg-red-50 text-red-900',
-                    default => 'border-amber-300 bg-amber-50 text-amber-900',
-                };
-            @endphp
-            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-mk-borderLight px-4 py-3 last:border-b-0">
-                <div>
-                    <a href="{{ route('invoices.show', $invoice) }}" class="font-mono text-sm font-bold text-mk-text underline-offset-4 hover:text-mk-muted hover:underline">
-                        {{ $invoice->invoice_number }}
-                    </a>
-                    <p class="mt-0.5 text-xs text-mk-muted">{{ $invoice->student?->full_name ?? 'Murid tidak tersedia' }}</p>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span class="money-value font-mono text-sm font-semibold text-mk-text" data-money-mask="Rp •••••••">Rp {{ number_format($invoice->total_amount, 0, ',', '.') }}</span>
-                    <span class="rounded-full border px-2.5 py-1 text-xs font-semibold {{ $statusClass }}">{{ $invoice->status }}</span>
-                </div>
-            </div>
-        @empty
-            <p class="px-4 py-8 text-center text-sm text-mk-muted">Belum ada invoice event.</p>
-        @endforelse
+        <div class="space-y-1.5 p-1.5">
+            @forelse($event->invoices as $invoice)
+                @php
+                    $statusClass = match ($invoice->status) {
+                        'PAID' => 'border-emerald-300 bg-emerald-50 text-emerald-900',
+                        'PARTIAL' => 'border-blue-300 bg-blue-50 text-blue-900',
+                        'VOID' => 'border-red-300 bg-red-50 text-red-900',
+                        default => 'border-amber-300 bg-amber-50 text-amber-900',
+                    };
+                @endphp
+                <a href="{{ route('invoices.show', $invoice) }}" target="_blank" rel="noopener"
+                   aria-label="Buka invoice {{ $invoice->invoice_number }} untuk {{ $invoice->student?->full_name ?? 'murid tidak tersedia' }} di tab baru"
+                   class="mk-invoice-row flex min-h-16 cursor-pointer flex-wrap items-center justify-between gap-3 rounded-[10px] px-4 py-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent focus-visible:ring-offset-2">
+                    <div>
+                        <span class="font-mono text-sm font-bold text-mk-text">
+                            {{ $invoice->invoice_number }}
+                        </span>
+                        <p class="mt-0.5 text-xs text-mk-muted">{{ $invoice->student?->full_name ?? 'Murid tidak tersedia' }}</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="money-value font-mono text-sm font-semibold text-mk-text" data-money-mask="Rp •••••••">Rp {{ number_format($invoice->total_amount, 0, ',', '.') }}</span>
+                        <span class="rounded-full border px-2.5 py-1 text-xs font-semibold {{ $statusClass }}">{{ $invoice->status }}</span>
+                    </div>
+                </a>
+            @empty
+                <p class="px-4 py-8 text-center text-sm text-mk-muted">Belum ada invoice event.</p>
+            @endforelse
+        </div>
     </section>
 </div>
