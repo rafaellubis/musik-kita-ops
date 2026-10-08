@@ -79,15 +79,28 @@ class HonorControllerEventHonorTest extends TestCase
         $this->assertSame(0, $this->slip->fresh()->transport_honor);
     }
 
-    public function test_owner_edit_show_print_and_guru_show_display_automatic_participant_breakdown(): void
+    public function test_print_groups_event_honor_with_student_instrument_and_amount(): void
     {
         $entry = EventHonorEntry::sole();
-        foreach (['honors.edit', 'honors.show', 'honors.print'] as $route) {
-            $this->get(route($route, $this->slip))->assertOk()->assertSee('Honor Event (Otomatis)')
-                ->assertSee('Konser KITA Juni')->assertSee($entry->participant->student->full_name)
-                ->assertSee($entry->snapshot_package_code)->assertSee('42.500')
-                ->assertDontSee('name="event_honor"', false)->assertDontSee('name="event_honor_note"', false);
+
+        foreach (['honors.edit', 'honors.show'] as $route) {
+            $this->get(route($route, $this->slip))->assertOk()
+                ->assertSee('Honor Event (Otomatis)')
+                ->assertSee('Konser KITA Juni')
+                ->assertSee($entry->participant->student->full_name)
+                ->assertSee($entry->snapshot_package_code)
+                ->assertSee('42.500');
         }
+
+        $this->get(route('honors.print', $this->slip))->assertOk()
+            ->assertSee('Rincian Event')
+            ->assertSee('Konser KITA Juni')
+            ->assertSee('15 Juni 2026')
+            ->assertSee($entry->participant->student->full_name)
+            ->assertSee($entry->participant->snapshot_instrument_name)
+            ->assertSee('42.500')
+            ->assertDontSee($entry->snapshot_package_code);
+
         $guru = User::factory()->create()->assignRole('Guru');
         $this->slip->teacher->update(['user_id' => $guru->id]);
         $this->actingAs($guru)->get(route('guru.honor.show', $this->slip))->assertOk()

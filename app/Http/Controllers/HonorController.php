@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EventHonorEntry;
 use App\Models\HonorSlip;
 use App\Models\Teacher;
 use App\Services\HonorCalculationService;
@@ -222,11 +223,18 @@ class HonorController extends Controller
 
         $studentBreakdown = $this->service->getStudentBreakdown($honor);
         $hasKids          = $studentBreakdown->where('is_kids', true)->isNotEmpty();
+        $eventBreakdown   = $honor->eventHonorEntries()
+            ->where('status', EventHonorEntry::STATUS_POSTED)
+            ->with(['event', 'participant.student'])
+            ->orderBy('event_id')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('event_id');
 
         $monthName = Carbon::create($honor->year, $honor->month, 1)->format('F Y');
 
         return view('honors.print', compact(
-            'honor', 'studentBreakdown', 'hasKids', 'monthName'
+            'honor', 'studentBreakdown', 'hasKids', 'eventBreakdown', 'monthName'
         ));
     }
 }

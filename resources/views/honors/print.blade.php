@@ -136,6 +136,20 @@
         .kids-note { font-size: 10px; color: #7A3818; font-style: italic;
                      margin-top: 4px; margin-bottom: 20px; padding-left: 8px; }
 
+        /* Rincian honor event */
+        .event-group { break-inside: avoid; margin-bottom: 18px; }
+        .event-heading {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 0 8px 6px;
+            color: #4A1F0A;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .event-date { color: #7A3818; font-weight: 600; white-space: nowrap; }
+        .event-group table { margin-bottom: 0; }
+
         /* Status badge */
         .status-badge {
             display: inline-block;
@@ -286,7 +300,38 @@
         @endif
     @endif
 
-    @include('honors.partials.event-entries')
+    @if($eventBreakdown->isNotEmpty())
+        <h2>Rincian Event</h2>
+        @foreach($eventBreakdown as $entries)
+            @php($event = $entries->first()->event)
+            <section class="event-group">
+                <div class="event-heading">
+                    <span>{{ $event->name }}</span>
+                    <span class="event-date">{{ $event->event_date->locale('id')->translatedFormat('d F Y') }}</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nama Murid</th>
+                            <th>Instrumen</th>
+                            <th class="text-right">Jumlah (Rp)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($entries as $entry)
+                            <tr>
+                                <td>{{ $entry->participant->student->full_name }}</td>
+                                <td>{{ $entry->participant->snapshot_instrument_name }}</td>
+                                <td class="text-right font-mono">
+                                    {{ number_format($entry->amount, 0, ',', '.') }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </section>
+        @endforeach
+    @endif
 
     {{-- Komponen honor --}}
     <h2>Komponen Honor</h2>
@@ -294,7 +339,7 @@
         <tbody>
             <tr>
                 <td>Honor Pokok</td>
-                <td class="text-right" style="color:#888;">
+                <td class="text-left" style="color:#888;">
                     {{ $studentBreakdown->sum('session_count') }} sesi
                 </td>
                 <td class="text-right font-mono">
