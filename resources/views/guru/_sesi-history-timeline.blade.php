@@ -44,20 +44,20 @@
                     <div class="space-y-2">
                         <div>
                             <span class="block text-[10px] font-bold text-on-surface-variant/60 uppercase tracking-wider">Materi</span>
-                            <p class="text-xs text-on-surface mt-0.5 leading-relaxed">
+                            <p class="text-xs text-on-surface mt-0.5 leading-relaxed whitespace-pre-line">
                                 {{ $note && $note->material_learned ? $note->material_learned : '—' }}
                             </p>
                         </div>
                         <div>
                             <span class="block text-[10px] font-bold text-on-surface-variant/60 uppercase tracking-wider">Tugas &amp; Latihan</span>
-                            <p class="text-xs text-on-surface mt-0.5 leading-relaxed">
+                            <p class="text-xs text-on-surface mt-0.5 leading-relaxed whitespace-pre-line">
                                 {{ $note && $note->homework_notes ? $note->homework_notes : '—' }}
                             </p>
                         </div>
                         @if($note && $note->notes)
                             <div>
                                 <span class="block text-[10px] font-bold text-on-surface-variant/60 uppercase tracking-wider">Catatan Tambahan</span>
-                                <p class="text-xs text-on-surface-variant mt-0.5 leading-relaxed italic">
+                                <p class="text-xs text-on-surface-variant mt-0.5 leading-relaxed italic whitespace-pre-line">
                                     "{{ $note->notes }}"
                                 </p>
                             </div>
