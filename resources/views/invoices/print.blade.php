@@ -379,7 +379,7 @@
 
     <div class="footer">
         <div class="footer-row">
-            <span>Pembayaran: <strong>CASH</strong> di studio / <strong>TRANSFER</strong> (hubungi admin)</span>
+            <span>Metode Pembayaran: <strong>{{ $invoice->validPayments->pluck('method')->unique()->implode(', ') ?: '—' }}</strong></span>
             <span>Dicetak {{ now()->format('d M Y H:i') }}</span>
         </div>
         <div class="footer-notes">
