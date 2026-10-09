@@ -159,34 +159,30 @@
              class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
             <div x-ref="modal" role="dialog" aria-modal="true" aria-labelledby="reminder-preview-title"
                  @keydown.tab="trapFocus($event)"
-                 class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden">
-                <div class="shrink-0 p-4 sm:p-6 border-b border-gray-200">
-                    <h3 id="reminder-preview-title" class="text-lg font-semibold text-gray-900">Konfirmasi Kirim Reminder</h3>
-                    <p class="mt-2 text-sm text-gray-600">
-                        Akan mengirim <strong x-text="selectedCount"></strong> murid:
-                        1 pesan teks via WhatsApp (Fonnte) dengan link PDF invoice di dalamnya.
-                    </p>
+                 class="bg-white border border-mk-accent rounded-xl shadow-xl max-w-2xl w-full max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden">
+                <div class="shrink-0 flex items-center justify-between gap-4 px-4 py-4 sm:px-6 bg-mk-sidebar text-white">
+                    <h3 id="reminder-preview-title" class="text-lg font-semibold">Preview &amp; Kirim</h3>
+                    <span class="shrink-0 text-sm text-white" x-text="selectedCount + ' penerima'"></span>
                 </div>
                 <div tabindex="0" role="region" aria-label="Pesan WhatsApp lengkap"
                      class="min-h-0 overflow-y-auto p-4 sm:p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-mk-accent">
-                    <p class="text-xs text-gray-600 mb-2">Pratinjau mengikuti data saat halaman dimuat. Muat ulang halaman jika tagihan atau template berubah.</p>
-                    <p class="text-xs text-gray-600 mb-4">Pesan mencakup seluruh tagihan belum lunas murid, termasuk yang tidak tampil karena filter.</p>
-                    <ul class="divide-y divide-gray-200">
+                     <ul class="space-y-4">
                         <template x-for="item in selectedDetails" :key="item.id">
-                            <li class="py-4 first:pt-0">
-                                <h4 class="font-semibold text-gray-900">
-                                    <span x-text="item.name"></span> (<span x-text="item.code"></span>)
-                                </h4>
-                                <p class="mt-1 text-sm text-gray-700">Tujuan WA: <span x-text="item.phone"></span></p>
-                                <p class="mt-3 rounded bg-gray-50 p-3 text-sm leading-relaxed text-gray-800 whitespace-pre-wrap break-words" x-text="item.message"></p>
+                            <li class="overflow-hidden rounded-lg border border-mk-accent">
+                                <div class="border-b border-mk-accent bg-mk-cardHover px-4 py-3">
+                                    <h4 class="font-semibold text-mk-text break-words" x-text="item.name"></h4>
+                                    <p class="mt-1 text-sm text-mk-muted">
+                                        <span x-text="item.code"></span>
+                                        <span aria-hidden="true" class="mx-1">&middot;</span>
+                                        <span x-text="item.phone"></span>
+                                    </p>
+                                </div>
+                                <p class="px-4 py-4 text-sm leading-relaxed text-mk-text whitespace-pre-wrap break-words" x-text="item.message"></p>
                             </li>
                         </template>
                     </ul>
                 </div>
-                <div class="shrink-0 p-4 sm:p-6 border-t border-gray-200">
-                <p class="text-xs text-amber-700 mb-4">
-                    Pastikan nomor tujuan WA sudah benar. Pengiriman tidak bisa dibatalkan setelah terkirim.
-                </p>
+                <div class="shrink-0 px-4 py-4 sm:px-6 border-t border-mk-accent bg-mk-bg">
                 <form method="POST" action="{{ route('invoice-reminders.send') }}">
                     @csrf
                     <template x-for="id in selected" :key="id">
@@ -195,12 +191,12 @@
                     {{-- ponytail: template dipilih otomatis oleh service (INVOICE_REMINDER jika no ortu ada, INVOICE_REMINDER_STUDENT jika tidak) --}}
                     <div class="flex justify-end gap-2">
                         <button x-ref="cancel" type="button" @click="closeModal()"
-                                class="min-h-11 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm focus-visible:ring-2 focus-visible:ring-mk-accent">
+                                class="min-h-11 px-4 py-2 border border-mk-muted bg-white hover:bg-mk-cardHover rounded-lg text-sm text-mk-text cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-mk-accent">
                             Batal
                         </button>
                         <button type="submit" :disabled="selectedCount === 0 || !fonnteReady"
-                                class="min-h-11 px-4 py-2 rounded text-sm font-bold btn-mk-primary disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-mk-accent">
-                            Kirim Sekarang
+                                class="min-h-11 px-4 py-2 rounded-lg text-sm font-bold btn-mk-primary cursor-pointer disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-mk-accent">
+                            Kirim
                         </button>
                     </div>
                 </form>
