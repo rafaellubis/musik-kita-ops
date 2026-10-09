@@ -29,6 +29,11 @@ Pastikan Task Scheduler menjalankan `php artisan schedule:run` setiap menit.
 Job cuti berjalan pukul 00:00 dan pada waktu yang diatur di halaman Scheduler.
 Pengujian wajib memakai SQLite `:memory:` sesuai `phpunit.xml`, bukan database studio.
 
+## Pencarian invoice
+
+Kolom **No. Invoice / nama** mencari nomor invoice, nama lengkap, nickname,
+atau kode murid, termasuk sebagian teks. Filter bulan dan status tetap berlaku.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

@@ -50,6 +50,7 @@ class InvoiceController extends Controller
                 $q->where('invoice_number', 'like', "%{$term}%")
                   ->orWhereHas('student', fn ($qs) =>
                       $qs->where('full_name', 'like', "%{$term}%")
+                         ->orWhere('nickname', 'like', "%{$term}%")
                          ->orWhere('student_code', 'like', "%{$term}%"));
             });
         }
