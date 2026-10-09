@@ -22,6 +22,8 @@
              'parent' => $r->student->parent_name,
              'phone' => $r->phone_normalized,
              'phone_valid' => $r->phone_valid,
+             'message' => $r->preview_message,
+             'preview_error' => $r->preview_error,
              'invoice_count' => $r->invoice_count,
              'total' => $r->total_balance,
              'pdf_count' => $r->invoice_count,
@@ -85,7 +87,7 @@
                     </label>
                     <span class="text-mk-dim text-xs" x-text="selectedCount + ' murid dipilih'"></span>
                     <button type="button"
-                            @click="showModal = true"
+                            @click="openModal($event.currentTarget)"
                             :disabled="selectedCount === 0 || !fonnteReady"
                             class="ml-auto px-4 py-2 rounded-lg text-sm font-bold btn-mk-primary disabled:opacity-40">
                         Preview & Kirim
@@ -112,7 +114,7 @@
                             @endphp
                             <tr class="hover:bg-mk-surface {{ $row->phone_valid ? '' : 'opacity-60' }}">
                                 <td class="px-4 py-2">
-                                    @if($row->phone_valid)
+                                    @if($row->phone_valid && !$row->preview_error)
                                         <input type="checkbox"
                                                value="{{ $sid }}"
                                                x-model.number="selected"
@@ -122,6 +124,9 @@
                                 <td class="px-4 py-2">
                                     <div class="font-medium">{{ $row->student->full_name }}</div>
                                     <div class="text-xs font-mono text-mk-dim">{{ $row->student->student_code }}</div>
+                                    @if($row->preview_error)
+                                        <p class="mt-1 text-xs text-red-700">{{ $row->preview_error }}</p>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-2">
                                     <div>{{ $row->student->parent_name ?? '—' }}</div>
@@ -150,25 +155,37 @@
 
         {{-- Modal konfirmasi --}}
         <div x-show="showModal" x-cloak
+             @click.self="closeModal()" @keydown.escape.window="closeFromEscape()"
              class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-            <div @click.outside="showModal = false"
-                 class="bg-white dark-content rounded-lg shadow-xl max-w-lg w-full p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">Konfirmasi Kirim Reminder</h3>
-                <p class="text-sm text-gray-600 mb-4">
-                    Akan mengirim <strong x-text="selectedCount"></strong> murid:
-                    1 pesan teks via WhatsApp (Fonnte) dengan link PDF invoice di dalamnya.
-                </p>
-                <ul class="text-xs text-gray-600 max-h-40 overflow-y-auto mb-4 space-y-1">
-                    <template x-for="item in selectedDetails" :key="item.id">
-                        <li>
-                            <span x-text="item.name"></span>
-                            (<span x-text="item.code"></span>) —
-                            (dengan link PDF)
-                        </li>
-                    </template>
-                </ul>
+            <div x-ref="modal" role="dialog" aria-modal="true" aria-labelledby="reminder-preview-title"
+                 @keydown.tab="trapFocus($event)"
+                 class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden">
+                <div class="shrink-0 p-4 sm:p-6 border-b border-gray-200">
+                    <h3 id="reminder-preview-title" class="text-lg font-semibold text-gray-900">Konfirmasi Kirim Reminder</h3>
+                    <p class="mt-2 text-sm text-gray-600">
+                        Akan mengirim <strong x-text="selectedCount"></strong> murid:
+                        1 pesan teks via WhatsApp (Fonnte) dengan link PDF invoice di dalamnya.
+                    </p>
+                </div>
+                <div tabindex="0" role="region" aria-label="Pesan WhatsApp lengkap"
+                     class="min-h-0 overflow-y-auto p-4 sm:p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-mk-accent">
+                    <p class="text-xs text-gray-600 mb-2">Pratinjau mengikuti data saat halaman dimuat. Muat ulang halaman jika tagihan atau template berubah.</p>
+                    <p class="text-xs text-gray-600 mb-4">Pesan mencakup seluruh tagihan belum lunas murid, termasuk yang tidak tampil karena filter.</p>
+                    <ul class="divide-y divide-gray-200">
+                        <template x-for="item in selectedDetails" :key="item.id">
+                            <li class="py-4 first:pt-0">
+                                <h4 class="font-semibold text-gray-900">
+                                    <span x-text="item.name"></span> (<span x-text="item.code"></span>)
+                                </h4>
+                                <p class="mt-1 text-sm text-gray-700">Tujuan WA: <span x-text="item.phone"></span></p>
+                                <p class="mt-3 rounded bg-gray-50 p-3 text-sm leading-relaxed text-gray-800 whitespace-pre-wrap break-words" x-text="item.message"></p>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+                <div class="shrink-0 p-4 sm:p-6 border-t border-gray-200">
                 <p class="text-xs text-amber-700 mb-4">
-                    Pastikan nomor WA ortu sudah benar. Pengiriman tidak bisa dibatalkan setelah terkirim.
+                    Pastikan nomor tujuan WA sudah benar. Pengiriman tidak bisa dibatalkan setelah terkirim.
                 </p>
                 <form method="POST" action="{{ route('invoice-reminders.send') }}">
                     @csrf
@@ -177,28 +194,55 @@
                     </template>
                     {{-- ponytail: template dipilih otomatis oleh service (INVOICE_REMINDER jika no ortu ada, INVOICE_REMINDER_STUDENT jika tidak) --}}
                     <div class="flex justify-end gap-2">
-                        <button type="button" @click="showModal = false"
-                                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm">
+                        <button x-ref="cancel" type="button" @click="closeModal()"
+                                class="min-h-11 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm focus-visible:ring-2 focus-visible:ring-mk-accent">
                             Batal
                         </button>
-                        <button type="submit"
-                                class="px-4 py-2 rounded text-sm font-bold btn-mk-primary">
+                        <button type="submit" :disabled="selectedCount === 0 || !fonnteReady"
+                                class="min-h-11 px-4 py-2 rounded text-sm font-bold btn-mk-primary disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-mk-accent">
                             Kirim Sekarang
                         </button>
                     </div>
                 </form>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         function reminderPage(fonnteReady, rows) {
-            const validIds = rows.filter(r => r.phone_valid).map(r => r.id);
+            const validIds = rows.filter(r => r.phone_valid && !r.preview_error).map(r => r.id);
             return {
                 fonnteReady,
                 rows,
                 selected: [],
                 showModal: false,
+                trigger: null,
+                openModal(trigger) {
+                    this.trigger = trigger;
+                    this.showModal = true;
+                    this.$nextTick(() => this.$refs.cancel.focus());
+                },
+                closeModal() {
+                    this.showModal = false;
+                    this.trigger?.focus();
+                },
+                closeFromEscape() {
+                    if (!this.showModal || document.querySelector('dialog[open]')) return;
+                    this.closeModal();
+                },
+                trapFocus(event) {
+                    const controls = [...this.$refs.modal.querySelectorAll('button:not(:disabled), [tabindex="0"]')];
+                    const first = controls[0];
+                    const last = controls[controls.length - 1];
+                    if (event.shiftKey && document.activeElement === first) {
+                        event.preventDefault();
+                        last.focus();
+                    } else if (!event.shiftKey && document.activeElement === last) {
+                        event.preventDefault();
+                        first.focus();
+                    }
+                },
                 get selectedCount() { return this.selected.length; },
                 get selectedDetails() {
                     return this.rows.filter(r => this.selected.includes(r.id));

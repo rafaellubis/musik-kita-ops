@@ -96,6 +96,117 @@ class InvoiceReminderTest extends TestCase
         return [$student, $invoice];
     }
 
+    public function test_preparation_uses_parent_and_explicit_template_without_sending(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake();
+        [$student, $invoice] = $this->studentWithUnpaidInvoice();
+        $template = new WhatsappMessageTemplate(['body' => 'Khusus {nama_murid}: {total_tagihan}']);
+
+        $prepared = app(\App\Services\InvoiceReminderService::class)
+            ->prepareReminder($student, collect([$invoice]), $template);
+
+        $this->assertSame('62816920592', $prepared['phone']);
+        $this->assertSame("Khusus {$student->full_name}: Rp 340.000", $prepared['message']);
+        Http::assertNothingSent();
+        $this->assertDatabaseCount('invoice_reminder_logs', 0);
+    }
+
+    public function test_preview_parent_contains_complete_message_without_side_effects(): void
+    {
+        $this->freezeTime();
+        Http::preventStrayRequests();
+        Http::fake();
+        [$student, $invoice] = $this->studentWithUnpaidInvoice();
+        WhatsappMessageTemplate::where('code', WhatsappMessageTemplate::CODE_INVOICE_REMINDER)
+            ->update(['body' => 'Halo {nama_ortu}, {nama_murid}: {total_tagihan}' . "\n{daftar_invoice}"]);
+
+        $row = $this->actingAs($this->admin)->get(route('invoice-reminders.index'))
+            ->assertOk()->viewData('rows')->first();
+
+        $this->assertSame('62816920592', $row->phone_normalized);
+        $this->assertNull($row->preview_error);
+        $this->assertStringContainsString("Halo Budi Ortu, {$student->full_name}: Rp 340.000", $row->preview_message);
+        $this->assertStringContainsString($invoice->invoice_number, $row->preview_message);
+        $this->assertStringContainsString(\Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'invoices.public-pdf', now()->addDays(30), ['invoice' => $invoice->id],
+        ), $row->preview_message);
+        Http::assertNothingSent();
+        $this->assertDatabaseCount('invoice_reminder_logs', 0);
+    }
+
+    public function test_preview_student_fallback_matches_manual_send(): void
+    {
+        $this->freezeTime();
+        Http::preventStrayRequests();
+        $this->fakeFonnte();
+        [$student] = $this->studentWithUnpaidInvoice('invalid');
+        $student->update(['phone' => '081234567890']);
+        WhatsappMessageTemplate::create([
+            'code' => WhatsappMessageTemplate::CODE_INVOICE_REMINDER_STUDENT,
+            'name' => 'Sapaan murid',
+            'body' => 'Hai {nama_murid}, tagihanmu {total_tagihan}' . "\n{daftar_invoice}",
+            'is_active' => true,
+        ]);
+        $row = $this->actingAs($this->admin)->get(route('invoice-reminders.index'))
+            ->assertOk()->viewData('rows')->first();
+        $this->assertSame('6281234567890', $row->phone_normalized);
+        $this->assertStringStartsWith("Hai {$student->full_name}, tagihanmu Rp 340.000", $row->preview_message);
+        Http::assertNothingSent();
+        $this->post(route('invoice-reminders.send'), ['student_ids' => [$student->id]])
+            ->assertSessionHas('success');
+        $log = InvoiceReminderLog::where('student_id', $student->id)->sole();
+        $this->assertSame($row->preview_message, $log->message_body);
+        $this->assertSame($row->phone_normalized, $log->phone);
+    }
+
+    public function test_overdue_preview_includes_all_unpaid_but_not_paid_invoices(): void
+    {
+        $this->freezeTime();
+        Http::preventStrayRequests();
+        $this->fakeFonnte();
+        [$student, $overdue] = $this->studentWithUnpaidInvoice();
+        $overdue->update(['due_date' => now()->subDay(), 'paid_amount' => 40000, 'status' => Invoice::STATUS_PARTIAL]);
+        $future = $overdue->replicate();
+        $future->fill(['invoice_number' => 'INV/2026/06/0101', 'due_date' => now()->addDays(5),
+            'total_amount' => 390000, 'paid_amount' => 0, 'status' => Invoice::STATUS_UNPAID])->save();
+        $paid = $overdue->replicate();
+        $paid->fill(['invoice_number' => 'INV/2026/06/0102', 'paid_amount' => 340000,
+            'status' => Invoice::STATUS_PAID])->save();
+        WhatsappMessageTemplate::where('code', WhatsappMessageTemplate::CODE_INVOICE_REMINDER)
+            ->update(['body' => '{jumlah_invoice} invoice, total {total_tagihan}' . "\n{daftar_invoice}"]);
+        $row = $this->actingAs($this->owner)->get(route('invoice-reminders.index', ['overdue_only' => 1]))
+            ->assertOk()->viewData('rows')->first();
+        $this->assertSame(1, $row->invoice_count);
+        $this->assertStringStartsWith('2 invoice, total Rp 690.000', $row->preview_message);
+        $this->assertStringContainsString('sisa Rp 300.000', $row->preview_message);
+        $this->assertStringContainsString($future->invoice_number, $row->preview_message);
+        $this->assertStringNotContainsString($paid->invoice_number, $row->preview_message);
+        $this->post(route('invoice-reminders.send'), ['student_ids' => [$student->id]])
+            ->assertSessionHas('success');
+        $this->assertSame($row->preview_message, InvoiceReminderLog::where('student_id', $student->id)->sole()->message_body);
+    }
+
+    public function test_preview_missing_or_inactive_template_keeps_row_without_sending(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake();
+        $this->studentWithUnpaidInvoice();
+        WhatsappMessageTemplate::query()->update(['is_active' => false]);
+        foreach ([false, true] as $missing) {
+            if ($missing) {
+                WhatsappMessageTemplate::query()->delete();
+            }
+            $row = $this->actingAs($this->owner)->get(route('invoice-reminders.index'))
+                ->assertOk()->viewData('rows')->first();
+            $this->assertNull($row->preview_message);
+            $this->assertSame('Template reminder aktif tidak ditemukan.', $row->preview_error);
+            $this->assertSame($missing ? 0 : 1, WhatsappMessageTemplate::count());
+        }
+        Http::assertNothingSent();
+        $this->assertDatabaseCount('invoice_reminder_logs', 0);
+    }
+
     public function test_index_200_for_admin(): void
     {
         $this->studentWithUnpaidInvoice();

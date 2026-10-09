@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\SendInvoiceReminderRequest;
 use App\Models\AuditLog;
+use App\Models\Invoice;
 use App\Services\InvoiceReminderService;
 use App\Services\FonnteService;
 use Illuminate\Http\RedirectResponse;
@@ -29,6 +30,28 @@ class InvoiceReminderController extends Controller
         ];
 
         $rows = $this->reminderService->getUnpaidGroupedByStudent($filters);
+
+        // Preview memakai seluruh tagihan belum lunas, sama seperti sendBatch().
+        if ($rows->isNotEmpty()) {
+            $invoicesByStudent = Invoice::query()->unpaid()
+                ->whereIn('student_id', $rows->pluck('student.id'))
+                ->with('enrollment.package.instrument')
+                ->get()->groupBy('student_id');
+
+            foreach ($rows as $row) {
+                $row->preview_message = null;
+                $row->preview_error = null;
+                try {
+                    $prepared = $this->reminderService->prepareReminder(
+                        $row->student, $invoicesByStudent->get($row->student->id, collect()),
+                    );
+                    $row->phone_normalized = $prepared['phone'];
+                    $row->preview_message = $prepared['message'];
+                } catch (\InvalidArgumentException $e) {
+                    $row->preview_error = $e->getMessage();
+                }
+            }
+        }
 
         // ponytail: template tidak lagi dipilih manual — auto-fallback di service
         $fonnteReady = $this->fonnte->isConfigured();

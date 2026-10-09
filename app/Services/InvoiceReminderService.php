@@ -200,17 +200,13 @@ class InvoiceReminderService
     }
 
     /**
-     * Kirim reminder ke satu murid: 1 teks berisi link PDF.
+     * Siapkan tujuan dan pesan yang sama untuk preview maupun pengiriman.
      *
      * @param  Collection<int, Invoice>  $invoices
+     * @return array{phone: string, message: string}
      */
-    public function sendReminder(
-        Student $student,
-        Collection $invoices,
-        User $sender,
-        ?WhatsappMessageTemplate $template = null,
-    ): InvoiceReminderLog {
-        // Tentukan nomor tujuan & jenis template yang dipakai
+    public function prepareReminder(Student $student, Collection $invoices, ?WhatsappMessageTemplate $template = null): array
+    {
         $phone = $this->fonnte->normalizePhone($student->parent_phone);
         $isStudentFallback = false;
 
@@ -223,7 +219,6 @@ class InvoiceReminderService
             throw new \InvalidArgumentException("Murid {$student->full_name} tidak punya nomor HP ortu atau murid yang valid.");
         }
 
-        // Tentukan template default
         if (! $template) {
             $template = $isStudentFallback
                 ? WhatsappMessageTemplate::query()->where('code', WhatsappMessageTemplate::CODE_INVOICE_REMINDER_STUDENT)->where('is_active', true)->first()
@@ -234,7 +229,21 @@ class InvoiceReminderService
             throw new \InvalidArgumentException('Template reminder aktif tidak ditemukan.');
         }
 
-        $message = $this->composeMessage($student, $invoices, $template);
+        return ['phone' => $phone, 'message' => $this->composeMessage($student, $invoices, $template)];
+    }
+
+    /**
+     * Kirim reminder ke satu murid: 1 teks berisi link PDF.
+     *
+     * @param  Collection<int, Invoice>  $invoices
+     */
+    public function sendReminder(
+        Student $student,
+        Collection $invoices,
+        User $sender,
+        ?WhatsappMessageTemplate $template = null,
+    ): InvoiceReminderLog {
+        ['phone' => $phone, 'message' => $message] = $this->prepareReminder($student, $invoices, $template);
         $fonnteIds = [];
 
         // ponytail: kirim text tunggal berisi link pdf tanpa mengirim file lampiran berat via WA
@@ -518,29 +527,7 @@ class InvoiceReminderService
         User $sender,
         ?WhatsappMessageTemplate $template = null,
     ): InvoiceReminderLog {
-        $phone = $this->fonnte->normalizePhone($student->parent_phone);
-        $isStudentFallback = false;
-
-        if (! $phone) {
-            $phone = $this->fonnte->normalizePhone($student->phone);
-            $isStudentFallback = true;
-        }
-
-        if (! $phone) {
-            throw new \InvalidArgumentException("Murid {$student->full_name} tidak punya nomor HP ortu atau murid yang valid.");
-        }
-
-        if (! $template) {
-            $template = $isStudentFallback
-                ? WhatsappMessageTemplate::query()->where('code', WhatsappMessageTemplate::CODE_INVOICE_REMINDER_STUDENT)->where('is_active', true)->first()
-                : WhatsappMessageTemplate::defaultInvoiceReminder();
-        }
-
-        if (! $template) {
-            throw new \InvalidArgumentException('Template reminder aktif tidak ditemukan.');
-        }
-
-        $message = $this->composeMessage($student, $invoices, $template);
+        ['phone' => $phone, 'message' => $message] = $this->prepareReminder($student, $invoices, $template);
         $result = $this->fonnte->sendText($phone, $message);
         $fonnteIds = [];
 
