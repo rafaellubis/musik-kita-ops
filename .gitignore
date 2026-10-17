@@ -20,9 +20,13 @@ yarn-error.log
 /.nova
 /.vscode
 .agents/
+.agent/
+.opencode/
+.impeccable/
 /.zed
 .understanding-anything/
 .cursor/
+.codex/
 memory/
 docs/
 .superpowers/
