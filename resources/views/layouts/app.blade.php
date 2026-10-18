@@ -198,11 +198,12 @@
                 <main class="mk-content flex-1 overflow-y-auto overflow-x-hidden bg-mk-bg">
                     {{-- Flash Messages (satu sumber — kontras tinggi agar teks terbaca di dark/light) --}}
                     @php
+                        // Warna kotak flash: latar tint + border + teks gelap agar kontras >= 4,5:1 di tema terang.
                         $mkFlashStyles = [
-                            'success' => 'background:rgba(52,211,153,0.14);color:#6EE7B7;border:1px solid rgba(52,211,153,0.35)',
-                            'error'   => 'background:rgba(248,113,113,0.14);color:#FCA5A5;border:1px solid rgba(248,113,113,0.35)',
-                            'warning' => 'background:rgba(251,191,36,0.14);color:#FCD34D;border:1px solid rgba(251,191,36,0.35)',
-                            'info'    => 'background:rgba(96,165,250,0.14);color:#93C5FD;border:1px solid rgba(96,165,250,0.35)',
+                            'success' => 'background:#AEEECB;color:#0E5138;border:1px solid rgba(44,105,78,0.35)',
+                            'error'   => 'background:#FFDAD6;color:#93000A;border:1px solid rgba(186,26,26,0.30)',
+                            'warning' => 'background:#FEF3C7;color:#92400E;border:1px solid rgba(180,83,9,0.35)',
+                            'info'    => 'background:#DBEAFE;color:#1E3A8A;border:1px solid rgba(30,64,175,0.30)',
                         ];
                     @endphp
                     @foreach($mkFlashStyles as $flashType => $flashStyle)
