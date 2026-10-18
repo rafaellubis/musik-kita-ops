@@ -19,4 +19,14 @@ class ReassignEventParticipantRequest extends FormRequest
             'reason' => ['required', 'string', 'max:1000'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'teacher_id.required' => 'Guru pendamping wajib dipilih.',
+            'teacher_id.exists' => 'Guru yang dipilih tidak aktif.',
+            'reason.required' => 'Alasan penggantian guru wajib diisi.',
+            'reason.max' => 'Alasan maksimal 1000 karakter.',
+        ];
+    }
 }

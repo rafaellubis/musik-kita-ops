@@ -22,4 +22,15 @@ class UpdateParticipantAttendanceRequest extends FormRequest
             'event_notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'attendance_status.required' => 'Absensi murid wajib dipilih.',
+            'attendance_status.in' => 'Absensi murid harus Hadir atau Tidak Hadir.',
+            'reason.required' => 'Alasan wajib diisi.',
+            'reason.max' => 'Alasan maksimal 1000 karakter.',
+            'event_notes.max' => 'Catatan maksimal 1000 karakter.',
+        ];
+    }
 }
