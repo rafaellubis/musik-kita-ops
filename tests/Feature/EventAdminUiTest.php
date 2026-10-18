@@ -134,7 +134,8 @@ class EventAdminUiTest extends TestCase
             ->assertSee('role="tabpanel"', false)
             ->assertSee('role="tabpanel" aria-labelledby="event-tab-summary" tabindex="0"', false)
             ->assertSee('REG-PIANO-BASIC')->assertSee('HOBBY-GITAR-45')
-            ->assertSee('name="enrollment_ids[]"', false)->assertSee('Publikasikan Event');
+            ->assertSee('name="enrollment_ids[]"', false)->assertSee('Publikasikan Event')
+            ->assertSee('Event masih Draft.');
     }
 
     public function test_published_teacher_card_shows_confirmation_progress_and_replacement_controls(): void
@@ -142,11 +143,15 @@ class EventAdminUiTest extends TestCase
         [$event, $assignment, $participant] = $this->publishedParticipant();
         $assignment->update(['attendance_status' => 'HADIR', 'confirmed_at' => now(), 'confirmed_by' => auth()->id()]);
         $this->get(route('events.show', $event))->assertOk()
-            ->assertSee($assignment->teacher->name)->assertSee('0 dari 1 absensi murid')
+            ->assertSee($assignment->teacher->name)->assertSee('Progres absensi murid')
+            ->assertSee('0 dari 1 absensi murid')
             ->assertSee('Dikonfirmasi oleh')->assertSee(auth()->user()->name)
             ->assertSee(route('event-participants.attendance', $participant), false)
             ->assertSee(route('event-participants.reassign', $participant), false)
             ->assertSee('name="reason"', false)->assertSee('Selesaikan absensi seluruh peserta aktif.')
+            ->assertSee('aria-label="Tandai '.$participant->student->full_name.' hadir"', false)
+            ->assertSee('aria-label="Tandai '.$participant->student->full_name.' tidak hadir"', false)
+            ->assertDontSee('Simpan Absensi')
             ->assertDontSee('action="'.route('events.complete', $event).'"', false)
             ->assertDontSee(route('events.edit', $event), false);
 
@@ -154,6 +159,47 @@ class EventAdminUiTest extends TestCase
         $this->assertTrue(
             $viewEvent->participants->first()->activeTeacherAssignment->relationLoaded('confirmedBy'),
         );
+    }
+
+    public function test_teacher_cards_confirm_in_one_click_and_expose_student_detail_panel(): void
+    {
+        [$event, $assignment, $participant] = $this->publishedParticipant();
+
+        $response = $this->get(route('events.show', $event))->assertOk();
+
+        // Konfirmasi satu klik: tombol submit langsung membawa nilainya, tanpa radio + tombol simpan terpisah.
+        $response->assertSee('name="attendance_status" value="HADIR"', false)
+            ->assertSee('name="attendance_status" value="TIDAK_HADIR"', false)
+            ->assertDontSee('type="radio" name="attendance_status"', false)
+            ->assertDontSee('Simpan Konfirmasi')
+            // Satu panel detail (slide-over) per guru, memuat murid yang didampingi.
+            ->assertSee('data-teacher-detail="'.$assignment->id.'"', false)
+            ->assertSee('Detail (1)')
+            ->assertSee('Murid didampingi '.$assignment->teacher->name);
+
+        $html = $response->getContent();
+        $this->assertSame(1, substr_count($html, 'data-teacher-detail="'));
+        // Satu kartu per guru. Penanda tombol absensi tidak dipakai karena markupnya sama dengan form absensi murid.
+        $this->assertSame(1, substr_count($html, 'name="assignment_id" value="'.$assignment->id.'"'));
+    }
+
+    public function test_failed_participant_attendance_reopens_the_detail_panel(): void
+    {
+        [$event, $assignment, $participant] = $this->publishedParticipant();
+        $assignment->update(['attendance_status' => 'HADIR']);
+
+        $this->from(route('events.show', $event))->patch(route('event-participants.attendance', $participant), [
+            'attendance_status' => 'HADIR',
+            'event_notes' => str_repeat('a', 1001),
+            'event_ui_tab' => 'teacher-attendance',
+            'participant_id' => $participant->id,
+        ])->assertRedirect(route('events.show', $event))->assertSessionHasErrors('event_notes');
+
+        // Panel detail guru yang bersangkutan dibuka lagi lewat konfigurasi Alpine (initial), lalu error tampil di baris murid.
+        $this->get(route('events.show', $event))->assertOk()
+            ->assertSee('initial: '.$assignment->id, false)
+            ->assertSee('name="participant_id" value="'.$participant->id.'"', false)
+            ->assertSee('Catatan maksimal 1000 karakter.');
     }
 
     public function test_absent_teacher_reason_is_visible_and_student_attendance_is_locked(): void
@@ -181,7 +227,9 @@ class EventAdminUiTest extends TestCase
             ->assertDontSee('sessionStorage.getItem', false)
             ->assertSee('id="event-validation-errors" role="alert"', false)
             ->assertSee('Alasan wajib diisi saat guru tidak hadir.')
-            ->assertSee('<option value="TIDAK_HADIR" selected>', false)
+            ->assertSee('x-data="{ absen: true }"', false)
+            ->assertSee('name="attendance_status" value="TIDAK_HADIR"', false)
+            ->assertSee('name="reason"', false)
             ->assertSee('name="assignment_id" value="'.$assignment->id.'"', false);
     }
 
@@ -256,11 +304,13 @@ class EventAdminUiTest extends TestCase
 
     public function test_closed_events_hide_mutations_and_finance_accepts_default_summary(): void
     {
-        [$event] = $this->publishedParticipant();
+        [$event, $assignment] = $this->publishedParticipant();
         foreach (['COMPLETED', 'CANCELLED'] as $status) {
             $event->update(['status' => $status]);
             $this->get(route('events.show', $event))->assertOk()->assertSee('Pendapatan diterima')
-                ->assertSee('Rp 0')->assertDontSee('Tambah Peserta')->assertDontSee('Simpan Konfirmasi')
+                ->assertSee('Rp 0')->assertDontSee('Tambah Peserta')
+                ->assertDontSee('action="'.route('event-teacher-assignments.attendance', $assignment).'"', false)
+                ->assertSee('Detail (1)')
                 ->assertDontSee('Batalkan Event');
         }
     }
