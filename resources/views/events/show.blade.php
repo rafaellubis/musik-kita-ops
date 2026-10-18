@@ -7,9 +7,8 @@
             'COMPLETED' => ['Selesai', 'bg-mk-accentDim text-mk-text border-mk-border', 'bg-mk-accent'],
             'CANCELLED' => ['Dibatalkan', 'bg-red-50 text-red-900 border-red-200', 'bg-red-600'],
         ][$event->status] ?? [$event->status, 'bg-mk-surface text-mk-text border-mk-border', 'bg-mk-muted'];
-        $initialTab = in_array(old('event_ui_tab'), ['summary', 'participants', 'teacher-attendance', 'finance'], true)
-            ? old('event_ui_tab')
-            : 'summary';
+        $tabDariValidasi = in_array(old('event_ui_tab'), ['summary', 'participants', 'teacher-attendance', 'finance'], true);
+        $initialTab = $tabDariValidasi ? old('event_ui_tab') : 'summary';
     @endphp
 
     <x-slot name="header">
@@ -32,7 +31,16 @@
         </div>
     </x-slot>
 
-    <div class="px-4 py-6 lg:px-8" x-data="{ tab: '{{ $initialTab }}' }">
+    {{-- Tab aktif: URL hash (shareable + tahan refresh) dan sessionStorage (tahan redirect back() setelah submit form). --}}
+    <div class="px-4 py-6 lg:px-8" x-data="{ tab: '{{ $initialTab }}' }"
+         x-init="const daftarTab = [...$el.querySelectorAll('[role=tab]')].map(tombol => tombol.dataset.tab);
+                 const kunciTab = 'mk-event-tab:{{ $event->id }}';
+                 @if(! $tabDariValidasi)
+                 const tabTersimpan = location.hash.slice(1) || sessionStorage.getItem(kunciTab) || '';
+                 if (daftarTab.includes(tabTersimpan)) tab = tabTersimpan;
+                 @endif
+                 history.replaceState(null, '', '#' + tab);
+                 $watch('tab', tabAktif => { history.replaceState(null, '', '#' + tabAktif); sessionStorage.setItem(kunciTab, tabAktif); });">
         <div class="overflow-x-auto border-b border-mk-border">
             <div class="flex min-w-max gap-1" role="tablist" aria-label="Detail event">
                 @foreach([
