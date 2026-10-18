@@ -183,6 +183,50 @@ class EventAdminUiTest extends TestCase
         $this->assertSame(1, substr_count($html, 'name="assignment_id" value="'.$assignment->id.'"'));
     }
 
+    public function test_confirmed_teacher_card_shows_reason_text_and_cancel_instead_of_reason_field(): void
+    {
+        [$event, $assignment, $participant] = $this->publishedParticipant();
+        // Payload persis seperti yang dikirim tombol di kartu guru.
+        $kirim = fn (string $status, ?string $reason = null) => $this->from(route('events.show', $event))
+            ->patch(route('event-teacher-assignments.attendance', $assignment), [
+                'attendance_status' => $status, 'reason' => $reason,
+                'event_ui_tab' => 'teacher-attendance', 'assignment_id' => $assignment->id,
+            ])->assertRedirect(route('events.show', $event));
+
+        // Tombol "Hadir": kartu hanya menyisakan Batalkan, field alasan tidak dirender.
+        $kirim('HADIR');
+        $this->get(route('events.show', $event))->assertOk()
+            ->assertSee('name="attendance_status" value="PENDING"', false)
+            ->assertSee('>Batalkan</button>', false)
+            ->assertDontSee('id="teacher-reason-'.$assignment->id.'"', false)
+            ->assertDontSee('Alasan tidak hadir:');
+
+        // Tombol "Batalkan": kartu kembali seperti semula (Hadir + Tidak hadir + field alasan).
+        $kirim('PENDING');
+        $this->get(route('events.show', $event))->assertOk()
+            ->assertSee('Belum dikonfirmasi')
+            ->assertSee('name="attendance_status" value="HADIR"', false)
+            ->assertSee('id="teacher-reason-'.$assignment->id.'"', false);
+
+        // Tombol "Simpan Tidak Hadir": alasan tampil sebagai teks, bukan field input.
+        $kirim('TIDAK_HADIR', 'Sedang sakit');
+        $this->get(route('events.show', $event))->assertOk()
+            ->assertSee('name="attendance_status" value="PENDING"', false)
+            ->assertSee('>Batalkan</button>', false)
+            ->assertSee('Alasan tidak hadir:')
+            ->assertSee('Sedang sakit')
+            ->assertDontSee('id="teacher-reason-'.$assignment->id.'"', false);
+
+        // Absensi murid sudah tercatat: Batalkan dinonaktifkan + alasan reset ditampilkan.
+        $kirim('HADIR');
+        $this->from(route('events.show', $event))->patch(route('event-participants.attendance', $participant), [
+            'attendance_status' => 'HADIR', 'event_notes' => null, 'event_ui_tab' => 'teacher-attendance',
+        ])->assertRedirect(route('events.show', $event));
+        $this->get(route('events.show', $event))->assertOk()
+            ->assertSee('Reset absensi murid terlebih dahulu sebelum membatalkan kehadiran guru.')
+            ->assertSee('name="attendance_status" value="PENDING" disabled', false);
+    }
+
     public function test_failed_participant_attendance_reopens_the_detail_panel(): void
     {
         [$event, $assignment, $participant] = $this->publishedParticipant();

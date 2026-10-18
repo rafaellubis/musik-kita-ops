@@ -114,7 +114,7 @@ class EventAttendanceService
     {
         abort_unless($actor->hasAnyRole(['Owner', 'Admin']), 403);
         Validator::make(['attendance_status' => $status, 'reason' => $reason], [
-            'attendance_status' => ['required', 'in:HADIR,TIDAK_HADIR'],
+            'attendance_status' => ['required', 'in:HADIR,TIDAK_HADIR,PENDING'],
             'reason' => ['required_if:attendance_status,TIDAK_HADIR', 'nullable', 'string', 'max:1000'],
         ])->validate();
 
@@ -124,12 +124,20 @@ class EventAttendanceService
             abort_unless($assignment->participants()->where('event_id', $event->id)
                 ->where('status', EventParticipant::STATUS_ACTIVE)->exists(),
                 422, 'Assignment harus memiliki peserta aktif pada event ini.');
+            // PENDING = tombol "Batalkan". Absensi murid wajib di-reset lebih dahulu supaya tidak
+            // ada absensi murid yang tercatat tanpa guru pendamping yang dikonfirmasi hadir.
+            if ($status === EventTeacherAssignment::ATTENDANCE_PENDING) {
+                abort_if($assignment->participants()->where('event_id', $event->id)
+                    ->where('status', EventParticipant::STATUS_ACTIVE)
+                    ->where('attendance_status', '!=', EventParticipant::ATTENDANCE_PENDING)->exists(),
+                    422, 'Reset absensi murid terlebih dahulu sebelum membatalkan kehadiran guru.');
+            }
             $old = $assignment->toArray();
             $assignment->update([
                 'attendance_status' => $status,
                 'absence_reason' => $status === EventTeacherAssignment::ATTENDANCE_TIDAK_HADIR ? $reason : null,
-                'confirmed_at' => now(),
-                'confirmed_by' => $actor->id,
+                'confirmed_at' => $status === EventTeacherAssignment::ATTENDANCE_PENDING ? null : now(),
+                'confirmed_by' => $status === EventTeacherAssignment::ATTENDANCE_PENDING ? null : $actor->id,
             ]);
             $this->audit($assignment, $actor, $old);
 

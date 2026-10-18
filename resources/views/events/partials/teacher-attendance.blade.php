@@ -83,9 +83,17 @@
                     $info = $ringkasan[$assignment->id];
                     $status = $teacherStatuses[$assignment->attendance_status] ?? [$assignment->attendance_status, 'bg-mk-surface text-mk-text border-mk-border', 'bg-mk-muted'];
                     $recoveringAssignment = $recoveringAssignmentId === $assignment->id;
-                    $selectedAttendance = $recoveringAssignment ? old('attendance_status') : $assignment->attendance_status;
                     $reason = $recoveringAssignment ? old('reason') : $assignment->absence_reason;
-                    $absenState = $selectedAttendance === EventTeacherAssignment::ATTENDANCE_TIDAK_HADIR;
+                    // Guru yang statusnya sudah ditentukan (Hadir/Tidak Hadir) hanya menyisakan tombol "Batalkan".
+                    $sudahDikonfirmasi = in_array($assignment->attendance_status, [
+                        EventTeacherAssignment::ATTENDANCE_HADIR,
+                        EventTeacherAssignment::ATTENDANCE_TIDAK_HADIR,
+                    ], true);
+                    // Panel alasan hanya dibuka ulang saat submit "Tidak hadir" gagal validasi.
+                    // Status yang sudah tersimpan tampil sebagai teks, BUKAN sebagai field input.
+                    $absenState = $recoveringAssignment && old('attendance_status') === EventTeacherAssignment::ATTENDANCE_TIDAK_HADIR;
+                    // Absensi murid yang sudah tercatat harus di-reset dulu sebelum kehadiran guru dibatalkan.
+                    $bolehBatalkan = $info['tercatat'] === 0;
                 @endphp
                 <article class="flex flex-col gap-3 rounded-lg border border-mk-borderLight bg-mk-card p-4">
                     <div class="flex items-start justify-between gap-3">
@@ -109,16 +117,21 @@
                         </div>
                     </div>
 
+                    @if($assignment->attendance_status === EventTeacherAssignment::ATTENDANCE_TIDAK_HADIR && $assignment->absence_reason)
+                        {{-- Alasan tampil sebagai teks di bawah status kehadiran, bukan sebagai field input. --}}
+                        <p class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">
+                            <span class="font-semibold">Alasan tidak hadir:</span> {{ $assignment->absence_reason }}
+                        </p>
+                    @endif
                     @if($assignment->confirmed_at)
                         <p class="text-xs text-mk-muted">Dikonfirmasi oleh {{ $assignment->confirmedBy?->name ?? 'Pengguna tidak tersedia' }} · {{ $assignment->confirmed_at->translatedFormat('d M Y, H:i') }}</p>
-                    @endif
-                    @if($assignment->attendance_status === EventTeacherAssignment::ATTENDANCE_TIDAK_HADIR && $assignment->absence_reason)
-                        <p class="text-sm text-red-900"><span class="font-semibold">Alasan:</span> {{ $assignment->absence_reason }}</p>
                     @endif
 
                     <div class="mt-auto space-y-2">
                         @if($canManageAttendance)
-                            {{-- Sekali klik: nilainya dibawa tombol submit; jalur "Tidak hadir" membuka field alasan yang wajib diisi. --}}
+                            {{-- Satu form per guru; nilai status dibawa tombol submit.
+                                 - Belum dikonfirmasi : pilih Hadir / Tidak hadir ("Tidak hadir" membuka field alasan).
+                                 - Hadir / Tidak hadir: hanya tombol Batalkan yang mengembalikan ke Belum dikonfirmasi. --}}
                             <form method="POST" action="{{ route('event-teacher-assignments.attendance', $assignment) }}"
                                   class="flex flex-col gap-2" x-data="{ absen: {{ $absenState ? 'true' : 'false' }} }">
                                 @csrf
@@ -126,23 +139,36 @@
                                 <input type="hidden" name="event_ui_tab" value="teacher-attendance">
                                 <input type="hidden" name="assignment_id" value="{{ $assignment->id }}">
 
-                                <div class="flex flex-wrap gap-2">
-                                    <button type="submit" name="attendance_status" value="HADIR" formnovalidate
-                                            class="min-h-11 flex-1 cursor-pointer rounded-lg px-3 py-2 text-sm font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent {{ $assignment->attendance_status === EventTeacherAssignment::ATTENDANCE_HADIR ? 'btn-mk-primary' : 'border border-mk-border text-mk-muted hover:bg-mk-surface hover:text-mk-text' }}">Hadir</button>
-                                    <button type="button" x-on:click="absen = ! absen" :aria-expanded="absen.toString()" aria-controls="absen-{{ $assignment->id }}"
-                                            class="min-h-11 cursor-pointer rounded-lg border border-mk-border px-3 py-2 text-sm font-semibold text-mk-text hover:bg-mk-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent">Tidak hadir</button>
-                                </div>
+                                @if($sudahDikonfirmasi)
+                                    <button type="submit" name="attendance_status" value="PENDING" @disabled(! $bolehBatalkan)
+                                            class="min-h-11 cursor-pointer rounded-lg border border-mk-border px-4 py-2 text-sm font-semibold text-mk-text hover:bg-mk-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent">Batalkan</button>
+                                    @unless($bolehBatalkan)
+                                        <p class="text-xs text-mk-muted">Reset absensi murid terlebih dahulu sebelum membatalkan kehadiran guru.</p>
+                                    @endunless
+                                @else
+                                    <div class="flex flex-wrap gap-2">
+                                        {{-- jalur "Hadir" tidak boleh diblokir field alasan yang sedang terbuka. --}}
+                                        <button type="submit" name="attendance_status" value="HADIR" formnovalidate
+                                                class="btn-mk-primary min-h-11 flex-1 cursor-pointer rounded-lg px-3 py-2 text-sm font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent">Hadir</button>
+                                        <button type="button" x-on:click="absen = ! absen" :aria-expanded="absen.toString()" aria-controls="absen-{{ $assignment->id }}"
+                                                class="min-h-11 flex-1 cursor-pointer rounded-lg border border-mk-border px-3 py-2 text-sm font-semibold text-mk-text hover:bg-mk-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent">Tidak hadir</button>
+                                    </div>
 
-                                {{-- Alasan wajib dari server: field hanya dibuka di jalur "Tidak hadir". --}}
-                                <div id="absen-{{ $assignment->id }}" x-show="absen" @if(! $absenState) style="display:none" @endif
-                                     class="rounded-lg border border-red-200 bg-red-50 p-3">
-                                    <label for="teacher-reason-{{ $assignment->id }}" class="block text-sm font-semibold text-red-900">Alasan tidak hadir</label>
-                                    <input id="teacher-reason-{{ $assignment->id }}" type="text" name="reason" maxlength="1000" value="{{ $reason }}" x-bind:required="absen"
-                                           @if($recoveringAssignment && $errors->has('reason')) aria-invalid="true" aria-describedby="event-validation-errors" @endif
-                                           class="mt-1 w-full rounded-md text-sm">
-                                    <button type="submit" name="attendance_status" value="TIDAK_HADIR"
-                                            class="mt-2 cursor-pointer rounded-lg bg-red-800 px-4 py-2 text-sm font-bold text-white hover:bg-red-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent">Simpan Tidak Hadir</button>
-                                </div>
+                                    {{-- Alasan wajib dari server: field hanya dibuka di jalur "Tidak hadir". --}}
+                                    <div id="absen-{{ $assignment->id }}" x-show="absen" @if(! $absenState) style="display:none" @endif
+                                         class="rounded-lg border border-red-200 bg-red-50 p-3">
+                                        <label for="teacher-reason-{{ $assignment->id }}" class="block text-sm font-semibold text-red-900">Alasan tidak hadir</label>
+                                        <input id="teacher-reason-{{ $assignment->id }}" type="text" name="reason" maxlength="1000" value="{{ $reason }}" x-bind:required="absen"
+                                               @if($recoveringAssignment && $errors->has('reason')) aria-invalid="true" aria-describedby="event-validation-errors" @endif
+                                               class="mt-1 w-full rounded-md text-sm">
+                                        <div class="mt-2 flex flex-wrap gap-2">
+                                            <button type="submit" name="attendance_status" value="TIDAK_HADIR"
+                                                    class="flex-1 cursor-pointer rounded-lg bg-red-800 px-4 py-2 text-sm font-bold text-white hover:bg-red-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent">Simpan Tidak Hadir</button>
+                                            <button type="button" x-on:click="absen = false"
+                                                    class="cursor-pointer rounded-lg border border-mk-border px-4 py-2 text-sm font-semibold text-mk-text hover:bg-mk-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent">Batal</button>
+                                        </div>
+                                    </div>
+                                @endif
                             </form>
                         @endif
 

@@ -14,7 +14,8 @@ class ConfirmTeacherAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'attendance_status' => ['required', 'in:HADIR,TIDAK_HADIR'],
+            // PENDING = tombol "Batalkan": status dikembalikan ke Belum dikonfirmasi.
+            'attendance_status' => ['required', 'in:HADIR,TIDAK_HADIR,PENDING'],
             'reason' => ['required_if:attendance_status,TIDAK_HADIR', 'nullable', 'string', 'max:1000'],
         ];
     }
@@ -23,7 +24,7 @@ class ConfirmTeacherAttendanceRequest extends FormRequest
     {
         return [
             'attendance_status.required' => 'Kehadiran guru wajib dipilih.',
-            'attendance_status.in' => 'Kehadiran guru harus Hadir atau Tidak Hadir.',
+            'attendance_status.in' => 'Kehadiran guru harus Hadir, Tidak Hadir, atau Batalkan.',
             'reason.required_if' => 'Alasan wajib diisi saat guru tidak hadir.',
             'reason.max' => 'Alasan maksimal 1000 karakter.',
         ];

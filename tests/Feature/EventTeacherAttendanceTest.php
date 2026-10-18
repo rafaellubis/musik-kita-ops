@@ -74,10 +74,36 @@ class EventTeacherAttendanceTest extends TestCase
         return [['Owner'], ['Admin']];
     }
 
+    public function test_cancel_returns_confirmation_to_pending_and_clears_confirmation(): void
+    {
+        $this->confirm('TIDAK_HADIR', 'Sakit')->assertRedirect();
+        $this->confirm('PENDING')->assertRedirect();
+        $assignment = $this->assignment->fresh();
+        $this->assertSame('PENDING', $assignment->attendance_status);
+        $this->assertNull($assignment->absence_reason);
+        $this->assertNull($assignment->confirmed_at);
+        $this->assertNull($assignment->confirmed_by);
+        $audit = AuditLog::latest('id')->first();
+        $this->assertSame('TIDAK_HADIR', $audit->old_values['attendance_status']);
+        $this->assertSame('PENDING', $audit->new_values['attendance_status']);
+    }
+
+    public function test_cancel_is_rejected_while_student_attendance_is_recorded(): void
+    {
+        $this->confirm('HADIR')->assertRedirect();
+        $this->record('HADIR')->assertRedirect();
+        $this->confirm('PENDING')->assertUnprocessable();
+        $this->assertSame('HADIR', $this->assignment->fresh()->attendance_status);
+        $this->assertSame('HADIR', $this->participant->fresh()->attendance_status);
+
+        $this->resetAttendance('Salah pilih guru')->assertRedirect();
+        $this->confirm('PENDING')->assertRedirect();
+        $this->assertSame('PENDING', $this->assignment->fresh()->attendance_status);
+    }
+
     public function test_teacher_confirmation_requires_valid_status_absence_reason_and_active_participants(): void
     {
         $this->confirm('TIDAK_HADIR', '   ')->assertUnprocessable();
-        $this->confirm('PENDING')->assertUnprocessable();
         $this->confirm('INVALID')->assertUnprocessable();
         $this->confirm('TIDAK_HADIR', str_repeat('x', 1001))->assertUnprocessable();
         $this->participant->update(['status' => 'CANCELLED']);
