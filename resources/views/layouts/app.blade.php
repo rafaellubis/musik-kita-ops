@@ -16,8 +16,8 @@
     </head>
     <body class="font-sans antialiased bg-mk-bg text-mk-text">
 
-        {{-- Layout: Sidebar gelap (kiri) + Area Konten (kanan) --}}
-        <div class="flex h-screen overflow-hidden"
+        {{-- Layout: Sidebar gelap (kiri) + Area Konten (kanan). fixed inset-0 supaya dokumen tidak punya area scroll sendiri — kalau tidak, topbar & sidebar ikut tergulir. --}}
+        <div class="fixed inset-0 flex overflow-hidden"
              x-data="{ sidebarOpen: false, showMoney: {{ $hideMoney ? 'false' : 'true' }} }"
              data-money-hidden="{{ $hideMoney ? 'true' : 'false' }}"
              :data-money-hidden="showMoney ? 'false' : 'true'"
