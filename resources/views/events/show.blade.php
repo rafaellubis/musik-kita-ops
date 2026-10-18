@@ -41,6 +41,18 @@
                  @endif
                  history.replaceState(null, '', '#' + tab);
                  $watch('tab', tabAktif => { history.replaceState(null, '', '#' + tabAktif); sessionStorage.setItem(kunciTab, tabAktif); });">
+        {{-- Ringkasan error validasi halaman event: gaya kotak sama seperti flash, warna token error tema. --}}
+        @if($errors->any())
+            <div id="event-validation-errors" role="alert"
+                 class="mb-5 rounded-lg border border-error/30 bg-error-container p-3 text-sm font-medium text-on-error-container">
+                <ul class="space-y-1">
+                    @foreach($errors->all() as $pesan)
+                        <li>{{ $pesan }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="overflow-x-auto border-b border-mk-border">
             <div class="flex min-w-max gap-1" role="tablist" aria-label="Detail event">
                 @foreach([

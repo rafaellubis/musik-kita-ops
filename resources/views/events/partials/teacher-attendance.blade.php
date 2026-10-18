@@ -79,12 +79,7 @@
                         <label for="teacher-reason-{{ $assignment->id }}" class="block text-sm font-semibold text-mk-text">Alasan jika tidak hadir</label>
                         <input id="teacher-reason-{{ $assignment->id }}" type="text" name="reason" maxlength="1000"
                                value="{{ $reason }}" class="mt-1 w-full rounded-md text-sm"
-                               @if($recoveringAssignment && $errors->has('reason')) aria-invalid="true" aria-describedby="teacher-reason-error-{{ $assignment->id }}" @endif>
-                        @if($recoveringAssignment)
-                            @error('reason')
-                                <p id="teacher-reason-error-{{ $assignment->id }}" data-validation-error="reason" class="mt-1 text-sm font-semibold text-red-800">{{ $message }}</p>
-                            @enderror
-                        @endif
+                               @if($recoveringAssignment && $errors->has('reason')) aria-invalid="true" aria-describedby="event-validation-errors" @endif>
                     </div>
                     <button type="submit" class="btn-mk-primary rounded-lg px-4 py-2 text-sm font-bold">Simpan Konfirmasi</button>
                 </form>

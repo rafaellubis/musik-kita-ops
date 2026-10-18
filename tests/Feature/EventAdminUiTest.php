@@ -178,7 +178,9 @@ class EventAdminUiTest extends TestCase
 
         $this->get(route('events.show', $event))->assertOk()
             ->assertSee('x-data="{ tab: \'teacher-attendance\' }"', false)
-            ->assertSee('data-validation-error="reason"', false)
+            ->assertDontSee('sessionStorage.getItem', false)
+            ->assertSee('id="event-validation-errors" role="alert"', false)
+            ->assertSee('Alasan wajib diisi saat guru tidak hadir.')
             ->assertSee('<option value="TIDAK_HADIR" selected>', false)
             ->assertSee('name="assignment_id" value="'.$assignment->id.'"', false);
     }

@@ -153,7 +153,6 @@
                         @csrf
                         <label for="event-reopen-reason" class="block font-semibold">Alasan membuka kembali</label>
                         <textarea id="event-reopen-reason" name="reason" required maxlength="1000" rows="3" class="mt-1 w-full rounded-md">{{ old('reason') }}</textarea>
-                        @error('reason')<p class="mt-1 text-red-800">{{ $message }}</p>@enderror
                         <button type="submit" class="btn-mk-primary mt-3 rounded-lg px-4 py-2 text-sm font-bold">Buka Kembali Event</button>
                     </form>
                 </details>
