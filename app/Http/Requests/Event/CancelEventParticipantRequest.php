@@ -14,7 +14,11 @@ class CancelEventParticipantRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'cancellation_reason' => ['required', 'string', 'max:1000'],
+            'cancellation_reason' => [
+                $this->route('participant')?->event->isDraft() ? 'nullable' : 'required',
+                'string',
+                'max:1000',
+            ],
         ];
     }
 

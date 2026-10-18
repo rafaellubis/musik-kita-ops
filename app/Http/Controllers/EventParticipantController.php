@@ -50,12 +50,14 @@ class EventParticipantController extends Controller
 
     public function destroy(CancelEventParticipantRequest $request, EventParticipant $participant)
     {
-        $this->participantService->cancelParticipant(
+        $participant = $this->participantService->cancelParticipant(
             $participant,
             $request->user(),
             $request->validated('cancellation_reason'),
         );
 
-        return back()->with('success', 'Partisipasi berhasil dibatalkan.');
+        return back()->with('success', $participant->exists
+            ? 'Partisipasi berhasil dibatalkan.'
+            : 'Peserta berhasil dihapus dari event.');
     }
 }

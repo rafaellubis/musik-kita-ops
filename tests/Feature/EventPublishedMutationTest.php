@@ -56,7 +56,7 @@ class EventPublishedMutationTest extends TestCase
         $this->assertDatabaseCount('event_honor_entries', 0);
     }
 
-    public function test_add_or_cancel_is_rejected_when_invoice_has_valid_payment(): void
+    public function test_add_is_rejected_when_invoice_has_valid_payment(): void
     {
         $first = $this->addDraft();
         $this->publish();
@@ -65,14 +65,12 @@ class EventPublishedMutationTest extends TestCase
         $second = Enrollment::factory()->create(['student_id' => $first->student_id]);
         $auditCount = AuditLog::count();
         $this->addPublished($second)->assertUnprocessable();
-        $this->cancelParticipant($first)->assertUnprocessable();
         $this->assertSame($auditCount, AuditLog::count());
         $this->assertDatabaseCount('event_participants', 1);
         $this->assertSame('ACTIVE', $first->fresh()->status);
         $this->assertSame(295000, $invoice->fresh()->total_amount);
         $payment->update(['voided_at' => now(), 'voided_by' => $this->actor->id]);
         $this->addPublished($second)->assertRedirect();
-        $this->cancelParticipant($first)->assertRedirect();
     }
 
     public function test_cancel_one_enrollment_removes_its_mc_item_and_discount_only(): void
@@ -278,6 +276,7 @@ class EventPublishedMutationTest extends TestCase
     public function test_payment_still_records_full_payment_for_current_unpaid_invoice(): void
     {
         $participant = $this->addDraft();
+        $this->addDraft();
         $this->publish();
         $invoice = $participant->fresh()->invoice;
         $payment = app(PaymentService::class)->recordPayment($invoice, [
@@ -286,7 +285,13 @@ class EventPublishedMutationTest extends TestCase
         $this->assertSame($invoice->id, $payment->invoice_id);
         $this->assertSame(295000, $invoice->fresh()->paid_amount);
         $this->assertSame('PAID', $invoice->fresh()->status);
-        $this->cancelParticipant($participant)->assertUnprocessable();
+        $this->cancelParticipant($participant)->assertRedirect();
+        $this->assertSame('CANCELLED', $participant->fresh()->status);
+        $this->assertSame('PAID', $invoice->fresh()->status);
+        $this->assertSame(295000, $invoice->fresh()->paid_amount);
+        $this->assertSame(295000, $invoice->total_amount);
+        $this->assertDatabaseHas('payments', ['id' => $payment->id, 'voided_at' => null]);
+        app(EventLifecycleService::class)->publish($this->event, $this->actor);
     }
 
     #[DataProvider('atomicMutations')]
@@ -370,6 +375,42 @@ class EventPublishedMutationTest extends TestCase
     public static function atomicMutations(): array
     {
         return [['add'], ['participant_cancel'], ['reschedule'], ['event_cancel']];
+    }
+
+    public function test_draft_removal_does_not_require_a_reason(): void
+    {
+        $participant = $this->addDraft();
+        $this->deleteJson('/event-participants/'.$participant->id)->assertRedirect();
+        $this->assertDatabaseMissing('event_participants', ['id' => $participant->id]);
+        $this->assertDatabaseHas('students', ['id' => $participant->student_id]);
+        $this->assertDatabaseHas('enrollments', ['id' => $participant->enrollment_id]);
+        $this->get('/events/'.$this->event->id)->assertOk()->assertDontSee('data-student-group="'.$participant->student_id.'"', false);
+        $this->assertDatabaseCount('invoices', 0);
+    }
+
+    public function test_published_cancellation_requires_reason(): void
+    {
+        $participant = $this->addDraft();
+        $this->publish();
+        $this->deleteJson('/event-participants/'.$participant->id)->assertUnprocessable();
+        $this->assertSame('ACTIVE', $participant->fresh()->status);
+        $this->assertSame('UNPAID', $participant->fresh()->invoice->status);
+    }
+
+    public function test_partial_payment_is_preserved_when_participant_is_cancelled(): void
+    {
+        $participant = $this->addDraft();
+        $this->publish();
+        $invoice = $participant->fresh()->invoice;
+        $payment = Payment::factory()->create(['invoice_id' => $invoice->id, 'amount' => 100000]);
+        $invoice->update(['status' => 'PARTIAL', 'paid_amount' => 100000]);
+        $this->cancelParticipant($participant)->assertRedirect();
+        $this->assertSame('CANCELLED', $participant->fresh()->status);
+        $this->assertSame('PARTIAL', $invoice->fresh()->status);
+        $this->assertSame(295000, $invoice->total_amount);
+        $this->assertSame(100000, $invoice->paid_amount);
+        $this->assertNotNull($participant->fresh()->invoice_item_id);
+        $this->assertDatabaseHas('payments', ['id' => $payment->id, 'voided_at' => null]);
     }
 
     private function addDraft(?Student $student = null): EventParticipant

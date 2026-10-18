@@ -91,19 +91,27 @@ class EventInvoiceService
             abort_unless($invoices->count() === 1 && $invoices->first()->id === $participant->invoice_id,
                 422, 'Invoice peserta tidak konsisten.');
             $invoice = $invoices->first();
-            $this->assertUnpaid($invoice);
+            // Pembayaran yang sudah tercatat tidak dibalik oleh pembatalan peserta.
+            $preserveInvoice = $invoice->status !== Invoice::STATUS_UNPAID
+                || $invoice->paid_amount > 0
+                || $invoice->validPayments()->lockForUpdate()->get()->isNotEmpty();
             $items = $invoice->items()->lockForUpdate()->get();
             $item = $items->firstWhere('id', $participant->invoice_item_id);
             abort_unless($item && $item->item_code === 'MC'
                 && ($item->metadata['event_participant_id'] ?? null) === $participant->id,
                 422, 'Item tagihan peserta tidak konsisten.');
             $old = $invoice->toArray() + ['items' => $items->toArray()];
-            $invoice->items()->where('parent_item_id', $item->id)->where('item_code', 'DISKON')->delete();
+            if (! $preserveInvoice) {
+                $invoice->items()->where('parent_item_id', $item->id)->where('item_code', 'DISKON')->delete();
+            }
             $participant->update([
                 'status' => EventParticipant::STATUS_CANCELLED, 'cancelled_at' => now(),
                 'cancelled_by' => $actor->id, 'cancellation_reason' => $reason,
-                'invoice_item_id' => null,
+                'invoice_item_id' => $preserveInvoice ? $item->id : null,
             ]);
+            if ($preserveInvoice) {
+                return;
+            }
             $item->delete();
             $this->recalculate($invoice);
             if (! $invoice->items()->exists()) {
@@ -216,6 +224,11 @@ class EventInvoiceService
     /** Retry hanya diterima bila seluruh tautan, snapshot item, dan total masih konsisten. */
     public function assertConsistent(Event $event, Collection $participants, Collection $invoices): void
     {
+        // Item peserta yang dibatalkan setelah membayar tetap menjadi bagian invoice historis.
+        $retained = $event->participants()->where('status', EventParticipant::STATUS_CANCELLED)
+            ->whereNotNull('invoice_item_id')->whereIn('invoice_id', $invoices->pluck('id'))
+            ->orderBy('id')->lockForUpdate()->get();
+        $participants = $participants->merge($retained);
         $groups = $participants->groupBy('student_id');
         abort_unless($invoices->count() === $groups->count(), 422, 'Jumlah invoice event tidak konsisten.');
         foreach ($groups as $studentId => $group) {

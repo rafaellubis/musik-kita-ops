@@ -191,13 +191,13 @@ class EventParticipantService
     public function cancelParticipant(
         EventParticipant $participant,
         User $actor,
-        string $reason,
+        ?string $reason = null,
     ): EventParticipant {
-        abort_if(blank($reason), 422, 'Alasan pembatalan peserta wajib diisi.');
         return DB::transaction(function () use ($participant, $actor, $reason) {
             $event = Event::query()->lockForUpdate()->findOrFail($participant->event_id);
             $participant = $event->participants()->lockForUpdate()->findOrFail($participant->id);
             abort_unless($event->isDraft() || $event->isPublished(), 422, 'Peserta hanya dapat dibatalkan saat event DRAFT atau PUBLISHED.');
+            abort_if($event->isPublished() && blank($reason), 422, 'Alasan pembatalan peserta wajib diisi.');
             abort_if($participant->status === EventParticipant::STATUS_CANCELLED, 422, 'Partisipasi sudah dibatalkan.');
             $old = $participant->toArray();
 
@@ -205,12 +205,11 @@ class EventParticipantService
                 $this->invoiceService->cancelPublishedParticipant($participant, $actor, $reason);
                 $participant->refresh();
             } else {
-                $participant->update([
-                    'status' => EventParticipant::STATUS_CANCELLED,
-                    'cancelled_at' => now(),
-                    'cancelled_by' => $actor->id,
-                    'cancellation_reason' => $reason,
-                ]);
+                // DRAFT belum memiliki tagihan: hapus keikutsertaan, bukan master murid.
+                $this->audit(AuditLog::ACTION_DELETE, $participant, $actor, $old, []);
+                $participant->delete();
+
+                return $participant;
             }
 
             $this->audit(

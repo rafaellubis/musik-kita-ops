@@ -163,7 +163,7 @@ class EventDraftManagementTest extends TestCase
         $this->assertDatabaseCount('event_participants', 0);
     }
 
-    public function test_same_enrollment_cannot_be_added_twice_and_cancelled_row_is_reactivated(): void
+    public function test_same_enrollment_cannot_be_added_twice_and_deleted_draft_participant_can_be_added_again(): void
     {
         $admin = $this->userWithRole('Admin');
         $event = Event::factory()->create();
@@ -183,27 +183,22 @@ class EventDraftManagementTest extends TestCase
         $this->actingAs($admin)->delete(route('event-participants.destroy', $participant), [
             'cancellation_reason' => 'Murid membatalkan keikutsertaan.',
         ])->assertRedirect();
-        $this->assertSame(EventParticipant::STATUS_CANCELLED, $participant->fresh()->status);
+        $this->assertDatabaseMissing('event_participants', ['id' => $participant->id]);
 
         $this->actingAs($admin)->post(route('events.participants.store', $event), $payload)
             ->assertRedirect();
 
         $this->assertDatabaseCount('event_participants', 1);
-        $this->assertSame($participant->id, EventParticipant::firstOrFail()->id);
-        $this->assertSame(EventParticipant::STATUS_ACTIVE, $participant->fresh()->status);
-        $reactivationAudit = AuditLog::query()
+        $replacement = EventParticipant::firstOrFail();
+        $this->assertNotSame($participant->id, $replacement->id);
+        $this->assertSame(EventParticipant::STATUS_ACTIVE, $replacement->status);
+        $deletionAudit = AuditLog::query()
             ->where('user_id', $admin->id)
-            ->where('action', AuditLog::ACTION_UPDATE)
+            ->where('action', AuditLog::ACTION_DELETE)
             ->where('entity_type', 'EventParticipant')
             ->where('entity_id', $participant->id)
-            ->get()
-            ->first(fn (AuditLog $audit) => $audit->new_values['status'] === EventParticipant::STATUS_ACTIVE);
-        $this->assertNotNull($reactivationAudit);
-        $this->assertSame(['status' => EventParticipant::STATUS_CANCELLED], $reactivationAudit->old_values);
-        $this->assertSame([
-            'status' => EventParticipant::STATUS_ACTIVE,
-            'enrollment_id' => $enrollment->id,
-        ], $reactivationAudit->new_values);
+            ->firstOrFail();
+        $this->assertSame($enrollment->id, $deletionAudit->old_values['enrollment_id']);
     }
 
     public function test_event_mutation_and_audit_log_are_atomic(): void
