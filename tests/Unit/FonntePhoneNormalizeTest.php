@@ -2,18 +2,18 @@
 
 namespace Tests\Unit;
 
-use App\Services\FonnteService;
+use App\Services\WhatsAppService;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class FonntePhoneNormalizeTest extends TestCase
 {
-    private FonnteService $service;
+    private WhatsAppService $service;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = app(FonnteService::class);
+        $this->service = app(WhatsAppService::class);
     }
 
     #[DataProvider('phoneProvider')]
@@ -33,10 +33,6 @@ class FonntePhoneNormalizeTest extends TestCase
         ];
     }
 
-    public function test_format_for_target(): void
-    {
-        $this->assertSame('0816920592', $this->service->formatForTarget('62816920592'));
-    }
 
     public function test_is_valid_phone(): void
     {
