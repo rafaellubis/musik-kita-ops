@@ -14,7 +14,7 @@ class SendWhatsAppTestRequest extends FormRequest
 
     public function rules(): array
     {
-        return ['phone' => ['required', 'string', 'max:30', function ($attribute, $value, $fail) {
+        return ['phone' => ['bail', 'required', 'string', 'max:30', function ($attribute, $value, $fail) {
             if (! app(WhatsAppService::class)->isValidPhone($value)) {
                 $fail('Nomor WhatsApp tujuan uji tidak valid.');
             }

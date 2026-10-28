@@ -83,4 +83,13 @@ class WhatsAppConnectionTest extends TestCase
         $this->assertStringNotContainsString('private-password', json_encode(session('whatsapp_result')));
         Http::assertSentCount(1);
     }
+
+    public function test_non_string_phone_is_rejected_without_contacting_provider(): void
+    {
+        Http::fake();
+        $this->actingAs($this->user('Owner'))->post('/scheduler/whatsapp/test', [
+            'phone' => ['081234567890'],
+        ])->assertSessionHasErrors('phone');
+        Http::assertNothingSent();
+    }
 }

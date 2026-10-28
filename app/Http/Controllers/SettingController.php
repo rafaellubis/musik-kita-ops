@@ -119,6 +119,11 @@ class SettingController extends Controller
             'integration_fonnte_token_masked'      => filled($fonnteToken) ? IntegrationSettings::maskSecret($fonnteToken) : '',
             'integration_fonnte_token_configured'  => filled($fonnteToken),
             'integration_fonnte_token_from_env'    => filled($fonnteToken) && ! IntegrationSettings::isFonnteTokenStoredInDb(),
+            'integration_whatsapp_provider' => Setting::get('integration_whatsapp_provider', 'fonnte'),
+            'integration_gowa_base_url' => Setting::get('integration_gowa_base_url', ''),
+            'integration_gowa_username' => Setting::get('integration_gowa_username', ''),
+            'integration_gowa_device_id' => Setting::get('integration_gowa_device_id', ''),
+            'integration_gowa_password_configured' => filled(Setting::get('integration_gowa_password')),
 
             'integration_wablas_base_url'            => IntegrationSettings::wablasBaseUrl(),
             'integration_wablas_token_masked'        => filled($wablasToken) ? IntegrationSettings::maskSecret($wablasToken) : '',

@@ -53,10 +53,13 @@ class IntegrationSettingsTest extends TestCase
         $this->assertSame('db-token', IntegrationSettings::fonnteToken());
     }
 
-    public function test_mask_secret_shows_last_four_chars(): void
+    public function test_short_secret_is_not_fully_exposed_in_ui_or_audit(): void
     {
-        $this->assertSame('********c123', IntegrationSettings::maskSecret('mysecretc123'));
-        $this->assertSame('', IntegrationSettings::maskSecret(''));
+        $this->assertStringNotContainsString('abcd', IntegrationSettings::maskSecret('abcd'));
+        IntegrationSettings::set('integration_gowa_password', 'abcd');
+        $this->assertStringNotContainsString('abcd', IntegrationSettings::maskValueForAudit(
+            'integration_gowa_password', Setting::get('integration_gowa_password')
+        ));
     }
 
     public function test_is_masked_placeholder_detects_preview_values(): void

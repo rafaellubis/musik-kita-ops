@@ -144,7 +144,7 @@ class IntegrationSettings
             return '';
         }
 
-        $visible = Str::substr($secret, -4);
+        $visible = Str::length($secret) > 4 ? Str::substr($secret, -4) : '';
 
         return '********' . $visible;
     }

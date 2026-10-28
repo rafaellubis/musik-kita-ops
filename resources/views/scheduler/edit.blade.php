@@ -45,7 +45,7 @@
             </p>
         </div>
 
-        <form action="{{ route('scheduler.update') }}" method="POST" class="space-y-6"
+        <div
               x-data="schedulerSettingsForm(@js([
                   'sessionsGenerateEnabled' => (bool) $settings['scheduler_sessions_generate_enabled'],
                   'invoicesGenerateEnabled' => (bool) $settings['scheduler_invoices_generate_enabled'],
@@ -57,10 +57,14 @@
                   'staffPayrollEnabled' => (bool) $settings['scheduler_staff_payroll_enabled'],
                   'reminderEnabled' => (bool) $settings['schedule_reminder_enabled'],
                   'reminderMode' => $settings['schedule_reminder_mode'],
+                  'whatsappProvider' => old('integration_whatsapp_provider', $settings['integration_whatsapp_provider']),
+                  'integrationDirty' => $errors->any() && old('_method') === 'PATCH',
                   'fonnteTokenMasked' => $settings['integration_fonnte_token_masked'],
                   'wablasTokenMasked' => $settings['integration_wablas_token_masked'],
                   'wablasSecretMasked' => $settings['integration_wablas_secret_masked'],
               ]))"
+              >
+        <form action="{{ route('scheduler.update') }}" method="POST" class="space-y-6"
               @submit="clearMaskedSecretsBeforeSubmit($event)">
             @csrf
             @method('PATCH')
@@ -386,14 +390,14 @@
             <section class="bg-mk-card rounded-2xl border border-mk-borderLight p-6 shadow-sm space-y-0">
                 <header class="mb-5">
                     <h3 class="text-sm font-bold text-mk-text">Reminder & Notifikasi</h3>
-                    <p class="text-[11px] text-mk-muted mt-0.5">Pengingat jadwal kelas via Fonnte ke ortu murid.</p>
+                    <p class="text-[11px] text-mk-muted mt-0.5">Pengingat jadwal kelas melalui provider WhatsApp global.</p>
                 </header>
 
                 <div class="pt-5 border-t border-mk-borderLight space-y-4">
                     <div class="flex justify-between items-start gap-4">
                         <div>
                             <h4 class="text-sm font-semibold text-mk-text">WhatsApp Reminder Jadwal Kelas</h4>
-                            <p class="text-[11px] text-mk-muted mt-0.5">Pengiriman otomatis pengingat sesi pelajaran via Fonnte.</p>
+                            <p class="text-[11px] text-mk-muted mt-0.5">Pengiriman otomatis mengikuti provider yang dipilih pada Integrasi WhatsApp.</p>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
                             <span class="sr-only">Aktifkan WhatsApp reminder jadwal</span>
@@ -448,15 +452,26 @@
             </section>
 
             {{-- Zona 5: Integrasi WhatsApp --}}
-            <section class="bg-mk-card rounded-2xl border border-mk-borderLight p-6 shadow-sm space-y-0">
+            <section id="whatsapp-integration" @input="integrationDirty = true" @change="integrationDirty = true"
+                     class="bg-mk-card rounded-2xl border border-mk-borderLight p-6 shadow-sm space-y-0">
                 <header class="mb-5">
                     <h3 class="text-sm font-bold text-mk-text">Integrasi WhatsApp</h3>
                     <p class="text-[11px] text-mk-muted mt-0.5">Kredensial disimpan terenkripsi. Isi field hanya jika ingin mengganti nilai yang sudah ada.</p>
                 </header>
+                <div class="mb-6 space-y-2">
+                    <label for="integration_whatsapp_provider" class="block text-sm font-semibold text-mk-text">Provider WhatsApp global</label>
+                    <select id="integration_whatsapp_provider" name="integration_whatsapp_provider" x-model="whatsappProvider"
+                            class="min-h-11 w-full rounded-lg border-mk-border text-sm focus:border-mk-accent focus:ring-mk-accent">
+                        <option value="fonnte">Fonnte</option>
+                        <option value="gowa">GOWA — server sendiri</option>
+                    </select>
+                    <p class="text-sm text-mk-muted">Berlaku untuk reminder jadwal, reminder tagihan, dan laporan sesi. Konfigurasi provider lain tetap tersimpan.</p>
+                    @error('integration_whatsapp_provider')<p role="alert" class="text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
 
                 {{-- Fonnte --}}
-                <div class="pt-5 border-t border-mk-borderLight space-y-4">
-                    <h4 class="text-sm font-semibold text-mk-text">Fonnte <span class="text-[11px] font-normal text-mk-muted">(reminder jadwal kelas)</span></h4>
+                <div x-show="whatsappProvider === 'fonnte'" class="pt-5 border-t border-mk-borderLight space-y-4">
+                    <h4 class="text-sm font-semibold text-mk-text">Fonnte</h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[11px] font-semibold text-mk-muted mb-1">Token Device</label>
@@ -510,6 +525,50 @@
                                    placeholder="https://api.fonnte.com"
                                    class="w-full h-9 rounded-lg text-xs shadow-sm border-mk-border focus:border-mk-accent focus:ring-1 focus:ring-mk-accent focus:ring-offset-0 @error('integration_fonnte_base_url') border-red-500 @enderror">
                             @error('integration_fonnte_base_url')<p class="text-[10px] text-error font-semibold mt-1">{{ $message }}</p>@enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="whatsappProvider === 'gowa'" x-cloak class="pt-5 border-t border-mk-borderLight space-y-4">
+                    <h4 class="text-sm font-semibold text-mk-text">GOWA melalui Tailscale</h4>
+                    <p class="text-sm text-mk-muted">Scan QR, login, dan kelola perangkat di dashboard GOWA. Musik KITA hanya menggunakan koneksi ini untuk mengirim pesan.</p>
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div>
+                            <label for="integration_gowa_base_url" class="mb-1 block text-sm font-semibold text-mk-text">Base URL GOWA</label>
+                            <input id="integration_gowa_base_url" name="integration_gowa_base_url" type="url"
+                                   value="{{ old('integration_gowa_base_url', $settings['integration_gowa_base_url']) }}"
+                                   placeholder="http://nama-vps-tailscale:3000"
+                                   class="min-h-11 w-full rounded-lg border-mk-border text-sm focus:border-mk-accent focus:ring-mk-accent">
+                            <p class="mt-1 text-xs text-mk-muted">Alamat Tailscale/MagicDNS dari VPS Musik KITA, termasuk base path jika ada.</p>
+                            @error('integration_gowa_base_url')<p role="alert" class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label for="integration_gowa_device_id" class="mb-1 block text-sm font-semibold text-mk-text">Device ID</label>
+                            <input id="integration_gowa_device_id" name="integration_gowa_device_id" type="text"
+                                   value="{{ old('integration_gowa_device_id', $settings['integration_gowa_device_id']) }}"
+                                   class="min-h-11 w-full rounded-lg border-mk-border text-sm focus:border-mk-accent focus:ring-mk-accent">
+                            @error('integration_gowa_device_id')<p role="alert" class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label for="integration_gowa_username" class="mb-1 block text-sm font-semibold text-mk-text">Username Basic Auth</label>
+                            <input id="integration_gowa_username" name="integration_gowa_username" type="text" autocomplete="off"
+                                   value="{{ old('integration_gowa_username', $settings['integration_gowa_username']) }}"
+                                   class="min-h-11 w-full rounded-lg border-mk-border text-sm focus:border-mk-accent focus:ring-mk-accent">
+                            @error('integration_gowa_username')<p role="alert" class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label for="integration_gowa_password" class="mb-1 block text-sm font-semibold text-mk-text">Password Basic Auth</label>
+                            <div class="flex gap-2">
+                                <input id="integration_gowa_password" name="integration_gowa_password" :type="showGowaPassword ? 'text' : 'password'"
+                                       autocomplete="new-password" placeholder="Kosongkan jika tidak mengubah"
+                                       class="min-h-11 min-w-0 flex-1 rounded-lg border-mk-border text-sm focus:border-mk-accent focus:ring-mk-accent">
+                                <button type="button" @click="showGowaPassword = !showGowaPassword" :aria-pressed="showGowaPassword"
+                                        class="min-h-11 rounded-lg border border-mk-border px-3 text-sm text-mk-text focus-visible:ring-2 focus-visible:ring-mk-accent">
+                                    <span x-text="showGowaPassword ? 'Sembunyikan' : 'Tampilkan'"></span>
+                                </button>
+                            </div>
+                            <p class="mt-1 text-xs text-mk-muted">{{ $settings['integration_gowa_password_configured'] ? 'Password tersimpan: ********. Isi hanya untuk mengganti.' : 'Password belum dikonfigurasi.' }}</p>
+                            @error('integration_gowa_password')<p role="alert" class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                         </div>
                     </div>
                 </div>
@@ -595,6 +654,48 @@
                 </button>
             </div>
         </form>
+
+        <section id="whatsapp-diagnostics" class="mt-6 space-y-4 rounded-2xl border border-mk-borderLight bg-mk-card p-6">
+            <div>
+                <h3 class="text-sm font-bold text-mk-text">Uji koneksi WhatsApp</h3>
+                <p class="mt-1 text-sm text-mk-muted">Menggunakan konfigurasi tersimpan. Provider aktif: <strong>{{ strtoupper($settings['integration_whatsapp_provider']) }}</strong>. Tidak berpindah provider otomatis jika gagal.</p>
+            </div>
+            <p x-show="integrationDirty" x-cloak role="status" class="text-sm text-mk-warning">Simpan konfigurasi WhatsApp terlebih dahulu.</p>
+            @if($feedback = session('whatsapp_result'))
+                <div role="{{ in_array($feedback['state'], ['connected', 'configuration_present', 'sent']) ? 'status' : 'alert' }}"
+                     class="rounded-lg border border-mk-borderLight p-4 text-sm text-mk-text">
+                    <p class="font-semibold">{{ strtoupper($feedback['provider']) }} — {{ $feedback['message'] }}</p>
+                    @if(!empty($feedback['message_ids']))
+                        <p class="mt-1 break-all text-xs text-mk-muted">ID pesan: {{ implode(', ', $feedback['message_ids']) }}</p>
+                    @endif
+                </div>
+            @endif
+            <form method="POST" action="{{ route('scheduler.whatsapp.check') }}" @submit="if (integrationDirty || diagnosticBusy) { $event.preventDefault(); } else { diagnosticBusy = true; }">
+                @csrf
+                <button type="submit" :disabled="integrationDirty || diagnosticBusy"
+                        class="min-h-11 rounded-lg border border-mk-border px-4 text-sm font-semibold text-mk-text disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-mk-accent">
+                    Cek koneksi tersimpan
+                </button>
+            </form>
+            <form method="POST" action="{{ route('scheduler.whatsapp.test') }}" class="space-y-2"
+                  @submit="if (integrationDirty || diagnosticBusy) { $event.preventDefault(); } else { diagnosticBusy = true; }">
+                @csrf
+                <label for="whatsapp_test_phone" class="block text-sm font-semibold text-mk-text">Nomor WhatsApp tujuan uji</label>
+                <div class="flex flex-col gap-3 sm:flex-row">
+                    <input id="whatsapp_test_phone" name="phone" type="tel" required maxlength="30" autocomplete="off"
+                           value="{{ old('phone') }}" placeholder="08… atau 628…"
+                           class="min-h-11 min-w-0 flex-1 rounded-lg border-mk-border text-sm focus:border-mk-accent focus:ring-mk-accent">
+                    <button type="submit" :disabled="integrationDirty || diagnosticBusy"
+                            class="btn-mk-primary min-h-11 rounded-lg px-4 text-sm font-semibold disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-mk-accent">
+                        Kirim pesan uji
+                    </button>
+                </div>
+                <p class="text-xs text-mk-muted">Mengirim satu pesan nyata ke nomor ini. Respons sukses API belum membuktikan pesan diterima atau dibaca.</p>
+                @error('phone')<p role="alert" class="text-sm text-red-600">{{ $message }}</p>@enderror
+            </form>
+            <p x-show="diagnosticBusy" x-cloak role="status" class="text-sm text-mk-muted">Memproses permintaan. Jangan kirim ulang sebelum hasil diketahui.</p>
+        </section>
+        </div>
     </div>
 
     @push('scripts')
@@ -611,6 +712,10 @@
                 staffPayrollEnabled: initial.staffPayrollEnabled,
                 reminderEnabled: initial.reminderEnabled,
                 reminderMode: initial.reminderMode,
+                whatsappProvider: initial.whatsappProvider,
+                integrationDirty: initial.integrationDirty,
+                showGowaPassword: false,
+                diagnosticBusy: false,
                 fonnteTokenMasked: initial.fonnteTokenMasked ?? '',
                 wablasTokenMasked: initial.wablasTokenMasked ?? '',
                 wablasSecretMasked: initial.wablasSecretMasked ?? '',
