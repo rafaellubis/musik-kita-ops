@@ -86,6 +86,26 @@ class ScheduledInvoiceReminderTest extends TestCase
         return $invoice;
     }
 
+    public function test_scheduled_reminder_uses_gowa_and_keeps_monthly_deduplication(): void
+    {
+        $this->travelTo(Carbon::parse('2026-06-15 10:00:00'));
+        foreach (['integration_whatsapp_provider' => 'gowa', 'integration_gowa_base_url' => 'http://gowa.test',
+            'integration_gowa_username' => 'studio', 'integration_gowa_device_id' => 'studio'] as $key => $value) {
+            Setting::set($key, $value);
+        }
+        \App\Services\IntegrationSettings::set('integration_gowa_password', 'secret');
+        Http::preventStrayRequests();
+        Http::fake(['http://gowa.test/send/message' => Http::response(['code' => 'SUCCESS', 'results' => ['message_id' => 'scheduled-gowa']])]);
+        $student = Student::factory()->create(['parent_phone' => '081234567890']);
+        $this->createEligibleInvoice($student, '2026-06-18');
+        $service = app(InvoiceReminderService::class);
+        $this->assertSame(1, $service->sendScheduledReminders(now())['sent']);
+        $this->assertSame('gowa', InvoiceReminderLog::firstOrFail()->provider);
+        Setting::set('integration_whatsapp_provider', 'fonnte');
+        $this->assertSame(1, $service->sendScheduledReminders(now())['skipped_already_reminded']);
+        Http::assertSentCount(1);
+    }
+
     public function test_due_date_today_plus_n_eligible_hari_ini(): void
     {
         $this->fakeFonnteTextOnly();

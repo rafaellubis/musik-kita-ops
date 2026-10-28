@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Invoice;
 use App\Models\Student;
-use App\Services\FonnteService;
+use App\Services\WhatsAppService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -37,7 +37,7 @@ class SendInvoiceReminderRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v) {
-            $fonnte = app(FonnteService::class);
+            $whatsapp = app(WhatsAppService::class);
             $ids = $this->input('student_ids', []);
 
             foreach ($ids as $studentId) {
@@ -47,8 +47,8 @@ class SendInvoiceReminderRequest extends FormRequest
                 }
 
                 // Valid jika no ortu valid, ATAU jika ortu tidak valid tapi no murid valid
-                $hasValidParent = $fonnte->isValidPhone($student->parent_phone);
-                $hasValidStudent = $fonnte->isValidPhone($student->phone);
+                $hasValidParent = $whatsapp->isValidPhone($student->parent_phone);
+                $hasValidStudent = $whatsapp->isValidPhone($student->phone);
 
                 if (! $hasValidParent && ! $hasValidStudent) {
                     $v->errors()->add(

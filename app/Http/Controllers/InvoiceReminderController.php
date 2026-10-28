@@ -6,7 +6,7 @@ use App\Http\Requests\SendInvoiceReminderRequest;
 use App\Models\AuditLog;
 use App\Models\Invoice;
 use App\Services\InvoiceReminderService;
-use App\Services\FonnteService;
+use App\Services\WhatsAppService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -18,7 +18,7 @@ class InvoiceReminderController extends Controller
 {
     public function __construct(
         private readonly InvoiceReminderService $reminderService,
-        private readonly FonnteService $fonnte,
+        private readonly WhatsAppService $whatsapp,
     ) {}
 
     public function index(Request $request): View
@@ -54,9 +54,9 @@ class InvoiceReminderController extends Controller
         }
 
         // ponytail: template tidak lagi dipilih manual — auto-fallback di service
-        $fonnteReady = $this->fonnte->isConfigured();
+        $whatsappReady = $this->whatsapp->isConfigured();
 
-        return view('invoice-reminders.index', compact('rows', 'filters', 'fonnteReady'));
+        return view('invoice-reminders.index', compact('rows', 'filters', 'whatsappReady'));
     }
 
     public function send(SendInvoiceReminderRequest $request): RedirectResponse
@@ -104,7 +104,7 @@ class InvoiceReminderController extends Controller
         $message = 'Pengiriman selesai: ' . (implode(', ', $parts) ?: 'tidak ada yang terkirim');
 
         if ($summary['aborted']) {
-            return back()->with('error', $message . ' — ' . ($summary['abort_reason'] ?? 'Token Fonnte tidak valid.'));
+            return back()->with('error', $message . ' — ' . ($summary['abort_reason'] ?? 'Autentikasi provider WhatsApp ditolak.'));
         }
 
         if ($summary['failed'] > 0 && $summary['success'] === 0 && $summary['partial'] === 0) {

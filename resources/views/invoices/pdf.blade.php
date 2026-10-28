@@ -294,7 +294,7 @@
                     </table>
                     <div class="contact-info">
                         Ruko Serpong Garden 1 Ruko 2 No. 19, Tangerang - Banten<br>
-                        WA: {{ \App\Services\FonnteService::STUDIO_WA_DISPLAY }}
+                        WA: {{ \App\Services\WhatsAppService::STUDIO_WA_DISPLAY }}
                     </div>
                 </td>
                 <td width="42%" class="invoice-meta">

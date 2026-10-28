@@ -3,7 +3,7 @@
         <div class="flex justify-between items-center">
             <div>
                 <h2 class="font-semibold text-xl text-mk-text">Reminder WA Tagihan</h2>
-                <div class="text-xs text-mk-muted mt-0.5">Kirim pengingat ke ortu murid via WhatsApp (Fonnte)</div>
+                <div class="text-xs text-mk-muted mt-0.5">Kirim pengingat ke ortu murid melalui provider WhatsApp aktif</div>
             </div>
             @role('Owner')
             <a href="{{ route('whatsapp-templates.index') }}"
@@ -15,7 +15,7 @@
     </x-slot>
 
     <div class="py-6 px-4 lg:px-8"
-         x-data="reminderPage(@js($fonnteReady), @js($rows->map(fn ($r) => [
+         x-data="reminderPage(@js($whatsappReady), @js($rows->map(fn ($r) => [
              'id' => $r->student->id,
              'name' => $r->student->full_name,
              'code' => $r->student->student_code,
@@ -41,9 +41,9 @@
         </div>
         @endif
 
-        @unless($fonnteReady)
+        @unless($whatsappReady)
         <div class="mb-4 p-3 rounded-lg text-sm bg-yellow-50 text-yellow-800 border border-yellow-200">
-            Kredensial Fonnte belum dikonfigurasi. Isi FONNTE_TOKEN di file .env.
+            Konfigurasi provider WhatsApp belum lengkap. Periksa Pengaturan Scheduler & Reminder.
         </div>
         @endunless
 
@@ -88,7 +88,7 @@
                     <span class="text-mk-dim text-xs" x-text="selectedCount + ' murid dipilih'"></span>
                     <button type="button"
                             @click="openModal($event.currentTarget)"
-                            :disabled="selectedCount === 0 || !fonnteReady"
+                            :disabled="selectedCount === 0 || !whatsappReady"
                             class="ml-auto px-4 py-2 rounded-lg text-sm font-bold btn-mk-primary disabled:opacity-40">
                         Preview & Kirim
                     </button>
@@ -194,7 +194,7 @@
                                 class="min-h-11 px-4 py-2 border border-mk-muted bg-white hover:bg-mk-cardHover rounded-lg text-sm text-mk-text cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-mk-accent">
                             Batal
                         </button>
-                        <button type="submit" :disabled="selectedCount === 0 || !fonnteReady"
+                        <button type="submit" :disabled="selectedCount === 0 || !whatsappReady"
                                 class="min-h-11 px-4 py-2 rounded-lg text-sm font-bold btn-mk-primary cursor-pointer disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-mk-accent">
                             Kirim
                         </button>
@@ -206,10 +206,10 @@
     </div>
 
     <script>
-        function reminderPage(fonnteReady, rows) {
+        function reminderPage(whatsappReady, rows) {
             const validIds = rows.filter(r => r.phone_valid && !r.preview_error).map(r => r.id);
             return {
-                fonnteReady,
+                whatsappReady,
                 rows,
                 selected: [],
                 showModal: false,

@@ -12,12 +12,12 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Orkestrasi reminder tagihan WA: query unpaid, compose pesan, kirim via Fonnte.
+ * Orkestrasi reminder tagihan WA melalui provider global.
  */
 class InvoiceReminderService
 {
     public function __construct(
-        private readonly FonnteService $fonnte,
+        private readonly WhatsAppService $whatsapp,
         private readonly InvoicePdfService $pdf,
     ) {}
 
@@ -65,8 +65,8 @@ class InvoiceReminderService
 
         $rows = $grouped->map(function (Collection $studentInvoices, int $studentId) {
             $student = $studentInvoices->first()->student;
-            $phone = $this->fonnte->normalizePhone($student->parent_phone)
-                ?? $this->fonnte->normalizePhone($student->phone);
+            $phone = $this->whatsapp->normalizePhone($student->parent_phone)
+                ?? $this->whatsapp->normalizePhone($student->phone);
 
             $lastLog = InvoiceReminderLog::query()
                 ->where('student_id', $studentId)
@@ -189,7 +189,7 @@ class InvoiceReminderService
             '{paket_murid}'     => $paketMuridVal,
             '{Bulan_tahun}'     => $bulanTahunVal,
             '{tempo_terdekat}'  => $tempoStr,
-            '{studio_wa}'       => FonnteService::STUDIO_WA_DISPLAY,
+            '{studio_wa}'       => WhatsAppService::STUDIO_WA_DISPLAY,
         ];
 
         return str_replace(
@@ -207,11 +207,11 @@ class InvoiceReminderService
      */
     public function prepareReminder(Student $student, Collection $invoices, ?WhatsappMessageTemplate $template = null): array
     {
-        $phone = $this->fonnte->normalizePhone($student->parent_phone);
+        $phone = $this->whatsapp->normalizePhone($student->parent_phone);
         $isStudentFallback = false;
 
         if (! $phone) {
-            $phone = $this->fonnte->normalizePhone($student->phone);
+            $phone = $this->whatsapp->normalizePhone($student->phone);
             $isStudentFallback = true;
         }
 
@@ -242,49 +242,28 @@ class InvoiceReminderService
         Collection $invoices,
         User $sender,
         ?WhatsappMessageTemplate $template = null,
+        ?WhatsAppService $transport = null,
     ): InvoiceReminderLog {
         ['phone' => $phone, 'message' => $message] = $this->prepareReminder($student, $invoices, $template);
-        $fonnteIds = [];
-
-        // ponytail: kirim text tunggal berisi link pdf tanpa mengirim file lampiran berat via WA
-        $result = $this->fonnte->sendText($phone, $message);
-        if (! empty($result['message_ids'])) {
-            $fonnteIds = $result['message_ids'];
-        }
-
-        if ($result['ok']) {
-            return $this->persistLog(
-                student: $student,
-                sender: $sender,
-                phone: $phone,
-                message: $message,
-                invoiceIds: $invoices->pluck('id')->all(),
-                pdfNames: [], // Kosong karena dikirim via URL
-                wablasIds: $fonnteIds, // Simpan Fonnte ID ke kolom ini
-                documentsSent: 0,
-                documentsTotal: 0,
-                status: InvoiceReminderLog::STATUS_SUCCESS,
-                error: null,
-            );
-        }
-
-        $err = ($result['auth_invalid'] ?? false)
-            ? 'Token Fonnte tidak valid.'
-            : ($result['error'] ?? 'Gagal kirim pengingat tagihan.');
-
-        return $this->persistLog(
+        $transport ??= $this->whatsapp->forBatch();
+        $result = $transport->sendText($phone, $message);
+        $log = $this->persistLog(
             student: $student,
             sender: $sender,
             phone: $phone,
             message: $message,
             invoiceIds: $invoices->pluck('id')->all(),
             pdfNames: [],
-            wablasIds: $fonnteIds,
+            providerMessageIds: $result['message_ids'],
             documentsSent: 0,
             documentsTotal: 0,
-            status: InvoiceReminderLog::STATUS_FAILED,
-            error: $err,
+            status: $result['ok'] ? InvoiceReminderLog::STATUS_SUCCESS : InvoiceReminderLog::STATUS_FAILED,
+            error: $result['error'],
+            provider: $result['provider'],
         );
+        $log->authInvalid = $result['auth_invalid'];
+
+        return $log;
     }
 
     /**
@@ -306,8 +285,9 @@ class InvoiceReminderService
     {
         set_time_limit(120);
 
-        if (! $this->fonnte->isConfigured()) {
-            throw new \InvalidArgumentException('Kredensial Fonnte belum dikonfigurasi di .env');
+        $transport = $this->whatsapp->forBatch();
+        if (! $transport->isConfigured()) {
+            throw new \InvalidArgumentException('Konfigurasi provider WhatsApp belum lengkap. Periksa Pengaturan Scheduler & Reminder.');
         }
 
         // ponytail: template selalu null — auto-fallback di sendReminder() yang menentukan
@@ -333,8 +313,8 @@ class InvoiceReminderService
                 continue;
             }
 
-            $hasValidPhone = $this->fonnte->isValidPhone($student->parent_phone)
-                || $this->fonnte->isValidPhone($student->phone);
+            $hasValidPhone = $this->whatsapp->isValidPhone($student->parent_phone)
+                || $this->whatsapp->isValidPhone($student->phone);
 
             if (! $hasValidPhone) {
                 $summary['skipped']++;
@@ -353,7 +333,7 @@ class InvoiceReminderService
             }
 
             try {
-                $log = $this->sendReminder($student, $invoices, $sender, null); // auto-fallback template
+                $log = $this->sendReminder($student, $invoices, $sender, null, $transport);
             } catch (\Throwable $e) {
                 $summary['failed']++;
                 $summary['errors'][$student->student_code] = $e->getMessage();
@@ -369,11 +349,10 @@ class InvoiceReminderService
             };
 
             if ($log->error_message) {
-                $summary['errors'][$student->student_code] = $this->humanizeFonnteError($log->error_message);
+                $summary['errors'][$student->student_code] = $log->error_message;
             }
 
-            if ($log->status === InvoiceReminderLog::STATUS_FAILED
-                && str_contains(strtolower($log->error_message ?? ''), 'token fonnte')) {
+            if ($log->authInvalid) {
                 $summary['aborted'] = true;
                 $summary['abort_reason'] = $log->error_message;
                 break;
@@ -427,8 +406,9 @@ class InvoiceReminderService
             return $summary;
         }
 
-        if (! $this->fonnte->isConfigured()) {
-            throw new \InvalidArgumentException('Kredensial Fonnte belum dikonfigurasi.');
+        $transport = $this->whatsapp->forBatch();
+        if (! $transport->isConfigured()) {
+            throw new \InvalidArgumentException('Konfigurasi provider WhatsApp belum lengkap. Periksa Pengaturan Scheduler & Reminder.');
         }
 
         $sender = User::role('Owner')->orderBy('id')->first();
@@ -468,8 +448,8 @@ class InvoiceReminderService
                 continue;
             }
 
-            $hasValidPhone = $this->fonnte->isValidPhone($student->parent_phone)
-                || $this->fonnte->isValidPhone($student->phone);
+            $hasValidPhone = $this->whatsapp->isValidPhone($student->parent_phone)
+                || $this->whatsapp->isValidPhone($student->phone);
 
             if (! $hasValidPhone) {
                 $summary['skipped']++;
@@ -484,11 +464,12 @@ class InvoiceReminderService
             }
 
             try {
-                $log = $this->sendTextOnlyReminder(
+                $log = $this->sendReminder(
                     $student,
                     $studentInvoices->values(),
                     $sender,
                     $template,
+                    $transport,
                 );
             } catch (\Throwable $e) {
                 $summary['failed']++;
@@ -503,12 +484,11 @@ class InvoiceReminderService
             } else {
                 $summary['failed']++;
                 if ($log->error_message) {
-                    $summary['errors'][$student->student_code] = $this->humanizeFonnteError($log->error_message);
+                    $summary['errors'][$student->student_code] = $log->error_message;
                 }
             }
 
-            if ($log->status === InvoiceReminderLog::STATUS_FAILED
-                && str_contains(strtolower($log->error_message ?? ''), 'token fonnte')) {
+            if ($log->authInvalid) {
                 break;
             }
         }
@@ -516,73 +496,6 @@ class InvoiceReminderService
         return $summary;
     }
 
-    /**
-     * Kirim reminder teks saja (tanpa lampiran PDF) — untuk scheduler otomatis.
-     *
-     * @param  Collection<int, Invoice>  $invoices
-     */
-    public function sendTextOnlyReminder(
-        Student $student,
-        Collection $invoices,
-        User $sender,
-        ?WhatsappMessageTemplate $template = null,
-    ): InvoiceReminderLog {
-        ['phone' => $phone, 'message' => $message] = $this->prepareReminder($student, $invoices, $template);
-        $result = $this->fonnte->sendText($phone, $message);
-        $fonnteIds = [];
-
-        if (! empty($result['message_ids'])) {
-            $fonnteIds = $result['message_ids'];
-        }
-
-        if (! $result['ok']) {
-            $err = ($result['auth_invalid'] ?? false)
-                ? 'Token Fonnte tidak valid.'
-                : ($result['error'] ?? 'Gagal kirim pesan teks.');
-
-            return $this->persistLog(
-                student: $student,
-                sender: $sender,
-                phone: $phone,
-                message: $message,
-                invoiceIds: $invoices->pluck('id')->all(),
-                pdfNames: [],
-                wablasIds: $fonnteIds,
-                documentsSent: 0,
-                documentsTotal: 0,
-                status: InvoiceReminderLog::STATUS_FAILED,
-                error: $err,
-            );
-        }
-
-        return $this->persistLog(
-            student: $student,
-            sender: $sender,
-            phone: $phone,
-            message: $message,
-            invoiceIds: $invoices->pluck('id')->all(),
-            pdfNames: [],
-            wablasIds: $fonnteIds,
-            documentsSent: 0,
-            documentsTotal: 0,
-            status: InvoiceReminderLog::STATUS_SUCCESS,
-            error: null,
-        );
-    }
-
-    /** Terjemahkan pesan error Fonnte ke Bahasa Indonesia yang mudah dipahami Admin. */
-    private function humanizeFonnteError(string $raw): string
-    {
-        $key = strtolower(trim($raw));
-
-        return match (true) {
-            str_contains($key, 'device blocked') => 'Perangkat WhatsApp di Fonnte terblokir. Buka dashboard Fonnte → cek status device → scan ulang QR / hubungi support Fonnte.',
-            str_contains($key, 'token') && str_contains($key, 'invalid') => 'Token Fonnte tidak valid. Periksa FONNTE_TOKEN di .env.',
-            str_contains($key, 'quota') => 'Kuota pesan Fonnte habis. Top up atau tunggu reset kuota.',
-            str_contains($key, 'phone') && str_contains($key, 'invalid') => 'Nomor WhatsApp tujuan tidak valid.',
-            default => $raw,
-        };
-    }
 
     private function persistLog(
         Student $student,
@@ -591,15 +504,16 @@ class InvoiceReminderService
         string $message,
         array $invoiceIds,
         array $pdfNames,
-        array $wablasIds,
+        array $providerMessageIds,
         int $documentsSent,
         int $documentsTotal,
         string $status,
         ?string $error,
+        string $provider,
     ): InvoiceReminderLog {
         return DB::transaction(function () use (
             $student, $sender, $phone, $message, $invoiceIds, $pdfNames,
-            $wablasIds, $documentsSent, $documentsTotal, $status, $error,
+            $providerMessageIds, $documentsSent, $documentsTotal, $status, $error, $provider,
         ) {
             return InvoiceReminderLog::create([
                 'student_id'          => $student->id,
@@ -608,7 +522,8 @@ class InvoiceReminderService
                 'message_body'        => $message,
                 'invoice_ids'         => $invoiceIds,
                 'pdf_filenames'       => $pdfNames,
-                'wablas_message_ids'  => $wablasIds,
+                'provider_message_ids' => $providerMessageIds,
+                'provider'            => $provider,
                 'documents_sent'      => $documentsSent,
                 'documents_total'     => $documentsTotal,
                 'status'              => $status,

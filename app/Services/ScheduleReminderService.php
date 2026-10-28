@@ -13,12 +13,12 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Orkestrasi pengingat jadwal WA: query sesi SCHEDULED, compose pesan, kirim via Fonnte.
+ * Orkestrasi pengingat jadwal WA melalui provider global.
  */
 class ScheduleReminderService
 {
     public function __construct(
-        private readonly FonnteService $fonnte,
+        private readonly WhatsAppService $whatsapp,
     ) {}
 
     /** Apakah fitur aktif dan siap dijalankan? */
@@ -99,9 +99,10 @@ class ScheduleReminderService
             return $summary;
         }
 
-        if (! $this->fonnte->isConfigured() && ! $dryRun) {
+        $sender = $this->whatsapp->forBatch();
+        if (! $sender->isConfigured() && ! $dryRun) {
             $summary['skipped'] = true;
-            $summary['reason'] = 'Kredensial Fonnte belum dikonfigurasi.';
+            $summary['reason'] = 'Konfigurasi provider WhatsApp belum lengkap. Periksa Pengaturan Scheduler & Reminder.';
 
             return $summary;
         }
@@ -146,8 +147,8 @@ class ScheduleReminderService
                 continue;
             }
 
-            $phone = $this->fonnte->normalizePhone($recipientPhone);
-            $result = $this->fonnte->sendText($recipientPhone, $message);
+            $phone = $this->whatsapp->normalizePhone($recipientPhone);
+            $result = $sender->sendText($recipientPhone, $message);
 
             $log = $this->persistLog(
                 student: $student,
@@ -158,13 +159,14 @@ class ScheduleReminderService
                 providerMessageIds: $result['message_ids'],
                 status: $result['ok'] ? ScheduleReminderLog::STATUS_SUCCESS : ScheduleReminderLog::STATUS_FAILED,
                 error: $result['error'],
+                provider: $result['provider'],
             );
 
             if ($log->status === ScheduleReminderLog::STATUS_SUCCESS) {
                 $summary['sent']++;
             } else {
                 $summary['failed']++;
-                $summary['errors'][$student->student_code] = $this->humanizeError($log->error_message ?? 'Gagal kirim.');
+                $summary['errors'][$student->student_code] = $log->error_message ?? 'Gagal kirim.';
             }
         }
 
@@ -308,7 +310,7 @@ class ScheduleReminderService
             '{nama_ortu}'      => $student->parent_name ?? 'Bapak/Ibu',
             '{tanggal}'        => $targetDate->locale('id')->translatedFormat('d M Y'),
             '{daftar_jadwal}'  => $scheduleLines,
-            '{studio_wa}'      => FonnteService::STUDIO_WA_DISPLAY,
+            '{studio_wa}'      => WhatsAppService::STUDIO_WA_DISPLAY,
         ];
 
         return str_replace(
@@ -342,16 +344,17 @@ class ScheduleReminderService
         array $providerMessageIds,
         string $status,
         ?string $error,
+        string $provider,
     ): ScheduleReminderLog {
         return DB::transaction(function () use (
-            $student, $targetDate, $sessions, $phone, $message, $providerMessageIds, $status, $error,
+            $student, $targetDate, $sessions, $phone, $message, $providerMessageIds, $status, $error, $provider,
         ) {
             return ScheduleReminderLog::create([
                 'student_id'             => $student->id,
                 'target_date'            => $targetDate->toDateString(),
                 'reminder_mode'          => $this->mode(),
                 'class_session_ids'      => $sessions->pluck('id')->values()->all(),
-                'provider'               => 'fonnte',
+                'provider'               => $provider,
                 'phone'                  => $phone,
                 'message_body'           => $message,
                 'provider_message_ids'   => $providerMessageIds,
@@ -366,27 +369,15 @@ class ScheduleReminderService
     /** Prioritas: parent_phone → phone murid. */
     private function resolveReminderPhone(Student $student): ?string
     {
-        if ($this->fonnte->isValidPhone($student->parent_phone)) {
+        if ($this->whatsapp->isValidPhone($student->parent_phone)) {
             return $student->parent_phone;
         }
 
-        if ($this->fonnte->isValidPhone($student->phone)) {
+        if ($this->whatsapp->isValidPhone($student->phone)) {
             return $student->phone;
         }
 
         return null;
     }
 
-    private function humanizeError(string $raw): string
-    {
-        $key = strtolower(trim($raw));
-
-        return match (true) {
-            str_contains($key, 'token') && str_contains($key, 'invalid') => 'Token Fonnte tidak valid. Periksa kredensial di Pengaturan Scheduler.',
-            str_contains($key, 'insufficient quota') => 'Kuota pesan Fonnte habis.',
-            str_contains($key, 'target invalid') => 'Nomor WhatsApp tujuan tidak valid.',
-            str_contains($key, 'device') => 'Device Fonnte belum terhubung. Scan QR di dashboard Fonnte.',
-            default => $raw,
-        };
-    }
 }

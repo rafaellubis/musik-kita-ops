@@ -132,6 +132,31 @@ class SessionReportWaTest extends TestCase
         ];
     }
 
+    public function test_same_worker_reads_new_provider_and_preserves_success_deduplication(): void
+    {
+        config(['session_report_wa.enabled' => true, 'services.fonnte.token' => 'test-token']);
+        ['session' => $session] = $this->buildSessionWithNote();
+        Http::preventStrayRequests();
+        Http::fake([
+            'https://api.fonnte.com/send' => Http::response(['status' => true, 'id' => ['old']]),
+            'http://gowa.test/send/message' => Http::response(['code' => 'SUCCESS', 'results' => ['message_id' => 'new']]),
+        ]);
+        $service = app(SessionReportWaService::class);
+        $this->assertSame('fonnte', $service->sendForSession($session)->provider);
+        foreach (['integration_whatsapp_provider' => 'gowa', 'integration_gowa_base_url' => 'http://gowa.test',
+            'integration_gowa_username' => 'studio', 'integration_gowa_device_id' => 'studio'] as $key => $value) {
+            \App\Models\Setting::set($key, $value);
+        }
+        \App\Services\IntegrationSettings::set('integration_gowa_password', 'secret');
+        $this->assertNull($service->sendForSession($session));
+        $this->travel(1)->minutes();
+        $session->teacherNote->update(['material_learned' => 'Materi diperbarui']);
+        $log = $service->sendForSession($session);
+        $this->assertSame('gowa', $log->provider);
+        $this->assertSame(['new'], $log->provider_message_ids);
+        Http::assertSentCount(2);
+    }
+
     public function test_compose_message_includes_session_fields(): void
     {
         ['session' => $session] = $this->buildSessionWithNote();

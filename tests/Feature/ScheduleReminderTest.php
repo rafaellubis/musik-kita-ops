@@ -122,6 +122,27 @@ class ScheduleReminderTest extends TestCase
         ]);
     }
 
+    public function test_provider_change_during_batch_keeps_gowa_and_success_history(): void
+    {
+        foreach (['provider' => 'gowa', 'gowa_base_url' => 'http://gowa.test', 'gowa_username' => 'studio', 'gowa_device_id' => 'studio'] as $key => $value) {
+            Setting::set('integration_'.($key === 'provider' ? 'whatsapp_provider' : $key), $value);
+        }
+        \App\Services\IntegrationSettings::set('integration_gowa_password', 'secret');
+        $this->travelTo(now()->setTime(18, 0));
+        $this->studentWithScheduledSession(now()->addDay()->toDateString());
+        $this->studentWithScheduledSession(now()->addDay()->toDateString(), '081234567890');
+        Http::preventStrayRequests();
+        Http::fake(['http://gowa.test/send/message' => function () {
+            Setting::set('integration_whatsapp_provider', 'fonnte');
+            return Http::response(['code' => 'SUCCESS', 'results' => ['message_id' => 'gowa-batch']]);
+        }]);
+        $service = app(\App\Services\ScheduleReminderService::class);
+        $this->assertSame(2, $service->sendDueReminders(now())['sent']);
+        $this->assertSame(['gowa'], ScheduleReminderLog::query()->distinct()->pluck('provider')->all());
+        $this->assertSame(0, $service->sendDueReminders(now())['sent']);
+        Http::assertSentCount(2);
+    }
+
     public function test_does_not_send_duplicate_reminder(): void
     {
         $this->fakeFonnte();

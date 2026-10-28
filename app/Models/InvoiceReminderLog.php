@@ -14,6 +14,9 @@ class InvoiceReminderLog extends Model
     public const STATUS_PARTIAL = 'PARTIAL';
     public const STATUS_FAILED  = 'FAILED';
 
+    /** Metadata hasil kirim untuk batch aktif; bukan atribut database. */
+    public bool $authInvalid = false;
+
     protected $fillable = [
         'student_id',
         'sent_by',
@@ -21,7 +24,8 @@ class InvoiceReminderLog extends Model
         'message_body',
         'invoice_ids',
         'pdf_filenames',
-        'wablas_message_ids',
+        'provider_message_ids',
+        'provider',
         'documents_sent',
         'documents_total',
         'status',
@@ -32,7 +36,7 @@ class InvoiceReminderLog extends Model
     protected $casts = [
         'invoice_ids'         => 'array',
         'pdf_filenames'       => 'array',
-        'wablas_message_ids'    => 'array',
+        'provider_message_ids' => 'array',
         'documents_sent'      => 'integer',
         'documents_total'     => 'integer',
         'sent_at'             => 'datetime',

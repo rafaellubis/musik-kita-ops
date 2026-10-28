@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 class SessionReportWaService
 {
     public function __construct(
-        private readonly FonnteService $fonnte,
+        private readonly WhatsAppService $whatsapp,
     ) {}
 
     public function isEnabled(): bool
@@ -61,7 +61,7 @@ class SessionReportWaService
 
     public function maskPhone(?string $phone): string
     {
-        $normalized = $this->fonnte->normalizePhone($phone);
+        $normalized = $this->whatsapp->normalizePhone($phone);
         if ($normalized === null || strlen($normalized) < 8) {
             return '—';
         }
@@ -72,11 +72,11 @@ class SessionReportWaService
     /** @return 'parent'|'student'|null */
     public function resolveRecipientType(Student $student): ?string
     {
-        if ($this->fonnte->isValidPhone($student->parent_phone)) {
+        if ($this->whatsapp->isValidPhone($student->parent_phone)) {
             return 'parent';
         }
 
-        if ($this->fonnte->isValidPhone($student->phone)) {
+        if ($this->whatsapp->isValidPhone($student->phone)) {
             return 'student';
         }
 
@@ -128,7 +128,7 @@ class SessionReportWaService
                 : 'Tidak ada tugas khusus — cukup latihan ringan sesuai materi hari ini',
             '{blok_catatan}'   => $blokCatatan,
             '{pesan_semangat}' => $template->encouragementForRating($note?->session_rating),
-            '{studio_wa}'      => FonnteService::STUDIO_WA_DISPLAY,
+            '{studio_wa}'      => WhatsAppService::STUDIO_WA_DISPLAY,
         ];
 
         $body = str_replace(
@@ -182,6 +182,7 @@ class SessionReportWaService
             return null;
         }
 
+        $sender = $this->whatsapp->forBatch();
         $recipientType = $this->resolveRecipientType($student);
         $recipientPhone = $this->resolveRecipientPhone($student, $recipientType);
         if ($recipientType === null || $recipientPhone === null) {
@@ -194,35 +195,38 @@ class SessionReportWaService
                 status: SessionReportWaLog::STATUS_SKIPPED,
                 isUpdate: $latestSuccess !== null,
                 error: 'Nomor WhatsApp tujuan tidak tersedia.',
+                provider: $sender->provider(),
             );
         }
 
-        if (! $this->fonnte->isConfigured()) {
+        if (! $sender->isConfigured()) {
             return $this->persistLog(
                 session: $session,
                 student: $student,
-                phone: (string) $this->fonnte->normalizePhone($recipientPhone),
+                phone: (string) $this->whatsapp->normalizePhone($recipientPhone),
                 message: '',
                 providerMessageIds: [],
                 status: SessionReportWaLog::STATUS_FAILED,
                 isUpdate: $latestSuccess !== null,
-                error: 'Kredensial Fonnte belum dikonfigurasi.',
+                error: 'Konfigurasi provider WhatsApp belum lengkap. Periksa Pengaturan Scheduler & Reminder.',
+                provider: $sender->provider(),
             );
         }
 
         $isUpdate = $latestSuccess !== null;
         $message = $this->composeMessage($session, $isUpdate, $recipientType);
-        $result = $this->fonnte->sendText($recipientPhone, $message);
+        $result = $sender->sendText($recipientPhone, $message);
 
         return $this->persistLog(
             session: $session,
             student: $student,
-            phone: (string) $this->fonnte->normalizePhone($recipientPhone),
+            phone: (string) $this->whatsapp->normalizePhone($recipientPhone),
             message: $message,
             providerMessageIds: $result['message_ids'],
             status: $result['ok'] ? SessionReportWaLog::STATUS_SUCCESS : SessionReportWaLog::STATUS_FAILED,
             isUpdate: $isUpdate,
             error: $result['error'],
+            provider: $result['provider'],
         );
     }
 
@@ -264,16 +268,17 @@ class SessionReportWaService
         string $status,
         bool $isUpdate,
         ?string $error,
+        string $provider,
     ): SessionReportWaLog {
         return DB::transaction(function () use (
-            $session, $student, $phone, $message, $providerMessageIds, $status, $isUpdate, $error,
+            $session, $student, $phone, $message, $providerMessageIds, $status, $isUpdate, $error, $provider,
         ) {
             return SessionReportWaLog::create([
                 'class_session_id'       => $session->id,
                 'student_id'             => $student->id,
                 'phone'                  => $phone,
                 'message_body'           => $message,
-                'provider'               => 'fonnte',
+                'provider'               => $provider,
                 'provider_message_ids'   => $providerMessageIds,
                 'status'                 => $status,
                 'is_update'              => $isUpdate,

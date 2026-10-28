@@ -96,6 +96,23 @@ class InvoiceReminderTest extends TestCase
         return [$student, $invoice];
     }
 
+    public function test_manual_reminder_uses_gowa_and_records_provider_ids(): void
+    {
+        foreach (['integration_whatsapp_provider' => 'gowa', 'integration_gowa_base_url' => 'http://gowa.test',
+            'integration_gowa_username' => 'studio', 'integration_gowa_device_id' => 'studio'] as $key => $value) {
+            \App\Models\Setting::set($key, $value);
+        }
+        \App\Services\IntegrationSettings::set('integration_gowa_password', 'secret');
+        Http::preventStrayRequests();
+        Http::fake(['http://gowa.test/send/message' => Http::response(['code' => 'SUCCESS', 'results' => ['message_id' => 'invoice-gowa']])]);
+        [$student] = $this->studentWithUnpaidInvoice();
+        $summary = app(\App\Services\InvoiceReminderService::class)->sendBatch([$student->id], $this->owner);
+        $this->assertSame(1, $summary['success']);
+        $log = InvoiceReminderLog::firstOrFail();
+        $this->assertSame('gowa', $log->provider);
+        $this->assertSame(['invoice-gowa'], $log->provider_message_ids);
+    }
+
     public function test_preparation_uses_parent_and_explicit_template_without_sending(): void
     {
         Http::preventStrayRequests();
