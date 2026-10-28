@@ -22,6 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
 	})
 
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->dontFlash([
+            'integration_fonnte_token', 'integration_gowa_password',
+            'integration_wablas_token', 'integration_wablas_secret_key',
+        ]);
     })->create();
 

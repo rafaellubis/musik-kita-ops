@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Setting;
+use App\Services\IntegrationSettings;
+use Illuminate\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -86,12 +89,56 @@ class UpdateSchedulerRequest extends FormRequest
                 'max:60',
             ],
 
+            'integration_whatsapp_provider' => ['sometimes', 'required', Rule::in(['fonnte', 'gowa'])],
+            'integration_gowa_base_url' => ['nullable', 'string', 'url:http,https', 'max:255'],
+            'integration_gowa_username' => ['nullable', 'string', 'max:255'],
+            'integration_gowa_password' => ['nullable', 'string', 'max:500'],
+            'integration_gowa_device_id' => ['nullable', 'string', 'max:255'],
             'integration_fonnte_token'       => ['nullable', 'string', 'max:500'],
             'integration_fonnte_base_url'    => ['nullable', 'url', 'max:255'],
             'integration_wablas_token'       => ['nullable', 'string', 'max:500'],
             'integration_wablas_secret_key'  => ['nullable', 'string', 'max:500'],
             'integration_wablas_base_url'    => ['nullable', 'url', 'max:255'],
         ];
+    }
+
+    public function after(): array
+    {
+        return [function (Validator $validator) {
+            foreach (['integration_fonnte_base_url', 'integration_gowa_base_url'] as $key) {
+                $url = $this->input($key);
+                if (! is_string($url) || $url === '') {
+                    continue;
+                }
+                $parts = parse_url($url);
+                if ($parts === false || ! in_array($parts['scheme'] ?? '', ['http', 'https'], true)
+                    || isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment'])) {
+                    $validator->errors()->add($key, 'Base URL harus HTTP/HTTPS tanpa kredensial, query, atau fragment.');
+                }
+            }
+
+            $provider = $this->input('integration_whatsapp_provider', Setting::get('integration_whatsapp_provider', 'fonnte'));
+            $keys = $provider === 'gowa'
+                ? ['integration_gowa_base_url', 'integration_gowa_username', 'integration_gowa_password', 'integration_gowa_device_id']
+                : ['integration_fonnte_base_url', 'integration_fonnte_token'];
+            foreach ($keys as $key) {
+                $value = $this->input($key);
+                if (! is_string($value) || $value === '' || IntegrationSettings::isMaskedPlaceholder($value)) {
+                    $value = match ($key) {
+                        'integration_fonnte_token' => IntegrationSettings::fonnteToken(),
+                        'integration_fonnte_base_url' => IntegrationSettings::fonnteBaseUrl(),
+                        default => Setting::get($key),
+                    };
+                    // Field biasa yang dikirim kosong tidak memakai fallback nilai lama.
+                    if ($this->has($key) && ! IntegrationSettings::isEncryptedKey($key)) {
+                        $value = $this->input($key);
+                    }
+                }
+                if (blank($value)) {
+                    $validator->errors()->add($key, 'Konfigurasi provider WhatsApp aktif wajib lengkap.');
+                }
+            }
+        }];
     }
 
     public function messages(): array
@@ -169,6 +216,11 @@ class UpdateSchedulerRequest extends FormRequest
             'schedule_reminder_poll_minutes.max'         => 'Interval poll maksimal 60 menit.',
 
             'integration_fonnte_base_url.url'   => 'Base URL Fonnte harus berupa URL valid.',
+            'integration_whatsapp_provider.in' => 'Provider WhatsApp tidak valid.',
+            'integration_gowa_base_url.url' => 'Base URL GOWA harus berupa URL HTTP/HTTPS valid.',
+            'integration_gowa_username.string' => 'Username GOWA harus berupa teks.',
+            'integration_gowa_password.string' => 'Password GOWA harus berupa teks.',
+            'integration_gowa_device_id.string' => 'Device ID GOWA harus berupa teks.',
             'integration_wablas_base_url.url'   => 'Base URL Wablas harus berupa URL valid.',
         ];
     }

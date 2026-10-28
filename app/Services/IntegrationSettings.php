@@ -15,6 +15,7 @@ class IntegrationSettings
 {
     private const ENCRYPTED_KEYS = [
         'integration_fonnte_token',
+        'integration_gowa_password',
         'integration_wablas_token',
         'integration_wablas_secret_key',
     ];
@@ -43,6 +44,36 @@ class IntegrationSettings
         } catch (\Throwable) {
             return $value;
         }
+    }
+
+    /** Ambil satu snapshot agar pilihan provider dan kredensial tidak tercampur. */
+    public static function whatsappConfiguration(): array
+    {
+        $values = Setting::query()->whereIn('key', [
+            'integration_whatsapp_provider', 'integration_fonnte_base_url',
+            'integration_fonnte_token', 'integration_gowa_base_url',
+            'integration_gowa_username', 'integration_gowa_password', 'integration_gowa_device_id',
+        ])->pluck('value', 'key')->all();
+        $provider = $values['integration_whatsapp_provider'] ?? 'fonnte';
+        $fonnte = $provider === 'fonnte';
+
+        return [
+            'provider' => $provider,
+            'base_url' => $fonnte
+                ? ($values['integration_fonnte_base_url'] ?? '') ?: (string) config('services.fonnte.base_url', 'https://api.fonnte.com')
+                : ($values['integration_gowa_base_url'] ?? ''),
+            'token' => $fonnte ? (self::decryptOrPlain($values['integration_fonnte_token'] ?? '') ?: config('services.fonnte.token')) : null,
+            'country_code' => (string) config('services.fonnte.country_code', '62'),
+            'username' => $values['integration_gowa_username'] ?? null,
+            'password' => self::decryptOrPlain($values['integration_gowa_password'] ?? ''),
+            'device_id' => $values['integration_gowa_device_id'] ?? null,
+        ];
+    }
+
+    /** Pembandingan rahasia harus berdasarkan nilai asli, bukan empat karakter mask. */
+    public static function secretMatches(?string $storedValue, string $value): bool
+    {
+        return hash_equals(self::decryptOrPlain($storedValue) ?? '', $value);
     }
 
     public static function fonnteToken(): ?string

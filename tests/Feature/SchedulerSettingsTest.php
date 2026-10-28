@@ -23,6 +23,7 @@ class SchedulerSettingsTest extends TestCase
         Role::firstOrCreate(['name' => 'Admin',   'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'Auditor', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'Guru',    'guard_name' => 'web']);
+        config(['services.fonnte.token' => 'test-fonnte-token']);
 
         $this->withoutMiddleware(ValidateCsrfToken::class);
     }
@@ -295,5 +296,76 @@ class SchedulerSettingsTest extends TestCase
             'schedule_reminder_hours_before',
             'integration_fonnte_base_url',
         ]);
+    }
+    public function test_gowa_password_changes_even_when_mask_is_identical_and_survives_blank_input(): void
+    {
+        IntegrationSettings::set('integration_gowa_password', 'first-secret-1234');
+        $payload = $this->validPayload([
+            'integration_whatsapp_provider' => 'gowa',
+            'integration_gowa_base_url' => 'http://gowa.test:3000/gowa/',
+            'integration_gowa_username' => 'studio',
+            'integration_gowa_password' => 'second-secret-1234',
+            'integration_gowa_device_id' => 'studio/a',
+        ]);
+        $this->patchScheduler($payload)->assertSessionHasNoErrors();
+        $raw = Setting::get('integration_gowa_password');
+        $this->assertNotSame('second-secret-1234', $raw);
+        $this->assertSame('second-secret-1234', \Illuminate\Support\Facades\Crypt::decryptString($raw));
+        $this->assertSame('gowa', Setting::get('integration_whatsapp_provider'));
+
+        $payload['integration_gowa_password'] = '';
+        unset($payload['integration_fonnte_base_url']);
+        $this->patchScheduler($payload)->assertSessionHasNoErrors();
+        $this->assertSame($raw, Setting::get('integration_gowa_password'));
+        $this->assertSame('https://api.fonnte.com', IntegrationSettings::fonnteBaseUrl());
+        $log = AuditLog::query()->where('entity_label', 'Scheduler Settings')->first();
+        $this->assertStringNotContainsString('second-secret', json_encode($log->new_values));
+    }
+
+    public function test_selected_provider_requires_effective_credentials_and_rejects_unsafe_url(): void
+    {
+        $this->patchScheduler($this->validPayload([
+            'integration_whatsapp_provider' => 'gowa',
+            'integration_gowa_base_url' => 'http://user:password@gowa.test/gowa?token=secret#fragment',
+            'integration_gowa_username' => 'studio',
+            'integration_gowa_device_id' => 'studio',
+        ]))->assertSessionHasErrors(['integration_gowa_base_url', 'integration_gowa_password']);
+        $this->assertNull(Setting::get('integration_whatsapp_provider'));
+    }
+
+    public function test_invalid_configuration_never_flashes_secrets(): void
+    {
+        $this->patchScheduler($this->validPayload([
+            'integration_whatsapp_provider' => 'invalid',
+            'integration_gowa_password' => 'do-not-flash-this',
+            'integration_fonnte_token' => 'do-not-flash-token',
+        ]))->assertSessionHasErrors('integration_whatsapp_provider');
+        $this->assertArrayNotHasKey('integration_gowa_password', session()->getOldInput());
+        $this->assertArrayNotHasKey('integration_fonnte_token', session()->getOldInput());
+    }
+
+    public function test_configuration_failure_rolls_back_provider_and_audit(): void
+    {
+        Setting::set('integration_whatsapp_provider', 'fonnte');
+        $dispatcher = clone Setting::getEventDispatcher();
+        Setting::saving(function (Setting $setting) {
+            if ($setting->key === 'integration_gowa_username') {
+                throw new \RuntimeException('simulated write failure');
+            }
+        });
+        try {
+            $this->patchScheduler($this->validPayload([
+                'integration_whatsapp_provider' => 'gowa',
+                'integration_gowa_base_url' => 'http://gowa.test:3000',
+                'integration_gowa_username' => 'studio',
+                'integration_gowa_password' => 'secret',
+                'integration_gowa_device_id' => 'studio',
+            ]))->assertStatus(500);
+            $this->assertSame('fonnte', Setting::get('integration_whatsapp_provider'));
+            $this->assertNull(Setting::get('integration_gowa_base_url'));
+            $this->assertDatabaseMissing('audit_logs', ['entity_label' => 'Scheduler Settings']);
+        } finally {
+            Setting::setEventDispatcher($dispatcher);
+        }
     }
 }

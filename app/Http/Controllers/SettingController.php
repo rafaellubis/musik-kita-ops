@@ -10,6 +10,7 @@ use App\Services\IntegrationSettings;
 use App\Services\InvoiceService;
 use App\Services\SchedulerPreviewService;
 use App\Services\SchedulerSettings;
+use Illuminate\Support\Facades\DB;
 
 class SettingController extends Controller
 {
@@ -35,44 +36,33 @@ class SettingController extends Controller
      */
     public function updateScheduler(UpdateSchedulerRequest $request)
     {
-        $keys = $this->buildSchedulerUpdates($request);
+        DB::transaction(function () use ($request) {
+            $keys = $this->buildSchedulerUpdates($request);
+            $oldValues = [];
+            $newValues = [];
 
-        $oldValues = [];
-        $newValues = [];
-
-        foreach ($keys as $key => $newValue) {
-            $oldValue = Setting::get($key);
-
-            if (IntegrationSettings::isEncryptedKey($key)) {
-                $oldPlain = IntegrationSettings::maskValueForAudit($key, $oldValue);
-                $newPlain = IntegrationSettings::maskSecret((string) $newValue);
-
-                if ($oldPlain !== $newPlain) {
-                    $oldValues[$key] = $oldPlain;
-                    $newValues[$key] = $newPlain;
-                    IntegrationSettings::set($key, (string) $newValue);
+            foreach ($keys as $key => $newValue) {
+                $oldValue = Setting::get($key);
+                if (IntegrationSettings::isEncryptedKey($key)) {
+                    if (! IntegrationSettings::secretMatches($oldValue, (string) $newValue)) {
+                        $oldValues[$key] = IntegrationSettings::maskValueForAudit($key, $oldValue);
+                        $newValues[$key] = IntegrationSettings::maskSecret((string) $newValue);
+                        IntegrationSettings::set($key, (string) $newValue);
+                    }
+                } elseif ($oldValue !== (string) $newValue) {
+                    $oldValues[$key] = $oldValue;
+                    $newValues[$key] = (string) $newValue;
+                    Setting::set($key, (string) $newValue);
                 }
-
-                continue;
             }
 
-            if ($oldValue !== (string) $newValue) {
-                $oldValues[$key] = $oldValue;
-                $newValues[$key] = (string) $newValue;
-                Setting::set($key, (string) $newValue);
+            if ($newValues !== []) {
+                AuditLog::record(
+                    AuditLog::ACTION_UPDATE, null, 'Scheduler Settings',
+                    $oldValues, $newValues, 'Memperbarui konfigurasi scheduler sistem'
+                );
             }
-        }
-
-        if (! empty($newValues)) {
-            AuditLog::record(
-                AuditLog::ACTION_UPDATE,
-                null,
-                'Scheduler Settings',
-                $oldValues,
-                $newValues,
-                'Memperbarui konfigurasi scheduler sistem'
-            );
-        }
+        });
 
         return redirect()->route('scheduler.edit')
             ->with('success', 'Konfigurasi scheduler berhasil disimpan.');
@@ -187,6 +177,22 @@ class SettingController extends Controller
             'integration_fonnte_base_url'    => fn () => $request->input('integration_fonnte_base_url'),
             'integration_wablas_base_url'    => fn () => $request->input('integration_wablas_base_url'),
         ];
+
+        foreach ([
+            'integration_whatsapp_provider', 'integration_gowa_base_url',
+            'integration_gowa_username', 'integration_gowa_device_id',
+        ] as $key) {
+            if ($request->has($key)) {
+                $map[$key] = fn () => $request->input($key);
+            }
+        }
+        if (! $request->has('integration_fonnte_base_url')) {
+            unset($map['integration_fonnte_base_url']);
+        }
+        $gowaPassword = $request->input('integration_gowa_password');
+        if (filled($gowaPassword) && ! IntegrationSettings::isMaskedPlaceholder($gowaPassword)) {
+            $map['integration_gowa_password'] = fn () => $gowaPassword;
+        }
 
         // Kredensial: kosong atau nilai mask preview = skip update (pertahankan nilai DB)
         $fonnteToken = $request->input('integration_fonnte_token');
