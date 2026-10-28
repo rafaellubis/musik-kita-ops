@@ -421,6 +421,8 @@ Route::middleware('auth')->group(function () {
         // ===== Pengaturan Scheduler (Owner only) =====
         Route::get('scheduler', [\App\Http\Controllers\SettingController::class, 'editScheduler'])->name('scheduler.edit');
         Route::patch('scheduler', [\App\Http\Controllers\SettingController::class, 'updateScheduler'])->name('scheduler.update');
+        Route::post('scheduler/whatsapp/check', [\App\Http\Controllers\WhatsAppConnectionController::class, 'check'])->name('scheduler.whatsapp.check');
+        Route::post('scheduler/whatsapp/test', [\App\Http\Controllers\WhatsAppConnectionController::class, 'sendTest'])->name('scheduler.whatsapp.test');
 
     });
 
