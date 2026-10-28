@@ -51,7 +51,7 @@ class WhatsAppConnectionTest extends TestCase
             'code' => 'SUCCESS', 'results' => ['device_id' => 'studio', 'is_connected' => true, 'is_logged_in' => true],
         ])]);
         $this->actingAs($this->user('Owner'))->post('/scheduler/whatsapp/check')
-            ->assertRedirect(route('scheduler.edit').'#whatsapp-diagnostics')->assertSessionHas('whatsapp_result.state', 'connected');
+            ->assertRedirect(route('scheduler.edit'))->assertSessionHas('success')->assertSessionMissing('warning');
         Http::assertSentCount(1);
         Http::assertNotSent(fn ($r) => $r->method() === 'POST');
     }
@@ -61,8 +61,7 @@ class WhatsAppConnectionTest extends TestCase
         Http::fake(['http://gowa.test/send/message' => Http::response(['code' => 'SUCCESS', 'results' => ['message_id' => 'test-id']])]);
         $this->actingAs($this->user('Owner'))->post('/scheduler/whatsapp/test', [
             'phone' => '081234567890', 'provider' => 'fonnte', 'base_url' => 'http://evil.test',
-        ])->assertRedirect(route('scheduler.edit').'#whatsapp-diagnostics')->assertSessionHas('whatsapp_result.state', 'sent')
-            ->assertSessionHas('whatsapp_result.message_ids', ['test-id']);
+        ])->assertRedirect(route('scheduler.edit'))->assertSessionHas('success')->assertSessionMissing('warning');
         Http::assertSent(fn ($r) => $r['phone'] === '6281234567890@s.whatsapp.net');
         Http::assertSentCount(1);
         $this->assertDatabaseCount('invoice_reminder_logs', 0);
@@ -70,6 +69,7 @@ class WhatsAppConnectionTest extends TestCase
         $this->assertDatabaseCount('session_report_wa_logs', 0);
         $audit = AuditLog::where('entity_label', 'WhatsApp Test')->sole();
         $this->assertSame('gowa', $audit->new_values['provider']);
+        $this->assertSame(['test-id'], $audit->new_values['message_ids']);
         $this->assertStringNotContainsString('private-password', json_encode($audit->new_values));
     }
 
@@ -79,9 +79,9 @@ class WhatsAppConnectionTest extends TestCase
         $this->actingAs($this->user('Owner'))->post('/scheduler/whatsapp/test', ['phone' => '123'])->assertSessionHasErrors('phone');
         Http::assertNothingSent();
         $response = $this->post('/scheduler/whatsapp/test', ['phone' => '081234567890']);
-        $response->assertSessionHas('whatsapp_result.state', 'failed');
-        $response->assertRedirect(route('scheduler.edit').'#whatsapp-diagnostics');
-        $this->assertStringNotContainsString('private-password', json_encode(session('whatsapp_result')));
+        $response->assertSessionHas('warning')->assertSessionMissing('success');
+        $response->assertRedirect(route('scheduler.edit'));
+        $this->assertStringNotContainsString('private-password', session('warning'));
         Http::assertSentCount(1);
     }
 
@@ -92,5 +92,16 @@ class WhatsAppConnectionTest extends TestCase
             'phone' => ['081234567890'],
         ])->assertSessionHasErrors('phone');
         Http::assertNothingSent();
+    }
+
+    public function test_disconnected_device_uses_existing_warning_notification(): void
+    {
+        Http::fake(['http://gowa.test/devices/studio/status' => Http::response([
+            'code' => 'SUCCESS', 'results' => ['is_connected' => false, 'is_logged_in' => false],
+        ])]);
+        $this->actingAs($this->user('Owner'))->post('/scheduler/whatsapp/check')
+            ->assertRedirect(route('scheduler.edit'))->assertSessionHas('warning')->assertSessionMissing('success');
+        Http::assertSentCount(1);
+        Http::assertNotSent(fn ($r) => $r->method() === 'POST');
     }
 }

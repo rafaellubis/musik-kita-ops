@@ -208,7 +208,7 @@
                     @endphp
                     @foreach($mkFlashStyles as $flashType => $flashStyle)
                     @if(session($flashType))
-                    <div class="mx-4 lg:mx-8 mt-4 p-3 rounded-lg text-sm font-medium" style="{{ $flashStyle }}">
+                    <div role="{{ in_array($flashType, ['error', 'warning']) ? 'alert' : 'status' }}" class="mx-4 lg:mx-8 mt-4 p-3 rounded-lg text-sm font-medium" style="{{ $flashStyle }}">
                         @if($flashType === 'warning')<span class="mr-1" aria-hidden="true">⚠️</span>@endif
                         {{ session($flashType) }}
                     </div>

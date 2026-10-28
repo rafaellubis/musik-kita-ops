@@ -12,7 +12,10 @@ class WhatsAppConnectionController extends Controller
 {
     public function check(CheckWhatsAppConnectionRequest $request, WhatsAppService $whatsapp): RedirectResponse
     {
-        return redirect(route('scheduler.edit').'#whatsapp-diagnostics')->with('whatsapp_result', $whatsapp->forBatch()->checkConnection());
+        $result = $whatsapp->forBatch()->checkConnection();
+        $type = $result['state'] === 'connected' ? 'success' : 'warning';
+
+        return redirect()->route('scheduler.edit')->with($type, strtoupper($result['provider']).' — '.$result['message']);
     }
 
     public function sendTest(SendWhatsAppTestRequest $request, WhatsAppService $whatsapp): RedirectResponse
@@ -33,6 +36,11 @@ class WhatsAppConnectionController extends Controller
             newValues: $feedback + ['phone' => $sender->normalizePhone($request->validated('phone'))],
         );
 
-        return redirect(route('scheduler.edit').'#whatsapp-diagnostics')->with('whatsapp_result', $feedback);
+        $message = strtoupper($feedback['provider']).' — '.$feedback['message'];
+        if ($feedback['message_ids'] !== []) {
+            $message .= ' ID pesan: '.implode(', ', $feedback['message_ids']);
+        }
+
+        return redirect()->route('scheduler.edit')->with($result['ok'] ? 'success' : 'warning', $message);
     }
 }

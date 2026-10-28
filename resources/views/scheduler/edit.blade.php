@@ -661,15 +661,6 @@
                 <p class="mt-1 text-sm text-mk-muted">Menggunakan konfigurasi tersimpan. Provider aktif: <strong>{{ strtoupper($settings['integration_whatsapp_provider']) }}</strong>. Tidak berpindah provider otomatis jika gagal.</p>
             </div>
             <p x-show="integrationDirty" x-cloak role="status" class="text-sm text-mk-warning">Simpan konfigurasi WhatsApp terlebih dahulu.</p>
-            @if($feedback = session('whatsapp_result'))
-                <div role="{{ in_array($feedback['state'], ['connected', 'configuration_present', 'sent']) ? 'status' : 'alert' }}"
-                     class="rounded-lg border border-mk-borderLight p-4 text-sm text-mk-text">
-                    <p class="font-semibold">{{ strtoupper($feedback['provider']) }} — {{ $feedback['message'] }}</p>
-                    @if(!empty($feedback['message_ids']))
-                        <p class="mt-1 break-all text-xs text-mk-muted">ID pesan: {{ implode(', ', $feedback['message_ids']) }}</p>
-                    @endif
-                </div>
-            @endif
             <form method="POST" action="{{ route('scheduler.whatsapp.check') }}" @submit="if (integrationDirty || diagnosticBusy) { $event.preventDefault(); } else { diagnosticBusy = true; }">
                 @csrf
                 <button type="submit" :disabled="integrationDirty || diagnosticBusy"
