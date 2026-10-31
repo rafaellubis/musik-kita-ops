@@ -102,6 +102,46 @@ class Enrollment extends Model
         return $this->hasOne(EnrollmentPromotion::class, 'successor_enrollment_id');
     }
 
+    public function transfers(): HasMany
+    {
+        return $this->hasMany(EnrollmentTransfer::class)->orderBy('effective_date')->orderBy('id');
+    }
+
+    /** Penugasan bertanggal: riwayat lama tidak mengikuti guru rutin terbaru. */
+    public function teachingAssignmentOn(CarbonInterface $date): array
+    {
+        $transfers = $this->transfers;
+        $schedule = $this->schedules->firstWhere('is_active', true);
+        $assignment = $transfers->first()?->before ?? [
+            'teacher_id' => (int) $this->teacher_id,
+            'day_of_week' => $schedule?->day_of_week,
+            'start_time' => $schedule?->start_time,
+            'end_time' => $schedule?->end_time,
+            'room_id' => $schedule?->room_id,
+        ];
+        foreach ($transfers as $transfer) {
+            if ($transfer->effective_date->toDateString() > $date->toDateString()) {
+                break;
+            }
+            $assignment = $transfer->after;
+        }
+        // Perubahan jadwal biasa setelah pengalihan tetap berlaku untuk periode terbaru.
+        if ($transfers->isNotEmpty() && $transfers->last()->status === 'APPLIED'
+            && $date->toDateString() >= $transfers->last()->effective_date->toDateString()) {
+            $assignment = [
+                'teacher_id' => (int) $this->teacher_id, 'day_of_week' => $schedule?->day_of_week,
+                'start_time' => $schedule?->start_time, 'end_time' => $schedule?->end_time, 'room_id' => $schedule?->room_id,
+            ];
+        }
+        return $assignment;
+    }
+
+    /** Penanggung jawab bulanan memakai pengalihan terakhir dalam bulan tersebut. */
+    public function reportTeacherFor(int $year, int $month): int
+    {
+        return $this->teachingAssignmentOn(\Carbon\Carbon::create($year, $month, 1)->endOfMonth())['teacher_id'];
+    }
+
     /** Kelas berlaku pada [from, until), termasuk penerus yang belum mulai hari ini. */
     public function scopeForPeriod(Builder $query, CarbonInterface $from, CarbonInterface $until): Builder
     {

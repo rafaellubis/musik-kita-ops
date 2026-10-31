@@ -167,6 +167,10 @@ class EnrollmentPromotionService
 
     private function assertSlotAvailable(Enrollment $source, array $data, string $end, Carbon $effective, array $removed): void
     {
+        app(ScheduleConflictDetector::class)->assertAssignmentAvailable($source, [
+            'teacher_id' => (int) $data['teacher_id'], 'day_of_week' => (int) $data['day_of_week'],
+            'start_time' => $data['start_time'].':00', 'end_time' => $end, 'room_id' => (int) $data['room_id'],
+        ], $effective);
         $schedules = Schedule::active()->where('enrollment_id', '!=', $source->id)
             ->where('day_of_week', $data['day_of_week'])->whereTime('start_time', '<', $end)
             ->whereTime('end_time', '>', $data['start_time'].':00')
@@ -207,6 +211,7 @@ class EnrollmentPromotionService
 
     public function assertNotScheduled(Enrollment $enrollment): void
     {
+        app(EnrollmentTransferService::class)->assertNotScheduled($enrollment);
         if (EnrollmentPromotion::where('status', 'SCHEDULED')->where(fn ($q) => $q
             ->where('source_enrollment_id', $enrollment->id)->orWhere('successor_enrollment_id', $enrollment->id))->exists()) {
             throw ValidationException::withMessages(['enrollment_id' => 'Kelas memiliki kenaikan level terjadwal. Perubahan kelas belum dapat dilakukan.']);

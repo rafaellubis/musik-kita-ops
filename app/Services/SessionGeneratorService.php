@@ -54,6 +54,7 @@ class SessionGeneratorService
     public function generateForMonth(int $year, int $month): array
     {
         app(EnrollmentPromotionService::class)->applyDue();
+        app(EnrollmentTransferService::class)->applyDue();
         return $this->generateMonth($year, $month);
     }
 
@@ -117,28 +118,31 @@ class SessionGeneratorService
         array &$report,
     ): void {
         $enrollment = $schedule->enrollment;
+        $baseSchedule = $schedule;
         if (!$enrollment) {
             return;
         }
 
-        // FASE 1: Kumpulkan semua tanggal yang cocok dengan day_of_week di bulan ini
+        // Tanggal mengikuti penugasan pada hari tersebut, termasuk pengalihan tengah bulan.
         $allDates = collect();
-        $cursor   = $monthStart->copy();
+        $cursor = $monthStart->copy();
         while ($cursor->lte($monthEnd)) {
-            if ($cursor->dayOfWeek === $schedule->day_of_week) {
+            $assignment = $enrollment->transfers->isEmpty()
+                ? ['day_of_week' => $schedule->day_of_week]
+                : $enrollment->teachingAssignmentOn($cursor);
+            if ($cursor->dayOfWeek === $assignment['day_of_week']) {
                 $allDates->push($cursor->copy());
             }
             $cursor->addDay();
         }
-
-        $replacementQueue = []; // [['date'=>Carbon,'reserved_slot'=>int,'libur_session_id'=>int]]
-        $scheduledCount   = 0;
-        $slotCounter      = 0;  // nomor slot mingguan (1–4, sesuai urutan occurrence)
-
-        // FASE 2: Proses minggu ke-1 sampai ke-4 saja (BR-3.5)
+        $replacementQueue = [];
+        $scheduledCount = 0;
+        $slotCounter = 0;
         $weekDates = $allDates->take(self::MAX_SESSIONS_PER_MONTH);
 
         foreach ($weekDates as $date) {
+            $schedule = $this->assignedSchedule($baseSchedule, $date);
+            $enrollment = $schedule->enrollment;
             // Guard: enrollment boundary
             if ($enrollment->effective_date && $date->lt($enrollment->effective_date)) {
                 continue;
@@ -154,6 +158,14 @@ class SessionGeneratorService
 
             // Jangan menggeser nomor slot atau membuat sesi LIBUR dalam periode cuti.
             if ($enrollment->isOnLeaveOn($dateStr)) {
+                continue;
+            }
+
+            // Hak sesi khusus yang dipertahankan tidak dibuat ulang di tanggal rutin baru.
+            if ($enrollment->transfers->isNotEmpty() && ClassSession::where('enrollment_id', $enrollment->id)
+                ->forAttributionMonth($monthStart->year, $monthStart->month)
+                ->where('session_sequence', $slotCounter)->where('session_date', '!=', $dateStr)->exists()) {
+                $report['skipped_exists']++;
                 continue;
             }
 
@@ -249,6 +261,8 @@ class SessionGeneratorService
         foreach ($replacementQueue as $repItem) {
             $repDate = $repItem['date'];
             $repStr  = $repDate->toDateString();
+            $schedule = $this->assignedSchedule($baseSchedule, $repDate);
+            $enrollment = $schedule->enrollment;
 
             // Tanggal pengganti dapat berada di bulan lain dan tetap mengikuti riwayat cuti kelas.
             if ($enrollment->isOnLeaveOn($repStr)) {
@@ -323,6 +337,21 @@ class SessionGeneratorService
         }
     }
 
+    private function assignedSchedule(Schedule $schedule, Carbon $date): Schedule
+    {
+        if ($schedule->enrollment->transfers->isEmpty()) {
+            return $schedule;
+        }
+        $assigned = clone $schedule;
+        $enrollment = clone $schedule->enrollment;
+        $assignment = $enrollment->teachingAssignmentOn($date);
+        $enrollment->teacher_id = $assignment['teacher_id'];
+        unset($assignment['teacher_id']);
+        $assigned->forceFill($assignment);
+        $assigned->setRelation('enrollment', $enrollment);
+        return $assigned;
+    }
+
     /**
      * Tentukan honor_code dan honor_amount untuk sesi LIBUR.
      *
@@ -387,6 +416,12 @@ class SessionGeneratorService
      */
     private function findConflictOnDate(Schedule $schedule, Carbon $date): ?ClassSession
     {
+        if ($schedule->enrollment->transfers->isNotEmpty()) {
+            return app(ScheduleConflictDetector::class)->findConcreteConflict($schedule->enrollment, [
+                'teacher_id' => $schedule->enrollment->teacher_id, 'room_id' => $schedule->room_id,
+                'start_time' => $schedule->start_time, 'end_time' => $schedule->end_time,
+            ], $date->toDateString());
+        }
         // Kids Class adalah kelas grup — satu guru dan satu ruang dipakai beberapa murid
         // sekaligus. Tidak ada "konflik" untuk sesi Kids Class.
         $classType = $schedule->enrollment->package?->class_type;

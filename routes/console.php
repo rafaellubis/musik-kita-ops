@@ -30,6 +30,7 @@ Artisan::command('inspire', function () {
 
 // Batas periode kelas tetap disinkronkan walaupun generator dinonaktifkan.
 Schedule::command('enrollments:apply-promotions')->dailyAt('00:00')->withoutOverlapping();
+Schedule::command('enrollments:apply-transfers')->dailyAt('00:00')->withoutOverlapping();
 
 // ===== M03: Generator sesi mingguan =====
 if (SchedulerSettings::sessionsGenerateEnabled()) {

@@ -137,6 +137,10 @@ class EnrollmentController extends Controller
             }
         }
 
+        if ($this->conflictDetector->findStudentConflicts($student->id, (int) $data['day_of_week'], $startTime, $endTime)->isNotEmpty()) {
+            return back()->withErrors(['start_time' => 'Murid sudah memiliki jadwal pada slot ini, termasuk pengalihan terjadwal.'])->withInput();
+        }
+
         DB::transaction(function () use ($student, $data, $startTime, $endTime) {
             $jadikanUtama = (bool) ($data['jadikan_utama'] ?? false);
 

@@ -13,6 +13,7 @@ class SyncEnrollmentPromotions
     {
         if ($request->user()) {
             app(EnrollmentPromotionService::class)->applyDue();
+            app(\App\Services\EnrollmentTransferService::class)->applyDue();
         }
         return $next($request);
     }

@@ -101,6 +101,8 @@ class StudentController extends Controller
             'enrollments.schedules' => fn ($query) => $query->where('is_active', true)->with('room'),
             'enrollments.currentLeave',
             'enrollments.promotion',
+            'enrollments.transfers.sourceTeacher',
+            'enrollments.transfers.targetTeacher',
         ])->findOrFail($id);
 
         $runningEnrollments = $student->enrollments

@@ -471,7 +471,8 @@ class GuruController extends Controller
         $teacher = auth()->user()->teacher;
         abort_if(!$teacher, 403, 'Akun ini tidak terhubung ke data guru.');
 
-        $enrollments = Enrollment::where('teacher_id', $teacher->id)
+        $enrollments = Enrollment::where(fn ($q) => $q->where('teacher_id', $teacher->id)
+                ->orWhereHas('transfers', fn ($t) => $t->where('source_teacher_id', $teacher->id)->where('status', 'APPLIED')))
             ->where(fn ($q) => $q->whereIn('status', ['ACTIVE', 'ON_LEAVE'])
                 ->orWhereHas('promotion', fn ($p) => $p->where('status', 'APPLIED')))
             ->with(['student', 'package.instrument'])
@@ -511,7 +512,7 @@ class GuruController extends Controller
         ]);
 
         $enrollment = Enrollment::with('package')->findOrFail($validated['enrollment_id']);
-        abort_if($enrollment->teacher_id !== $teacher->id, 403, 'Bukan enrollment Anda.');
+        abort_if($enrollment->reportTeacherFor((int) $validated['year'], (int) $validated['month']) !== $teacher->id, 403, 'Bukan penanggung jawab laporan kelas pada periode ini.');
 
         $template = $this->reportTemplateResolver->resolveForEnrollment($enrollment);
         if (! $template) {

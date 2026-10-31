@@ -149,15 +149,9 @@ class ScheduleController extends Controller
             // Validasi: murid tidak boleh punya jadwal aktif lain di hari + jam yang overlap
             // (berlaku untuk multi-enrollment — Piano dan Gitar di waktu yang sama tidak masuk akal)
             $studentId        = $enrollment->student_id;
-            $studentConflicts = Schedule::query()
-                ->active()
-                ->whereHas('enrollment', function ($q) use ($studentId) {
-                    $q->forPeriod(today(), \Carbon\Carbon::parse('9999-12-31'))->where('student_id', $studentId);
-                })
-                ->where('day_of_week', $data['day_of_week'])
-                ->where('start_time', '<', $data['end_time'])
-                ->where('end_time', '>', $data['start_time'])
-                ->get();
+            $studentConflicts = $this->conflictDetector->findStudentConflicts(
+                $studentId, (int) $data['day_of_week'], $data['start_time'], $data['end_time']
+            );
 
             if ($studentConflicts->isNotEmpty()) {
                 $namaKelas = $studentConflicts->map(function ($s) {
@@ -325,16 +319,9 @@ class ScheduleController extends Controller
 
             // Validasi: murid tidak boleh punya jadwal aktif lain di hari + jam yang overlap
             $studentId        = $schedule->enrollment->student_id;
-            $studentConflicts = Schedule::query()
-                ->active()
-                ->whereHas('enrollment', function ($q) use ($studentId) {
-                    $q->forPeriod(today(), \Carbon\Carbon::parse('9999-12-31'))->where('student_id', $studentId);
-                })
-                ->where('day_of_week', $data['day_of_week'])
-                ->where('start_time', '<', $data['end_time'])
-                ->where('end_time', '>', $data['start_time'])
-                ->where('id', '!=', $schedule->id) // kecualikan diri sendiri
-                ->get();
+            $studentConflicts = $this->conflictDetector->findStudentConflicts(
+                $studentId, (int) $data['day_of_week'], $data['start_time'], $data['end_time'], $schedule->id
+            );
 
             if ($studentConflicts->isNotEmpty()) {
                 $namaKelas = $studentConflicts->map(function ($s) {

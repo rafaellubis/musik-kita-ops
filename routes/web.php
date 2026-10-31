@@ -192,6 +192,12 @@ Route::middleware('auth')->group(function () {
         Route::post('students/{student}/enrollments/{enrollment}/promotions',
             [\App\Http\Controllers\EnrollmentPromotionController::class, 'store']
         )->name('students.enrollments.promotions.store');
+        Route::post('students/{student}/enrollments/{enrollment}/transfer-preview',
+            [\App\Http\Controllers\EnrollmentTransferController::class, 'preview']
+        )->name('students.enrollments.transfer-preview');
+        Route::post('students/{student}/enrollments/{enrollment}/transfers',
+            [\App\Http\Controllers\EnrollmentTransferController::class, 'store']
+        )->name('students.enrollments.transfers.store');
         Route::post('students/{student}/enrollments/{enrollment}/manual-sessions',
             [ManualSessionController::class, 'store']
         )->name('students.enrollments.manual-sessions.store');

@@ -39,7 +39,7 @@
     <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm overflow-hidden">
 
         {{-- Header section kelas berjalan --}}
-        <div class="px-5 py-3.5 flex items-center justify-between border-b border-mk-borderLight">
+        <div class="px-5 py-3.5 flex flex-wrap items-center justify-between gap-3 border-b border-mk-borderLight">
             <div class="text-[10px] uppercase tracking-widest font-semibold text-secondary">
                 Kelas Berjalan
                 <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-secondary/15 text-secondary">
@@ -47,11 +47,59 @@
                 </span>
             </div>
             @if(auth()->user()->hasAnyRole(['Owner', 'Admin']) && $student->status === 'Aktif')
-                <button type="button"
-                        onclick="document.getElementById('modal-tambah-kelas').classList.remove('hidden')"
-                        class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors bg-secondary-container/30 text-secondary border border-secondary/20 hover:bg-secondary-container/50">
-                    + Tambah Kelas
-                </button>
+                @php
+                    $editClasses = $runningEnrollments->filter(fn ($class) =>
+                        $class->status === 'ACTIVE' && $class->schedules->isNotEmpty()
+                        && !$class->transfers->contains('status', 'SCHEDULED')
+                        && $class->promotion?->status !== 'SCHEDULED');
+                    $classAction = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors bg-secondary-container/30 text-secondary border border-secondary/20 hover:bg-secondary-container/50';
+                @endphp
+                <div x-data class="flex flex-wrap items-center gap-2">
+                    <button type="button"
+                            onclick="document.getElementById('modal-tambah-kelas').classList.remove('hidden')"
+                            class="{{ $classAction }}">
+                        + Tambah Kelas
+                    </button>
+                    @if($editClasses->isNotEmpty())
+                        <div x-data="{ expanded: false }" class="relative"
+                             @click.outside="expanded = false"
+                             @keydown.escape.stop="expanded = false; $refs.editToggle.focus()">
+                            <button x-ref="editToggle" type="button" @click="expanded = !expanded"
+                                    :aria-expanded="expanded" aria-controls="edit-class-options"
+                                    class="{{ $classAction }}">
+                                Edit Kelas
+                            </button>
+                            <div id="edit-class-options" x-show="expanded" x-cloak
+                                 class="absolute left-1/2 top-full z-20 mt-2 w-64 max-w-[calc(100vw-3rem)] -translate-x-1/2 rounded-lg border border-mk-borderLight bg-mk-card p-1 shadow-lg sm:left-auto sm:right-0 sm:translate-x-0"
+                                 aria-label="Pilih kelas yang diedit">
+                            @foreach($editClasses as $class)
+                                @php
+                                    $schedule = $class->schedules->first();
+                                    $editData = [
+                                        'enrollment_id' => $class->id,
+                                        'source_label' => $class->package->instrument->name,
+                                        'source_teacher_id' => $class->teacher_id,
+                                        'source_teacher_name' => $class->teacher->name,
+                                        'instrument_id' => $class->package->instrument_id,
+                                        'instrument_name' => $class->package->instrument->name,
+                                        'duration_min' => $class->package->duration_min,
+                                        'room_id' => $schedule->room_id, 'day_of_week' => $schedule->day_of_week,
+                                        'start_time' => substr($schedule->start_time, 0, 5),
+                                        'effective_date' => today()->startOfMonth()->addMonth()->toDateString(),
+                                        'preview_url' => route('students.enrollments.transfer-preview', [$student, $class]),
+                                        'store_url' => route('students.enrollments.transfers.store', [$student, $class]),
+                                    ];
+                                @endphp
+                                <button type="button"
+                                        @click="expanded = false; $dispatch('open-transfer', @js($editData))"
+                                        class="block min-h-11 w-full rounded-md px-3 py-2 text-left text-sm text-mk-text hover:bg-mk-cardHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary">
+                                    {{ $class->package->instrument->name }} · {{ $class->teacher->name }} · {{ $class->package->code }}
+                                </button>
+                            @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
             @endif
         </div>
 
@@ -116,6 +164,18 @@
                             </div>
                             <div class="text-mk-muted">Aktif kembali mulai {{ $leave->cuti_until->copy()->addDay()->format('d M Y') }}. {{ $leaveEnded ? 'Periode ini sudah selesai.' : ($leave->extension_count > 0 ? 'Perpanjangan sudah digunakan.' : 'Dapat diperpanjang satu kali.') }}</div>
                         @endif
+                        @foreach($enrollment->transfers as $transfer)
+                            <div class="border-t border-mk-borderLight pt-3 text-sm">
+                                <p class="font-semibold">{{ $transfer->sourceTeacher->name }} → {{ $transfer->targetTeacher->name }}</p>
+                                <p>{{ $transfer->status === 'APPLIED' ? 'Berlaku sejak' : 'Terjadwal mulai' }} {{ $transfer->effective_date->format('d M Y') }}
+                                    · {{ \App\Models\Schedule::DAY_NAMES[$transfer->after['day_of_week']] }}
+                                    {{ substr($transfer->after['start_time'], 0, 5) }}–{{ substr($transfer->after['end_time'], 0, 5) }}</p>
+                                <p class="whitespace-pre-line break-words text-mk-muted">{{ $transfer->reason }}</p>
+                                @if($transfer->blocked_reason)
+                                    <p role="alert" class="mt-2 text-red-700">Pengalihan tertahan: {{ $transfer->blocked_reason }} Perbaiki data terkait, lalu sistem mencoba kembali saat sinkronisasi.</p>
+                                @endif
+                            </div>
+                        @endforeach
                     </div>
                 </div>
 
@@ -127,6 +187,7 @@
                 {{-- Aksi (hanya Owner/Admin) --}}
                 @if(auth()->user()->hasAnyRole(['Owner', 'Admin']))
                     <div class="flex flex-wrap items-center gap-2 mt-0.5">
+                        @php $pendingTransfer = $enrollment->transfers->firstWhere('status', 'SCHEDULED'); @endphp
                         @php
                             $promotionGrades = ['BASIC', 'L1', 'L2', 'L3', 'L4'];
                             $gradeIndex = array_search($enrollment->package?->grade, $promotionGrades, true);
@@ -150,7 +211,7 @@
                                 'store_url' => route('students.enrollments.promotions.store', [$student, $enrollment]),
                             ] : null;
                         @endphp
-                        @if($promotionData && !$enrollment->promotion && $enrollment->status === 'ACTIVE')
+                        @if($promotionData && !$pendingTransfer && !$enrollment->promotion && $enrollment->status === 'ACTIVE')
                             <button type="button" @click="$dispatch('open-promotion', @js($promotionData))"
                                     class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors bg-mk-sidebar text-mk-accent border border-mk-sidebar hover:bg-mk-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-mk-sidebar">
                                 Naik Level
@@ -383,6 +444,7 @@
 </div>
 @if(auth()->user()->hasAnyRole(['Owner', 'Admin']))
     @include('students.partials.promotion-panel')
+    @include('students.partials.transfer-panel')
 @endif
 
 
