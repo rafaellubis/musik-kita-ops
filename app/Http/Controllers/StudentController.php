@@ -100,6 +100,7 @@ class StudentController extends Controller
             'enrollments.teacher',
             'enrollments.schedules' => fn ($query) => $query->where('is_active', true)->with('room'),
             'enrollments.currentLeave',
+            'enrollments.promotion',
         ])->findOrFail($id);
 
         $runningEnrollments = $student->enrollments
@@ -190,6 +191,7 @@ class StudentController extends Controller
         // M-Kelas: Riwayat kelas — enrollment yang sudah tidak aktif
         $historyEnrollments = $student->enrollments()
             ->whereIn('status', ['INACTIVE', 'COMPLETED'])
+            ->whereDoesntHave('promotedFrom', fn ($q) => $q->where('status', 'SCHEDULED'))
             ->with(['package.instrument', 'teacher'])
             ->orderByDesc('end_date')
             ->get();
@@ -245,6 +247,9 @@ class StudentController extends Controller
             ? ClassSession::where('enrollment_id', $trialEnrollment->id)->latest('id')->first()
             : null;
 
+        $promotions = \App\Models\EnrollmentPromotion::where('student_id', $student->id)
+            ->with('successor.package.instrument', 'successor.teacher', 'creator')->latest('id')->get();
+
         return view('students.show', compact(
             'student', 'packages', 'teachers', 'rooms',
             'roomsForFilter', 'bookedSchedules',
@@ -257,6 +262,7 @@ class StudentController extends Controller
             'tampilKidsFpButton', 'kidsFpFee',
             'enrollmentSlotSummaries',
             'trialEnrollment', 'trialSession',
+            'promotions',
         ));
     }
 

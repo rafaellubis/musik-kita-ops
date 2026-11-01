@@ -218,6 +218,7 @@ class EnrollmentController extends Controller
     {
         // Pastikan enrollment milik murid ini
         abort_if($enrollment->student_id !== $student->id, 403);
+        app(\App\Services\EnrollmentPromotionService::class)->assertNotScheduled($enrollment);
         // Kelas berjalan dapat dihentikan meskipun sedang cuti.
         abort_if(!in_array($enrollment->status, ['ACTIVE', 'ON_LEAVE'], true), 422, 'Kelas sudah tidak aktif.');
 
@@ -257,6 +258,9 @@ class EnrollmentController extends Controller
 
             // Lanjutkan proses swap + hentikan dalam satu transaksi
             DB::transaction(function () use ($student, $enrollment, $newPrimary) {
+                Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+                $enrollment->refresh();
+                app(\App\Services\EnrollmentPromotionService::class)->assertNotScheduled($enrollment);
                 // Lepas flag utama dari semua enrollment
                 $student->enrollments()->where('is_primary', true)->update(['is_primary' => false]);
                 // Tetapkan enrollment pengganti sebagai utama baru
@@ -274,6 +278,9 @@ class EnrollmentController extends Controller
         // Kasus normal: hentikan kelas non-utama, atau kelas utama satu-satunya
         // Dibungkus dalam transaksi agar enrollment->update dan schedules->update atomic
         DB::transaction(function () use ($enrollment) {
+            Student::whereKey($enrollment->student_id)->lockForUpdate()->firstOrFail();
+            $enrollment->refresh();
+            app(\App\Services\EnrollmentPromotionService::class)->assertNotScheduled($enrollment);
             $this->hentikanEnrollment($enrollment);
         });
 

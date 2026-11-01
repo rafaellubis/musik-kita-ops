@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
 		// [SECURITY] Security headers global — X-Frame-Options, HSTS, dll.
 		$middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+        $middleware->web(append: [\App\Http\Middleware\SyncEnrollmentPromotions::class]);
 	})
 
     ->withExceptions(function (Exceptions $exceptions) {

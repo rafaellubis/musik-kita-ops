@@ -53,6 +53,17 @@ class SessionGeneratorService
      */
     public function generateForMonth(int $year, int $month): array
     {
+        app(EnrollmentPromotionService::class)->applyDue();
+        return $this->generateMonth($year, $month);
+    }
+
+    public function generateForEnrollment(Enrollment $enrollment, int $year, int $month): array
+    {
+        return $this->generateMonth($year, $month, $enrollment);
+    }
+
+    private function generateMonth(int $year, int $month, ?Enrollment $only = null): array
+    {
         $start = Carbon::create($year, $month, 1)->startOfMonth();
         $end   = $start->copy()->endOfMonth();
 
@@ -71,7 +82,7 @@ class SessionGeneratorService
         // Jika koneksi terputus di tengah proses, SEMUA insert di-rollback —
         // tidak ada data sesi partial yang tersimpan di database.
         // Admin cukup jalankan ulang generator setelah koneksi pulih.
-        DB::transaction(function () use ($start, $end, &$report) {
+        DB::transaction(function () use ($start, $end, $only, &$report) {
             // Pre-load holidays bulan ini sebagai [Y-m-d => Holiday]
             // Include 'Internal' agar Konser KITA terdeteksi
             $holidayMap = $this->loadHolidayDates($start, $end);
@@ -79,7 +90,8 @@ class SessionGeneratorService
             // Status hari ini tidak menentukan sesi bulan target; tanggal cuti per kelas yang menentukan.
             $schedules = Schedule::query()
                 ->active()
-                ->whereHas('enrollment', fn ($q) => $q->whereIn('status', [Enrollment::STATUS_ACTIVE, Enrollment::STATUS_ON_LEAVE]))
+                ->whereHas('enrollment', fn ($q) => $q->forPeriod($start, $end->copy()->addDay()->startOfDay()))
+                ->when($only, fn ($q) => $q->where('enrollment_id', $only->id))
                 ->whereHas('enrollment.student', fn ($q) => $q->whereIn('status', ['Aktif', 'Cuti']))
                 ->with(['enrollment', 'enrollment.package', 'enrollment.student', 'enrollment.teacher', 'enrollment.leaves'])
                 ->get();
@@ -392,7 +404,7 @@ class SessionGeneratorService
                 ->whereDate('session_date', $date)
                 ->where('start_time', '<', $schedule->end_time)
                 ->where('end_time', '>', $schedule->start_time)
-                ->where('schedule_id', '!=', $schedule->id)
+                ->where(fn ($q) => $q->whereNull('schedule_id')->orWhere('schedule_id', '!=', $schedule->id))
                 ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
                 ->whereHas('enrollment.package', fn ($q) => $q->where('class_type', '!=', 'DUO'))
                 ->first();
@@ -407,7 +419,7 @@ class SessionGeneratorService
                     ->whereDate('session_date', $date)
                     ->where('start_time', '<', $schedule->end_time)
                     ->where('end_time', '>', $schedule->start_time)
-                    ->where('schedule_id', '!=', $schedule->id)
+                    ->where(fn ($q) => $q->whereNull('schedule_id')->orWhere('schedule_id', '!=', $schedule->id))
                     ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
                     ->whereHas('enrollment.package', fn ($q) => $q->where('class_type', '!=', 'DUO'))
                     ->first();
@@ -422,7 +434,7 @@ class SessionGeneratorService
                 ->whereDate('session_date', $date)
                 ->where('start_time', '<', $schedule->end_time)
                 ->where('end_time', '>', $schedule->start_time)
-                ->where('schedule_id', '!=', $schedule->id)
+                ->where(fn ($q) => $q->whereNull('schedule_id')->orWhere('schedule_id', '!=', $schedule->id))
                 ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
                 ->whereHas('enrollment.package', fn ($q) => $q->where('class_type', 'DUO'))
                 ->count();
@@ -433,7 +445,7 @@ class SessionGeneratorService
                     ->whereDate('session_date', $date)
                     ->where('start_time', '<', $schedule->end_time)
                     ->where('end_time', '>', $schedule->start_time)
-                    ->where('schedule_id', '!=', $schedule->id)
+                    ->where(fn ($q) => $q->whereNull('schedule_id')->orWhere('schedule_id', '!=', $schedule->id))
                     ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
                     ->whereHas('enrollment.package', fn ($q) => $q->where('class_type', 'DUO'))
                     ->with('student')
@@ -451,7 +463,7 @@ class SessionGeneratorService
             ->whereDate('session_date', $date)
             ->where('start_time', '<', $schedule->end_time)
             ->where('end_time', '>', $schedule->start_time)
-            ->where('schedule_id', '!=', $schedule->id)
+            ->where(fn ($q) => $q->whereNull('schedule_id')->orWhere('schedule_id', '!=', $schedule->id))
             ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
             ->first();
 
@@ -465,7 +477,7 @@ class SessionGeneratorService
                 ->whereDate('session_date', $date)
                 ->where('start_time', '<', $schedule->end_time)
                 ->where('end_time', '>', $schedule->start_time)
-                ->where('schedule_id', '!=', $schedule->id)
+                ->where(fn ($q) => $q->whereNull('schedule_id')->orWhere('schedule_id', '!=', $schedule->id))
                 ->whereNotIn('status', ClassSession::statusesExcludedFromScheduleConflict())
                 ->first();
 

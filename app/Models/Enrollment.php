@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -88,6 +90,26 @@ class Enrollment extends Model
     public function progressReports(): HasMany
     {
         return $this->hasMany(ProgressReport::class)->orderByDesc('year')->orderByDesc('month');
+    }
+
+    public function promotion(): HasOne
+    {
+        return $this->hasOne(EnrollmentPromotion::class, 'source_enrollment_id');
+    }
+
+    public function promotedFrom(): HasOne
+    {
+        return $this->hasOne(EnrollmentPromotion::class, 'successor_enrollment_id');
+    }
+
+    /** Kelas berlaku pada [from, until), termasuk penerus yang belum mulai hari ini. */
+    public function scopeForPeriod(Builder $query, CarbonInterface $from, CarbonInterface $until): Builder
+    {
+        return $query->whereDate('effective_date', '<', $until->toDateString())
+            ->where(fn ($q) => $q->whereNull('end_date')->orWhereDate('end_date', '>', $from->toDateString()))
+            ->where(fn ($q) => $q->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_ON_LEAVE])
+                ->orWhere(fn ($pending) => $pending->where('status', self::STATUS_INACTIVE)
+                    ->whereHas('promotedFrom', fn ($p) => $p->where('status', 'SCHEDULED'))));
     }
 
     // ============= SCOPES =============

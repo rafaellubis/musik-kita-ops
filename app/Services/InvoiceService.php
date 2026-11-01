@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\Models\AuditLog;
 use App\Models\Enrollment;
+use App\Models\EnrollmentPromotion;
+use App\Models\Package;
+use Illuminate\Validation\ValidationException;
 use App\Models\Invoice;
 use App\Models\InvoiceComponent;
 use App\Models\InvoiceItem;
@@ -236,16 +239,17 @@ class InvoiceService
      */
     public function generateMonthlySPP(int $year, int $month): array
     {
+        app(EnrollmentPromotionService::class)->applyDue();
         $issuedAt = Carbon::create($year, $month, 1)->startOfMonth();
         $dueDate  = $issuedAt->copy()->day($this->dueDay())->endOfDay();
         $monthEnd = $issuedAt->copy()->endOfMonth()->startOfDay();
 
         $report = ['created' => 0, 'skipped' => 0];
 
-        $statuses = [Enrollment::STATUS_ACTIVE, Enrollment::STATUS_ON_LEAVE];
+        $until = $issuedAt->copy()->addMonth();
         $students = Student::whereIn('status', ['Aktif', 'Cuti'])
-            ->whereHas('enrollments', fn ($q) => $q->whereIn('status', $statuses))
-            ->with(['enrollments' => fn ($q) => $q->whereIn('status', $statuses)->with([
+            ->whereHas('enrollments', fn ($q) => $q->forPeriod($issuedAt, $until))
+            ->with(['enrollments' => fn ($q) => $q->forPeriod($issuedAt, $until)->with([
                 'package.instrument',
                 'leaves' => fn ($q) => $q->where('cuti_from', '<=', $monthEnd->toDateString())
                     ->where('cuti_until', '>=', $issuedAt->toDateString())->orderBy('cuti_from'),
@@ -348,6 +352,13 @@ class InvoiceService
         }
 
         return DB::transaction(function () use ($invoice, $voidedBy, $reason) {
+            // Tagihan selisih harus di-void lebih dulu agar regenerasi tidak menagih dua kali.
+            $hasDifference = Invoice::where('student_id', $invoice->student_id)->notVoid()
+                ->whereHas('items', fn ($q) => $q->where('metadata->kind', 'LEVEL_PROMOTION_DIFFERENCE')
+                    ->where('metadata->original_invoice_id', $invoice->id))->exists();
+            if ($hasDifference) {
+                throw new InvalidArgumentException('Void tagihan selisih kenaikan level terlebih dahulu sebelum invoice asal.');
+            }
             $invoice->update([
                 'status'        => Invoice::STATUS_VOID,
                 'voided_at'     => now(),
@@ -552,13 +563,91 @@ class InvoiceService
      * Guard legacy: invoice aktivasi (REG+SPP) tanpa enrollment_id tapi metadata package_id cocok —
      * mencegah duplikat saat generate SPP bulanan setelah konversi/skip trial.
      */
+    public function previewPromotion(Enrollment $source, Package $target, Carbon $effective): array
+    {
+        $invoices = Invoice::where('student_id', $source->student_id)->notVoid()
+            ->where(fn ($q) => $q->where('enrollment_id', $source->id)
+                ->orWhere(fn ($legacy) => $legacy->whereNull('enrollment_id')
+                    ->whereHas('items', fn ($item) => $item->where('item_code', 'SPP')
+                        ->whereJsonContains('metadata->package_id', $source->package_id))))
+            ->where(fn ($q) => $q->where('year', '>', $effective->year)
+                ->orWhere(fn ($m) => $m->where('year', $effective->year)->where('month', '>=', $effective->month)))
+            ->whereHas('items', fn ($q) => $q->where('item_code', 'SPP'))
+            ->when(DB::transactionLevel() > 0, fn ($q) => $q->lockForUpdate())
+            ->with(['items', 'validPayments' => fn ($q) => $q->when(DB::transactionLevel() > 0, fn ($payments) => $payments->lockForUpdate())])
+            ->orderBy('year')->orderBy('month')->get();
+        $changes = [];
+        foreach ($invoices as $invoice) {
+            $period = sprintf('%04d-%02d', $invoice->year, $invoice->month);
+            if (isset($changes[$period]) || $invoice->items->where('item_code', 'SPP')->count() !== 1) {
+                throw ValidationException::withMessages(['invoice' => "Tagihan SPP {$period} ambigu. Periksa invoice terlebih dahulu."]);
+            }
+            $paid = (int) $invoice->validPayments->sum('amount');
+            if ($paid === 0 && $invoice->items->whereIn('item_code', ['DISKON', 'DENDA'])->isNotEmpty()) {
+                throw ValidationException::withMessages(['invoice' => "Invoice {$invoice->invoice_number} belum dibayar dan memiliki diskon/denda. Periksa penyesuaian terlebih dahulu."]);
+            }
+            $changes[$period] = [
+                'period' => $period, 'original_invoice_id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
+                'mode' => $paid > 0 ? 'DIFFERENCE' : 'UPDATE',
+                'amount' => $paid > 0 ? (int) ($target->price_per_month - $source->package->price_per_month) : (int) $target->price_per_month,
+            ];
+        }
+        return array_values($changes);
+    }
+
+    public function adjustForPromotion(EnrollmentPromotion $promotion): array
+    {
+        $source = $promotion->source;
+        $target = $promotion->successor->package;
+        $changes = $this->previewPromotion($source, $target, $promotion->effective_date);
+        foreach ($changes as &$change) {
+            $invoice = Invoice::lockForUpdate()->findOrFail($change['original_invoice_id']);
+            $this->recalcStatus($invoice);
+            $change['adjustment_invoice_id'] = null;
+            if ($change['mode'] === 'UPDATE') {
+                $item = $invoice->items()->where('item_code', 'SPP')->firstOrFail();
+                $item->update([
+                    'amount' => $target->price_per_month,
+                    'description' => "SPP {$target->instrument->name} {$target->grade} — {$change['period']}",
+                    'metadata' => array_merge($item->metadata ?? [], ['package_id' => $target->id, 'promotion_id' => $promotion->id]),
+                ]);
+                $invoice->update(['enrollment_id' => $promotion->successor_enrollment_id, 'class_type' => 'REGULER']);
+                $this->recalcStatus($invoice);
+            } elseif ($change['amount'] > 0) {
+                $description = "Selisih kenaikan level {$target->instrument->name}: {$source->package->grade} → {$target->grade} — {$change['period']}";
+                $adjustment = $this->createOneOff($source->student, [[
+                    'code' => 'SPP', 'description' => $description, 'amount' => $change['amount'],
+                    'metadata' => ['kind' => 'LEVEL_PROMOTION_DIFFERENCE', 'promotion_id' => $promotion->id,
+                        'original_invoice_id' => $invoice->id, 'package_id' => $target->id],
+                ]], description: $description, dueDate: $invoice->due_date instanceof Carbon ? $invoice->due_date : Carbon::parse($invoice->due_date),
+                    classType: 'REGULER', enrollmentId: $promotion->successor_enrollment_id,
+                    periodDate: Carbon::create($invoice->year, $invoice->month, 1));
+                $change['adjustment_invoice_id'] = $adjustment->id;
+            }
+            AuditLog::record('UPDATE', $invoice, 'Penyesuaian SPP kenaikan level', newValues: $change);
+        }
+        unset($change);
+        return $changes;
+    }
+
     private function sppInvoiceExistsForEnrollment(
         Student $student,
         Enrollment $enrollment,
         int $year,
         int $month,
     ): bool {
-        $hasSppItem = fn ($q) => $q->where('item_code', 'SPP');
+        // Invoice asal berbayar tetap milik kelas lama, tetapi telah mencakup periode penerus.
+        $promotion = $enrollment->promotedFrom;
+        foreach ($promotion?->invoice_adjustments ?? [] as $change) {
+            if ($change['period'] === sprintf('%04d-%02d', $year, $month)
+                && Invoice::whereKey($change['original_invoice_id'])->notVoid()->exists()) {
+                return true;
+            }
+        }
+        $hasSppItem = fn ($q) => $q->where('item_code', 'SPP')
+            ->where(fn ($item) => $item->whereNull('metadata->kind')
+                ->orWhere('metadata->kind', '!=', 'LEVEL_PROMOTION_DIFFERENCE'));
 
         $byEnrollment = Invoice::where('student_id', $student->id)
             ->where('enrollment_id', $enrollment->id)

@@ -8,6 +8,7 @@ use App\Models\PayrollConfig;
 use App\Models\Room;
 use Carbon\Carbon;
 use InvalidArgumentException;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Menangani pembuatan sesi pengganti (reschedule) beserta validasi konflik.
@@ -40,76 +41,82 @@ class RescheduleService
         ?int $roomId,
         ?Enrollment $overrideEnrollment = null,
     ): ClassSession {
-        // Hitung jam selesai berdasarkan durasi paket enrollment
-        // Jika ada override enrollment, gunakan paket dari enrollment override
-        if ($overrideEnrollment !== null) {
-            $overrideEnrollment->loadMissing('package');
-            $durationMin = $overrideEnrollment->package->duration_min;
-        } else {
-            $original->loadMissing(['enrollment.package', 'teacher']);
-            $durationMin = $original->enrollment->package->duration_min;
-        }
+        return DB::transaction(function () use ($original, $date, $startTime, $roomId, $overrideEnrollment) {
+            \App\Models\Student::whereIn('id', [$original->student_id, $overrideEnrollment?->student_id])
+                ->orderBy('id')->lockForUpdate()->get();
+            $original->refresh();
+            // Hitung jam selesai berdasarkan durasi paket enrollment
+            // Jika ada override enrollment, gunakan paket dari enrollment override
+            if ($overrideEnrollment !== null) {
+                $overrideEnrollment->loadMissing('package');
+                $durationMin = $overrideEnrollment->package->duration_min;
+            } else {
+                $original->loadMissing(['enrollment.package', 'teacher']);
+                $durationMin = $original->enrollment->package->duration_min;
+            }
 
-        $enrollment = $overrideEnrollment ?? $original->enrollment;
-        if ($enrollment->isOnLeaveOn($date)) {
-            throw new InvalidArgumentException('Sesi pengganti tidak dapat dibuat pada tanggal cuti kelas ini.');
-        }
+            $enrollment = $overrideEnrollment ?? $original->enrollment;
+            app(EnrollmentPromotionService::class)->assertRescheduleAllowed($original, $enrollment);
+            if ($enrollment->isOnLeaveOn($date)) {
+                throw new InvalidArgumentException('Sesi pengganti tidak dapat dibuat pada tanggal cuti kelas ini.');
+            }
 
-        $endTime = Carbon::createFromFormat('H:i', $startTime)
-            ->addMinutes($durationMin)
-            ->format('H:i:s');
+            $endTime = Carbon::createFromFormat('H:i', $startTime)
+                ->addMinutes($durationMin)
+                ->format('H:i:s');
 
-        $startTimeFull = $startTime . ':00';
+            $startTimeFull = $startTime . ':00';
 
-        // Tentukan student_id dan enrollment_id yang dipakai di sesi pengganti
-        $enrollmentId = $overrideEnrollment?->id ?? $original->enrollment_id;
-        $studentId    = $overrideEnrollment?->student_id ?? $original->student_id;
+            // Tentukan student_id dan enrollment_id yang dipakai di sesi pengganti
+            $enrollmentId = $overrideEnrollment?->id ?? $original->enrollment_id;
+            $studentId    = $overrideEnrollment?->student_id ?? $original->student_id;
 
-        // Guru selalu dari sesi asli (guru tidak berubah meski murid di-override)
-        $original->loadMissing('teacher');
+            // Guru selalu dari sesi asli (guru tidak berubah meski murid di-override)
+            $original->loadMissing('teacher');
 
-        $newClassType = $overrideEnrollment !== null
-            ? $overrideEnrollment->package->class_type
-            : $original->enrollment->package->class_type;
+            $newClassType = $overrideEnrollment !== null
+                ? $overrideEnrollment->package->class_type
+                : $original->enrollment->package->class_type;
 
-        $this->assertNoTeacherConflict($original, $newClassType, $date, $startTimeFull, $endTime);
+            $this->assertNoTeacherConflict($original, $newClassType, $date, $startTimeFull, $endTime);
 
-        if ($roomId !== null) {
-            $this->assertNoRoomConflict($original, $newClassType, $roomId, $date, $startTimeFull, $endTime);
-        }
+            if ($roomId !== null) {
+                $this->assertNoRoomConflict($original, $newClassType, $roomId, $date, $startTimeFull, $endTime);
+            }
 
-        // Buat sesi pengganti (ad-hoc — schedule_id null)
-        // ponytail: attribution bulan/tahun WAJIB dari sesi origin, bukan session_date baru.
-        // Tanpa ini, reschedule lintas bulan (misal Juni→Juli) salah label.
-        $replacement = ClassSession::create([
-            'schedule_id'           => null,
-            'enrollment_id'         => $enrollmentId,
-            'student_id'            => $studentId,
-            'teacher_id'            => $original->teacher_id,
-            'substitute_teacher_id' => null,
-            'session_date'          => $date,
-            'start_time'            => $startTimeFull,
-            'end_time'              => $endTime,
-            'room_id'               => $roomId,
-            'status'                => ClassSession::STATUS_SCHEDULED,
-            'honor_code'            => null,
-            'honor_amount'          => null,
-            'notes'                 => "Sesi pengganti dari " . \Carbon\Carbon::parse($original->session_date)->format('d/m/Y'),
-            'session_sequence'      => $original->session_sequence,  // mewarisi dari sesi asli
-            'origin_session_id'     => $original->id,                // referensi ke sesi asli
-            'attribution_month'     => $original->attributionMonth(),
-            'attribution_year'      => $original->attributionYear(),
-        ]);
-
-        // Update notes sesi asli dengan referensi tanggal pengganti
-        // (hanya untuk pengganti murid asli — override tidak mengubah notes sesi asli)
-        if ($overrideEnrollment === null) {
-            $original->update([
-                'notes' => "Sesi pengganti: {$date} " . substr($startTime, 0, 5),
+            // Buat sesi pengganti (ad-hoc — schedule_id null)
+            // ponytail: attribution bulan/tahun WAJIB dari sesi origin, bukan session_date baru.
+            // Tanpa ini, reschedule lintas bulan (misal Juni→Juli) salah label.
+            $replacement = ClassSession::create([
+                'schedule_id'           => null,
+                'enrollment_id'         => $enrollmentId,
+                'student_id'            => $studentId,
+                'teacher_id'            => $original->teacher_id,
+                'substitute_teacher_id' => null,
+                'session_date'          => $date,
+                'start_time'            => $startTimeFull,
+                'end_time'              => $endTime,
+                'room_id'               => $roomId,
+                'status'                => ClassSession::STATUS_SCHEDULED,
+                'honor_code'            => null,
+                'honor_amount'          => null,
+                'notes'                 => "Sesi pengganti dari " . \Carbon\Carbon::parse($original->session_date)->format('d/m/Y'),
+                'session_sequence'      => $original->session_sequence,  // mewarisi dari sesi asli
+                'origin_session_id'     => $original->id,                // referensi ke sesi asli
+                'attribution_month'     => $original->attributionMonth(),
+                'attribution_year'      => $original->attributionYear(),
             ]);
-        }
 
-        return $replacement;
+            // Update notes sesi asli dengan referensi tanggal pengganti
+            // (hanya untuk pengganti murid asli — override tidak mengubah notes sesi asli)
+            if ($overrideEnrollment === null) {
+                $original->update([
+                    'notes' => "Sesi pengganti: {$date} " . substr($startTime, 0, 5),
+                ]);
+            }
+
+            return $replacement;
+        });
     }
 
     /**
@@ -133,55 +140,60 @@ class RescheduleService
         ?int $roomId,
         int $part
     ): ClassSession {
-        $original->loadMissing(['enrollment.package', 'teacher']);
+        return DB::transaction(function () use ($original, $date, $startTime, $roomId, $part) {
+            \App\Models\Student::whereKey($original->student_id)->lockForUpdate()->firstOrFail();
+            $original->refresh();
+            $original->loadMissing(['enrollment.package', 'teacher']);
+            app(EnrollmentPromotionService::class)->assertRescheduleAllowed($original, $original->enrollment);
 
-        if ($original->enrollment->isOnLeaveOn($date)) {
-            throw new InvalidArgumentException('Sesi split tidak dapat dibuat pada tanggal cuti kelas ini.');
-        }
+            if ($original->enrollment->isOnLeaveOn($date)) {
+                throw new InvalidArgumentException('Sesi split tidak dapat dibuat pada tanggal cuti kelas ini.');
+            }
 
-        // Durasi split = setengah durasi paket (30 menit → 15 menit)
-        $durationMin   = (int) ceil($original->enrollment->package->duration_min / 2);
-        $endTime       = Carbon::createFromFormat('H:i', $startTime)->addMinutes($durationMin)->format('H:i:s');
-        $startTimeFull = $startTime . ':00';
+            // Durasi split = setengah durasi paket (30 menit → 15 menit)
+            $durationMin   = (int) ceil($original->enrollment->package->duration_min / 2);
+            $endTime       = Carbon::createFromFormat('H:i', $startTime)->addMinutes($durationMin)->format('H:i:s');
+            $startTimeFull = $startTime . ':00';
 
-        $newClassType = $original->enrollment->package->class_type;
+            $newClassType = $original->enrollment->package->class_type;
 
-        $this->assertNoTeacherConflict($original, $newClassType, $date, $startTimeFull, $endTime);
+            $this->assertNoTeacherConflict($original, $newClassType, $date, $startTimeFull, $endTime);
 
-        if ($roomId !== null) {
-            $this->assertNoRoomConflict($original, $newClassType, $roomId, $date, $startTimeFull, $endTime);
-        }
+            if ($roomId !== null) {
+                $this->assertNoRoomConflict($original, $newClassType, $roomId, $date, $startTimeFull, $endTime);
+            }
 
-        // Honor = setengah honor normal satu sesi (DUO pakai rate dari PayrollConfig)
-        $package = $original->enrollment->package;
-        if ($package?->isDuo()) {
-            $duoRate     = (int) (PayrollConfig::where('scenario_code', 'H_DUO')->value('value_or_formula') ?? 40000);
-            $honorAmount = (int) round($duoRate / 2);
-        } else {
-            $honorAmount = (int) round($package->price_per_month * 0.5 / 4 / 2);
-        }
+            // Honor = setengah honor normal satu sesi (DUO pakai rate dari PayrollConfig)
+            $package = $original->enrollment->package;
+            if ($package?->isDuo()) {
+                $duoRate     = (int) (PayrollConfig::where('scenario_code', 'H_DUO')->value('value_or_formula') ?? 40000);
+                $honorAmount = (int) round($duoRate / 2);
+            } else {
+                $honorAmount = (int) round($package->price_per_month * 0.5 / 4 / 2);
+            }
 
-        // ponytail: attribution dari origin, sama seperti createReplacement()
-        return ClassSession::create([
-            'schedule_id'           => null,
-            'enrollment_id'         => $original->enrollment_id,
-            'student_id'            => $original->student_id,
-            'teacher_id'            => $original->teacher_id,
-            'substitute_teacher_id' => null,
-            'session_date'          => $date,
-            'start_time'            => $startTimeFull,
-            'end_time'              => $endTime,
-            'room_id'               => $roomId,
-            'status'                => ClassSession::STATUS_SCHEDULED,
-            'honor_code'            => 'H_SPLIT',
-            'honor_amount'          => $honorAmount,
-            'notes'                 => "Split bagian {$part}/2 dari sesi " . Carbon::parse($original->session_date)->format('d/m/Y'),
-            'session_sequence'      => $original->session_sequence,
-            'origin_session_id'     => $original->id,
-            'split_part'            => $part,
-            'attribution_month'     => $original->attributionMonth(),
-            'attribution_year'      => $original->attributionYear(),
-        ]);
+            // ponytail: attribution dari origin, sama seperti createReplacement()
+            return ClassSession::create([
+                'schedule_id'           => null,
+                'enrollment_id'         => $original->enrollment_id,
+                'student_id'            => $original->student_id,
+                'teacher_id'            => $original->teacher_id,
+                'substitute_teacher_id' => null,
+                'session_date'          => $date,
+                'start_time'            => $startTimeFull,
+                'end_time'              => $endTime,
+                'room_id'               => $roomId,
+                'status'                => ClassSession::STATUS_SCHEDULED,
+                'honor_code'            => 'H_SPLIT',
+                'honor_amount'          => $honorAmount,
+                'notes'                 => "Split bagian {$part}/2 dari sesi " . Carbon::parse($original->session_date)->format('d/m/Y'),
+                'session_sequence'      => $original->session_sequence,
+                'origin_session_id'     => $original->id,
+                'split_part'            => $part,
+                'attribution_month'     => $original->attributionMonth(),
+                'attribution_year'      => $original->attributionYear(),
+            ]);
+        });
     }
 
     /**

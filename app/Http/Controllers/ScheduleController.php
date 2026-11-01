@@ -7,6 +7,7 @@ use App\Models\Schedule;
 use App\Models\Student;
 use App\Services\ScheduleConflictDetector;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Schedule mingguan tetap (M03).
@@ -27,345 +28,363 @@ class ScheduleController extends Controller
      */
     public function store(Request $request, Student $student)
     {
-        $data = $request->validate([
-            'enrollment_id' => 'required|integer|exists:enrollments,id',
-            'day_of_week'   => 'required|integer|min:0|max:6',
-            'start_time'    => 'required|date_format:H:i',
-            'end_time'      => 'required|date_format:H:i|after:start_time',
-            'room_id'       => 'nullable|exists:rooms,id',
-            'notes'         => 'nullable|string|max:500',
-        ], [
-            'enrollment_id.required' => 'Enrollment wajib dipilih.',
-            'day_of_week.required'   => 'Hari wajib dipilih.',
-            'start_time.required'    => 'Jam mulai wajib diisi.',
-            'end_time.after'         => 'Jam selesai harus setelah jam mulai.',
-        ]);
+        return DB::transaction(function () use ($request, $student) {
+            Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+            $data = $request->validate([
+                'enrollment_id' => 'required|integer|exists:enrollments,id',
+                'day_of_week'   => 'required|integer|min:0|max:6',
+                'start_time'    => 'required|date_format:H:i',
+                'end_time'      => 'required|date_format:H:i|after:start_time',
+                'room_id'       => 'nullable|exists:rooms,id',
+                'notes'         => 'nullable|string|max:500',
+            ], [
+                'enrollment_id.required' => 'Enrollment wajib dipilih.',
+                'day_of_week.required'   => 'Hari wajib dipilih.',
+                'start_time.required'    => 'Jam mulai wajib diisi.',
+                'end_time.after'         => 'Jam selesai harus setelah jam mulai.',
+            ]);
 
-        // Cari enrollment dari request, pastikan milik student ini
-        $enrollment = $student->enrollments()->active()->find($data['enrollment_id']);
-        if (!$enrollment) {
-            abort(403, 'Enrollment ini tidak ditemukan atau bukan milik murid ini.');
-        }
-
-        $package = $enrollment->package;
-        $isDuo   = $package?->isDuo() ?? false;
-
-        // Validasi konflik guru — DUO boleh berbagi slot jika partner juga DUO (maks 2)
-        $teacherClashes = $this->conflictDetector->findTeacherConflicts(
-            teacherId: $enrollment->teacher_id,
-            dayOfWeek: $data['day_of_week'],
-            startTime: $data['start_time'],
-            endTime:   $data['end_time'],
-        );
-
-        if ($isDuo) {
-            $nonDuoClashes = $teacherClashes->filter(
-                fn ($s) => $s->enrollment?->package?->class_type !== 'DUO'
-            );
-            $duoClashes = $teacherClashes->filter(
-                fn ($s) => $s->enrollment?->package?->class_type === 'DUO'
-            );
-
-            if ($nonDuoClashes->isNotEmpty()) {
-                $names = $nonDuoClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
-                                       ->implode(', ');
-                return back()->withInput()->with('error',
-                    "Bentrok jadwal guru di slot tsb. Sudah dipakai untuk: {$names}.");
+            // Cari enrollment dari request, pastikan milik student ini
+            $enrollment = $student->enrollments()->active()->find($data['enrollment_id']);
+            if (!$enrollment) {
+                abort(403, 'Enrollment ini tidak ditemukan atau bukan milik murid ini.');
             }
-            if ($duoClashes->count() >= 2) {
-                return back()->withInput()->with('error',
-                    'Slot DUO sudah penuh (maksimal 2 murid per slot).');
-            }
-        } else {
-            $blockingClashes = $this->conflictDetector->findBlockingTeacherConflicts(
+            app(\App\Services\EnrollmentPromotionService::class)->assertNotScheduled($enrollment);
+            \App\Models\Teacher::whereKey($enrollment->teacher_id)->lockForUpdate()->firstOrFail();
+            Room::whereKey($data['room_id'] ?? null)->lockForUpdate()->get();
+
+            $package = $enrollment->package;
+            $isDuo   = $package?->isDuo() ?? false;
+
+            // Validasi konflik guru — DUO boleh berbagi slot jika partner juga DUO (maks 2)
+            $teacherClashes = $this->conflictDetector->findTeacherConflicts(
                 teacherId: $enrollment->teacher_id,
                 dayOfWeek: $data['day_of_week'],
                 startTime: $data['start_time'],
                 endTime:   $data['end_time'],
-                newClassType: $package?->class_type ?? '',
             );
 
-            if ($blockingClashes->isNotEmpty()) {
-                $names = $blockingClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
-                                         ->implode(', ');
-                return back()->withInput()->with('error',
-                    "Bentrok jadwal guru di slot tsb. Sudah dipakai untuk: {$names}.");
-            }
-        }
-
-        // Validasi kapasitas ruangan — DUO boleh berbagi ruang dengan partner DUO (maks 2)
-        if (!empty($data['room_id'])) {
             if ($isDuo) {
-                $roomConflicts = $this->conflictDetector->findRoomConflicts(
-                    roomId:    (int) $data['room_id'],
-                    dayOfWeek: $data['day_of_week'],
-                    startTime: $data['start_time'],
-                    endTime:   $data['end_time'],
-                );
-                $nonDuoRoom = $roomConflicts->filter(
+                $nonDuoClashes = $teacherClashes->filter(
                     fn ($s) => $s->enrollment?->package?->class_type !== 'DUO'
                 );
-                $duoRoom = $roomConflicts->filter(
+                $duoClashes = $teacherClashes->filter(
                     fn ($s) => $s->enrollment?->package?->class_type === 'DUO'
                 );
 
-                if ($nonDuoRoom->isNotEmpty() || $duoRoom->count() >= 2) {
+                if ($nonDuoClashes->isNotEmpty()) {
+                    $names = $nonDuoClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
+                                           ->implode(', ');
                     return back()->withInput()->with('error',
-                        'Ruangan tidak tersedia di slot ini untuk DUO.');
+                        "Bentrok jadwal guru di slot tsb. Sudah dipakai untuk: {$names}.");
+                }
+                if ($duoClashes->count() >= 2) {
+                    return back()->withInput()->with('error',
+                        'Slot DUO sudah penuh (maksimal 2 murid per slot).');
                 }
             } else {
-                $isFull = $this->conflictDetector->isRoomFull(
-                    roomId:    (int) $data['room_id'],
+                $blockingClashes = $this->conflictDetector->findBlockingTeacherConflicts(
+                    teacherId: $enrollment->teacher_id,
                     dayOfWeek: $data['day_of_week'],
                     startTime: $data['start_time'],
                     endTime:   $data['end_time'],
+                    newClassType: $package?->class_type ?? '',
                 );
-                if ($isFull) {
+
+                if ($blockingClashes->isNotEmpty()) {
+                    $names = $blockingClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
+                                             ->implode(', ');
                     return back()->withInput()->with('error',
-                        'Kapasitas ruangan sudah penuh di slot ini.');
+                        "Bentrok jadwal guru di slot tsb. Sudah dipakai untuk: {$names}.");
                 }
             }
-        }
 
-        // Validasi: ruangan harus support instrumen murid
-        if (!empty($data['room_id'])) {
-            $room = Room::findOrFail($data['room_id']);
-            $instrumentName = $enrollment->package?->instrument?->name;
+            // Validasi kapasitas ruangan — DUO boleh berbagi ruang dengan partner DUO (maks 2)
+            if (!empty($data['room_id'])) {
+                if ($isDuo) {
+                    $roomConflicts = $this->conflictDetector->findRoomConflicts(
+                        roomId:    (int) $data['room_id'],
+                        dayOfWeek: $data['day_of_week'],
+                        startTime: $data['start_time'],
+                        endTime:   $data['end_time'],
+                    );
+                    $nonDuoRoom = $roomConflicts->filter(
+                        fn ($s) => $s->enrollment?->package?->class_type !== 'DUO'
+                    );
+                    $duoRoom = $roomConflicts->filter(
+                        fn ($s) => $s->enrollment?->package?->class_type === 'DUO'
+                    );
 
-            if ($instrumentName && !$room->supportsInstrument($instrumentName)) {
-                return back()->withInput()->with('error',
-                    "Ruangan [{$room->code}] {$room->name} tidak mendukung instrumen {$instrumentName}. " .
-                    "Pilih ruangan lain atau kosongkan field ruangan."
-                );
+                    if ($nonDuoRoom->isNotEmpty() || $duoRoom->count() >= 2) {
+                        return back()->withInput()->with('error',
+                            'Ruangan tidak tersedia di slot ini untuk DUO.');
+                    }
+                } else {
+                    $isFull = $this->conflictDetector->isRoomFull(
+                        roomId:    (int) $data['room_id'],
+                        dayOfWeek: $data['day_of_week'],
+                        startTime: $data['start_time'],
+                        endTime:   $data['end_time'],
+                    );
+                    if ($isFull) {
+                        return back()->withInput()->with('error',
+                            'Kapasitas ruangan sudah penuh di slot ini.');
+                    }
+                }
             }
-        }
 
-        // Validasi: murid tidak boleh punya jadwal aktif lain di hari + jam yang overlap
-        // (berlaku untuk multi-enrollment — Piano dan Gitar di waktu yang sama tidak masuk akal)
-        $studentId        = $enrollment->student_id;
-        $studentConflicts = Schedule::query()
-            ->active()
-            ->whereHas('enrollment', function ($q) use ($studentId) {
-                $q->active()->where('student_id', $studentId);
-            })
-            ->where('day_of_week', $data['day_of_week'])
-            ->where('start_time', '<', $data['end_time'])
-            ->where('end_time', '>', $data['start_time'])
-            ->get();
+            // Validasi: ruangan harus support instrumen murid
+            if (!empty($data['room_id'])) {
+                $room = Room::findOrFail($data['room_id']);
+                $instrumentName = $enrollment->package?->instrument?->name;
 
-        if ($studentConflicts->isNotEmpty()) {
-            $namaKelas = $studentConflicts->map(function ($s) {
-                $pkg = $s->enrollment?->package;
-                return ($pkg?->instrument?->name ?? '?') . ' ' . ($s->start_time ? substr($s->start_time, 0, 5) : '');
-            })->implode(', ');
-            return back()->withInput()->with('error',
-                "Murid sudah memiliki jadwal aktif di slot yang sama: {$namaKelas}.");
-        }
+                if ($instrumentName && !$room->supportsInstrument($instrumentName)) {
+                    return back()->withInput()->with('error',
+                        "Ruangan [{$room->code}] {$room->name} tidak mendukung instrumen {$instrumentName}. " .
+                        "Pilih ruangan lain atau kosongkan field ruangan."
+                    );
+                }
+            }
 
-        Schedule::create([
-            'enrollment_id' => $enrollment->id,
-            'day_of_week'   => $data['day_of_week'],
-            'start_time'    => $data['start_time'],
-            'end_time'      => $data['end_time'],
-            'room_id'       => $data['room_id'] ?? null,
-            'notes'         => $data['notes'] ?? null,
-            'is_active'     => true,
-        ]);
+            // Validasi: murid tidak boleh punya jadwal aktif lain di hari + jam yang overlap
+            // (berlaku untuk multi-enrollment — Piano dan Gitar di waktu yang sama tidak masuk akal)
+            $studentId        = $enrollment->student_id;
+            $studentConflicts = Schedule::query()
+                ->active()
+                ->whereHas('enrollment', function ($q) use ($studentId) {
+                    $q->forPeriod(today(), \Carbon\Carbon::parse('9999-12-31'))->where('student_id', $studentId);
+                })
+                ->where('day_of_week', $data['day_of_week'])
+                ->where('start_time', '<', $data['end_time'])
+                ->where('end_time', '>', $data['start_time'])
+                ->get();
 
-        // Secondary check: cek class_sessions konkret untuk potensi konflik dengan
-        // manual/replacement sessions di 30 hari ke depan. Hanya peringatan (warning),
-        // bukan error — jadwal tetap tersimpan karena ini adalah template mingguan.
-        // Filter day-of-week dilakukan di PHP untuk kompatibilitas SQLite (test) dan MySQL.
-        $upcomingConflict = \App\Models\ClassSession::where('teacher_id', $enrollment->teacher_id)
-            ->where('session_date', '>=', today()->toDateString())
-            ->where('session_date', '<=', today()->addDays(30)->toDateString())
-            ->whereNull('schedule_id')  // hanya manual/replacement sessions
-            ->where('start_time', '<', $data['end_time'] . ':00')
-            ->where('end_time', '>', $data['start_time'] . ':00')
-            ->whereNotIn('status', \App\Models\ClassSession::statusesExcludedFromScheduleConflict())
-            ->get()
-            ->contains(function ($session) use ($data) {
-                return \Carbon\Carbon::parse($session->session_date)->dayOfWeek === (int) $data['day_of_week'];
-            });
+            if ($studentConflicts->isNotEmpty()) {
+                $namaKelas = $studentConflicts->map(function ($s) {
+                    $pkg = $s->enrollment?->package;
+                    return ($pkg?->instrument?->name ?? '?') . ' ' . ($s->start_time ? substr($s->start_time, 0, 5) : '');
+                })->implode(', ');
+                return back()->withInput()->with('error',
+                    "Murid sudah memiliki jadwal aktif di slot yang sama: {$namaKelas}.");
+            }
 
-        if ($upcomingConflict) {
-            return back()->with('warning',
-                'Jadwal berhasil ditambahkan, namun terdeteksi potensi bentrok dengan sesi manual/pengganti yang sudah ada di 30 hari ke depan. Cek kalender untuk konfirmasi.');
-        }
+            Schedule::create([
+                'enrollment_id' => $enrollment->id,
+                'day_of_week'   => $data['day_of_week'],
+                'start_time'    => $data['start_time'],
+                'end_time'      => $data['end_time'],
+                'room_id'       => $data['room_id'] ?? null,
+                'notes'         => $data['notes'] ?? null,
+                'is_active'     => true,
+            ]);
 
-        return back()->with('success', 'Jadwal mingguan berhasil ditambahkan.');
+            // Secondary check: cek class_sessions konkret untuk potensi konflik dengan
+            // manual/replacement sessions di 30 hari ke depan. Hanya peringatan (warning),
+            // bukan error — jadwal tetap tersimpan karena ini adalah template mingguan.
+            // Filter day-of-week dilakukan di PHP untuk kompatibilitas SQLite (test) dan MySQL.
+            $upcomingConflict = \App\Models\ClassSession::where('teacher_id', $enrollment->teacher_id)
+                ->where('session_date', '>=', today()->toDateString())
+                ->where('session_date', '<=', today()->addDays(30)->toDateString())
+                ->whereNull('schedule_id')  // hanya manual/replacement sessions
+                ->where('start_time', '<', $data['end_time'] . ':00')
+                ->where('end_time', '>', $data['start_time'] . ':00')
+                ->whereNotIn('status', \App\Models\ClassSession::statusesExcludedFromScheduleConflict())
+                ->get()
+                ->contains(function ($session) use ($data) {
+                    return \Carbon\Carbon::parse($session->session_date)->dayOfWeek === (int) $data['day_of_week'];
+                });
+
+            if ($upcomingConflict) {
+                return back()->with('warning',
+                    'Jadwal berhasil ditambahkan, namun terdeteksi potensi bentrok dengan sesi manual/pengganti yang sudah ada di 30 hari ke depan. Cek kalender untuk konfirmasi.');
+            }
+
+            return back()->with('success', 'Jadwal mingguan berhasil ditambahkan.');
+        });
     }
 
     public function update(Request $request, Student $student, Schedule $schedule)
     {
-        abort_unless(
-            $schedule->enrollment->student_id === $student->id,
-            403,
-            'Jadwal tidak ditemukan untuk murid ini.'
-        );
-
-        $data = $request->validate([
-            'day_of_week' => 'required|integer|min:0|max:6',
-            'start_time'  => 'required|date_format:H:i',
-            'end_time'    => 'required|date_format:H:i|after:start_time',
-            'room_id'     => 'nullable|exists:rooms,id',
-            'notes'       => 'nullable|string|max:500',
-        ]);
-
-        $teacherId = $schedule->enrollment->teacher_id;
-        $package   = $schedule->enrollment?->package;
-        $isDuo     = $package?->isDuo() ?? false;
-
-        // Validasi konflik guru — DUO boleh berbagi slot jika partner juga DUO (maks 2)
-        // Kecualikan schedule ini sendiri (saat update)
-        $teacherClashes = $this->conflictDetector->findTeacherConflicts(
-            teacherId: $teacherId,
-            dayOfWeek: $data['day_of_week'],
-            startTime: $data['start_time'],
-            endTime:   $data['end_time'],
-            excludeScheduleId: $schedule->id,
-        );
-
-        if ($isDuo) {
-            $nonDuoClashes = $teacherClashes->filter(
-                fn ($s) => $s->enrollment?->package?->class_type !== 'DUO'
+        return DB::transaction(function () use ($request, $student, $schedule) {
+            Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+            $schedule->refresh();
+            abort_unless(
+                $schedule->enrollment->student_id === $student->id,
+                403,
+                'Jadwal tidak ditemukan untuk murid ini.'
             );
-            $duoClashes = $teacherClashes->filter(
-                fn ($s) => $s->enrollment?->package?->class_type === 'DUO'
-            );
+            app(\App\Services\EnrollmentPromotionService::class)->assertNotScheduled($schedule->enrollment);
 
-            if ($nonDuoClashes->isNotEmpty()) {
-                $names = $nonDuoClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
-                                       ->implode(', ');
-                return back()->withInput()->with('error',
-                    "Bentrok jadwal guru di slot tsb. Sudah dipakai untuk: {$names}.");
-            }
-            if ($duoClashes->count() >= 2) {
-                return back()->withInput()->with('error',
-                    'Slot DUO sudah penuh (maksimal 2 murid per slot).');
-            }
-        } else {
-            $blockingClashes = $this->conflictDetector->findBlockingTeacherConflicts(
+            $data = $request->validate([
+                'day_of_week' => 'required|integer|min:0|max:6',
+                'start_time'  => 'required|date_format:H:i',
+                'end_time'    => 'required|date_format:H:i|after:start_time',
+                'room_id'     => 'nullable|exists:rooms,id',
+                'notes'       => 'nullable|string|max:500',
+            ]);
+
+            $teacherId = $schedule->enrollment->teacher_id;
+            \App\Models\Teacher::whereKey($teacherId)->lockForUpdate()->firstOrFail();
+            Room::whereKey($data['room_id'] ?? null)->lockForUpdate()->get();
+            $package   = $schedule->enrollment?->package;
+            $isDuo     = $package?->isDuo() ?? false;
+
+            // Validasi konflik guru — DUO boleh berbagi slot jika partner juga DUO (maks 2)
+            // Kecualikan schedule ini sendiri (saat update)
+            $teacherClashes = $this->conflictDetector->findTeacherConflicts(
                 teacherId: $teacherId,
                 dayOfWeek: $data['day_of_week'],
                 startTime: $data['start_time'],
                 endTime:   $data['end_time'],
-                newClassType: $package?->class_type ?? '',
                 excludeScheduleId: $schedule->id,
             );
 
-            if ($blockingClashes->isNotEmpty()) {
-                $names = $blockingClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
-                                         ->implode(', ');
-                return back()->withInput()->with('error',
-                    "Bentrok jadwal guru di slot tsb. Sudah dipakai untuk: {$names}.");
-            }
-        }
-
-        if (!empty($data['room_id'])) {
             if ($isDuo) {
-                $roomConflicts = $this->conflictDetector->findRoomConflicts(
-                    roomId:    (int) $data['room_id'],
-                    dayOfWeek: $data['day_of_week'],
-                    startTime: $data['start_time'],
-                    endTime:   $data['end_time'],
-                    excludeScheduleId: $schedule->id,
-                );
-                $nonDuoRoom = $roomConflicts->filter(
+                $nonDuoClashes = $teacherClashes->filter(
                     fn ($s) => $s->enrollment?->package?->class_type !== 'DUO'
                 );
-                $duoRoom = $roomConflicts->filter(
+                $duoClashes = $teacherClashes->filter(
                     fn ($s) => $s->enrollment?->package?->class_type === 'DUO'
                 );
 
-                if ($nonDuoRoom->isNotEmpty() || $duoRoom->count() >= 2) {
+                if ($nonDuoClashes->isNotEmpty()) {
+                    $names = $nonDuoClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
+                                           ->implode(', ');
                     return back()->withInput()->with('error',
-                        'Ruangan tidak tersedia di slot ini untuk DUO.');
+                        "Bentrok jadwal guru di slot tsb. Sudah dipakai untuk: {$names}.");
+                }
+                if ($duoClashes->count() >= 2) {
+                    return back()->withInput()->with('error',
+                        'Slot DUO sudah penuh (maksimal 2 murid per slot).');
                 }
             } else {
-                $isFull = $this->conflictDetector->isRoomFull(
-                    roomId:    (int) $data['room_id'],
+                $blockingClashes = $this->conflictDetector->findBlockingTeacherConflicts(
+                    teacherId: $teacherId,
                     dayOfWeek: $data['day_of_week'],
                     startTime: $data['start_time'],
                     endTime:   $data['end_time'],
+                    newClassType: $package?->class_type ?? '',
                     excludeScheduleId: $schedule->id,
                 );
-                if ($isFull) {
+
+                if ($blockingClashes->isNotEmpty()) {
+                    $names = $blockingClashes->map(fn ($s) => $s->enrollment->student->full_name ?? '?')
+                                             ->implode(', ');
                     return back()->withInput()->with('error',
-                        'Kapasitas ruangan sudah penuh di slot ini.');
+                        "Bentrok jadwal guru di slot tsb. Sudah dipakai untuk: {$names}.");
                 }
             }
-        }
 
-        // Validasi: ruangan harus support instrumen murid (saat update)
-        if (!empty($data['room_id'])) {
-            $room = Room::findOrFail($data['room_id']);
-            $instrumentName = $schedule->enrollment?->package?->instrument?->name;
+            if (!empty($data['room_id'])) {
+                if ($isDuo) {
+                    $roomConflicts = $this->conflictDetector->findRoomConflicts(
+                        roomId:    (int) $data['room_id'],
+                        dayOfWeek: $data['day_of_week'],
+                        startTime: $data['start_time'],
+                        endTime:   $data['end_time'],
+                        excludeScheduleId: $schedule->id,
+                    );
+                    $nonDuoRoom = $roomConflicts->filter(
+                        fn ($s) => $s->enrollment?->package?->class_type !== 'DUO'
+                    );
+                    $duoRoom = $roomConflicts->filter(
+                        fn ($s) => $s->enrollment?->package?->class_type === 'DUO'
+                    );
 
-            if ($instrumentName && !$room->supportsInstrument($instrumentName)) {
-                return back()->withInput()->with('error',
-                    "Ruangan [{$room->code}] {$room->name} tidak mendukung instrumen {$instrumentName}. " .
-                    "Pilih ruangan lain atau kosongkan field ruangan."
-                );
+                    if ($nonDuoRoom->isNotEmpty() || $duoRoom->count() >= 2) {
+                        return back()->withInput()->with('error',
+                            'Ruangan tidak tersedia di slot ini untuk DUO.');
+                    }
+                } else {
+                    $isFull = $this->conflictDetector->isRoomFull(
+                        roomId:    (int) $data['room_id'],
+                        dayOfWeek: $data['day_of_week'],
+                        startTime: $data['start_time'],
+                        endTime:   $data['end_time'],
+                        excludeScheduleId: $schedule->id,
+                    );
+                    if ($isFull) {
+                        return back()->withInput()->with('error',
+                            'Kapasitas ruangan sudah penuh di slot ini.');
+                    }
+                }
             }
-        }
 
-        // Validasi: murid tidak boleh punya jadwal aktif lain di hari + jam yang overlap
-        $studentId        = $schedule->enrollment->student_id;
-        $studentConflicts = Schedule::query()
-            ->active()
-            ->whereHas('enrollment', function ($q) use ($studentId) {
-                $q->active()->where('student_id', $studentId);
-            })
-            ->where('day_of_week', $data['day_of_week'])
-            ->where('start_time', '<', $data['end_time'])
-            ->where('end_time', '>', $data['start_time'])
-            ->where('id', '!=', $schedule->id) // kecualikan diri sendiri
-            ->get();
+            // Validasi: ruangan harus support instrumen murid (saat update)
+            if (!empty($data['room_id'])) {
+                $room = Room::findOrFail($data['room_id']);
+                $instrumentName = $schedule->enrollment?->package?->instrument?->name;
 
-        if ($studentConflicts->isNotEmpty()) {
-            $namaKelas = $studentConflicts->map(function ($s) {
-                $pkg = $s->enrollment?->package;
-                return ($pkg?->instrument?->name ?? '?') . ' ' . ($s->start_time ? substr($s->start_time, 0, 5) : '');
-            })->implode(', ');
-            return back()->withInput()->with('error',
-                "Murid sudah memiliki jadwal aktif di slot yang sama: {$namaKelas}.");
-        }
+                if ($instrumentName && !$room->supportsInstrument($instrumentName)) {
+                    return back()->withInput()->with('error',
+                        "Ruangan [{$room->code}] {$room->name} tidak mendukung instrumen {$instrumentName}. " .
+                        "Pilih ruangan lain atau kosongkan field ruangan."
+                    );
+                }
+            }
 
-        $schedule->update($data);
+            // Validasi: murid tidak boleh punya jadwal aktif lain di hari + jam yang overlap
+            $studentId        = $schedule->enrollment->student_id;
+            $studentConflicts = Schedule::query()
+                ->active()
+                ->whereHas('enrollment', function ($q) use ($studentId) {
+                    $q->forPeriod(today(), \Carbon\Carbon::parse('9999-12-31'))->where('student_id', $studentId);
+                })
+                ->where('day_of_week', $data['day_of_week'])
+                ->where('start_time', '<', $data['end_time'])
+                ->where('end_time', '>', $data['start_time'])
+                ->where('id', '!=', $schedule->id) // kecualikan diri sendiri
+                ->get();
 
-        // Sinkronisasi: update sesi SCHEDULED masa depan yang sudah ter-generate
-        // agar konsisten dengan perubahan jadwal mingguan (jam, ruang).
-        // Sesi dengan status SCHEDULED di-update; sesi lewat/status lain TIDAK diubah.
-        \App\Models\ClassSession::where('schedule_id', $schedule->id)
-            ->where('session_date', '>=', today()->toDateString())
-            ->where('status', \App\Models\ClassSession::STATUS_SCHEDULED)
-            ->update([
-                'start_time' => $data['start_time'] . ':00',
-                'end_time'   => $data['end_time'] . ':00',
-                'room_id'    => !empty($data['room_id']) ? $data['room_id'] : null,
-            ]);
+            if ($studentConflicts->isNotEmpty()) {
+                $namaKelas = $studentConflicts->map(function ($s) {
+                    $pkg = $s->enrollment?->package;
+                    return ($pkg?->instrument?->name ?? '?') . ' ' . ($s->start_time ? substr($s->start_time, 0, 5) : '');
+                })->implode(', ');
+                return back()->withInput()->with('error',
+                    "Murid sudah memiliki jadwal aktif di slot yang sama: {$namaKelas}.");
+            }
 
-        return back()->with('success', 'Jadwal mingguan berhasil diperbarui.');
+            $schedule->update($data);
+
+            // Sinkronisasi: update sesi SCHEDULED masa depan yang sudah ter-generate
+            // agar konsisten dengan perubahan jadwal mingguan (jam, ruang).
+            // Sesi dengan status SCHEDULED di-update; sesi lewat/status lain TIDAK diubah.
+            \App\Models\ClassSession::where('schedule_id', $schedule->id)
+                ->where('session_date', '>=', today()->toDateString())
+                ->where('status', \App\Models\ClassSession::STATUS_SCHEDULED)
+                ->update([
+                    'start_time' => $data['start_time'] . ':00',
+                    'end_time'   => $data['end_time'] . ':00',
+                    'room_id'    => !empty($data['room_id']) ? $data['room_id'] : null,
+                ]);
+
+            return back()->with('success', 'Jadwal mingguan berhasil diperbarui.');
+        });
     }
 
     public function destroy(Student $student, Schedule $schedule)
     {
-        abort_unless(
-            $schedule->enrollment->student_id === $student->id,
-            403,
-            'Jadwal tidak ditemukan untuk murid ini.'
-        );
+        return DB::transaction(function () use ($student, $schedule) {
+            Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+            $schedule->refresh();
+            abort_unless(
+                $schedule->enrollment->student_id === $student->id,
+                403,
+                'Jadwal tidak ditemukan untuk murid ini.'
+            );
+            app(\App\Services\EnrollmentPromotionService::class)->assertNotScheduled($schedule->enrollment);
 
-        // CATATAN: hanya boleh hapus kalau belum ada sesi ter-generate.
-        // Kalau sudah ada, lebih aman set is_active=false (toggle).
-        if ($schedule->classSessions()->exists()) {
-            return back()->with('error',
-                'Jadwal sudah punya sesi. Pakai toggle nonaktif daripada hapus.');
-        }
+            // CATATAN: hanya boleh hapus kalau belum ada sesi ter-generate.
+            // Kalau sudah ada, lebih aman set is_active=false (toggle).
+            if ($schedule->classSessions()->exists()) {
+                return back()->with('error',
+                    'Jadwal sudah punya sesi. Pakai toggle nonaktif daripada hapus.');
+            }
 
-        $schedule->delete();
-        return back()->with('success', 'Jadwal mingguan dihapus.');
+            $schedule->delete();
+            return back()->with('success', 'Jadwal mingguan dihapus.');
+        });
     }
 
     /**
@@ -374,18 +393,38 @@ class ScheduleController extends Controller
      */
     public function toggleActive(Student $student, Schedule $schedule)
     {
-        abort_unless(
-            $schedule->enrollment->student_id === $student->id,
-            403,
-            'Jadwal tidak ditemukan untuk murid ini.'
-        );
+        return DB::transaction(function () use ($student, $schedule) {
+            Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+            $schedule->refresh();
+            abort_unless(
+                $schedule->enrollment->student_id === $student->id,
+                403,
+                'Jadwal tidak ditemukan untuk murid ini.'
+            );
+            app(\App\Services\EnrollmentPromotionService::class)->assertNotScheduled($schedule->enrollment);
+            \App\Models\Teacher::whereKey($schedule->enrollment->teacher_id)->lockForUpdate()->firstOrFail();
+            Room::whereKey($schedule->room_id)->lockForUpdate()->get();
+            if (!$schedule->is_active) {
+                $reserved = Schedule::active()->where('day_of_week', $schedule->day_of_week)
+                    ->whereTime('start_time', '<', \Carbon\Carbon::parse($schedule->end_time)->format('H:i:s'))
+                    ->whereTime('end_time', '>', \Carbon\Carbon::parse($schedule->start_time)->format('H:i:s'))
+                    ->whereHas('enrollment.promotedFrom', fn ($q) => $q->where('status', 'SCHEDULED'))
+                    ->where(fn ($q) => $q->whereHas('enrollment', fn ($e) => $e
+                        ->where('student_id', $student->id)->orWhere('teacher_id', $schedule->enrollment->teacher_id))
+                        ->when($schedule->room_id, fn ($room) => $room->orWhere('room_id', $schedule->room_id)))
+                    ->lockForUpdate()->exists();
+                if ($reserved) {
+                    return back()->with('error', 'Slot murid, guru, atau ruang sudah dipesan oleh kenaikan level terjadwal.');
+                }
+            }
 
-        $schedule->update(['is_active' => !$schedule->is_active]);
+            $schedule->update(['is_active' => !$schedule->is_active]);
 
-        $msg = $schedule->is_active
-            ? 'Jadwal diaktifkan kembali.'
-            : 'Jadwal dinonaktifkan. Sesi yang sudah ada tetap, tapi sesi baru tidak akan di-generate.';
+            $msg = $schedule->is_active
+                ? 'Jadwal diaktifkan kembali.'
+                : 'Jadwal dinonaktifkan. Sesi yang sudah ada tetap, tapi sesi baru tidak akan di-generate.';
 
-        return back()->with('success', $msg);
+            return back()->with('success', $msg);
+        });
     }
 }

@@ -436,6 +436,7 @@ class StudentLifecycleService
         return DB::transaction(function () use ($student, $data) {
             $student = Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
             $enrollment = $this->leaveEnrollment($student, $data);
+            app(EnrollmentPromotionService::class)->assertNotScheduled($enrollment);
             $leave = $enrollment->currentLeave;
             $isExtension = $leave !== null;
             $newUntil = Carbon::parse($data['cuti_until'])->startOfDay();
@@ -569,6 +570,10 @@ class StudentLifecycleService
         $this->ensureTransition($student, 'Mengundurkan Diri');
 
         return DB::transaction(function () use ($student, $data) {
+            $student = Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+            foreach ($student->enrollments as $enrollment) {
+                app(EnrollmentPromotionService::class)->assertNotScheduled($enrollment);
+            }
             $from = $student->status;
 
             $student->update(['status' => 'Mengundurkan Diri']);

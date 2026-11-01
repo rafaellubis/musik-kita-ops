@@ -51,7 +51,8 @@ class ScheduleConflictDetector
         return Schedule::query()
             ->active()
             ->whereHas('enrollment', function ($q) use ($teacherId) {
-                $q->active()->where('teacher_id', $teacherId);
+                $q->where('teacher_id', $teacherId)->where(fn ($classes) => $classes->active()
+                    ->orWhereHas('promotedFrom', fn ($p) => $p->where('status', 'SCHEDULED')));
             })
             ->where('day_of_week', $dayOfWeek)
             ->where(fn ($q) => $this->whereTimeOverlaps($q, $startTime, $endTime))

@@ -7,6 +7,7 @@ use App\Models\Enrollment;
 use App\Models\Room;
 use Carbon\Carbon;
 use InvalidArgumentException;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Pembuatan sesi manual oleh admin (enrollment mid-month / rapel).
@@ -64,64 +65,69 @@ class ManualSessionService
         int $attributionMonth,
         ?int $sessionSequence = null,
     ): ClassSession {
-        $enrollment->loadMissing(['package', 'student']);
+        return DB::transaction(function () use ($enrollment, $sessionDate, $startTime, $roomId, $attributionYear, $attributionMonth, $sessionSequence) {
+            \App\Models\Student::whereKey($enrollment->student_id)->lockForUpdate()->firstOrFail();
+            $enrollment->refresh();
+            $enrollment->loadMissing(['package', 'student']);
+            app(EnrollmentPromotionService::class)->assertNotScheduled($enrollment);
 
-        if ($enrollment->status !== 'ACTIVE') {
-            throw new InvalidArgumentException('Enrollment harus berstatus ACTIVE.');
-        }
+            if ($enrollment->status !== 'ACTIVE') {
+                throw new InvalidArgumentException('Enrollment harus berstatus ACTIVE.');
+            }
 
-        if ($enrollment->student?->status !== 'Aktif') {
-            throw new InvalidArgumentException('Murid harus berstatus Aktif.');
-        }
+            if ($enrollment->student?->status !== 'Aktif') {
+                throw new InvalidArgumentException('Murid harus berstatus Aktif.');
+            }
 
-        if ($enrollment->isOnLeaveOn($sessionDate)) {
-            throw new InvalidArgumentException('Sesi tidak dapat dibuat pada tanggal cuti kelas ini.');
-        }
+            if ($enrollment->isOnLeaveOn($sessionDate)) {
+                throw new InvalidArgumentException('Sesi tidak dapat dibuat pada tanggal cuti kelas ini.');
+            }
 
-        $sessionSequence ??= $this->suggestNextSequence($enrollment, $attributionYear, $attributionMonth);
+            $sessionSequence ??= $this->suggestNextSequence($enrollment, $attributionYear, $attributionMonth);
 
-        if ($sessionSequence === null) {
-            throw new InvalidArgumentException('Semua slot sesi (1–4) sudah terisi untuk periode atribusi ini.');
-        }
+            if ($sessionSequence === null) {
+                throw new InvalidArgumentException('Semua slot sesi (1–4) sudah terisi untuk periode atribusi ini.');
+            }
 
-        if ($this->sequenceTaken($enrollment, $attributionYear, $attributionMonth, $sessionSequence)) {
-            throw new InvalidArgumentException("Sequence {$sessionSequence} sudah terpakai untuk periode atribusi ini.");
-        }
+            if ($this->sequenceTaken($enrollment, $attributionYear, $attributionMonth, $sessionSequence)) {
+                throw new InvalidArgumentException("Sequence {$sessionSequence} sudah terpakai untuk periode atribusi ini.");
+            }
 
-        $package = $enrollment->package;
-        if (! $package) {
-            throw new InvalidArgumentException('Paket enrollment tidak ditemukan.');
-        }
+            $package = $enrollment->package;
+            if (! $package) {
+                throw new InvalidArgumentException('Paket enrollment tidak ditemukan.');
+            }
 
-        $startTimeFull = strlen($startTime) === 5 ? $startTime . ':00' : $startTime;
-        $endTime = Carbon::createFromFormat('H:i:s', $startTimeFull)
-            ->addMinutes($package->duration_min)
-            ->format('H:i:s');
+            $startTimeFull = strlen($startTime) === 5 ? $startTime . ':00' : $startTime;
+            $endTime = Carbon::createFromFormat('H:i:s', $startTimeFull)
+                ->addMinutes($package->duration_min)
+                ->format('H:i:s');
 
-        $this->assertNoConflict(
-            enrollment: $enrollment,
-            date: $sessionDate,
-            startTimeFull: $startTimeFull,
-            endTime: $endTime,
-            roomId: $roomId,
-        );
+            $this->assertNoConflict(
+                enrollment: $enrollment,
+                date: $sessionDate,
+                startTimeFull: $startTimeFull,
+                endTime: $endTime,
+                roomId: $roomId,
+            );
 
-        return ClassSession::create([
-            'schedule_id'        => null,
-            'enrollment_id'      => $enrollment->id,
-            'student_id'         => $enrollment->student_id,
-            'teacher_id'         => $enrollment->teacher_id,
-            'session_date'       => $sessionDate,
-            'start_time'         => $startTimeFull,
-            'end_time'           => $endTime,
-            'room_id'            => $roomId,
-            'status'             => ClassSession::STATUS_SCHEDULED,
-            'session_sequence'   => $sessionSequence,
-            'attribution_year'   => $attributionYear,
-            'attribution_month'  => $attributionMonth,
-            'session_type'       => ClassSession::TYPE_MANUAL,
-            'notes'              => 'Sesi manual admin',
-        ]);
+            return ClassSession::create([
+                'schedule_id'        => null,
+                'enrollment_id'      => $enrollment->id,
+                'student_id'         => $enrollment->student_id,
+                'teacher_id'         => $enrollment->teacher_id,
+                'session_date'       => $sessionDate,
+                'start_time'         => $startTimeFull,
+                'end_time'           => $endTime,
+                'room_id'            => $roomId,
+                'status'             => ClassSession::STATUS_SCHEDULED,
+                'session_sequence'   => $sessionSequence,
+                'attribution_year'   => $attributionYear,
+                'attribution_month'  => $attributionMonth,
+                'session_type'       => ClassSession::TYPE_MANUAL,
+                'notes'              => 'Sesi manual admin',
+            ]);
+        });
     }
 
     private function sequenceTaken(

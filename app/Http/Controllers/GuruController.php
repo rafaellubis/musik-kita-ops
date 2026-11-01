@@ -472,7 +472,8 @@ class GuruController extends Controller
         abort_if(!$teacher, 403, 'Akun ini tidak terhubung ke data guru.');
 
         $enrollments = Enrollment::where('teacher_id', $teacher->id)
-            ->whereIn('status', ['ACTIVE', 'ON_LEAVE'])
+            ->where(fn ($q) => $q->whereIn('status', ['ACTIVE', 'ON_LEAVE'])
+                ->orWhereHas('promotion', fn ($p) => $p->where('status', 'APPLIED')))
             ->with(['student', 'package.instrument'])
             ->get();
 

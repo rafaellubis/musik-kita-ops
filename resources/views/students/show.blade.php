@@ -626,7 +626,7 @@
         </div>
 
         {{-- ===== TAB NAVIGASI ===== --}}
-        <div x-data="{ activeTab: @js(session('active_tab', 'info')), openSchedule: null, editSchedule: null }" class="space-y-0">
+        <div x-data="{ activeTab: @js(old('promotion_enrollment_id') ? 'kelas' : session('active_tab', 'info')), openSchedule: null, editSchedule: null }" class="space-y-0">
 
             {{-- Tab pills --}}
             <div class="flex gap-1 p-1 bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm mb-5 fade-in-up"

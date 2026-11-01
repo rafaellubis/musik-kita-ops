@@ -28,6 +28,9 @@ Artisan::command('inspire', function () {
 |   php artisan schedule:work        (loop terus seperti di production)
 */
 
+// Batas periode kelas tetap disinkronkan walaupun generator dinonaktifkan.
+Schedule::command('enrollments:apply-promotions')->dailyAt('00:00')->withoutOverlapping();
+
 // ===== M03: Generator sesi mingguan =====
 if (SchedulerSettings::sessionsGenerateEnabled()) {
     Schedule::command('sessions:generate-month')

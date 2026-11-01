@@ -127,6 +127,37 @@
                 {{-- Aksi (hanya Owner/Admin) --}}
                 @if(auth()->user()->hasAnyRole(['Owner', 'Admin']))
                     <div class="flex flex-wrap items-center gap-2 mt-0.5">
+                        @php
+                            $promotionGrades = ['BASIC', 'L1', 'L2', 'L3', 'L4'];
+                            $gradeIndex = array_search($enrollment->package?->grade, $promotionGrades, true);
+                            $nextGrade = $gradeIndex !== false ? ($promotionGrades[$gradeIndex + 1] ?? null) : null;
+                            $promotionTarget = $nextGrade && $enrollment->package?->class_type === 'REGULER'
+                                ? $allPackages->first(fn ($p) => $p->class_type === 'REGULER' && $p->instrument_id === $enrollment->package->instrument_id && $p->grade === $nextGrade)
+                                : null;
+                            $promotionData = $promotionTarget ? [
+                                'enrollment_id' => $enrollment->id,
+                                'package_id' => $promotionTarget->id,
+                                'source_label' => $enrollment->package->instrument->name.' · '.$enrollment->package->grade,
+                                'target_label' => $promotionTarget->grade,
+                                'instrument_id' => $enrollment->package->instrument_id,
+                                'instrument_name' => $enrollment->package->instrument->name,
+                                'teacher_id' => $enrollment->teacher_id,
+                                'room_id' => $jadwal?->room_id,
+                                'day_of_week' => $jadwal?->day_of_week,
+                                'start_time' => substr($jadwal?->start_time ?? '', 0, 5),
+                                'effective_date' => today()->startOfMonth()->addMonth()->toDateString(),
+                                'preview_url' => route('students.enrollments.promotion-preview', [$student, $enrollment]),
+                                'store_url' => route('students.enrollments.promotions.store', [$student, $enrollment]),
+                            ] : null;
+                        @endphp
+                        @if($promotionData && !$enrollment->promotion && $enrollment->status === 'ACTIVE')
+                            <button type="button" @click="$dispatch('open-promotion', @js($promotionData))"
+                                    class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors bg-mk-sidebar text-mk-accent border border-mk-sidebar hover:bg-mk-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-mk-sidebar">
+                                Naik Level
+                            </button>
+                        @elseif($enrollment->promotion?->status === 'SCHEDULED')
+                            <span class="text-sm text-mk-muted">Naik level terjadwal {{ $enrollment->promotion->effective_date->format('d M Y') }}</span>
+                        @endif
                         @if($leave && in_array($student->status, ['Aktif', 'Cuti']))
                             @if($leaveEnded)
                             <form method="POST" action="{{ route('students.return-from-cuti', $student->id) }}"
@@ -292,6 +323,23 @@
         @endforelse
     </div>
 
+    @if($promotions->isNotEmpty())
+        <section class="rounded-xl border border-mk-borderLight bg-mk-card p-5">
+            <h3 class="font-semibold text-mk-text">Riwayat Kenaikan Level</h3>
+            <div class="mt-3 divide-y divide-mk-borderLight">
+                @foreach($promotions as $promotion)
+                    <article class="space-y-2 py-3 text-sm">
+                        <p class="font-semibold">{{ $promotion->snapshot['source_package']['code'] ?? 'Kelas asal' }} → {{ $promotion->snapshot['target_package']['code'] ?? 'Level baru' }}</p>
+                        <p>{{ $promotion->status === 'SCHEDULED' ? 'Terjadwal mulai' : 'Berlaku sejak' }} {{ $promotion->effective_date->format('d M Y') }} · {{ $promotion->snapshot['schedule']['teacher'] ?? '—' }}</p>
+                        <p>{{ ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][$promotion->snapshot['schedule']['day_of_week'] ?? 0] }} {{ $promotion->snapshot['schedule']['start_time'] ?? '—' }} · {{ $promotion->snapshot['schedule']['room'] ?? '—' }}</p>
+                        <p class="whitespace-pre-line break-words text-mk-muted">{{ $promotion->evaluation_note }}</p>
+                        <p class="text-mk-muted">Dicatat oleh {{ $promotion->creator?->name ?? '—' }} · {{ $promotion->created_at->format('d M Y H:i') }}</p>
+                    </article>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     {{-- ===== RIWAYAT KELAS ===== --}}
     @if($historyEnrollments->isNotEmpty())
         <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm overflow-hidden">
@@ -316,7 +364,8 @@
                             &nbsp;·&nbsp;
                             {{ $enrollment->effective_date ? \Carbon\Carbon::parse($enrollment->effective_date)->format('M Y') : '—' }}
                             –
-                            {{ $enrollment->end_date ? \Carbon\Carbon::parse($enrollment->end_date)->format('M Y') : '—' }}
+                            {{-- Batas akhir kelas asal kenaikan bersifat eksklusif. --}}
+                            {{ $enrollment->end_date ? \Carbon\Carbon::parse($enrollment->end_date)->subDays($enrollment->promotion ? 1 : 0)->format('M Y') : '—' }}
                         </div>
                     </div>
                     {{-- Badge status berdasarkan nilai INACTIVE/COMPLETED --}}
@@ -332,6 +381,10 @@
     @endif
 
 </div>
+@if(auth()->user()->hasAnyRole(['Owner', 'Admin']))
+    @include('students.partials.promotion-panel')
+@endif
+
 
 {{-- ===== MODAL: TAMBAH KELAS ===== --}}
 {{-- Modal ditutup dengan klik backdrop atau tombol batal/× --}}

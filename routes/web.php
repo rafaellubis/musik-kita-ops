@@ -186,6 +186,12 @@ Route::middleware('auth')->group(function () {
         Route::delete('students/{student}/enrollments/{enrollment}',
             [EnrollmentController::class, 'destroy']
         )->name('students.enrollments.destroy');
+        Route::post('students/{student}/enrollments/{enrollment}/promotion-preview',
+            [\App\Http\Controllers\EnrollmentPromotionController::class, 'preview']
+        )->name('students.enrollments.promotion-preview');
+        Route::post('students/{student}/enrollments/{enrollment}/promotions',
+            [\App\Http\Controllers\EnrollmentPromotionController::class, 'store']
+        )->name('students.enrollments.promotions.store');
         Route::post('students/{student}/enrollments/{enrollment}/manual-sessions',
             [ManualSessionController::class, 'store']
         )->name('students.enrollments.manual-sessions.store');
