@@ -82,45 +82,40 @@ class ScheduleMultiEnrollmentTest extends TestCase
         return [$student, $enrollPiano, $enrollGitar, $teacher];
     }
 
-    // =================== TASK 1 (A3) ===================
-
-    /**
-     * A3: $bookedSchedules yang dikirim ke view harus menyertakan field 'id'
-     * agar Alpine.js bisa exclude jadwal yang sedang diedit dari conflict check.
-     */
-    public function test_student_show_view_has_booked_schedules_with_id(): void
+    public function test_room_dropdown_only_counts_enrollments_that_still_reserve_slots(): void
     {
+        $this->travelTo(\Carbon\Carbon::parse('2026-11-03 12:00:00'));
         [$student, $enrollPiano] = $this->makeStudentWithTwoEnrollments();
+        $room = Room::factory()->create(['capacity' => 1, 'supported_instruments' => ['Piano']]);
+        $expected = [];
 
-        // Buat room dan jadwal yang punya room_id
-        $room = Room::create([
-            'code'                  => 'R2',
-            'name'                  => 'Studio 2',
-            'capacity'              => 1,
-            'supported_instruments' => ['Piano'],
-            'is_active'             => true,
-        ]);
-        $schedule = Schedule::create([
-            'enrollment_id' => $enrollPiano->id,
-            'day_of_week'   => 1,
-            'start_time'    => '10:00:00',
-            'end_time'      => '10:30:00',
-            'room_id'       => $room->id,
-            'is_active'     => true,
-        ]);
+        // Jadwal lama boleh tetap aktif untuk riwayat, tetapi kelasnya tidak lagi memesan ruang.
+        foreach ([
+            ['ACTIVE', '2026-01-01', null, true],
+            ['ON_LEAVE', '2026-01-01', null, true],
+            ['ACTIVE', '2026-12-01', null, true],
+            ['INACTIVE', '2026-01-01', '2026-06-02', false],
+            ['INACTIVE', '2026-01-01', null, false],
+            ['COMPLETED', '2026-01-01', null, false],
+            ['ACTIVE', '2026-01-01', '2026-11-03', false],
+        ] as [$status, $from, $until, $reservesRoom]) {
+            $enrollment = Enrollment::factory()->create([
+                'package_id' => $enrollPiano->package_id, 'status' => $status,
+                'effective_date' => $from, 'end_date' => $until,
+            ]);
+            $schedule = Schedule::factory()->for($enrollment)->create([
+                'room_id' => $room->id, 'day_of_week' => 5,
+                'start_time' => '18:30:00', 'end_time' => '19:15:00', 'is_active' => true,
+            ]);
+            if ($reservesRoom) {
+                $expected[] = $schedule->id;
+            }
+        }
 
-        $response = $this->actingAs($this->admin)
-            ->get(route('students.show', $student->id));
-
+        $response = $this->actingAs($this->admin)->get(route('students.show', $student));
         $response->assertOk();
-
-        // bookedSchedules harus ada di view dan tiap item harus punya 'id'
-        $bookedSchedules = $response->viewData('bookedSchedules');
-        $this->assertNotEmpty($bookedSchedules);
-
-        $first = $bookedSchedules->first();
-        $this->assertNotNull($first->id, 'bookedSchedules harus menyertakan kolom id');
-        $this->assertSame($schedule->id, $first->id);
+        $this->assertSame($expected, $response->viewData('bookedSchedules')->pluck('id')->all());
+        $this->assertSame(7, Schedule::where('room_id', $room->id)->where('is_active', true)->count());
     }
 
     // =================== TASK 2 (A1+A2) ===================

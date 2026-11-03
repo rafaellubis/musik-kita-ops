@@ -130,9 +130,10 @@ class StudentController extends Controller
             ->orderBy('code')
             ->get(['id', 'code', 'name', 'capacity', 'supported_instruments']);
 
-        // $bookedSchedules: jadwal aktif yang sudah ada room_id — untuk cek konflik client-side.
+        // Samakan periode reservasi dengan backend; jadwal kelas yang sudah berakhir tidak memblokir ruangan.
         // Field 'id' wajib agar Alpine.js bisa exclude jadwal yang sedang diedit dari conflict check.
         $bookedSchedules = Schedule::active()
+            ->whereHas('enrollment', fn ($query) => $query->forPeriod(today(), \Carbon\Carbon::parse('9999-12-31')))
             ->whereNotNull('room_id')
             ->get(['id', 'room_id', 'day_of_week', 'start_time', 'end_time']);
 
