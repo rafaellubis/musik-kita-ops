@@ -30,6 +30,11 @@ class KalenderController extends Controller
 
         // --- 2. Query sesi minggu ini dengan eager load ---
         $query = ClassSession::whereBetween('session_date', [$weekStart, $weekEnd])
+            // Slot asal sudah kosong saat menunggu atau sudah mendapat sesi pengganti.
+            ->whereNotIn('status', [
+                ClassSession::STATUS_IZIN_RESCHEDULE,
+                ClassSession::STATUS_IZIN_PENDING,
+            ])
             ->with([
                 'student',                        // nama + kode murid
                 'teacher',                        // nama guru

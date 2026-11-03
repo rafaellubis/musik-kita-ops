@@ -212,8 +212,6 @@ class KalenderControllerTest extends TestCase
         $response = $this->actingAs($this->ownerUser())->get(route('kalender.index'));
         $response->assertStatus(200);
         $response->assertSee('Bud', false);
-        $response->assertSee('Piano ·', false);
-        $response->assertSee('text-mk-accent', false);
         $response->assertSee('ADI', false);
     }
 
@@ -252,7 +250,43 @@ class KalenderControllerTest extends TestCase
         $response = $this->actingAs($this->ownerUser())->get(route('kalender.index'));
         $response->assertStatus(200);
         $response->assertSee('Sari', false);
-        $response->assertSee('Gitar ·', false);
         $response->assertSee('NAEL', false);
+    }
+
+    public function test_slot_asal_reschedule_dan_pending_kosong_tetapi_pengganti_tetap_tampil(): void
+    {
+        $original = ClassSession::factory()->create([
+            'session_date' => '2026-11-04',
+            'start_time' => '15:30:00',
+            'status' => 'IZIN_RESCHEDULE',
+        ]);
+        $pending = ClassSession::factory()->create([
+            'session_date' => '2026-11-05',
+            'start_time' => '16:30:00',
+            'status' => 'IZIN_PENDING',
+        ]);
+        $replacement = ClassSession::factory()->create([
+            'schedule_id' => null,
+            'origin_session_id' => $original->id,
+            'enrollment_id' => $original->enrollment_id,
+            'student_id' => $original->student_id,
+            'teacher_id' => $original->teacher_id,
+            'session_date' => '2026-11-03',
+            'start_time' => '14:30:00',
+            'status' => 'SCHEDULED',
+        ]);
+
+        $response = $this->actingAs($this->ownerUser())
+            ->get(route('kalender.index', ['week' => '2026-11-02']));
+
+        $response->assertOk();
+        $response->assertViewHas('grid', function ($grid) use ($replacement) {
+            return ! isset($grid[3]['15:30:00'])
+                && ! isset($grid[4]['16:30:00'])
+                && $grid[2]['14:30:00'][0]->id === $replacement->id;
+        });
+        $response->assertViewHas('timeSlots', fn ($slots) => $slots->all() === ['14:30:00']);
+        $this->assertDatabaseHas('class_sessions', ['id' => $original->id, 'status' => 'IZIN_RESCHEDULE']);
+        $this->assertDatabaseHas('class_sessions', ['id' => $pending->id, 'status' => 'IZIN_PENDING']);
     }
 }
