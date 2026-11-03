@@ -389,25 +389,8 @@
         @endforelse
     </div>
 
-    @if($promotions->isNotEmpty())
-        <section class="rounded-xl border border-mk-borderLight bg-mk-card p-5">
-            <h3 class="font-semibold text-mk-text">Riwayat Kenaikan Level</h3>
-            <div class="mt-3 divide-y divide-mk-borderLight">
-                @foreach($promotions as $promotion)
-                    <article class="space-y-2 py-3 text-sm">
-                        <p class="font-semibold">{{ $promotion->snapshot['source_package']['code'] ?? 'Kelas asal' }} → {{ $promotion->snapshot['target_package']['code'] ?? 'Level baru' }}</p>
-                        <p>{{ $promotion->status === 'SCHEDULED' ? 'Terjadwal mulai' : 'Berlaku sejak' }} {{ $promotion->effective_date->format('d M Y') }} · {{ $promotion->snapshot['schedule']['teacher'] ?? '—' }}</p>
-                        <p>{{ ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][$promotion->snapshot['schedule']['day_of_week'] ?? 0] }} {{ $promotion->snapshot['schedule']['start_time'] ?? '—' }} · {{ $promotion->snapshot['schedule']['room'] ?? '—' }}</p>
-                        <p class="whitespace-pre-line break-words text-mk-muted">{{ $promotion->evaluation_note }}</p>
-                        <p class="text-mk-muted">Dicatat oleh {{ $promotion->creator?->name ?? '—' }} · {{ $promotion->created_at->format('d M Y H:i') }}</p>
-                    </article>
-                @endforeach
-            </div>
-        </section>
-    @endif
-
     {{-- ===== RIWAYAT KELAS ===== --}}
-    @if($historyEnrollments->isNotEmpty())
+    @if($historyEnrollments->isNotEmpty() || $promotions->isNotEmpty())
         <div class="bg-mk-card rounded-2xl border border-mk-borderLight shadow-sm overflow-hidden">
             <div class="px-5 py-3.5 border-b border-mk-borderLight">
                 <div class="text-[10px] uppercase tracking-widest font-semibold text-secondary">
@@ -442,6 +425,56 @@
                         {{ $enrollment->status === 'COMPLETED' ? 'Selesai' : 'Dihentikan' }}
                     </span>
                 </div>
+            @endforeach
+            @foreach($promotions as $promotion)
+                @php
+                    $canCancel = $promotion->status === 'SCHEDULED' && $promotion->effective_date->gt(today())
+                        && auth()->user()->hasAnyRole(['Owner', 'Admin']);
+                @endphp
+                <article class="px-5 py-3.5 flex items-start gap-4 border-b border-mk-borderLight last:border-0 {{ $promotion->status === 'CANCELLED' ? 'opacity-60' : '' }}">
+                    <div class="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0 bg-secondary/10">
+                        🎵
+                    </div>
+                    <div class="flex-1 min-w-0 sm:flex sm:items-start sm:justify-between sm:gap-4">
+                        <div class="min-w-0">
+                            <div class="text-sm text-mk-muted break-words">
+                                {{ $promotion->successor?->package?->instrument?->name ?? '—' }}
+                                &nbsp;·&nbsp;
+                                <span class="font-mono">{{ $promotion->snapshot['source_package']['code'] ?? 'Kelas asal' }} → {{ $promotion->snapshot['target_package']['code'] ?? 'Level baru' }}</span>
+                            </div>
+                            <div class="text-xs text-mk-dim mt-0.5">
+                                Guru: {{ $promotion->snapshot['schedule']['teacher'] ?? '—' }}
+                                &nbsp;·&nbsp;
+                                {{ match ($promotion->status) { 'SCHEDULED' => 'Terjadwal', 'CANCELLED' => 'Dibatalkan', default => 'Berlaku' } }} {{ $promotion->effective_date->format('d M Y') }}
+                            </div>
+                            <details class="mt-1 text-xs text-mk-dim">
+                                <summary class="cursor-pointer w-fit rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary">Detail</summary>
+                                <div class="mt-1 space-y-1">
+                                    <p>{{ ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][$promotion->snapshot['schedule']['day_of_week'] ?? 0] }} {{ $promotion->snapshot['schedule']['start_time'] ?? '—' }} · {{ $promotion->snapshot['schedule']['room'] ?? '—' }}</p>
+                                    <p class="whitespace-pre-line break-words">{{ $promotion->evaluation_note }}</p>
+                                    <p>Dicatat oleh {{ $promotion->creator?->name ?? '—' }} · {{ $promotion->created_at->format('d M Y H:i') }}</p>
+                                    @if($promotion->status === 'CANCELLED')
+                                        <p>Dibatalkan oleh {{ $promotion->snapshot['cancellation']['user_name'] ?? '—' }} · {{ isset($promotion->snapshot['cancellation']['cancelled_at']) ? \Carbon\Carbon::parse($promotion->snapshot['cancellation']['cancelled_at'])->format('d M Y H:i') : '—' }}</p>
+                                    @endif
+                                </div>
+                            </details>
+                        </div>
+                        <div class="mt-2 flex flex-wrap items-center gap-2 sm:mt-0 sm:flex-shrink-0">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-secondary/10 text-secondary">Naik Level</span>
+                            @if($canCancel)
+                                <form method="POST" action="{{ route('students.promotions.cancel', [$student, $promotion]) }}"
+                                      onsubmit="return confirm('Batalkan kenaikan level ini? Kelas dan sesi asal akan dipulihkan jika aman. Pembayaran tidak dihapus.')">
+                                    @csrf
+                                    <input type="hidden" name="promotion_cancellation_id" value="{{ $promotion->id }}">
+                                    <button type="submit"
+                                            class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary">
+                                        Batalkan kenaikan
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+                </article>
             @endforeach
         </div>
     @endif

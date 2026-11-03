@@ -141,7 +141,7 @@ class EnrollmentPromotionService
             $source->update(['end_date' => $preview['effective_date']]);
             $promotion = EnrollmentPromotion::create([
                 'student_id' => $source->student_id, 'source_enrollment_id' => $source->id, 'successor_enrollment_id' => $successor->id,
-                'effective_date' => $preview['effective_date'], 'evaluation_note' => $data['evaluation_note'],
+                'effective_date' => $preview['effective_date'], 'evaluation_note' => $data['evaluation_note'] ?? '',
                 'created_by' => $actor->id, 'status' => 'SCHEDULED', 'invoice_adjustments' => [],
                 'snapshot' => $preview + [
                     'source_package' => $source->package->only('id', 'code', 'grade', 'price_per_month'),
@@ -163,6 +163,116 @@ class EnrollmentPromotionService
             $promotion->update(['invoice_adjustments' => app(InvoiceService::class)->adjustForPromotion($promotion)]);
             AuditLog::record('CREATE', $promotion, 'Kenaikan level terjadwal', newValues: $promotion->toArray());
             return $promotion->fresh('successor');
+        });
+    }
+
+    /** Batalkan persiapan level baru tanpa menimpa riwayat kelas berjalan. */
+    public function cancel(EnrollmentPromotion $candidate, string $reason, User $actor): void
+    {
+        abort_unless($actor->hasAnyRole(['Owner', 'Admin']), 403);
+        $reason = trim($reason);
+        $this->require($reason !== '' && mb_strlen($reason) <= 2000, 'reason', 'Alasan pembatalan wajib diisi, maksimal 2000 karakter.');
+
+        DB::transaction(function () use ($candidate, $reason, $actor) {
+            // Urutan kunci murid lalu kenaikan sama dengan penerapan tanggal efektif.
+            Student::whereKey($candidate->student_id)->lockForUpdate()->firstOrFail();
+            $promotion = EnrollmentPromotion::lockForUpdate()->findOrFail($candidate->id);
+            $this->require($promotion->status === 'SCHEDULED' && $promotion->effective_date->gt(today()),
+                'promotion', 'Hanya kenaikan terjadwal yang belum memasuki tanggal berlaku dapat dibatalkan.');
+            $source = Enrollment::lockForUpdate()->findOrFail($promotion->source_enrollment_id);
+            $successor = Enrollment::lockForUpdate()->findOrFail($promotion->successor_enrollment_id);
+            $this->require($source->status === 'ACTIVE' && $successor->status === 'INACTIVE' && !$successor->is_primary
+                && $source->end_date?->toDateString() === $promotion->effective_date->toDateString(),
+                'promotion', 'Keadaan kelas sudah berubah. Periksa kelas asal dan penerus sebelum pembatalan.');
+            $snapshot = $promotion->snapshot;
+            $this->require(isset($snapshot['sessions_to_delete'], $snapshot['sessions_created'], $snapshot['source_schedules']),
+                'promotion', 'Snapshot kenaikan tidak lengkap; pembatalan otomatis tidak aman.');
+            $teachers = [$source->teacher_id, $successor->teacher_id];
+            Teacher::whereIn('id', $teachers)->orderBy('id')->lockForUpdate()->get();
+            $schedules = $source->schedules()->lockForUpdate()->get();
+            $newSchedules = $successor->schedules()->lockForUpdate()->get();
+            Room::whereIn('id', $schedules->merge($newSchedules)->pluck('room_id')->filter())->orderBy('id')->lockForUpdate()->get();
+            HonorSlip::whereIn('teacher_id', $teachers)->orderBy('id')->lockForUpdate()->get();
+            $sessions = $successor->classSessions()->with('originSession', 'teacherNote')->lockForUpdate()->get();
+            $source->classSessions()->lockForUpdate()->get();
+            $created = collect($snapshot['sessions_created'])->keyBy('id');
+            $oldSessions = collect($snapshot['sessions_to_delete']);
+            $this->require($created->keys()->diff($sessions->pluck('id'))->isEmpty()
+                && !ClassSession::whereIn('id', $oldSessions->pluck('id'))->exists(),
+                'promotion', 'Sesi hasil kenaikan atau sesi asal sudah berubah. Pembatalan dihentikan.');
+            $this->require(!$successor->progressReports()->exists() && !$successor->leaves()->exists()
+                && !$successor->transfers()->exists()
+                && !ProgressReportSessionNote::whereIn('class_session_id', $sessions->pluck('id'))->exists()
+                && !ClassSession::whereIn('origin_session_id', $sessions->pluck('id'))->where('enrollment_id', '!=', $successor->id)->exists(),
+                'promotion', 'Kelas penerus sudah memiliki laporan, cuti, pengalihan, atau sesi terkait. Pembatalan tidak aman.');
+            foreach ($sessions as $session) {
+                $holidayChild = $session->originSession?->status === 'LIBUR';
+                $autoNote = ($session->status === 'LIBUR' && str_starts_with($session->notes ?? '', 'Auto-set LIBUR: '))
+                    || ($holidayChild && $session->notes === 'Sesi pengganti dari tanggal libur');
+                $safe = $session->session_type === ClassSession::TYPE_REGULAR
+                    && in_array($session->status, ['SCHEDULED', 'LIBUR'], true)
+                    && (!$session->origin_session_id || $holidayChild) && !$session->split_part
+                    && !$session->substitute_teacher_id && !$session->teacherNote && (!$session->notes || $autoNote);
+                $this->require($safe && (!$created->has($session->id) || $created[$session->id] == $session->getAttributes()),
+                    'promotion', 'Sesi penerus sudah memiliki absensi, catatan, atau perubahan. Selesaikan koreksi sesi terlebih dahulu.');
+            }
+            $months = $sessions->pluck('session_date')->merge($oldSessions->pluck('session_date'))
+                ->map(fn ($date) => Carbon::parse($date)->format('Y-m'))->unique();
+            foreach ($months as $month) {
+                [$year, $number] = explode('-', $month);
+                $this->require(!HonorSlip::whereIn('teacher_id', $teachers)->where('year', $year)
+                    ->where('month', $number)->where('status', 'PAID')->exists(),
+                    'promotion', 'Honor pada periode terdampak sudah dibayar. Selesaikan koreksi honor sebelum pembatalan.');
+            }
+            $fields = ['id', 'room_id', 'day_of_week', 'start_time', 'end_time', 'is_active'];
+            foreach ($snapshot['source_schedules'] as $oldSchedule) {
+                $current = $schedules->firstWhere('id', $oldSchedule['id']);
+                $this->require($current && \Illuminate\Support\Arr::only($oldSchedule, $fields) == $current->only($fields),
+                    'promotion', 'Jadwal kelas asal sudah berubah. Periksa sebelum pembatalan.');
+            }
+            $this->require($schedules->count() === count($snapshot['source_schedules']),
+                'promotion', 'Jumlah jadwal kelas asal sudah berubah.');
+
+            app(InvoiceService::class)->rollbackPromotion($promotion, $actor, $reason);
+            $promotion->update(['status' => 'CANCELLED', 'snapshot' => $snapshot + [
+                'cancellation' => ['reason' => $reason, 'user_id' => $actor->id, 'user_name' => $actor->name, 'cancelled_at' => now()->toIso8601String()],
+            ]]);
+            $successor->schedules()->update(['is_active' => false]);
+            $source->update(['end_date' => null]);
+            $source->unsetRelation('promotion');
+            $detector = app(ScheduleConflictDetector::class);
+            foreach ($schedules->where('is_active', true) as $schedule) {
+                $assignment = $schedule->only(['room_id', 'day_of_week', 'start_time', 'end_time']) + ['teacher_id' => $source->teacher_id];
+                $detector->assertAssignmentAvailable($source, $assignment, $promotion->effective_date);
+                // Slot lama mungkin sudah dipakai kelas/sesi lain setelah kenaikan diajukan.
+                $dates = ClassSession::whereDate('session_date', '>=', $promotion->effective_date)
+                    ->whereNotIn('id', $sessions->pluck('id'))->select('session_date')->distinct()->pluck('session_date');
+                foreach ($dates as $date) {
+                    if (Carbon::parse($date)->dayOfWeek === (int) $schedule->day_of_week) {
+                        $this->require(!$detector->findConcreteConflict($source, $assignment, $date, $sessions->pluck('id')->all()),
+                            'promotion', 'Slot jadwal lama sudah dipakai sesi lain. Sesuaikan konflik sebelum pembatalan.');
+                    }
+                }
+            }
+            foreach ($oldSessions as $old) {
+                $this->require(!$detector->findConcreteConflict($source, $old, $old['session_date'], $sessions->pluck('id')->all()),
+                    'promotion', 'Sesi lama tidak dapat dipulihkan karena konflik jadwal baru.');
+            }
+            $ids = $sessions->pluck('id');
+            ClassSession::whereIn('id', $ids)->whereNotNull('origin_session_id')->delete();
+            ClassSession::whereIn('id', $ids)->delete();
+            // Pertahankan ID dan relasi sesi libur/pengganti, termasuk nominal honor asal.
+            foreach ($oldSessions->sortBy(fn ($row) => !empty($row['origin_session_id'])) as $row) {
+                DB::table('class_sessions')->insert($row);
+            }
+            foreach ($months as $month) {
+                [$year, $number] = explode('-', $month);
+                foreach (HonorSlip::whereIn('teacher_id', $teachers)->where('year', $year)->where('month', $number)->get() as $slip) {
+                    app(HonorCalculationService::class)->calculateForTeacher(Teacher::findOrFail($slip->teacher_id), (int) $year, (int) $number, $actor->id);
+                }
+            }
+            AuditLog::record('UPDATE', $promotion, 'Kenaikan level dibatalkan', ['status' => 'SCHEDULED'],
+                ['status' => 'CANCELLED', 'reason' => $reason, 'cancelled_by' => $actor->id]);
         });
     }
 

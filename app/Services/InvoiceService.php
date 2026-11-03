@@ -607,6 +607,11 @@ class InvoiceService
             $change['adjustment_invoice_id'] = null;
             if ($change['mode'] === 'UPDATE') {
                 $item = $invoice->items()->where('item_code', 'SPP')->firstOrFail();
+                $change['rollback']['before'] = [
+                    'enrollment_id' => $invoice->enrollment_id,
+                    'class_type' => $invoice->class_type,
+                    'spp_item' => $item->getAttributes(),
+                ];
                 $item->update([
                     'amount' => $target->price_per_month,
                     'description' => "SPP {$target->instrument->name} {$target->grade} — {$change['period']}",
@@ -625,10 +630,171 @@ class InvoiceService
                     periodDate: Carbon::create($invoice->year, $invoice->month, 1));
                 $change['adjustment_invoice_id'] = $adjustment->id;
             }
+            $affected = $change['mode'] === 'UPDATE' ? $invoice
+                : ($change['adjustment_invoice_id'] ? $adjustment : null);
+            if ($affected) {
+                $change['rollback']['after'] = $this->promotionInvoiceSnapshot($affected, $change['mode'] === 'DIFFERENCE');
+            }
             AuditLog::record('UPDATE', $invoice, 'Penyesuaian SPP kenaikan level', newValues: $change);
         }
         unset($change);
         return $changes;
+    }
+
+    /**
+     * Pemanggil mengunci murid dan enrollment serta membungkus pembatalan dalam transaksi.
+     */
+    public function rollbackPromotion(EnrollmentPromotion $promotion, User $actor, string $reason): void
+    {
+        $changes = $promotion->invoice_adjustments ?? [];
+        $references = collect($changes)->flatMap(fn ($change) => [
+            $change['original_invoice_id'] ?? null, $change['adjustment_invoice_id'] ?? null,
+        ])->filter()->values();
+        if ($references->count() !== $references->unique()->count()
+            || count($changes) !== collect($changes)->pluck('period')->unique()->count()) {
+            $this->rejectPromotionRollback('Riwayat penyesuaian memuat invoice atau periode ganda. Rekonsiliasi tagihan kenaikan terlebih dahulu.');
+        }
+        $ids = $references->all();
+        $invoices = Invoice::where(fn ($query) => $query->whereIn('id', $ids)
+            ->orWhere('enrollment_id', $promotion->successor_enrollment_id)
+            ->orWhereHas('items', fn ($items) => $items->where('metadata->promotion_id', $promotion->id)))
+            ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+        foreach ($invoices as $invoice) {
+            $invoice->setRelation('items', $invoice->items()->orderBy('id')->lockForUpdate()->get());
+            $invoice->setRelation('payments', $invoice->payments()->orderBy('id')->lockForUpdate()->get());
+            if ($invoice->status !== Invoice::STATUS_VOID && !in_array($invoice->id, $ids)) {
+                $this->rejectPromotionRollback("Invoice {$invoice->invoice_number} terbit untuk kelas penerus setelah pengajuan. Periksa dan void tagihan tersebut sebelum membatalkan kenaikan.");
+            }
+        }
+
+        // Validasi seluruh tagihan sebelum satu pun dipulihkan atau di-void.
+        $operations = [];
+        foreach ($changes as $change) {
+            $original = $invoices->get($change['original_invoice_id'] ?? null);
+            if (!$original || $original->student_id !== $promotion->student_id) {
+                $this->rejectPromotionRollback('Invoice asal kenaikan tidak ditemukan atau tidak cocok. Periksa riwayat tagihan terlebih dahulu.');
+            }
+            $mode = $change['mode'] ?? null;
+            if ($mode === 'UPDATE') {
+                $before = $change['rollback']['before'] ?? null;
+                $after = $change['rollback']['after'] ?? null;
+                if (!$before || !$after || !array_key_exists('enrollment_id', $before)
+                    || !array_key_exists('class_type', $before) || empty($before['spp_item']['id'])) {
+                    $this->rejectPromotionRollback("Invoice {$original->invoice_number} berasal dari kenaikan lama tanpa snapshot pemulihan. Rekonsiliasi invoice terlebih dahulu; pembatalan otomatis tidak aman.");
+                }
+                $item = $original->items->firstWhere('id', $before['spp_item']['id']);
+                if ($item && (array_diff_key($item->getAttributes(), $before['spp_item'])
+                    || ($before['spp_item']['invoice_id'] ?? null) !== $original->id
+                    || ($before['spp_item']['item_code'] ?? null) !== 'SPP')) {
+                    $this->rejectPromotionRollback("Snapshot item invoice {$original->invoice_number} tidak lengkap. Rekonsiliasi tagihan terlebih dahulu.");
+                }
+                if ($original->status !== Invoice::STATUS_UNPAID
+                    || $original->payments->isNotEmpty()
+                    || $this->promotionInvoiceSnapshot($original) != $after
+                    || !$item) {
+                    $this->rejectPromotionRollback("Invoice {$original->invoice_number} telah dibayar atau diubah setelah kenaikan. Periksa pembayaran, diskon, denda, dan item manual sebelum pembatalan.");
+                }
+                $operations[] = [$original, $before];
+            } elseif ($mode === 'DIFFERENCE') {
+                if (empty($change['adjustment_invoice_id'])) {
+                    if ((int) ($change['amount'] ?? -1) !== 0) {
+                        $this->rejectPromotionRollback('Riwayat invoice selisih tidak lengkap. Rekonsiliasi tagihan kenaikan terlebih dahulu.');
+                    }
+                    continue;
+                }
+                $adjustment = $invoices->get($change['adjustment_invoice_id']);
+                if (!$adjustment || $adjustment->student_id !== $promotion->student_id
+                    || $adjustment->enrollment_id !== $promotion->successor_enrollment_id) {
+                    $this->rejectPromotionRollback('Invoice selisih tidak ditemukan atau tidak cocok. Periksa riwayat tagihan terlebih dahulu.');
+                }
+                $after = $change['rollback']['after'] ?? null;
+                if (!in_array($adjustment->status, [Invoice::STATUS_UNPAID, Invoice::STATUS_VOID], true)
+                    || $adjustment->payments->isNotEmpty()
+                    || ($after ? $this->promotionInvoiceSnapshot($adjustment, true) != $after
+                        : !$this->isSafeLegacyPromotionDifference($adjustment, $original, $promotion, $change))) {
+                    $this->rejectPromotionRollback("Invoice selisih {$adjustment->invoice_number} telah dibayar atau diubah. Rekonsiliasi pembayaran dan penyesuaian manual terlebih dahulu.");
+                }
+                if ($adjustment->status !== Invoice::STATUS_VOID) {
+                    $operations[] = [$adjustment, null];
+                }
+            } else {
+                $this->rejectPromotionRollback('Jenis penyesuaian invoice tidak dikenal. Periksa riwayat kenaikan terlebih dahulu.');
+            }
+        }
+
+        foreach ($operations as [$invoice, $before]) {
+            $oldValues = $this->promotionInvoiceSnapshot($invoice);
+            if ($before) {
+                $item = $invoice->items->firstWhere('id', $before['spp_item']['id']);
+                $item->timestamps = false;
+                $item->setRawAttributes($before['spp_item']);
+                $item->save();
+                $invoice->update(['enrollment_id' => $before['enrollment_id'], 'class_type' => $before['class_type']]);
+                $this->recalcStatus($invoice);
+            } else {
+                try {
+                    $this->voidInvoice($invoice, $actor, $reason);
+                } catch (InvalidArgumentException $exception) {
+                    $this->rejectPromotionRollback($exception->getMessage());
+                }
+            }
+            AuditLog::record($before ? 'UPDATE' : 'VOID', $invoice, 'Pembatalan tagihan kenaikan level',
+                oldValues: $oldValues,
+                newValues: ['promotion_id' => $promotion->id, 'actor_id' => $actor->id,
+                    'invoice' => $invoice->fresh()->getAttributes()], notes: $reason);
+        }
+    }
+
+    private function promotionInvoiceSnapshot(Invoice $invoice, bool $ignoreVoid = false): array
+    {
+        $attributes = $invoice->getAttributes();
+        unset($attributes['updated_at']);
+        // Bandingkan snapshot sebagai nilai; urutan properti JSON tidak stabil di MySQL.
+        // Void selisih yang sudah dilakukan tidak mengubah isi tagihan yang diperiksa.
+        if ($ignoreVoid) {
+            unset($attributes['status'], $attributes['voided_at'], $attributes['voided_by'], $attributes['voided_reason']);
+        }
+        $stable = fn ($row) => array_diff_key($row->getAttributes(), ['updated_at' => true]);
+        return [
+            'invoice' => $attributes,
+            'items' => $invoice->items()->orderBy('id')->get()->map($stable)->all(),
+            'payments' => $invoice->payments()->orderBy('id')->get()->map($stable)->all(),
+        ];
+    }
+
+    private function isSafeLegacyPromotionDifference(Invoice $invoice, Invoice $original, EnrollmentPromotion $promotion, array $change): bool
+    {
+        $item = $invoice->items->first();
+        $snapshot = $promotion->snapshot ?? [];
+        $oldGrade = $snapshot['source_package']['grade'] ?? null;
+        $newGrade = $snapshot['target_package']['grade'] ?? null;
+        $instrument = $promotion->source->package->instrument->name;
+        $description = "Selisih kenaikan level {$instrument}: {$oldGrade} → {$newGrade} — {$change['period']}";
+        $due = $original->due_date?->copy();
+        if ($due && $due->lt($promotion->created_at)) {
+            $due = Carbon::create($original->year, $original->month, 1)->endOfMonth();
+        }
+        return $oldGrade !== null && $newGrade !== null && $invoice->items->count() === 1
+            && $item->item_code === 'SPP' && $item->description === $description
+            && (int) $item->amount === (int) $change['amount'] && (int) $change['amount'] > 0
+            && $item->metadata == ['kind' => 'LEVEL_PROMOTION_DIFFERENCE', 'promotion_id' => $promotion->id,
+                'original_invoice_id' => $original->id, 'package_id' => $promotion->successor->package_id]
+            && $item->invoice_component_id === null && $item->added_by === null && $item->parent_item_id === null
+            && $item->discount_type === null && $item->discount_value === null && $item->discount_reason === null
+            && $invoice->description === $description && $invoice->total_amount === (int) $change['amount']
+            && $invoice->paid_amount === 0 && $invoice->class_type === 'REGULER'
+            && $invoice->payment_mode === Invoice::MODE_FULL
+            && $invoice->installment_number === null && $invoice->installment_group_id === null
+            && $invoice->event_id === null && $invoice->notes === null
+            && $invoice->fine_waived_at === null && $invoice->fine_waived_by === null && $invoice->fine_waive_reason === null
+            && sprintf('%04d-%02d', $invoice->year, $invoice->month) === $change['period']
+            && $invoice->issued_at?->toDateString() === $promotion->created_at->toDateString()
+            && $invoice->due_date?->toDateString() === $due?->toDateString();
+    }
+
+    private function rejectPromotionRollback(string $message): never
+    {
+        throw ValidationException::withMessages(['promotion' => $message]);
     }
 
     private function sppInvoiceExistsForEnrollment(

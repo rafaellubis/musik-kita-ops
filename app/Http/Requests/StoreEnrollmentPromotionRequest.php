@@ -22,7 +22,7 @@ class StoreEnrollmentPromotionRequest extends FormRequest
             'day_of_week' => ['required', 'integer', 'between:0,6'],
             'start_time' => ['required', 'date_format:H:i'],
             'effective_date' => ['required', 'date_format:Y-m-d', Rule::in([today()->startOfMonth()->addMonth()->toDateString()])],
-            'evaluation_note' => ['required', 'string', 'max:2000'],
+            'evaluation_note' => ['nullable', 'string', 'max:2000'],
         ];
     }
 

@@ -192,6 +192,9 @@ Route::middleware('auth')->group(function () {
         Route::post('students/{student}/enrollments/{enrollment}/promotions',
             [\App\Http\Controllers\EnrollmentPromotionController::class, 'store']
         )->name('students.enrollments.promotions.store');
+        Route::post('students/{student}/promotions/{promotion}/cancel',
+            [\App\Http\Controllers\EnrollmentPromotionController::class, 'cancel']
+        )->name('students.promotions.cancel');
         Route::post('students/{student}/enrollments/{enrollment}/transfer-preview',
             [\App\Http\Controllers\EnrollmentTransferController::class, 'preview']
         )->name('students.enrollments.transfer-preview');

@@ -94,7 +94,9 @@ class Enrollment extends Model
 
     public function promotion(): HasOne
     {
-        return $this->hasOne(EnrollmentPromotion::class, 'source_enrollment_id');
+        return $this->hasOne(EnrollmentPromotion::class, 'source_enrollment_id')
+            ->ofMany(['id' => 'max'], fn ($query) => $query->where('status', '!=', 'CANCELLED'))
+            ->where('status', '!=', 'CANCELLED');
     }
 
     public function promotedFrom(): HasOne

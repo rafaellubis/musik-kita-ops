@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreEnrollmentPromotionRequest;
+use App\Http\Requests\CancelEnrollmentPromotionRequest;
+use App\Models\EnrollmentPromotion;
 use App\Models\Enrollment;
 use App\Models\Student;
 use App\Services\EnrollmentPromotionService;
@@ -22,5 +24,13 @@ class EnrollmentPromotionController extends Controller
         return redirect()->to(route('students.show', $student).'#kelas')
             ->with('active_tab', 'kelas')
             ->with('success', 'Kenaikan level dijadwalkan. Sesi mendatang dan tagihan telah disesuaikan.');
+    }
+
+    public function cancel(CancelEnrollmentPromotionRequest $request, Student $student, EnrollmentPromotion $promotion, EnrollmentPromotionService $service): RedirectResponse
+    {
+        $service->cancel($promotion, 'Pembatalan kenaikan level.', $request->user());
+        return redirect()->to(route('students.show', $student).'#kelas')
+            ->with('active_tab', 'kelas')
+            ->with('success', 'Kenaikan dibatalkan. Kelas dan tagihan dipulihkan; Anda dapat mengajukan kenaikan yang benar.');
     }
 }

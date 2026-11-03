@@ -66,8 +66,8 @@
                             <template x-for="room in rooms" :key="room.id"><option :value="room.id" x-text="room.name"></option></template>
                         </select>
                     </label>
-                    <label class="block text-sm font-medium" for="promotion-evaluation">Evaluasi guru
-                        <textarea id="promotion-evaluation" name="evaluation_note" x-model="form.evaluation_note" rows="3" maxlength="2000" required class="{{ $promotionInput }}"></textarea>
+                    <label class="block text-sm font-medium" for="promotion-evaluation">Evaluasi guru (opsional)
+                        <textarea id="promotion-evaluation" name="evaluation_note" x-model="form.evaluation_note" rows="3" maxlength="2000" class="{{ $promotionInput }}"></textarea>
                     </label>
                     <template x-if="preview">
                         <div class="space-y-4 border-t border-mk-borderLight pt-4" aria-live="polite">

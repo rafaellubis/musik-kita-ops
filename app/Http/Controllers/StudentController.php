@@ -193,7 +193,7 @@ class StudentController extends Controller
         // M-Kelas: Riwayat kelas — enrollment yang sudah tidak aktif
         $historyEnrollments = $student->enrollments()
             ->whereIn('status', ['INACTIVE', 'COMPLETED'])
-            ->whereDoesntHave('promotedFrom', fn ($q) => $q->where('status', 'SCHEDULED'))
+            ->whereDoesntHave('promotedFrom', fn ($q) => $q->whereIn('status', ['SCHEDULED', 'CANCELLED']))
             ->with(['package.instrument', 'teacher'])
             ->orderByDesc('end_date')
             ->get();

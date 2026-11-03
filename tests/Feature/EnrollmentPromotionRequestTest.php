@@ -29,6 +29,30 @@ class EnrollmentPromotionRequestTest extends TestCase
         $this->assertSame(1, EnrollmentPromotion::count());
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('optionalEvaluations')]
+    public function test_evaluation_is_optional_but_keeps_length_validation(array $evaluation, bool $valid): void
+    {
+        extract($this->promotionClass());
+        unset($data['evaluation_note']);
+        $data += $evaluation;
+        $base = "/students/{$student->id}/enrollments/{$source->id}";
+        if (!$valid) {
+            $this->actingAs($actor)->postJson($base.'/promotions', $data)
+                ->assertUnprocessable()->assertJsonValidationErrors('evaluation_note');
+            $this->assertSame(0, EnrollmentPromotion::count());
+            return;
+        }
+        $this->actingAs($actor)->postJson($base.'/promotion-preview', $data)->assertOk();
+        $this->post($base.'/promotions', $data)->assertSessionHasNoErrors()->assertRedirect();
+        $this->assertSame('', EnrollmentPromotion::sole()->evaluation_note);
+    }
+
+    public static function optionalEvaluations(): array
+    {
+        return [[[], true], [['evaluation_note' => null], true], [['evaluation_note' => ''], true],
+            [['evaluation_note' => str_repeat('a', 2001)], false]];
+    }
+
     public function test_preview_date_cannot_silently_move_after_month_boundary(): void
     {
         extract($this->promotionClass());
