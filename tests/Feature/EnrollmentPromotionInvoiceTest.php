@@ -19,6 +19,7 @@ class EnrollmentPromotionInvoiceTest extends TestCase
     public function test_invoice_is_adjusted_without_losing_payments_or_generating_duplicate_spp(int $paid, bool $legacy = false): void
     {
         extract($this->promotionClass());
+        $target->update(['grade' => 'L2', 'price_per_month' => 400000]);
         $invoices = app(InvoiceService::class);
         $invoice = $invoices->createOneOff($student, [['code' => 'SPP', 'description' => 'SPP Basic November', 'amount' => 340000]], enrollmentId: $source->id, periodDate: Carbon::parse('2026-11-01'));
         if ($legacy) {
@@ -32,11 +33,11 @@ class EnrollmentPromotionInvoiceTest extends TestCase
         $number = $invoice->invoice_number;
         $promotion = app(EnrollmentPromotionService::class)->schedule($source, $data, $actor);
         $this->assertSame($number, $invoice->fresh()->invoice_number);
-        $this->assertEquals($paid ? 340000 : 370000, $invoice->fresh()->total_amount);
+        $this->assertEquals($paid ? 340000 : 400000, $invoice->fresh()->total_amount);
         $this->assertEquals($paid, $invoice->fresh()->paid_amount);
         if ($paid) {
             $adjustment = Invoice::where('enrollment_id', $promotion->successor_enrollment_id)->firstOrFail();
-            $this->assertEquals(30000, $adjustment->total_amount);
+            $this->assertEquals(60000, $adjustment->total_amount);
             $this->assertSame('LEVEL_PROMOTION_DIFFERENCE', $adjustment->items->first()->metadata['kind']);
             $this->assertSame($legacy ? null : $source->id, $invoice->fresh()->enrollment_id);
         } else {

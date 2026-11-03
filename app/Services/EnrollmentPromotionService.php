@@ -63,10 +63,11 @@ class EnrollmentPromotionService
         $target = Package::with('instrument')->findOrFail($data['package_id']);
         $grades = ['BASIC', 'L1', 'L2', 'L3', 'L4'];
         $index = array_search($source->package->grade, $grades, true);
+        $targetIndex = array_search($target->grade, $grades, true);
         $this->require($source->package->class_type === 'REGULER' && $index !== false
-            && isset($grades[$index + 1]) && $target->grade === $grades[$index + 1]
+            && $targetIndex !== false && $targetIndex > $index
             && $target->class_type === 'REGULER' && $target->instrument_id === $source->package->instrument_id
-            && $target->is_active, 'package_id', 'Pilih paket aktif satu tingkat berikutnya pada instrumen yang sama.');
+            && $target->is_active, 'package_id', 'Pilih paket aktif dengan level lebih tinggi pada instrumen yang sama.');
         $this->require($target->price_per_month >= $source->package->price_per_month, 'package_id', 'Harga level tujuan lebih rendah. Periksa master paket terlebih dahulu.');
         $teacher = Teacher::findOrFail($data['teacher_id']);
         $room = Room::findOrFail($data['room_id']);

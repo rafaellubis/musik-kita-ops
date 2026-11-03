@@ -28,7 +28,6 @@
             <form x-ref="form" method="POST" :action="config.store_url" @submit="submit($event)" @input="changed()" @change="changed()" class="flex min-h-0 flex-1 flex-col">
                 @csrf
                 <input type="hidden" name="promotion_enrollment_id" :value="config.enrollment_id">
-                <input type="hidden" name="package_id" :value="form.package_id">
                 <input type="hidden" name="effective_date" :value="form.effective_date">
                 <div class="flex-1 space-y-5 overflow-y-auto p-6">
                     <div x-show="errors.length" role="alert" class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -36,10 +35,14 @@
                         <ul class="mt-2 list-disc space-y-1 pl-4"><template x-for="(error, index) in errors" :key="index"><li x-text="error"></li></template></ul>
                     </div>
                     <dl class="space-y-2 text-sm">
-                        <div class="flex justify-between gap-4"><dt>Level tujuan</dt><dd class="font-semibold" x-text="config.target_label"></dd></div>
                         <div class="flex justify-between gap-4"><dt>Mulai berlaku</dt><dd class="font-semibold" x-text="form.effective_date"></dd></div>
                     </dl>
-                    <p class="text-sm text-mk-muted">Kelas bulan berjalan tetap. Pilih guru, jadwal, dan ruang untuk level baru.</p>
+                    <label class="block text-sm font-medium" for="promotion-package">Level tujuan
+                        <select id="promotion-package" name="package_id" x-model="form.package_id" required class="{{ $promotionInput }}">
+                            <option value="">Pilih level tujuan</option>
+                            <template x-for="target in config.targets || []" :key="target.id"><option :value="target.id" x-text="target.label"></option></template>
+                        </select>
+                    </label>
                     <label class="block text-sm font-medium" for="promotion-teacher">Guru
                         <select id="promotion-teacher" name="teacher_id" x-model="form.teacher_id" required class="{{ $promotionInput }}">
                             <option value="">Pilih guru</option>

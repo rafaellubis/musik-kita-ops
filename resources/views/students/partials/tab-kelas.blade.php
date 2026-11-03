@@ -192,14 +192,19 @@
                             $promotionGrades = ['BASIC', 'L1', 'L2', 'L3', 'L4'];
                             $gradeIndex = array_search($enrollment->package?->grade, $promotionGrades, true);
                             $nextGrade = $gradeIndex !== false ? ($promotionGrades[$gradeIndex + 1] ?? null) : null;
-                            $promotionTarget = $nextGrade && $enrollment->package?->class_type === 'REGULER'
-                                ? $allPackages->first(fn ($p) => $p->class_type === 'REGULER' && $p->instrument_id === $enrollment->package->instrument_id && $p->grade === $nextGrade)
-                                : null;
-                            $promotionData = $promotionTarget ? [
+                            $higherGrades = $gradeIndex !== false ? array_slice($promotionGrades, $gradeIndex + 1) : [];
+                            $promotionTargets = $enrollment->package?->class_type === 'REGULER'
+                                ? $allPackages->filter(fn ($p) => $p->class_type === 'REGULER'
+                                    && $p->instrument_id === $enrollment->package->instrument_id
+                                    && in_array($p->grade, $higherGrades, true))
+                                    ->sortBy(fn ($p) => array_search($p->grade, $promotionGrades, true))->values()
+                                : collect();
+                            $promotionTarget = $promotionTargets->firstWhere('grade', $nextGrade);
+                            $promotionData = $promotionTargets->isNotEmpty() ? [
                                 'enrollment_id' => $enrollment->id,
-                                'package_id' => $promotionTarget->id,
+                                'package_id' => $promotionTarget?->id ?? '',
                                 'source_label' => $enrollment->package->instrument->name.' · '.$enrollment->package->grade,
-                                'target_label' => $promotionTarget->grade,
+                                'targets' => $promotionTargets->map(fn ($p) => ['id' => $p->id, 'label' => $p->grade.' · '.$p->code])->all(),
                                 'instrument_id' => $enrollment->package->instrument_id,
                                 'instrument_name' => $enrollment->package->instrument->name,
                                 'teacher_id' => $enrollment->teacher_id,

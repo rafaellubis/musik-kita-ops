@@ -60,7 +60,11 @@ class EnrollmentPromotionRequestTest extends TestCase
     {
         extract($this->promotionClass());
         match ($case) {
-            'grade' => $target->update(['grade' => 'L2']),
+            'same_grade' => $target->update(['grade' => 'BASIC']),
+            'lower_grade' => $package->update(['grade' => 'L2']),
+            'unknown_grade' => $target->update(['grade' => 'UNKNOWN']),
+            'class_type' => $target->update(['class_type' => 'HOBBY']),
+            'lower_price' => $target->update(['price_per_month' => 330000]),
             'instrument' => $target->update(['instrument_id' => \App\Models\Instrument::factory()->create()->id]),
             'package' => $target->update(['is_active' => false]),
             'teacher' => $teacher->update(['is_active' => false]),
@@ -74,6 +78,26 @@ class EnrollmentPromotionRequestTest extends TestCase
 
     public static function invalidTargets(): array
     {
-        return [['grade'], ['instrument'], ['package'], ['teacher'], ['teacher_instrument'], ['room']];
+        return [['same_grade'], ['lower_grade'], ['unknown_grade'], ['class_type'], ['lower_price'], ['instrument'], ['package'], ['teacher'], ['teacher_instrument'], ['room']];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('higherLevels')]
+    public function test_higher_level_can_be_selected_directly(string $from, string $to, int $price): void
+    {
+        extract($this->promotionClass());
+        $package->update(['grade' => $from]);
+        $target->update(['grade' => $to, 'price_per_month' => $price]);
+        $base = "/students/{$student->id}/enrollments/{$source->id}";
+        $this->actingAs($actor)->postJson($base.'/promotion-preview', $data)
+            ->assertOk()->assertJsonPath('new_price', $price);
+        $this->post($base.'/promotions', $data)->assertSessionHasNoErrors()->assertRedirect();
+        $promotion = EnrollmentPromotion::sole();
+        $this->assertSame($target->id, $promotion->successor->package_id);
+        $this->assertSame($package->id, $source->fresh()->package_id);
+    }
+
+    public static function higherLevels(): array
+    {
+        return [['BASIC', 'L1', 370000], ['BASIC', 'L2', 400000], ['L1', 'L4', 460000]];
     }
 }
