@@ -36,6 +36,8 @@ class ScheduleConflictDetector
 {
     public function findStudentConflicts(int $studentId, int $dayOfWeek, string $startTime, string $endTime, ?int $excludeScheduleId = null): Collection
     {
+        $startTime = $this->normalizeTime($startTime);
+        $endTime = $this->normalizeTime($endTime);
         return $this->assignmentsFrom(today())->filter(fn ($s) =>
             $s->enrollment->student_id === $studentId && $s->day_of_week === $dayOfWeek
             && $s->start_time < $endTime && $s->end_time > $startTime
@@ -90,6 +92,8 @@ class ScheduleConflictDetector
                     'teacher_id' => $enrollment->teacher_id, 'day_of_week' => $schedule->day_of_week,
                     'start_time' => $schedule->start_time, 'end_time' => $schedule->end_time, 'room_id' => $schedule->room_id,
                 ] : $enrollment->teachingAssignmentOn(\Carbon\Carbon::parse($boundary));
+                $assignment['start_time'] = $this->normalizeTime($assignment['start_time']);
+                $assignment['end_time'] = $this->normalizeTime($assignment['end_time']);
                 $variant->forceFill($assignment);
                 $variant->setAttribute('period_from', $boundary);
                 $variant->setAttribute('period_until', $boundaries[$index + 1] ?? $enrollment->end_date?->toDateString() ?? '9999-12-31');
@@ -101,6 +105,8 @@ class ScheduleConflictDetector
 
     public function assertAssignmentAvailable(Enrollment $source, array $assignment, \Carbon\CarbonInterface $from): void
     {
+        $assignment['start_time'] = $this->normalizeTime($assignment['start_time']);
+        $assignment['end_time'] = $this->normalizeTime($assignment['end_time']);
         $rows = $this->assignmentsFrom($from)->filter(fn ($s) =>
             $s->enrollment_id !== $source->id && $s->day_of_week === $assignment['day_of_week']
             && $s->start_time < $assignment['end_time'] && $s->end_time > $assignment['start_time']);
@@ -139,6 +145,8 @@ class ScheduleConflictDetector
         string $endTime,
         ?int $excludeScheduleId = null,
     ): Collection {
+        $startTime = $this->normalizeTime($startTime);
+        $endTime = $this->normalizeTime($endTime);
         return $this->assignmentsFrom(today())->filter(fn ($s) =>
             (int) $s->teacher_id === $teacherId && $s->day_of_week === $dayOfWeek
             && $s->start_time < $endTime && $s->end_time > $startTime
@@ -198,6 +206,8 @@ class ScheduleConflictDetector
         string $endTime,
         ?int $excludeScheduleId = null,
     ): Collection {
+        $startTime = $this->normalizeTime($startTime);
+        $endTime = $this->normalizeTime($endTime);
         return $this->assignmentsFrom(today())->filter(fn ($s) =>
             (int) $s->room_id === $roomId && $s->day_of_week === $dayOfWeek
             && $s->start_time < $endTime && $s->end_time > $startTime
@@ -225,6 +235,12 @@ class ScheduleConflictDetector
 
         // Schedule baru ini menambah 1 occupant. Penuh kalau total >= capacity.
         return ($conflicts->count() + 1) > $room->capacity;
+    }
+
+    /** Samakan jam form dan database; detik yang sudah ada tetap dipertahankan. */
+    private function normalizeTime(string $time): string
+    {
+        return strlen($time) === 5 ? $time.':00' : $time;
     }
 
     /**
