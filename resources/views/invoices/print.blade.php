@@ -182,12 +182,14 @@
             border-bottom: 1px solid rgba(93, 184, 144, 0.08);
             font-size: 11px;
             color: #3A2015;
+            vertical-align: top;
         }
         tr:last-child td { border-bottom: none; }
         td.right, th.right { text-align: right; }
         td.code { font-family: monospace; font-size: 10px; color: #4A1F0A; font-weight: 600; }
         tr.item-discount td { color: #b45309; font-size: 11px; font-weight: 500; background: rgba(245, 158, 11, 0.03); }
         tr.item-discount .code { padding-left: 16px; color: #b45309; }
+        .item-note { margin-top: 4px; font-size: 10px; color: #7A3818; overflow-wrap: anywhere; word-wrap: break-word; }
 
         /* SUMMARY */
         .summary-wrap { display: flex; justify-content: flex-end; margin-top: 14px; }

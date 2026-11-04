@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RemoveFineRequest;
+use App\Http\Requests\UpdateInvoiceItemNotesRequest;
+use App\Models\AuditLog;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Services\InvoiceService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Tambah / hapus item tagihan manual di invoice (M05).
@@ -16,9 +19,10 @@ use Illuminate\Http\Request;
  *   - destroy : role:Owner|Admin
  *
  * Rule bisnis:
- *   - Hanya invoice UNPAID/PARTIAL yang boleh diubah (PAID/VOID terkunci).
+ *   - Perubahan nominal hanya untuk invoice UNPAID/PARTIAL.
+ *   - Catatan tetap boleh diubah setelah PAID; invoice VOID terkunci.
  *   - Hanya item manual (added_by != null) yang boleh dihapus.
- *   - Setiap perubahan item → recalc total_amount invoice.
+ *   - Perubahan nominal item → recalc total_amount invoice.
  */
 class InvoiceItemController extends Controller
 {
@@ -105,6 +109,36 @@ class InvoiceItemController extends Controller
         $this->invoiceService->recalcStatus($invoice->fresh());
 
         return back()->with('success', "Item '{$code}' berhasil dihapus dari invoice.");
+    }
+
+    public function updateNotes(UpdateInvoiceItemNotesRequest $request, InvoiceItem $invoiceItem)
+    {
+        DB::transaction(function () use ($request, $invoiceItem) {
+            $invoice = Invoice::lockForUpdate()->findOrFail($invoiceItem->invoice_id);
+            abort_if($invoice->status === Invoice::STATUS_VOID, 403, 'Catatan invoice yang sudah VOID tidak bisa diubah.');
+
+            $item = InvoiceItem::lockForUpdate()->findOrFail($invoiceItem->id);
+            $metadata = $item->metadata ?? [];
+            $oldNotes = $metadata['notes'] ?? null;
+            $notes = $request->validated('notes');
+            if ($notes === null) {
+                unset($metadata['notes']);
+            } else {
+                $metadata['notes'] = $notes;
+            }
+            $item->update(['metadata' => $metadata]);
+
+            AuditLog::record(
+                action: AuditLog::ACTION_UPDATE,
+                entity: $item,
+                entityLabel: "Catatan {$item->item_code} — {$invoice->invoice_number}",
+                oldValues: ['notes' => $oldNotes],
+                newValues: ['notes' => $notes],
+            );
+        });
+
+        return redirect()->route('invoices.show', $invoiceItem->invoice_id)
+            ->with('success', 'Catatan item tagihan berhasil disimpan.');
     }
 
     /**

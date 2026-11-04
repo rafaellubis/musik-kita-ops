@@ -30,6 +30,7 @@
             && in_array($invoice->status, ['UNPAID', 'PARTIAL']);
         // Diskon: boleh selama UNPAID atau PARTIAL (sama dengan canEditItems)
         $canDiscount = $canEditItems;
+        $canEditNotes = ($isOwner || $isAdmin) && $invoice->status !== 'VOID';
         // Void invoice: Owner atau Admin, belum VOID, tidak ada pembayaran aktif
         $canVoidInvoice = ($isOwner || $isAdmin)
             && $invoice->event_id === null
@@ -452,16 +453,20 @@
                         <th class="py-1 text-right">Jumlah</th>
                         <th class="py-1 text-center">Tipe</th>
                         @hasanyrole('Owner|Admin')
-                            @if($canEditItems)
+                            @if($canEditNotes)
                                 <th class="py-1 text-right">Aksi</th>
                             @endif
                         @endhasanyrole
                     </tr>
                 </thead>
                 @foreach($invoice->items as $item)
+                @php
+                    $hasNoteError = old('note_item_id') == $item->id && $errors->itemNote->any();
+                @endphp
                 <tbody x-data="{
                     showDiscount: false,
                     showRemoveFine: false,
+                    showNotes: {{ $hasNoteError ? 'true' : 'false' }},
                     type: '{{ $item->discountItem?->discount_type ?? 'PERCENT' }}',
                     value: '{{ $item->discountItem?->discount_value ?? '' }}',
                     itemAmount: {{ $item->amount }},
@@ -480,10 +485,41 @@
                     <tr class="border-b">
                         <td class="py-2 font-mono text-xs">{{ $item->item_code }}</td>
                         <td class="py-2">
-                            {{ $item->description }}
-                            @if($item->isManual() && $item->addedBy)
-                                <div class="text-xs text-mk-dim">+ oleh {{ $item->addedBy->name }}</div>
-                            @endif
+                            <div class="flex flex-col gap-3 md:flex-row md:items-center">
+                                <div class="min-w-0">
+                                    {{ $item->description }}
+                                    @if(isset($item->metadata['notes']))
+                                        <div x-show="!showNotes" class="mt-1 whitespace-pre-line break-words text-xs text-mk-muted">{{ $item->metadata['notes'] }}</div>
+                                    @endif
+                                    @if($item->isManual() && $item->addedBy)
+                                        <div class="text-xs text-mk-dim">+ oleh {{ $item->addedBy->name }}</div>
+                                    @endif
+                                </div>
+                                @if($canEditNotes)
+                                    <form id="item-note-{{ $item->id }}" x-show="showNotes" x-cloak
+                                          method="POST" action="{{ route('invoice-items.notes.update', $item) }}"
+                                          class="w-full min-w-0 md:w-[530px] md:shrink-0">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="note_item_id" value="{{ $item->id }}">
+                                        <div class="flex items-center gap-1">
+                                            <textarea name="notes" rows="1" maxlength="500"
+                                                      aria-label="Catatan untuk {{ $item->description }}"
+                                                      @if($hasNoteError) aria-invalid="true" aria-describedby="item-note-error-{{ $item->id }}" @endif
+                                                      class="block h-[30px] min-h-0 w-full min-w-0 flex-1 rounded border-mk-border px-2 py-1 text-xs leading-4"
+                                                      placeholder="Catatan...">{{ $hasNoteError && is_string(old('notes')) ? old('notes') : ($item->metadata['notes'] ?? '') }}</textarea>
+                                            <div class="flex shrink-0 gap-1">
+                                                <button type="submit" class="h-[30px] rounded bg-mk-sidebar px-3 text-xs font-medium text-white hover:bg-mk-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-mk-accent">Save</button>
+                                                <button type="button" @click="showNotes = false"
+                                                        class="h-[30px] rounded px-3 text-xs text-mk-muted hover:text-mk-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-mk-accent">Batal</button>
+                                            </div>
+                                        </div>
+                                        @if($hasNoteError)
+                                            <p id="item-note-error-{{ $item->id }}" role="alert" class="mt-1 text-sm text-red-600">{{ $errors->itemNote->first('notes') }}</p>
+                                        @endif
+                                    </form>
+                                @endif
+                            </div>
                         </td>
                         <td class="py-2 text-right">Rp {{ number_format($item->amount, 0, ',', '.') }}</td>
                         <td class="py-2 text-center">
@@ -494,9 +530,9 @@
                             @endif
                         </td>
                         @hasanyrole('Owner|Admin')
-                            @if($canEditItems)
-                                <td class="py-2 text-right space-x-2 whitespace-nowrap">
-                                    @if($item->isManual())
+                            @if($canEditNotes)
+                                <td class="py-2 text-right">
+                                    @if($canEditItems && $item->isManual())
                                         <form method="POST"
                                               action="{{ route('invoice-items.destroy', $item->id) }}"
                                               class="inline"
@@ -522,10 +558,16 @@
                                             Hapus Denda
                                         </button>
                                     @endif
+                                    <button type="button" @click="showNotes = !showNotes"
+                                            :aria-expanded="showNotes" aria-controls="item-note-{{ $item->id }}"
+                                            class="min-h-11 rounded px-2 text-xs text-mk-muted whitespace-nowrap hover:text-mk-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-mk-accent">
+                                        {{ isset($item->metadata['notes']) ? 'Edit Catatan' : 'Catatan' }}
+                                    </button>
                                 </td>
                             @endif
                         @endhasanyrole
                     </tr>
+
 
                     {{-- ===== Form beri/edit diskon (inline expand, Alpine.js) ===== --}}
                     @hasanyrole('Owner|Admin')
@@ -652,8 +694,9 @@
                                 <span class="px-1.5 py-0.5 rounded text-xs bg-amber-100 text-amber-700">Diskon</span>
                             </td>
                             @hasanyrole('Owner|Admin')
-                                @if($canDiscount)
+                                @if($canEditNotes)
                                     <td class="py-1.5 text-right">
+                                        @if($canDiscount)
                                         <form method="POST"
                                               action="{{ route('invoice-items.discount.destroy', $item->id) }}"
                                               class="inline"
@@ -664,6 +707,7 @@
                                                 Hapus Diskon
                                             </button>
                                         </form>
+                                        @endif
                                     </td>
                                 @endif
                             @endhasanyrole
@@ -679,7 +723,7 @@
                         <td class="py-2 text-right">
                             Rp {{ number_format($invoice->total_amount, 0, ',', '.') }}
                         </td>
-                        <td colspan="{{ $canEditItems ? 2 : 1 }}"></td>
+                        <td colspan="{{ $canEditNotes ? 2 : 1 }}"></td>
                     </tr>
                 </tbody>
             </table>

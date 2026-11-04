@@ -527,7 +527,7 @@ class InvoiceService
                     $existingFine->update([
                         'amount'      => $fineAmount,
                         'description' => $description,
-                        'metadata'    => ['days_late' => $daysLate, 'fine_per_day' => $finePerDay],
+                        'metadata'    => array_merge($existingFine->metadata ?? [], ['days_late' => $daysLate, 'fine_per_day' => $finePerDay]),
                     ]);
                 } else {
                     InvoiceItem::create([

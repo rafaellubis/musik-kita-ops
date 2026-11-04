@@ -2,7 +2,12 @@
 @foreach($invoice->items as $item)
     <tr>
         <td class="code">{{ $item->item_code }}</td>
-        <td>{{ $item->description }}</td>
+        <td>
+            {{ $item->description }}
+            @if(isset($item->metadata['notes']))
+                <div class="item-note">Notes: {!! nl2br(e($item->metadata['notes'])) !!}</div>
+            @endif
+        </td>
         <td class="right">Rp {{ number_format($item->amount, 0, ',', '.') }}</td>
     </tr>
     @if($item->discountItem)

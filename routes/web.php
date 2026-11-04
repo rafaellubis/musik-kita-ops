@@ -486,6 +486,10 @@ Route::middleware('auth')->group(function () {
             [InvoiceItemController::class, 'destroy']
         )->name('invoice-items.destroy');
 
+        Route::patch('invoice-items/{invoiceItem}/notes',
+            [InvoiceItemController::class, 'updateNotes']
+        )->name('invoice-items.notes.update');
+
         // Diskon per item invoice — beri/update dan hapus
         Route::post('invoice-items/{invoiceItem}/discount',
             [\App\Http\Controllers\DiscountController::class, 'store']

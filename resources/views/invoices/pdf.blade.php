@@ -190,6 +190,7 @@
             border-bottom: 1px solid #e8f3ed;
             font-size: 11px;
             color: #3A2015;
+            vertical-align: top;
         }
 
         table.items tr.item-discount td {
@@ -210,6 +211,7 @@
         }
 
         .right { text-align: right; }
+        .item-note { margin-top: 4px; font-size: 10px; color: #7A3818; overflow-wrap: anywhere; word-wrap: break-word; }
 
         .summary-wrap { width: 100%; margin-top: 14px; }
         .summary-table {
