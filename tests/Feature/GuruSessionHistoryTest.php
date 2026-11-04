@@ -52,6 +52,90 @@ class GuruSessionHistoryTest extends TestCase
         ]);
     }
 
+    public function test_new_teacher_reads_previous_levels_without_mixing_progress_report(): void
+    {
+        $current = $this->session->enrollment;
+        $oldTeacher = Teacher::factory()->create();
+        $previous = Enrollment::factory()->create([
+            'student_id' => $current->student_id,
+            'teacher_id' => $oldTeacher->id,
+            'package_id' => Package::factory()->create([
+                'instrument_id' => $current->package->instrument_id,
+                'class_type' => 'REGULER',
+                'grade' => 'Basic',
+            ])->id,
+            'status' => 'COMPLETED',
+        ]);
+        \App\Models\EnrollmentPromotion::create([
+            'student_id' => $current->student_id,
+            'source_enrollment_id' => $previous->id,
+            'successor_enrollment_id' => $current->id,
+            'effective_date' => today(),
+            'status' => 'APPLIED',
+            'evaluation_note' => 'Siap naik level',
+            'snapshot' => [],
+            'invoice_adjustments' => [],
+            'created_by' => $this->guruUser->id,
+        ]);
+        $oldSession = ClassSession::factory()->create([
+            'student_id' => $current->student_id,
+            'enrollment_id' => $previous->id,
+            'teacher_id' => $oldTeacher->id,
+            'session_date' => today()->toDateString(),
+            'attribution_month' => $this->session->attribution_month,
+            'attribution_year' => $this->session->attribution_year,
+            'status' => 'HADIR',
+        ]);
+        \App\Models\SessionTeacherNote::create([
+            'class_session_id' => $oldSession->id,
+            'teacher_id' => $oldTeacher->id,
+            'material_learned' => 'Materi level sebelumnya',
+        ]);
+        \App\Models\SessionTeacherNote::create([
+            'class_session_id' => $this->session->id,
+            'teacher_id' => $this->teacher->id,
+            'material_learned' => 'Materi level sekarang',
+        ]);
+        $parallel = ClassSession::factory()->create([
+            'student_id' => $current->student_id,
+            'teacher_id' => $this->teacher->id,
+            'session_date' => today()->toDateString(),
+            'status' => 'HADIR',
+        ]);
+        \App\Models\SessionTeacherNote::create([
+            'class_session_id' => $parallel->id,
+            'teacher_id' => $this->teacher->id,
+            'material_learned' => 'Materi kelas paralel',
+        ]);
+
+        $this->actingAs($this->guruUser)
+            ->get(route('guru.sesi.history', $this->session))
+            ->assertOk()
+            ->assertSee('Materi level sebelumnya')
+            ->assertSee('Basic')
+            ->assertDontSee('Materi kelas paralel');
+
+        $report = \App\Models\ProgressReport::create([
+            'student_id' => $current->student_id,
+            'enrollment_id' => $current->id,
+            'teacher_id' => $this->teacher->id,
+            'report_template_id' => \App\Models\ReportTemplate::create([
+                'instrument_id' => $current->package->instrument_id,
+                'name' => 'Template Piano',
+                'is_active' => true,
+                'sort_order' => 1,
+            ])->id,
+            'year' => $this->session->attribution_year,
+            'month' => $this->session->attribution_month,
+            'status' => 'DRAFT',
+        ]);
+        app(\App\Services\SessionNoteSyncService::class)->sync($report);
+        $this->assertSame(
+            ['Materi level sekarang'],
+            $report->sessionNotes()->pluck('material_learned')->all()
+        );
+    }
+
     public function test_guest_cannot_access_history_endpoint(): void
     {
         $response = $this->get(route('guru.sesi.history', $this->session));

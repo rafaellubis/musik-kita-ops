@@ -28,6 +28,11 @@
                         {{ $sesi->status }}
                     </span>
                 </div>
+                @if($sesi->enrollment_id !== $classSession->enrollment_id)
+                    <p class="text-xs font-semibold text-primary mb-1.5">
+                        {{ $sesi->enrollment->package->instrument->name }} · {{ $sesi->enrollment->package->grade }}
+                    </p>
+                @endif
 
                 <!-- Kartu Rincian Catatan -->
                 <div class="bg-surface/50 border border-outline-variant/20 rounded-xl p-3 shadow-sm">

@@ -984,13 +984,27 @@ class GuruController extends Controller
         $month = request('month', $classSession->attribution_month);
         $year = request('year', $classSession->attribution_year);
 
-        // Sesi sesuai filter bulan & tahun dari enrollment yang sama, kecuali sesi aktif
-        $history = ClassSession::where('enrollment_id', $classSession->enrollment_id)
+        // Hanya rantai level terdahulu yang sudah berlaku, bukan kelas paralel murid.
+        $predecessors = \App\Models\EnrollmentPromotion::where('student_id', $classSession->student_id)
+            ->where('status', 'APPLIED')
+            ->pluck('source_enrollment_id', 'successor_enrollment_id');
+        $enrollmentIds = [$classSession->enrollment_id];
+        $enrollmentId = $classSession->enrollment_id;
+        while (isset($predecessors[$enrollmentId])) {
+            $enrollmentId = $predecessors[$enrollmentId];
+            if (in_array($enrollmentId, $enrollmentIds, true)) {
+                break;
+            }
+            $enrollmentIds[] = $enrollmentId;
+        }
+
+        $history = ClassSession::whereIn('enrollment_id', $enrollmentIds)
+            ->where('student_id', $classSession->student_id)
             ->where('id', '!=', $classSession->id)
             ->where('attribution_month', $month)
             ->where('attribution_year', $year)
             ->whereIn('status', ['HADIR', 'HADIR_TERLAMBAT'])
-            ->with('teacherNote')
+            ->with(['teacherNote', 'enrollment.package.instrument'])
             ->orderByDesc('session_date')
             ->orderByDesc('start_time')
             ->get();

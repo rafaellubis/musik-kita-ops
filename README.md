@@ -34,6 +34,19 @@ Pengujian wajib memakai SQLite `:memory:` sesuai `phpunit.xml`, bukan database s
 Kolom **No. Invoice / nama** mencari nomor invoice, nama lengkap, nickname,
 atau kode murid, termasuk sebagian teks. Filter bulan dan status tetap berlaku.
 
+## Riwayat sesi lintas level — portal guru
+
+- **Riwayat Sesi** mencakup enrollment sesi yang dibuka dan rantai level sebelumnya
+  dengan kenaikan berstatus `APPLIED`, termasuk catatan guru terdahulu.
+  Kelas paralel dan kenaikan yang dibatalkan tidak digabungkan.
+- Catatan level lama diberi label instrumen dan level. Akses tetap melalui sesi
+  milik guru utama/pengganti; izin membaca tidak memberikan izin mengedit catatan lama.
+- Pilihan bulan tetap bulan sesi dan dua bulan sebelumnya; hanya sesi `HADIR`
+  atau `HADIR_TERLAMBAT` yang ditampilkan, selain sesi yang sedang dibuka.
+- Laporan progress tetap mengambil catatan dari enrollment dan bulan atribusinya
+  sendiri. Riwayat lintas level hanya tampilan, tanpa memindahkan catatan atau
+  mengubah snapshot laporan.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
