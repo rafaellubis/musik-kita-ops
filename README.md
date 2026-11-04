@@ -47,6 +47,16 @@ atau kode murid, termasuk sebagian teks. Filter bulan dan status tetap berlaku.
   sendiri. Riwayat lintas level hanya tampilan, tanpa memindahkan catatan atau
   mengubah snapshot laporan.
 
+## Catatan pengujian — 4 November 2026
+
+Atas permintaan Owner, 12 tes yang gagal dihapus: dua daftar absensi,
+dua label split reschedule, empat reset password publik, dua registrasi
+publik, dan dua wording navigasi guru. Kode aplikasi tidak diubah.
+Penghapusan ini mengurangi cakupan tes, bukan memperbaiki perilaku aplikasi;
+penyebab dua kegagalan daftar absensi belum dikonfirmasi penuh.
+Suite tersisa dijalankan dengan SQLite `:memory:`: 1.082 tes lulus,
+4.869 assertions. Peringatan metadata doc-comment PHPUnit masih ada.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

@@ -34,15 +34,6 @@ class GuruNavigationTest extends TestCase
             ->assertDontSee('Isi laporan perkembangan murid bulanan', false);
     }
 
-    public function test_layout_menampilkan_menu_laporan_progress_di_navigasi(): void
-    {
-        $response = $this->actingAs($this->guruUser)->get('/guru/dashboard');
-
-        $response->assertOk()
-            ->assertSee('Laporan Progress', false)
-            ->assertSee(route('guru.laporan.index'), false);
-    }
-
     public function test_bottom_nav_tidak_punya_tombol_keluar(): void
     {
         $html = $this->actingAs($this->guruUser)
@@ -71,14 +62,5 @@ class GuruNavigationTest extends TestCase
         $topbarActions = substr($html, $start, 800);
         $this->assertStringContainsString(route('logout'), $topbarActions);
         $this->assertStringContainsString('Keluar', $topbarActions);
-    }
-
-    public function test_halaman_laporan_menyalakan_menu_aktif(): void
-    {
-        $this->actingAs($this->guruUser)
-            ->get('/guru/laporan')
-            ->assertOk()
-            ->assertSee('Laporan Progress', false)
-            ->assertSee(route('guru.laporan.index'), false);
     }
 }
