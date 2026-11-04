@@ -462,10 +462,10 @@
                 <tbody x-data="{
                     showDiscount: false,
                     showRemoveFine: false,
-                    type: '{{ $item->discountItem?->discount_type ?? 'NOMINAL' }}',
+                    type: '{{ $item->discountItem?->discount_type ?? 'PERCENT' }}',
                     value: '{{ $item->discountItem?->discount_value ?? '' }}',
                     itemAmount: {{ $item->amount }},
-                    isDenda: {{ $item->item_code === 'DENDA' ? 'true' : 'false' }},
+                    canFullyDiscount: {{ in_array($item->item_code, ['REG', 'DENDA'], true) ? 'true' : 'false' }},
                     get preview() {
                         const v = parseInt(this.value) || 0;
                         if (v <= 0) return 0;
@@ -555,7 +555,7 @@
                                                 <input type="number" name="discount_value"
                                                        x-model="value"
                                                        min="1"
-                                                       :max="type === 'PERCENT' ? (isDenda ? 100 : 90) : (isDenda ? itemAmount : itemAmount - 1)"
+                                                       :max="type === 'PERCENT' ? (canFullyDiscount ? 100 : 90) : (canFullyDiscount ? itemAmount : itemAmount - 1)"
                                                        required
                                                        class="block w-28 border-mk-border rounded text-sm"
                                                        placeholder="0">

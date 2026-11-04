@@ -393,8 +393,8 @@ class InvoiceService
         // Safety net: jika karena sebab apapun paid < total, status kembali ke UNPAID.
         $status = match (true) {
             $invoice->status === Invoice::STATUS_VOID => Invoice::STATUS_VOID,
-            $paid <= 0                                => Invoice::STATUS_UNPAID,
             $paid >= $invoice->total_amount           => Invoice::STATUS_PAID,
+            $paid <= 0                                => Invoice::STATUS_UNPAID,
             default                                   => Invoice::STATUS_UNPAID,
         };
 

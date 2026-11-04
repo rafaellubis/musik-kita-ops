@@ -55,6 +55,43 @@ class DiscountTest extends TestCase
         $this->service = new DiscountService(new InvoiceService());
     }
 
+    public function test_diskon_registrasi_penuh_tidak_mengurangi_spp(): void
+    {
+        $registration = $this->invoice->items()->create([
+            'item_code' => 'REG',
+            'description' => 'Biaya pendaftaran',
+            'amount' => 250000,
+        ]);
+
+        $this->actingAs($this->owner)
+            ->post(route('invoice-items.discount.store', $registration), [
+                'discount_type' => 'PERCENT',
+                'discount_value' => 100,
+                'discount_reason' => 'Promo bebas pendaftaran',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('success');
+
+        $this->assertSame(-250000, $registration->discountItem()->firstOrFail()->amount);
+        $this->assertSame(370000, $this->invoice->fresh()->total_amount);
+        $this->assertSame(Invoice::STATUS_UNPAID, $this->invoice->fresh()->status);
+    }
+
+    public function test_diskon_registrasi_nominal_penuh_melunasi_invoice_nol(): void
+    {
+        $this->sppItem->update(['item_code' => 'REG', 'amount' => 250000]);
+
+        $this->service->applyDiscount(
+            $this->sppItem, 'NOMINAL', 250000, 'Promo bebas pendaftaran', $this->owner,
+        );
+
+        $invoice = $this->invoice->fresh();
+        $this->assertSame(0, $invoice->total_amount);
+        $this->assertSame(0, $invoice->paid_amount);
+        $this->assertSame(Invoice::STATUS_PAID, $invoice->status);
+        $this->assertSame(0, $invoice->balance);
+    }
+
     public function test_apply_diskon_nominal_berhasil(): void
     {
         $this->actingAs($this->owner);
