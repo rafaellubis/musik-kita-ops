@@ -116,17 +116,45 @@
                 </div>
             </div>
             <div id="reminder-history-content" role="tabpanel" aria-labelledby="reminder-history-tab" x-show="activeTab === 'history'">
+                <div x-show="history?.data.length" class="mb-4 flex items-center justify-between gap-3 text-xs text-mk-muted">
+                    <span>Terbaru lebih dahulu</span>
+                    <span x-text="(history?.total || 0) + ' pengiriman'"></span>
+                </div>
                 <p x-show="history && !history.data.length && !loading" class="py-3 text-sm text-mk-muted">Belum ada pengiriman reminder untuk invoice ini.</p>
-                <template x-for="log in (history?.data || [])" :key="log.id">
-                    <article class="border-b border-mk-border py-3 first:pt-0">
-                        <h4 class="font-semibold" x-text="statusLabel(log.status)"></h4>
-                        <p class="mt-1 text-sm text-mk-muted" x-text="date(log.sent_at) + ' · ' + log.sender_name"></p>
-                        <p class="mt-1 text-sm text-mk-muted" x-text="log.phone + ' · ' + log.provider"></p>
-                        <p class="mt-2 text-xs text-mk-muted" x-text="log.invoices.map(i => i.invoice_number).join(' · ')"></p>
-                        <p class="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed" x-text="log.message_body"></p>
-                        <p x-show="log.error_message" class="mt-2 text-sm text-red-700" x-text="log.error_message"></p>
-                        <button x-show="log.can_prepare_resend" type="button" @click="prepareResend(log.id)" :disabled="loading" class="{{ $reminderButton }} mt-2">Siapkan kirim ulang</button>
-                    </article>
+                <template x-for="(log, index) in (history?.data || [])" :key="log.id">
+                    <div>
+                        <h4 x-show="index === 0 || log.sent_at.slice(0, 10) !== history.data[index - 1].sent_at.slice(0, 10)"
+                            class="mb-3 flex items-center gap-3 text-xs font-semibold" :class="index > 0 && 'mt-4'">
+                            <span x-text="date(log.sent_at.slice(0, 10))"></span>
+                            <span class="h-px flex-1 bg-mk-border" aria-hidden="true"></span>
+                        </h4>
+                        <article class="border-b border-mk-border py-3">
+                            <div class="flex items-center justify-between gap-3">
+                                <time :datetime="log.sent_at" class="font-semibold tabular-nums" x-text="log.sent_at.slice(11, 16).replace(':', '.')"></time>
+                                <span class="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold"
+                                      :class="log.status === 'SUCCESS' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : (log.status === 'PARTIAL' ? 'border-yellow-200 bg-yellow-50 text-yellow-800' : 'border-red-200 bg-red-50 text-red-700')">
+                                    <svg x-show="log.status === 'SUCCESS'" class="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m3 8 3 3 7-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    <span x-text="log.status === 'SUCCESS' ? 'Terkirim' : statusLabel(log.status)"></span>
+                                </span>
+                            </div>
+                            <p class="mt-2">Oleh <span class="font-semibold" x-text="log.sender_name"></span></p>
+                            <p class="mt-1 text-mk-muted" x-text="'Ke ' + log.phone"></p>
+                            <p class="mt-1 break-words text-xs text-mk-muted" x-text="log.invoices.map(i => i.invoice_number).join(' · ')"></p>
+                            <p x-show="log.error_message" class="mt-2 text-sm text-red-700" x-text="log.error_message"></p>
+                            <details name="invoice-reminder-history" class="group mt-1">
+                                <summary tabindex="0" class="flex min-h-11 w-fit cursor-pointer list-none items-center gap-2 rounded text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mk-accent">
+                                    <span class="group-open:hidden">Lihat pesan</span>
+                                    <span class="hidden group-open:inline">Sembunyikan pesan</span>
+                                    <svg class="h-3 w-3 group-open:rotate-180" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="m3 4 3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </summary>
+                                <p class="max-h-64 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-mk-surface p-3 text-sm leading-relaxed" tabindex="0" aria-label="Isi pesan reminder tersimpan" x-text="log.message_body"></p>
+                                <p class="mt-2 text-xs text-mk-muted" x-text="'Provider: ' + log.provider"></p>
+                            </details>
+                            <div x-show="log.can_prepare_resend" class="mt-2 flex justify-end">
+                                <button type="button" @click="prepareResend(log.id)" :disabled="loading" class="{{ $reminderButton }}">Siapkan kirim ulang</button>
+                            </div>
+                        </article>
+                    </div>
                 </template>
                 <div x-show="history && history.last_page > 1" class="mt-3 flex items-center justify-between gap-2 text-sm">
                     <button type="button" @click="loadHistory(historyPage - 1)" :disabled="loading || historyPage <= 1" class="{{ $reminderButton }}">Sebelumnya</button>
@@ -138,6 +166,9 @@
         <footer x-show="activeTab === 'new'" class="flex shrink-0 items-center justify-end gap-2 border-t border-mk-border bg-mk-card px-4 py-2">
             <button type="button" @click="close()" :disabled="submitting" class="{{ $reminderButton }}">Batal</button>
             <button type="button" @click="send()" :disabled="!canSend" class="min-h-11 rounded-lg px-4 py-2 text-sm font-bold btn-mk-primary focus-visible:ring-2 focus-visible:ring-mk-accent disabled:opacity-50" x-text="submitting ? 'Mengirim…' : 'Kirim WA'"></button>
+        </footer>
+        <footer x-show="activeTab === 'history' && history?.data.length" class="shrink-0 border-t border-mk-border bg-mk-card px-4 py-3 text-xs leading-relaxed text-mk-muted">
+            Terkirim berarti diterima provider, bukan bukti pesan diterima atau dibaca.
         </footer>
     </section>
 </div>

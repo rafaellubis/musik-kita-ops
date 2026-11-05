@@ -47,7 +47,9 @@ atau kode murid, termasuk sebagian teks. Filter bulan dan status tetap berlaku.
 - Pesan boleh diedit untuk satu pengiriman saja; template utama tidak berubah.
   **Kembalikan ke template** membuat preview baru. Edit yang belum dikirim
   meminta konfirmasi sebelum dibuang.
-- **Riwayat** menampilkan pesan/nomor/pengirim/waktu yang tercatat saat pengiriman.
+- **Riwayat** diurutkan terbaru dan dikelompokkan per tanggal, dengan status,
+  pengirim, serta nomor tujuan historis. **Lihat pesan** membuka pesan asli dan
+  provider; hanya satu pesan terbuka sekaligus. Pesan panjang dapat di-scroll.
   **Siapkan kirim ulang** membuat preview baru dari invoice yang masih belum lunas,
   bukan langsung mengirim pesan lama.
 - Preview berlaku 30 menit. Jika data tagihan/kontak berubah, buat ulang pesan dan
