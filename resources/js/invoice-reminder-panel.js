@@ -11,6 +11,12 @@ export function invoiceReminderPanel(metadata = {}) {
                 && !this.result && !this.expired && this.messageBody.trim() && [...this.messageBody].length <= 5000
                 && Date.parse(this.preview.expires_at) > Date.now());
         },
+        resizeMessage(element) {
+            if (!element.getClientRects().length) return;
+            element.style.height = 'auto';
+            const style = getComputedStyle(element);
+            element.style.height = `${element.scrollHeight + parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth)}px`;
+        },
         async show(config, tab = 'new') {
             if (this.submitting || (this.open && this.dirty && !window.confirm('Buang perubahan pesan yang belum dikirim?'))) return;
             this.trigger = document.activeElement;
