@@ -52,8 +52,9 @@ atau kode murid, termasuk sebagian teks. Filter bulan dan status tetap berlaku.
   bukan langsung mengirim pesan lama.
 - Preview berlaku 30 menit. Jika data tagihan/kontak berubah, buat ulang pesan dan
   tinjau kembali. Reminder sukses hari ini meminta konfirmasi sebelum dikirim lagi.
-- **Dikirim ke provider** bukan bukti WA diterima atau dibaca. Jika hasil belum
-  pasti, periksa riwayat dan WhatsApp terlebih dahulu; tidak ada retry otomatis.
+- **Terkirim** (hijau pada daftar invoice) berarti **Dikirim ke provider**, bukan
+  bukti WA diterima atau dibaca. Jika hasil belum pasti, periksa riwayat dan
+  WhatsApp terlebih dahulu; tidak ada retry otomatis.
   Proteksi klik ganda berlaku untuk tindakan/token yang sama, bukan deduplikasi
   seluruh pengiriman dari panel/browser berbeda.
 - Link PDF bertanda tangan berlaku 30 hari, tetapi host aplikasi tetap harus
