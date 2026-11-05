@@ -75,9 +75,10 @@ class InvoiceReminderPanelService
         if (!$blockers) {
             $token = (string) Str::uuid();
             $expires = now()->addMinutes(30);
-            Cache::put($this->key($token), ['user_id' => $user->id, 'source_invoice_id' => $source->id,
+            $stored = Cache::put($this->key($token), ['user_id' => $user->id, 'source_invoice_id' => $source->id,
                 'invoice_ids' => $selected->modelKeys(), 'recipient' => $recipient,
                 'snapshot' => $this->snapshot($selected), 'expires_at' => $expires->timestamp, 'state' => 'ready'], $expires);
+            abort_unless($stored, 503, 'Preview belum dapat disimpan. Coba kembali.');
         }
         $other = Invoice::unpaid()->where('student_id', $source->student_id)->whereNotIn('id', $ids)
             ->whereColumn('total_amount', '>', 'paid_amount')->with('enrollment.package.instrument')->orderBy('due_date')->orderBy('id')->get();
@@ -122,7 +123,8 @@ class InvoiceReminderPanelService
             if (!$transport->isConfigured()) throw ValidationException::withMessages(['provider' => 'Konfigurasi provider WhatsApp belum lengkap.']);
             $context['state'] = 'sending';
             $context['payload_hash'] = $payloadHash;
-            Cache::put($key, $context, Carbon::createFromTimestamp($context['expires_at']));
+            abort_unless(Cache::put($key, $context, Carbon::createFromTimestamp($context['expires_at'])),
+                503, 'Pengiriman belum dimulai karena preview tidak dapat dikunci. Coba kembali.');
         } finally {
             $lock->release();
         }
@@ -135,6 +137,7 @@ class InvoiceReminderPanelService
             $log = $this->reminders->sendPreparedReminder($selected->first()->student, $selected, $user,
                 $context['recipient']['phone'], $message, $transport);
             $result['log_id'] = $log->id;
+            $result['sent_at'] = $log->sent_at->toIso8601String();
             $result['state'] = $log->deliveryUncertain ? 'unknown' : ($log->status === 'SUCCESS' ? 'sent' : 'failed');
             $result['message'] = match ($result['state']) {
                 'sent' => 'Dikirim ke provider. Penerimaan pesan belum dapat dipastikan.',

@@ -15,7 +15,7 @@ class SendInvoiceReminderPanelRequest extends FormRequest
     {
         return [
             'preview_token' => ['required', 'uuid'],
-            'message_body' => ['required', 'string', 'max:5000', function ($attribute, $value, $fail) {
+            'message_body' => ['bail', 'required', 'string', 'max:5000', function ($attribute, $value, $fail) {
                 if (preg_match('/\S/u', $value) !== 1) $fail('Pesan tidak boleh kosong.');
             }],
             'confirm_repeat' => ['sometimes', 'boolean'],

@@ -158,4 +158,21 @@ class InvoiceReminderPanelSendTest extends TestCase
             InvoiceReminderLog::flushEventListeners();
         }
     }
+    public function test_non_string_message_is_a_validation_error_not_a_server_error(): void
+    {
+        $payload = $this->payload();
+        $this->postJson(route('invoices.reminder.send', $this->source), [...$payload, 'message_body' => ['invalid']])->assertUnprocessable();
+        Http::assertNothingSent();
+    }
+
+    public function test_cache_claim_write_failure_never_dispatches(): void
+    {
+        $payload = $this->payload();
+        $cache = \Mockery::mock(Cache::getFacadeRoot());
+        $cache->shouldReceive('put')->andReturn(false);
+        Cache::swap($cache);
+        $this->postJson(route('invoices.reminder.send', $this->source), $payload)->assertStatus(503);
+        Http::assertNothingSent();
+    }
+
 }

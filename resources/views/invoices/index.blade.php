@@ -33,7 +33,7 @@
         $canManage = auth()->user()?->hasAnyRole(['Owner', 'Admin']);
     @endphp
 
-    <div class="py-6 px-4 lg:px-8 space-y-4">
+    <div class="py-6 px-4 lg:px-8 space-y-4" x-data="invoiceReminderPanel(@js($reminderMetadata))">
 
         {{-- ===== STATS PER STATUS + AGING ===== --}}
         <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -275,16 +275,7 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-center">
-                                    @php $remStatus = $inv->reminder_status; @endphp
-                                    @if($remStatus === 'Terkirim')
-                                        <span class="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-100 text-emerald-800 border border-emerald-200">Terkirim</span>
-                                    @elseif($remStatus === 'Gagal')
-                                        <span class="px-2 py-0.5 text-xs font-semibold rounded bg-red-100 text-red-800 border border-red-200">Gagal</span>
-                                    @elseif($remStatus === '—')
-                                        <span class="text-mk-dim text-xs">—</span>
-                                    @else
-                                        <span class="px-2 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-700 border border-slate-200">Belum</span>
-                                    @endif
+                                    @include('invoices.partials.reminder-actions', ['reminderInvoice' => $inv])
                                 </td>
                                 <td class="px-4 py-3 text-xs text-mk-text">
                                     <span class="font-medium">{{ $inv->due_date->format('d M Y') }}</span>
@@ -319,6 +310,7 @@
             <div class="mt-5">{{ $invoices->links() }}</div>
         </div>
 
+        @include('invoices.partials.reminder-panel')
     </div>
 
     <style>[x-cloak] { display: none !important; }</style>
