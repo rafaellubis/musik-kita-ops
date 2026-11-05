@@ -25,6 +25,14 @@ class InvoiceReminderController extends Controller
         private readonly WhatsAppService $whatsapp,
     ) {}
 
+    public function history(Request $request, Invoice $invoice, InvoiceReminderPanelService $panel): JsonResponse
+    {
+        $data = $request->validate(['page' => ['sometimes', 'integer', 'min:1']], [
+            'page.integer' => 'Halaman harus berupa angka.', 'page.min' => 'Halaman minimal 1.',
+        ]);
+        return response()->json($panel->history($invoice, (int) ($data['page'] ?? 1)));
+    }
+
     public function sendPanel(SendInvoiceReminderPanelRequest $request, Invoice $invoice, InvoiceReminderPanelService $panel): JsonResponse
     {
         return response()->json($panel->send($invoice, $request->user(), $request->validated('preview_token'),

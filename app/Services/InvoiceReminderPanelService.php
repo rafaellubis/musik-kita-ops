@@ -159,6 +159,44 @@ class InvoiceReminderPanelService
         return $result;
     }
 
+    public function history(Invoice $source, int $page = 1): array
+    {
+        $logs = InvoiceReminderLog::whereJsonContains('invoice_ids', $source->id)
+            ->with('sender:id,name')->orderByDesc('sent_at')->orderByDesc('id')->paginate(20, ['*'], 'page', $page);
+        $ids = $logs->getCollection()->flatMap(fn ($log) => $log->invoice_ids)->unique()->all();
+        $numbers = Invoice::whereIn('id', $ids)->pluck('invoice_number', 'id');
+        return ['data' => $logs->getCollection()->map(fn ($log) => [
+            'id' => $log->id, 'sent_at' => $log->sent_at->toIso8601String(),
+            'sender_name' => $log->sender?->name ?? 'Pengguna #'.$log->sent_by, 'phone' => $log->phone,
+            'provider' => $log->provider, 'status' => $log->status,
+            'error_message' => $log->error_message ? 'Pengiriman tidak berhasil. Periksa status provider sebelum mencoba lagi.' : null,
+            'message_body' => $log->message_body,
+            'invoices' => array_map(fn ($id) => ['id' => $id, 'invoice_number' => $numbers[$id] ?? 'Invoice #'.$id], $log->invoice_ids),
+            'can_prepare_resend' => $this->eligible($source),
+        ])->all(), 'current_page' => $logs->currentPage(), 'last_page' => $logs->lastPage(), 'total' => $logs->total()];
+    }
+
+    public function metadataFor(array $invoiceIds): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $invoiceIds)));
+        $metadata = array_fill_keys($ids, ['status' => null, 'label' => 'Belum dikirim', 'sent_at' => null, 'sender_name' => null]);
+        if (!$ids) return $metadata;
+        $logs = InvoiceReminderLog::select(['id', 'invoice_ids', 'status', 'sent_at', 'sent_by'])
+            ->where(function ($q) use ($ids) {
+                foreach ($ids as $id) $q->orWhereJsonContains('invoice_ids', $id);
+            })->with('sender:id,name')->orderByDesc('sent_at')->orderByDesc('id')->get();
+        foreach ($logs as $log) {
+            foreach (array_intersect($ids, $log->invoice_ids) as $id) {
+                if ($metadata[$id]['sent_at'] !== null) continue;
+                $metadata[$id] = ['status' => $log->status, 'label' => match ($log->status) {
+                    'SUCCESS' => 'Dikirim ke provider', 'PARTIAL' => 'Sebagian', default => 'Gagal',
+                }, 'sent_at' => $log->sent_at->toIso8601String(),
+                    'sender_name' => $log->sender?->name ?? 'Pengguna #'.$log->sent_by];
+            }
+        }
+        return $metadata;
+    }
+
     private function conflict(string $code, string $message, array $data = []): never
     {
         throw new HttpResponseException(response()->json(['code' => $code, 'message' => $message] + $data, 409));

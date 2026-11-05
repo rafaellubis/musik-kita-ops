@@ -305,6 +305,8 @@ Route::middleware('auth')->group(function () {
             ->name('invoices.reminder.preview');
         Route::post('invoices/{invoice}/reminder/send', [InvoiceReminderController::class, 'sendPanel'])
             ->middleware('throttle:3,1')->name('invoices.reminder.send');
+        Route::get('invoices/{invoice}/reminder/history', [InvoiceReminderController::class, 'history'])
+            ->name('invoices.reminder.history');
 
         Route::post('session-report-wa-logs/{sessionReportWaLog}/resend', [SessionReportWaLogController::class, 'resend'])
             ->name('session-report-wa-logs.resend');

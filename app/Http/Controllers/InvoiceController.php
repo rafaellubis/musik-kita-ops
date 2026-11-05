@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Student;
 use App\Services\InvoiceService;
+use App\Services\InvoiceReminderPanelService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -56,6 +57,7 @@ class InvoiceController extends Controller
         }
 
         $invoices = $query->latest('issued_at')->paginate(50)->withQueryString();
+        $reminderMetadata = app(InvoiceReminderPanelService::class)->metadataFor($invoices->getCollection()->modelKeys());
 
         // Stats per status untuk bulan terpilih
         $stats = Invoice::forMonth($year, $month)
@@ -77,7 +79,7 @@ class InvoiceController extends Controller
 
         return view('invoices.index', compact(
             'invoices', 'stats', 'students',
-            'year', 'month', 'overdueCount'
+            'year', 'month', 'overdueCount', 'reminderMetadata'
         ));
     }
 
@@ -109,7 +111,8 @@ class InvoiceController extends Controller
             ->orderBy('code')
             ->get(['id', 'code', 'name', 'default_price']);
 
-        return view('invoices.show', compact('invoice', 'catalogItems', 'siblings'));
+        $reminderMetadata = app(InvoiceReminderPanelService::class)->metadataFor([$invoice->id]);
+        return view('invoices.show', compact('invoice', 'catalogItems', 'siblings', 'reminderMetadata'));
     }
 
     /**
