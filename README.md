@@ -34,6 +34,32 @@ Pengujian wajib memakai SQLite `:memory:` sesuai `phpunit.xml`, bukan database s
 Kolom **No. Invoice / nama** mencari nomor invoice, nama lengkap, nickname,
 atau kode murid, termasuk sebagian teks. Filter bulan dan status tetap berlaku.
 
+## Reminder WA dari invoice
+
+- Owner/Admin membuka **Reminder WA** pada daftar atau detail invoice. Default
+  pesan hanya memuat invoice yang diklik. **Sertakan tagihan belum lunas lainnya**
+  membuka pilihan invoice milik murid yang sama; tidak otomatis memilih semuanya.
+- Periksa nama/nomor penerima, rincian tagihan, dan total sisa. Nomor orang tua
+  diutamakan, lalu nomor murid jika tidak tersedia. Perbaikan kontak melalui data murid.
+- Pesan boleh diedit untuk satu pengiriman saja; template utama tidak berubah.
+  **Kembalikan ke template** membuat preview baru. Edit yang belum dikirim
+  meminta konfirmasi sebelum dibuang.
+- **Riwayat** menampilkan pesan/nomor/pengirim/waktu yang tercatat saat pengiriman.
+  **Siapkan kirim ulang** membuat preview baru dari invoice yang masih belum lunas,
+  bukan langsung mengirim pesan lama.
+- Preview berlaku 30 menit. Jika data tagihan/kontak berubah, buat ulang pesan dan
+  tinjau kembali. Reminder sukses hari ini meminta konfirmasi sebelum dikirim lagi.
+- **Dikirim ke provider** bukan bukti WA diterima atau dibaca. Jika hasil belum
+  pasti, periksa riwayat dan WhatsApp terlebih dahulu; tidak ada retry otomatis.
+  Proteksi klik ganda berlaku untuk tindakan/token yang sama, bukan deduplikasi
+  seluruh pengiriman dari panel/browser berbeda.
+- Link PDF bertanda tangan berlaku 30 hari, tetapi host aplikasi tetap harus
+  dapat diakses perangkat penerima. Host LAN/localhost tidak dapat dianggap
+  bisa dibuka dari luar jaringan studio.
+- Panel memakai provider yang sudah dikonfigurasi. Tidak perlu migrasi database.
+  Reminder massal dan scheduler tetap memakai alur lama; filter/status pengiriman
+  lama pada kedua alur tersebut tidak diubah oleh fitur ini.
+
 ## Riwayat sesi lintas level — portal guru
 
 - **Riwayat Sesi** mencakup enrollment sesi yang dibuka dan rantai level sebelumnya

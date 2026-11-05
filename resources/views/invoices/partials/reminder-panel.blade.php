@@ -91,7 +91,7 @@
                         <div>
                             <label for="invoice-reminder-message" class="font-semibold">Pesan WA</label>
                             <p id="invoice-reminder-message-help" class="mt-1 text-sm text-mk-muted">Edit hanya berlaku untuk pengiriman ini. Periksa nominal dan link sebelum mengirim.</p>
-                            <textarea id="invoice-reminder-message" x-model="messageBody" :disabled="submitting || !!result" rows="10" maxlength="5000" aria-describedby="invoice-reminder-message-help"
+                            <textarea id="invoice-reminder-message" x-model="messageBody" :disabled="loading || submitting" :readonly="!!result" rows="10" maxlength="5000" aria-describedby="invoice-reminder-message-help"
                                       class="mt-3 w-full rounded-lg border-gray-300 text-sm leading-relaxed focus:border-mk-accent focus:ring-mk-accent"></textarea>
                             <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
                                 <button type="button" @click="resetMessage()" :disabled="loading || submitting" class="{{ $reminderButton }}" x-text="result ? 'Siapkan pesan baru' : 'Kembalikan ke template'"></button>

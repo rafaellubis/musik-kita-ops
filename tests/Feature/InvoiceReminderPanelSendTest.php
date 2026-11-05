@@ -175,4 +175,19 @@ class InvoiceReminderPanelSendTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_admin_can_send_maximum_message_but_excess_requests_are_throttled(): void
+    {
+        $admin = User::factory()->create()->assignRole('Admin');
+        $preview = $this->actingAs($admin)->postJson(route('invoices.reminder.preview', $this->source))->assertOk()->json();
+        $payload = ['preview_token' => $preview['preview_token'], 'message_body' => str_repeat('x', 5000)];
+        Http::fake(['https://api.fonnte.com/send' => Http::response(['status' => true, 'id' => ['admin-max']])]);
+        $url = route('invoices.reminder.send', $this->source);
+        foreach (range(1, 3) as $attempt) {
+            $this->postJson($url, $payload)->assertOk()->assertJsonPath('state', 'sent');
+        }
+        $this->postJson($url, $payload)->assertTooManyRequests();
+        Http::assertSentCount(1);
+        $this->assertSame($payload['message_body'], InvoiceReminderLog::sole()->message_body);
+        $this->assertSame($admin->id, InvoiceReminderLog::sole()->sent_by);
+    }
 }
