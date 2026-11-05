@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SendInvoiceReminderRequest;
+use App\Http\Requests\PreviewInvoiceReminderRequest;
+use App\Services\InvoiceReminderPanelService;
+use Illuminate\Http\JsonResponse;
 use App\Models\AuditLog;
 use App\Models\Invoice;
 use App\Services\InvoiceReminderService;
@@ -20,6 +23,12 @@ class InvoiceReminderController extends Controller
         private readonly InvoiceReminderService $reminderService,
         private readonly WhatsAppService $whatsapp,
     ) {}
+
+    public function preview(PreviewInvoiceReminderRequest $request, Invoice $invoice, InvoiceReminderPanelService $panel): JsonResponse
+    {
+        return response()->json($panel->preview($invoice, $request->user(),
+            $request->validated('invoice_ids'), $request->validated('resend_log_id')));
+    }
 
     public function index(Request $request): View
     {

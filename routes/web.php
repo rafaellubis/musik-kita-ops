@@ -301,6 +301,8 @@ Route::middleware('auth')->group(function () {
         // [SECURITY] Throttle: mencegah spam WhatsApp dan kuota API habis (max 3x/menit)
         Route::post('invoice-reminders/send', [InvoiceReminderController::class, 'send'])
             ->middleware('throttle:3,1')->name('invoice-reminders.send');
+        Route::post('invoices/{invoice}/reminder/preview', [InvoiceReminderController::class, 'preview'])
+            ->name('invoices.reminder.preview');
 
         Route::post('session-report-wa-logs/{sessionReportWaLog}/resend', [SessionReportWaLogController::class, 'resend'])
             ->name('session-report-wa-logs.resend');
