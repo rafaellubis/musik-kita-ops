@@ -46,8 +46,8 @@
         {{-- ============= HEADER INVOICE ============= --}}
         <div class="bg-mk-card shadow-sm sm:rounded-lg p-6"
              x-data="{ showPay: false }">
-            <div class="flex justify-between items-start">
-                <div>
+            <div class="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-start">
+                <div class="min-w-0">
                     <div class="font-mono text-sm text-mk-dim">{{ $invoice->invoice_number }}</div>
                     <div class="text-2xl font-bold mt-1">{{ $invoice->student->full_name ?? '?' }}</div>
                     @if($invoice->student?->nickname)
@@ -63,7 +63,6 @@
                         <span class="px-3 py-1 rounded text-sm border {{ $statusColors[$invoice->status] }}">
                             {{ $invoice->status }}
                         </span>
-                        @include('invoices.partials.reminder-actions', ['reminderInvoice' => $invoice])
                         @if($invoice->installment_label)
                             <span class="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-300">
                                 {{ $invoice->installment_label }}
@@ -98,7 +97,8 @@
                     </div>
                 </div>
 
-                <div class="flex gap-2 flex-wrap justify-end">
+                <div class="flex shrink-0 flex-wrap items-center justify-end gap-2 lg:max-w-[55%]">
+                    @include('invoices.partials.reminder-actions', ['reminderInvoice' => $invoice, 'reminderCompact' => false])
                     <a href="{{ route('invoices.print', $invoice->id) }}" target="_blank"
                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">
                         Cetak Invoice

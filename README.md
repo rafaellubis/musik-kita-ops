@@ -39,8 +39,10 @@ atau kode murid, termasuk sebagian teks. Filter bulan dan status tetap berlaku.
 - Owner/Admin membuka **Reminder WA** pada daftar atau detail invoice. Default
   pesan hanya memuat invoice yang diklik. **Sertakan tagihan belum lunas lainnya**
   membuka pilihan invoice milik murid yang sama; tidak otomatis memilih semuanya.
-- Periksa nama/nomor penerima, rincian tagihan, dan total sisa. Nomor orang tua
-  diutamakan, lalu nomor murid jika tidak tersedia. Perbaikan kontak melalui data murid.
+  Pada detail invoice, tombol reminder berada di kelompok aksi kanan.
+- Panel menampilkan **Penerima: nama** beserta tujuan **Orang Tua/Murid** dan nomor
+  WA, lalu **Detail Tagihan**. Nomor orang tua diutamakan, lalu nomor murid jika
+  tidak tersedia atau tidak valid. Perbaikan kontak melalui data murid.
 - Pesan boleh diedit untuk satu pengiriman saja; template utama tidak berubah.
   **Kembalikan ke template** membuat preview baru. Edit yang belum dikirim
   meminta konfirmasi sebelum dibuang.

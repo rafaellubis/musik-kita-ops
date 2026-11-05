@@ -265,17 +265,17 @@
                                 <td class="px-4 py-3 text-center">
                                     @php $cfg = $statusStatsConfig[$inv->status] ?? null; @endphp
                                     @if($cfg)
-                                        <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full {{ $cfg['badge'] }}">
+                                        <span class="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 text-xs font-semibold rounded-full {{ $cfg['badge'] }}">
                                             {{ $cfg['label'] }}
                                         </span>
                                     @else
-                                        <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-stone-100 text-stone-700 border border-stone-200">
+                                        <span class="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 text-xs font-semibold rounded-full bg-stone-100 text-stone-700 border border-stone-200">
                                             {{ $inv->status }}
                                         </span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-center">
-                                    @include('invoices.partials.reminder-actions', ['reminderInvoice' => $inv])
+                                    @include('invoices.partials.reminder-actions', ['reminderInvoice' => $inv, 'reminderCompact' => true])
                                 </td>
                                 <td class="px-4 py-3 text-xs text-mk-text">
                                     <span class="font-medium">{{ $inv->due_date->format('d M Y') }}</span>

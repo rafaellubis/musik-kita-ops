@@ -8,16 +8,19 @@
     ];
     $reminderInfo = $reminderMetadata[$reminderInvoice->id];
     $canRemind = auth()->user()?->hasAnyRole(['Owner', 'Admin']);
+    $reminderButtonSize = ($reminderCompact ?? false)
+        ? 'rounded-full border px-2.5 py-0.5 text-xs'
+        : 'rounded px-4 py-2 text-sm';
 @endphp
-<div class="flex flex-wrap items-center gap-2">
+<div class="{{ ($reminderCompact ?? false) ? 'flex flex-wrap items-center justify-center gap-2' : 'contents' }}">
     @if($canRemind)
         <button type="button" @click="show(@js($reminderConfig), 'history')"
-                class="min-h-11 rounded-lg border border-mk-border px-3 py-2 text-xs font-semibold text-mk-muted hover:bg-mk-cardHover focus-visible:ring-2 focus-visible:ring-mk-accent"
+                class="inline-flex items-center justify-center whitespace-nowrap border-mk-border font-semibold text-mk-muted ring-1 ring-inset ring-mk-border hover:bg-mk-cardHover focus-visible:ring-2 focus-visible:ring-mk-accent {{ $reminderButtonSize }}"
                 :title="metadata[{{ $reminderInvoice->id }}]?.sent_at ? date(metadata[{{ $reminderInvoice->id }}].sent_at) : 'Lihat riwayat reminder'"
                 x-text="metadata[{{ $reminderInvoice->id }}]?.label || 'Belum dikirim'">{{ $reminderInfo['label'] }}</button>
         @if(in_array($reminderInvoice->status, ['UNPAID', 'PARTIAL']) && $reminderInvoice->balance > 0)
             <button type="button" @click="show(@js($reminderConfig))"
-                    class="min-h-11 rounded-lg px-3 py-2 text-xs font-bold btn-mk-primary focus-visible:ring-2 focus-visible:ring-mk-accent">Reminder WA</button>
+                    class="inline-flex items-center justify-center whitespace-nowrap border-transparent font-bold btn-mk-primary focus-visible:ring-2 focus-visible:ring-mk-accent {{ $reminderButtonSize }}">Reminder WA</button>
         @endif
     @else
         <span class="text-xs text-mk-muted">{{ $reminderInfo['label'] }}</span>

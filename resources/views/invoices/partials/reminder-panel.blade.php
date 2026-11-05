@@ -42,17 +42,20 @@
                 <template x-if="preview">
                     <div class="space-y-6">
                         <div>
-                            <h4 class="font-semibold">Penerima</h4>
-                            <p class="mt-2 text-sm" x-text="preview.recipient?.name || 'Nomor tujuan tidak tersedia'"></p>
+                            <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm">
+                                <h4 class="font-semibold">Penerima:</h4>
+                                <span x-text="preview.recipient?.name || 'Nomor tujuan tidak tersedia'"></span>
+                                <span x-show="preview.recipient" class="text-xs text-mk-muted" x-text="preview.recipient?.kind === 'student' ? 'Dikirim ke Murid' : 'Dikirim ke Orang Tua'"></span>
+                            </div>
                             <p class="mt-1 text-sm text-mk-muted" x-text="preview.recipient?.phone || '—'"></p>
-                            <p class="mt-2 text-sm text-mk-muted" x-text="preview.recipient?.kind === 'student' ? 'Dikirim ke murid — nomor orang tua tidak tersedia atau tidak valid' : (preview.recipient ? 'Dikirim ke orang tua' : '')"></p>
+                            <p x-show="preview.recipient?.kind === 'student'" class="mt-1 text-xs text-mk-muted">Nomor orang tua tidak tersedia atau tidak valid.</p>
                             <a x-show="!preview.recipient && preview.student.edit_url" :href="preview.student.edit_url" class="{{ $reminderButton }} mt-2 inline-flex items-center">Perbaiki data murid</a>
                         </div>
                         <div x-show="preview.blockers.length" class="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
                             <template x-for="(blocker, index) in preview.blockers" :key="index"><p x-text="blocker"></p></template>
                         </div>
                         <div>
-                            <h4 class="font-semibold">Tagihan yang diingatkan</h4>
+                            <h4 class="font-semibold">Detail Tagihan</h4>
                             <ul class="mt-2 divide-y divide-mk-border">
                                 <template x-for="item in preview.selected_invoices" :key="item.id">
                                     <li class="py-3 text-sm">
