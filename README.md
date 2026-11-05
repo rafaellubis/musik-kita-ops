@@ -43,6 +43,7 @@ atau kode murid, termasuk sebagian teks. Filter bulan dan status tetap berlaku.
 - Panel menampilkan **Penerima: nama** beserta tujuan **Orang Tua/Murid** dan nomor
   WA, lalu **Detail Tagihan**. Nomor orang tua diutamakan, lalu nomor murid jika
   tidak tersedia atau tidak valid. Perbaikan kontak melalui data murid.
+- Gunakan tab **Pesan baru** / **Riwayat**; garis bawah menandai tab aktif.
 - Pesan boleh diedit untuk satu pengiriman saja; template utama tidak berubah.
   **Kembalikan ke template** membuat preview baru. Edit yang belum dikirim
   meminta konfirmasi sebelum dibuang.
