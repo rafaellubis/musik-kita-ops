@@ -16,6 +16,7 @@ class InvoiceReminderLog extends Model
 
     /** Metadata hasil kirim untuk batch aktif; bukan atribut database. */
     public bool $authInvalid = false;
+    public bool $deliveryUncertain = false;
 
     protected $fillable = [
         'student_id',

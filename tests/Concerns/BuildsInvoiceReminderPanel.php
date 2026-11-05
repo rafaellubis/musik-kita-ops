@@ -35,7 +35,6 @@ trait BuildsInvoiceReminderPanel
         }
         config(['services.fonnte.token' => 'test-token', 'services.fonnte.base_url' => 'https://api.fonnte.com']);
         Http::preventStrayRequests();
-        Http::fake(['https://api.fonnte.com/send' => Http::response(['status' => true, 'id' => ['panel-1']])]);
     }
 
     protected function panelInvoice(Student $student, int $amount): Invoice

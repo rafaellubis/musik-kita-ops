@@ -6,6 +6,7 @@ use App\Http\Requests\SendInvoiceReminderRequest;
 use App\Http\Requests\PreviewInvoiceReminderRequest;
 use App\Services\InvoiceReminderPanelService;
 use Illuminate\Http\JsonResponse;
+use App\Http\Requests\SendInvoiceReminderPanelRequest;
 use App\Models\AuditLog;
 use App\Models\Invoice;
 use App\Services\InvoiceReminderService;
@@ -23,6 +24,12 @@ class InvoiceReminderController extends Controller
         private readonly InvoiceReminderService $reminderService,
         private readonly WhatsAppService $whatsapp,
     ) {}
+
+    public function sendPanel(SendInvoiceReminderPanelRequest $request, Invoice $invoice, InvoiceReminderPanelService $panel): JsonResponse
+    {
+        return response()->json($panel->send($invoice, $request->user(), $request->validated('preview_token'),
+            $request->validated('message_body'), $request->boolean('confirm_repeat')));
+    }
 
     public function preview(PreviewInvoiceReminderRequest $request, Invoice $invoice, InvoiceReminderPanelService $panel): JsonResponse
     {

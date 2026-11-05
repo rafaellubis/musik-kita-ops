@@ -245,6 +245,18 @@ class InvoiceReminderService
         ?WhatsAppService $transport = null,
     ): InvoiceReminderLog {
         ['phone' => $phone, 'message' => $message] = $this->prepareReminder($student, $invoices, $template);
+        return $this->sendPreparedReminder($student, $invoices, $sender, $phone, $message, $transport);
+    }
+
+    /** Kirim teks final yang sudah ditinjau tanpa merender ulang template. */
+    public function sendPreparedReminder(
+        Student $student,
+        Collection $invoices,
+        User $sender,
+        string $phone,
+        string $message,
+        ?WhatsAppService $transport = null,
+    ): InvoiceReminderLog {
         $transport ??= $this->whatsapp->forBatch();
         $result = $transport->sendText($phone, $message);
         $log = $this->persistLog(
@@ -262,6 +274,7 @@ class InvoiceReminderService
             provider: $result['provider'],
         );
         $log->authInvalid = $result['auth_invalid'];
+        $log->deliveryUncertain = !$result['ok'] && $result['status'] === 0;
 
         return $log;
     }

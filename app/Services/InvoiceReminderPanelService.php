@@ -10,6 +10,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Models\AuditLog;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class InvoiceReminderPanelService
 {
@@ -88,6 +90,78 @@ class InvoiceReminderPanelService
             'total_balance' => $selected->sum('balance'), 'message_body' => $message, 'can_send' => !$blockers,
             'blockers' => $blockers, 'preview_token' => $token, 'expires_at' => $expires?->toIso8601String(),
             'repeat_warnings' => $this->repeatWarnings($ids)];
+    }
+
+    public function send(Invoice $source, User $user, string $previewToken, string $message, bool $confirmRepeat = false): array
+    {
+        $key = $this->key($previewToken);
+        $payloadHash = hash('sha256', json_encode([$message, $confirmRepeat], JSON_THROW_ON_ERROR));
+        $lock = Cache::lock($key.':lock', 10);
+        if (!$lock->get()) $this->conflict('request_in_progress', 'Pengiriman sedang diproses. Periksa riwayat sebelum mencoba lagi.');
+        try {
+            $context = Cache::get($key);
+            if (!$context || $context['expires_at'] <= now()->timestamp) $this->conflict('preview_expired', 'Preview kedaluwarsa. Buat ulang preview.');
+            abort_unless($context['user_id'] === $user->id, 403);
+            if ($context['source_invoice_id'] !== $source->id) $this->conflict('request_conflict', 'Preview tidak terkait invoice ini.');
+            if ($context['state'] !== 'ready') {
+                if ($context['payload_hash'] !== $payloadHash) $this->conflict('request_conflict', 'Tindakan ini sudah digunakan untuk pesan lain.');
+                if ($context['state'] === 'done') return $context['result'];
+                $this->conflict('request_in_progress', 'Hasil pengiriman belum dapat dipastikan; periksa riwayat dan WhatsApp sebelum mencoba lagi.');
+            }
+            $selected = $this->invoices($context['invoice_ids']);
+            if ($selected->count() !== count($context['invoice_ids'])
+                || $selected->contains(fn ($i) => !$this->eligible($i) || $i->student_id !== $source->student_id)
+                || $this->snapshot($selected) !== $context['snapshot']) {
+                $this->conflict('preview_changed', 'Data tagihan atau penerima berubah. Buat ulang pesan dan tinjau kembali.',
+                    ['selected_invoices' => $selected->map(fn ($i) => $this->summary($i))->all()]);
+            }
+            if ($this->repeatWarnings($context['invoice_ids']) && !$confirmRepeat) {
+                $this->conflict('repeat_confirmation_required', 'Invoice sudah diingatkan hari ini. Konfirmasi untuk mengirim lagi.');
+            }
+            $transport = $this->whatsapp->forBatch();
+            if (!$transport->isConfigured()) throw ValidationException::withMessages(['provider' => 'Konfigurasi provider WhatsApp belum lengkap.']);
+            $context['state'] = 'sending';
+            $context['payload_hash'] = $payloadHash;
+            Cache::put($key, $context, Carbon::createFromTimestamp($context['expires_at']));
+        } finally {
+            $lock->release();
+        }
+
+        // Setelah dispatch, kegagalan pencatatan tidak boleh mengembalikan tindakan menjadi ready.
+        $result = ['state' => 'unknown', 'log_id' => null,
+            'message' => 'Hasil pengiriman belum dapat dipastikan; periksa riwayat dan WhatsApp sebelum mencoba lagi.',
+            'metadata_by_invoice' => []];
+        try {
+            $log = $this->reminders->sendPreparedReminder($selected->first()->student, $selected, $user,
+                $context['recipient']['phone'], $message, $transport);
+            $result['log_id'] = $log->id;
+            $result['state'] = $log->deliveryUncertain ? 'unknown' : ($log->status === 'SUCCESS' ? 'sent' : 'failed');
+            $result['message'] = match ($result['state']) {
+                'sent' => 'Dikirim ke provider. Penerimaan pesan belum dapat dipastikan.',
+                'failed' => $log->error_message ?: 'Provider menolak pengiriman.',
+                default => $result['message'],
+            };
+            AuditLog::record(AuditLog::ACTION_CREATE, $log, 'Reminder WA '.$source->invoice_number,
+                newValues: ['log_id' => $log->id, 'state' => $result['state'], 'invoice_ids' => $context['invoice_ids']]);
+            foreach ($context['invoice_ids'] as $id) {
+                $result['metadata_by_invoice'][$id] = ['status' => $log->status,
+                    'label' => $log->status === 'SUCCESS' ? 'Dikirim ke provider' : 'Gagal',
+                    'sent_at' => $log->sent_at->toIso8601String(), 'sender_name' => $user->name];
+            }
+        } catch (\Throwable $e) {
+            report($e);
+            $result['state'] = 'unknown';
+            $result['message'] = 'Hasil pengiriman belum dapat dipastikan; periksa riwayat dan WhatsApp sebelum mencoba lagi.';
+        }
+        $context['state'] = 'done';
+        $context['result'] = $result;
+        Cache::put($key, $context, Carbon::createFromTimestamp($context['expires_at']));
+        return $result;
+    }
+
+    private function conflict(string $code, string $message, array $data = []): never
+    {
+        throw new HttpResponseException(response()->json(['code' => $code, 'message' => $message] + $data, 409));
     }
 
     private function key(string $token): string

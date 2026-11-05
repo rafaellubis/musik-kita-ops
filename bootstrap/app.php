@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/kesehatankita',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trimStrings(except: [
+            fn (\Illuminate\Http\Request $request) => $request->isMethod('POST') && $request->is('invoices/*/reminder/send'),
+        ]);
 		$middleware->alias([
 			'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
 			'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
